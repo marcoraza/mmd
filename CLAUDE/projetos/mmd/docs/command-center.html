@@ -7,7 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,sans-serif;background:#FAFAF8;color:#111827;-webkit-font-smoothing:antialiased}
-.header{background:#1A1F36;color:#fff;padding:32px 48px}
+.header{background:#0F172A;color:#fff;padding:32px 48px}
 .header h1{font-size:28px;font-weight:600;letter-spacing:-0.02em;margin-bottom:6px}
 .header p{font-size:13px;color:rgba(255,255,255,0.6)}
 .dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#6366F1;margin-right:8px;vertical-align:middle}
@@ -16,38 +16,23 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;color:#111827;-webkit-f
 .kpi-value{font-size:28px;font-weight:600;letter-spacing:-0.02em}
 .kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;margin-left:6px}
 .section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;margin:32px 0 16px}
-.sprint-grid{display:grid;gap:12px;margin-bottom:40px}
-.sprint-card{background:#fff;border-radius:12px;overflow:hidden;border:1px solid #0000000A}
+.sprint-card{background:#fff;border-radius:12px;overflow:hidden;border:1px solid #0000000A;margin-bottom:12px}
 .sprint-header{display:flex;align-items:center;padding:16px 20px;cursor:pointer;gap:16px;user-select:none}
 .sprint-header:hover{background:#F5F5F5}
 .sprint-number{font-size:11px;font-weight:600;color:#fff;border-radius:6px;padding:4px 10px;min-width:36px;text-align:center;flex-shrink:0}
-.sprint-number.opus{background:#6366F1}
-.sprint-number.sonnet{background:#10B981}
-.sprint-number.codex{background:#F59E0B;color:#111}
-.sprint-number.supervisor{background:#EF4444}
 .sprint-title{font-size:14px;font-weight:500;flex:1}
-.model-badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:4px;background:#F3F4F6;color:#6B7280}
-.model-badge.opus{background:#EEF2FF;color:#4F46E5}
-.model-badge.sonnet{background:#ECFDF5;color:#059669}
-.model-badge.codex{background:#FFFBEB;color:#B45309}
-.model-badge.supervisor{background:#FEF2F2;color:#DC2626}
+.model-badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:4px}
 .dep-tag{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:#F3F4F6;color:#6B7280;margin-right:4px}
 .chevron{color:#9CA3AF;transition:transform 200ms ease;flex-shrink:0}
 .sprint-card.open .chevron{transform:rotate(180deg)}
 .sprint-body{display:none;border-top:1px solid #0000000A}
 .sprint-card.open .sprint-body{display:block}
 .prompt-container{position:relative;padding:20px}
-.prompt-box{background:#1E1E2E;color:#CDD6F4;border-radius:8px;padding:16px 20px;font-size:12px;line-height:1.6;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.prompt-box{background:#1E1E2E;color:#CDD6F4;border-radius:8px;padding:16px 20px;font-size:12px;line-height:1.6;max-height:500px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,monospace}
 .copy-btn{position:absolute;top:28px;right:28px;background:#6366F1;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;z-index:2}
 .copy-btn:hover{background:#4F46E5}
 .copy-btn.copied{background:#10B981}
-.sprint-meta{display:flex;gap:12px;align-items:center;flex-shrink:0}
-.tabs{display:flex;gap:0;border-bottom:1px solid #E5E7EB;padding:0 20px}
-.tab{padding:10px 16px;font-size:12px;font-weight:500;color:#9CA3AF;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
-.tab:hover{color:#374151}
-.tab.active{color:#111827;border-bottom-color:#6366F1}
-.tab-content{display:none}
-.tab-content.active{display:block}
+.sprint-meta{display:flex;gap:8px;align-items:center;flex-shrink:0}
 @media(max-width:768px){.header,.content{padding:20px}.kpis{gap:24px;flex-wrap:wrap}.sprint-meta{display:none}}
 </style>
 </head>
@@ -59,206 +44,22 @@ body{font-family:system-ui,sans-serif;background:#FAFAF8;color:#111827;-webkit-f
 <div class="content">
 <div class="kpis">
 <div><span class="kpi-value">7</span><span class="kpi-label">Sprints</span></div>
-<div><span class="kpi-value">3</span><span class="kpi-label">Opus</span></div>
-<div><span class="kpi-value">3</span><span class="kpi-label">Sonnet</span></div>
-<div><span class="kpi-value">1</span><span class="kpi-label">Codex</span></div>
+<div><span class="kpi-value" style="color:#6366F1">3</span><span class="kpi-label">Opus</span></div>
+<div><span class="kpi-value" style="color:#10B981">3</span><span class="kpi-label">Sonnet</span></div>
+<div><span class="kpi-value" style="color:#F59E0B">1</span><span class="kpi-label">Codex</span></div>
 </div>
+<div class="section-title">Sprints</div>
 
-<div class="section-title">Pipeline</div>
-<div class="sprint-grid">
-
-<!-- Supervisor -->
-<div class="sprint-card" id="card-supervisor">
-<div class="sprint-header" onclick="toggleCard('card-supervisor')">
-<span class="sprint-number supervisor">SUP</span>
-<span class="sprint-title">Supervisor</span>
-<div class="sprint-meta">
-<span class="model-badge supervisor">supervisor</span>
-</div>
-<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-</div>
-<div class="sprint-body">
-<div class="prompt-container">
-<button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
-<div class="prompt-box">## Prompt do Supervisor
-
-**Modelo:** Opus
-**Funcao:** Validacao de entregas (nao executa codigo)
-
-### Contexto
-
-Voce e o supervisor do projeto Estoque Inteligente MMD. Seu papel e validar a entrega de cada sprint contra o plano definido. Voce NAO executa codigo, NAO faz commits, NAO cria arquivos. Voce le, verifica e aprova ou rejeita.
-
-Referencia: `CLAUDE/projetos/mmd/PLANO-ESTOQUE-INTELIGENTE.md`
-Prompts de execucao: `CLAUDE/projetos/mmd/estoque-inteligente-agent-prompts.md`
-
-### Protocolo de Validacao
-
-Para cada sprint entregue, execute este checklist:
-
-**1. Verificacao de Escopo**
-
-- Todos os itens listados na secao "Tarefa" do sprint foram implementados?
-- Algum item foi pulado ou feito parcialmente?
-- Algum item foi adicionado que nao estava no plano (scope creep)?
-
-**2. Verificacao de Arquivos**
-
-- Todos os arquivos listados em "Arquivos para criar" existem?
-- Arquivos modificados foram de fato modificados?
-- Algum arquivo fora do escopo foi tocado?
-
-**3. Verificacao de Qualidade**
-
-- Codigo TypeScript esta em strict mode sem erros?
-- Swift code compila sem warnings?
-- SQL e valido e executavel?
-- Testes existem e passam?
-- Nao ha TODO/FIXME/HACK sem justificativa?
-- Nao ha credenciais hardcoded?
-
-**4. Checklist de Verificacao**
-
-Percorrer cada item da secao "Verificacao" do sprint. Para cada item:
-- PASS: verificado e funcional
-- FAIL: nao funciona, com descricao do problema
-- SKIP: nao pode ser verificado (ex: hardware nao disponivel), com justificativa
-
-**5. Verificacao de Handoff**
-
-- Os pre-requisitos listados na secao "Handoff" estao prontos?
-- O sprint seguinte pode comecar sem bloqueios?
-- PR foi criado na branch correta?
-
-### Template de Report
-
-```markdown
-# Validacao Sprint {N} - {Nome}
-
-**Data:** YYYY-MM-DD
-**Agente executor:** {modelo usado}
-**Branch:** {branch name}
-**PR:** {link do PR}
-
-## Escopo
-- [x] Item A implementado
-- [x] Item B implementado
-- [ ] Item C: PARCIAL - falta X
-
-## Arquivos
-- [x] Todos os arquivos esperados existem
-- [ ] Arquivo extra nao planejado: {path} - {justificativa}
-
-## Qualidade
-- [x] Build sem erros
-- [x] Testes passam
-- [ ] Warning: {descricao}
-
-## Checklist de Verificacao
-- [PASS] Item 1
-- [PASS] Item 2
-- [FAIL] Item 3 - {descricao do problema}
-- [SKIP] Item 4 - {justificativa}
-
-## Handoff
-- [x] Pre-requisitos prontos para Sprint {N+1}
-- [ ] Bloqueio: {descricao}
-
-## Veredito
-**APROVADO** / **APROVADO COM RESSALVAS** / **REPROVADO**
-
-Ressalvas (se houver):
-1. ...
-
-Acoes necessarias antes de prosseguir:
-1. ...
-```
-
-### Validacao por Sprint
-
-**Sprint 0 - Data Cleanup:**
-- Rodar `python scripts/cleanup_inventory.py` e verificar output
-- Conferir que `data/cleanup_report.txt` nao tem erros criticos
-- Verificar schema no Supabase: tabelas, enums, indices, RLS
-- Contar items e serial_numbers no banco vs 1.064 esperados
-- Verificar que 8 categorias existem e nenhum item ficou sem categoria
-- Verificar codigos internos unicos (query: SELECT COUNT(*), COUNT(DISTINCT codigo_interno) FROM serial_numbers)
-- Verificar lotes criados (esperar 40-60)
-
-**Sprint 1 - iOS RFID Core:**
-- Abrir projeto Xcode e verificar build
-- Verificar Info.plist com permissoes Bluetooth
-- Verificar que RFIDManager implementa delegates do Zebra SDK
-- Verificar que MockRFIDManager existe para testes sem hardware
-- Verificar que APIClient conecta com Supabase
-- Revisar ConnectReaderView, ScanView, ScanResultView
-
-**Sprint 2 - iOS Packing List:**
-- Verificar fluxo de checkout: selecionar projeto → scan → validar → confirmar
-- Verificar fluxo de retorno: scan → comparar → alertar faltantes → confirmar
-- Verificar transicoes de status: EM_CAMPO no checkout, DISPONIVEL/MANUTENCAO no retorno
-- Verificar QR scan fallback
-- Verificar marcacao de defeito
-
-**Sprint 3 - Web Dashboard:**
-- `npm run build` sem erros
-- Dashboard mostra totais corretos (comparar com dados seeded)
-- CRUD de items funciona (criar, ler, editar, deletar)
-- Layout responsivo em 375px e 1440px
-- Busca e filtro funcionais
-- Console do browser sem erros
-
-**Sprint 4 - Web Events + QR:**
-- CRUD de projetos funciona
-- Editor de packing list adiciona/remove items
-- Disponibilidade filtra por data corretamente
-- QR codes geram e sao escaneaveis
-- Pagina publica /s/[codigo] funciona
-- Layout de impressao cabe em A4
-
-**Sprint 5 - RFID Linking + Realtime:**
-- Vinculacao RFID funciona no iOS
-- Vinculacao manual funciona no web
-- Import CSV funciona
-- Realtime propaga mudancas para o dashboard
-- Testes E2E passam
-
-**Sprint 6 - Deploy + Polish:**
-- Web live no Vercel, todos os fluxos funcionam
-- iOS distribuido (TestFlight ou ad-hoc)
-- Testes E2E passam em producao
-- Guia do Marcelo existe e esta claro
-- Handoff documentado com credenciais
-
-### Criterios de Bloqueio
-
-O supervisor BLOQUEIA o proximo sprint se:
-
-1. **Build quebrado:** o projeto nao compila/builda
-2. **Schema inconsistente:** dados nao conferem com o esperado
-3. **Fluxo critico quebrado:** checkout ou retorno nao funciona
-4. **Sem testes:** sprint sem nenhum teste automatizado
-5. **Credenciais hardcoded:** qualquer secret no codigo
-
-O supervisor APROVA COM RESSALVAS se:
-
-1. **Itens menores faltando:** ex: empty state nao implementado, mas fluxo funciona
-2. **Testes parciais:** alguns testes existem mas cobertura e baixa
-3. **UI rough:** funciona mas precisa de polish (aceitavel antes do Sprint 6)</div>
-</div>
-</div>
-</div>
-
-<!-- Sprint 0 -->
-<div class="sprint-card" id="card-sprint-0">
-<div class="sprint-header" onclick="toggleCard('card-sprint-0')">
-<span class="sprint-number codex">S0</span>
-<span class="sprint-title">Sprint 0 — Data Cleanup + Supabase Schema</span>
-<div class="sprint-meta">
-<span class="model-badge codex">codex</span>
-<a href="https://app.clickup.com/t/86agn5dq2" target="_blank" class="dep-tag" style="text-decoration:none">ClickUp</a>
-</div>
-<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="sprint-card" id="card-0">
+<div class="sprint-header" onclick="toggleCard('card-0')">
+<span class="sprint-number codex" style="background:#F59E0B">0</span>
+<span class="sprint-title">Sprint 0 - Data Cleanup + Supabase Schema</span>
+<span class="sprint-meta">
+<span class="dep-tag">Nenhuma</span>
+<span class="model-badge" style="background:#FFFBEB;color:#B45309">CODEX</span>
+<a href="https://app.clickup.com/t/86agn5dq2" style="font-size:11px;color:#6B7280;text-decoration:none" target="_blank">ClickUp</a>
+</span>
+<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2"/></svg>
 </div>
 <div class="sprint-body">
 <div class="prompt-container">
@@ -275,12 +76,12 @@ O supervisor APROVA COM RESSALVAS se:
 
 ```
 Antes de comecar:
-1. Fetch task 86agn5dq2 e confirme status "IN PROGRESS"
-2. Poste comment: "Sprint 0 iniciado. Limpeza de dados + schema Supabase."
+1. Fetch task 86agn5dq2 e confirme status &quot;IN PROGRESS&quot;
+2. Poste comment: &quot;Sprint 0 iniciado. Limpeza de dados + schema Supabase.&quot;
 
 Ao finalizar:
 1. Poste comment com resumo do que foi feito e link do PR
-2. Mova task para "REVIEW"
+2. Mova task para &quot;REVIEW&quot;
 ```
 
 ### Contexto
@@ -295,7 +96,7 @@ Criar um pipeline de dados completo:
 
 **1. Script Python para limpeza do inventario**
 
-Arquivo de entrada: `CLAUDE/projetos/mmd/inventario-mmd-original.xlsx`
+Arquivo de entrada: `data/inventario-original.xlsx`
 
 O Excel tem duas sheets relevantes:
 - `EQUIPAMENTOS` - versao antiga
@@ -321,7 +122,7 @@ ACESSORIO   - Case, Ferramenta, Roteador, MIDI
 Criar um mapeamento explicito de cada categoria bruta para o enum. Nenhuma categoria pode ficar sem mapeamento. Logar warnings para categorias ambiguas.
 
 c) Criar a estrutura Item + Serial Number (modelo Rentman):
-- Um "QSC K12.2" com 6 unidades = 1 item com 6 serial_numbers
+- Um &quot;QSC K12.2&quot; com 6 unidades = 1 item com 6 serial_numbers
 - Agrupar por: nome + marca + modelo (case-insensitive, trim whitespace)
 - Cada serial_number recebe um codigo_interno unico
 
@@ -333,22 +134,30 @@ d) Gerar codigos internos padronizados por serial:
 
 e) Classificar status com base nos dados:
 - Default: `DISPONIVEL`
-- Itens marcados "SEU BIGODE": `EMPRESTADO` (ha 4)
-- Itens marcados "VENDIDA": `VENDIDO` (ha 2)
-- Itens marcados "QUEBRADO": `BAIXA` (ha 1)
+- Itens marcados &quot;SEU BIGODE&quot;: `EMPRESTADO` (ha 4)
+- Itens marcados &quot;VENDIDA&quot;: `VENDIDO` (ha 2)
+- Itens marcados &quot;QUEBRADO&quot;: `BAIXA` (ha 1)
 
-f) Agrupar cabos genericos em lotes (~40-60 lotes):
-- Logica: cabos do mesmo tipo + mesmo comprimento + mesma condicao = 1 lote
-- Exemplo: "Kit 10 XLR curtos" = 1 lote com quantidade 10
+f) Calcular sistema de condicao para cada serial_number:
+- estado: default `USADO` para importacao inicial
+- desgaste: default `3` (escala 1-5, 5=excelente)
+- depreciacao_pct: calculado como (desgaste/5) x fator_estado x 100
+  - Fatores: NOVO=1.00, SEMI_NOVO=0.85, USADO=0.65, RECONDICIONADO=0.50
+- valor_atual: calculado como valor_mercado_unitario x (desgaste/5) x fator_estado
+- Se valor_mercado_unitario for null, valor_atual e depreciacao_pct ficam null
+
+g) Agrupar cabos genericos em lotes (~40-60 lotes):
+- Logica: cabos do mesmo tipo + mesmo comprimento + mesmo estado = 1 lote
+- Exemplo: &quot;Kit 10 XLR curtos&quot; = 1 lote com quantidade 10
 - Cada lote recebe um codigo_lote unico: `MMD-LOT-{SEQUENCIAL}`
 - Lotes tambem recebem campos para tag_rfid e qr_code (inicialmente null)
 
-g) Tratar duplicatas:
+h) Tratar duplicatas:
 - 21 seriais internos duplicados identificados na analise
 - Renumerar para garantir unicidade
 - Logar cada duplicata tratada
 
-h) Output:
+i) Output:
 - `data/items.json` - lista de items consolidados
 - `data/serial_numbers.json` - lista de serial numbers com codigo_interno
 - `data/lotes.json` - lotes de cabos
@@ -361,14 +170,14 @@ Gerar SQL completo (`data/migration.sql`) com:
 
 ```sql
 -- Enums
-CREATE TYPE categoria_enum AS ENUM ('ILUMINACAO','AUDIO','CABO','ENERGIA','ESTRUTURA','EFEITO','VIDEO','ACESSORIO');
-CREATE TYPE tipo_rastreamento_enum AS ENUM ('INDIVIDUAL','LOTE','BULK');
-CREATE TYPE status_serial_enum AS ENUM ('DISPONIVEL','PACKED','EM_CAMPO','RETORNANDO','MANUTENCAO','EMPRESTADO','VENDIDO','BAIXA');
-CREATE TYPE condicao_enum AS ENUM ('OK','DEFEITO','REVISAR');
-CREATE TYPE status_projeto_enum AS ENUM ('PLANEJAMENTO','CONFIRMADO','EM_CAMPO','FINALIZADO','CANCELADO');
-CREATE TYPE tipo_movimentacao_enum AS ENUM ('SAIDA','RETORNO','MANUTENCAO','TRANSFERENCIA','DANO');
-CREATE TYPE metodo_scan_enum AS ENUM ('RFID','QRCODE','MANUAL');
-CREATE TYPE status_lote_enum AS ENUM ('DISPONIVEL','EM_CAMPO','MANUTENCAO');
+CREATE TYPE categoria_enum AS ENUM (&#x27;ILUMINACAO&#x27;,&#x27;AUDIO&#x27;,&#x27;CABO&#x27;,&#x27;ENERGIA&#x27;,&#x27;ESTRUTURA&#x27;,&#x27;EFEITO&#x27;,&#x27;VIDEO&#x27;,&#x27;ACESSORIO&#x27;);
+CREATE TYPE tipo_rastreamento_enum AS ENUM (&#x27;INDIVIDUAL&#x27;,&#x27;LOTE&#x27;,&#x27;BULK&#x27;);
+CREATE TYPE status_serial_enum AS ENUM (&#x27;DISPONIVEL&#x27;,&#x27;PACKED&#x27;,&#x27;EM_CAMPO&#x27;,&#x27;RETORNANDO&#x27;,&#x27;MANUTENCAO&#x27;,&#x27;EMPRESTADO&#x27;,&#x27;VENDIDO&#x27;,&#x27;BAIXA&#x27;);
+CREATE TYPE estado_enum AS ENUM (&#x27;NOVO&#x27;,&#x27;SEMI_NOVO&#x27;,&#x27;USADO&#x27;,&#x27;RECONDICIONADO&#x27;);
+CREATE TYPE status_projeto_enum AS ENUM (&#x27;PLANEJAMENTO&#x27;,&#x27;CONFIRMADO&#x27;,&#x27;EM_CAMPO&#x27;,&#x27;FINALIZADO&#x27;,&#x27;CANCELADO&#x27;);
+CREATE TYPE tipo_movimentacao_enum AS ENUM (&#x27;SAIDA&#x27;,&#x27;RETORNO&#x27;,&#x27;MANUTENCAO&#x27;,&#x27;TRANSFERENCIA&#x27;,&#x27;DANO&#x27;);
+CREATE TYPE metodo_scan_enum AS ENUM (&#x27;RFID&#x27;,&#x27;QRCODE&#x27;,&#x27;MANUAL&#x27;);
+CREATE TYPE status_lote_enum AS ENUM (&#x27;DISPONIVEL&#x27;,&#x27;EM_CAMPO&#x27;,&#x27;MANUTENCAO&#x27;);
 
 -- Tabelas
 items (
@@ -378,7 +187,7 @@ items (
   subcategoria text,
   marca text,
   modelo text,
-  tipo_rastreamento tipo_rastreamento_enum NOT NULL DEFAULT 'INDIVIDUAL',
+  tipo_rastreamento tipo_rastreamento_enum NOT NULL DEFAULT &#x27;INDIVIDUAL&#x27;,
   quantidade_total int NOT NULL DEFAULT 1,
   valor_mercado_unitario numeric(10,2),
   foto_url text,
@@ -394,8 +203,11 @@ serial_numbers (
   serial_fabrica text,
   tag_rfid text UNIQUE,
   qr_code text UNIQUE,
-  status status_serial_enum NOT NULL DEFAULT 'DISPONIVEL',
-  condicao condicao_enum NOT NULL DEFAULT 'OK',
+  status status_serial_enum NOT NULL DEFAULT &#x27;DISPONIVEL&#x27;,
+  estado estado_enum NOT NULL DEFAULT &#x27;USADO&#x27;,
+  desgaste int NOT NULL DEFAULT 3 CHECK (desgaste BETWEEN 1 AND 5),
+  depreciacao_pct numeric(5,2),
+  valor_atual numeric(10,2),
   localizacao text,
   notas text,
   created_at timestamptz DEFAULT now(),
@@ -409,7 +221,7 @@ projetos (
   data_inicio date,
   data_fim date,
   local text,
-  status status_projeto_enum NOT NULL DEFAULT 'PLANEJAMENTO',
+  status status_projeto_enum NOT NULL DEFAULT &#x27;PLANEJAMENTO&#x27;,
   notas text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
@@ -445,7 +257,7 @@ lotes (
   quantidade int NOT NULL DEFAULT 1,
   tag_rfid text UNIQUE,
   qr_code text UNIQUE,
-  status status_lote_enum NOT NULL DEFAULT 'DISPONIVEL',
+  status status_lote_enum NOT NULL DEFAULT &#x27;DISPONIVEL&#x27;,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -486,6 +298,8 @@ data/cleanup_report.txt         # Relatorio da limpeza
 - [ ] Codigos internos unicos sem duplicatas (MMD-XXX-NNNN)
 - [ ] Cabos agrupados em lotes (esperar 40-60 lotes)
 - [ ] Status classificados corretamente (4 EMPRESTADO, 2 VENDIDO, 1 BAIXA, resto DISPONIVEL)
+- [ ] Campos de condicao preenchidos: estado=USADO, desgaste=3, depreciacao_pct e valor_atual calculados
+- [ ] valor_atual = valor_mercado x (desgaste/5) x fator_estado para serials com valor
 - [ ] Schema SQL valido (testar com psql ou Supabase SQL editor)
 - [ ] Data seeded com sucesso no Supabase
 - [ ] RLS policies aplicadas
@@ -500,22 +314,23 @@ Ao finalizar, garantir que:
 4. O `cleanup_report.txt` esta documentado
 5. PR criado e aprovado em `main`
 
-Sprint 1 (iOS) e Sprint 3 (Web) dependem do schema e dados estarem prontos.</div>
+Sprint 1 (iOS) e Sprint 3 (Web) dependem do schema e dados estarem prontos.
+
+---</div>
 </div>
 </div>
 </div>
 
-<!-- Sprint 1 -->
-<div class="sprint-card" id="card-sprint-1">
-<div class="sprint-header" onclick="toggleCard('card-sprint-1')">
-<span class="sprint-number opus">S1</span>
-<span class="sprint-title">Sprint 1 — iOS RFID Core (Zebra SDK)</span>
-<div class="sprint-meta">
-<span class="model-badge opus">opus</span>
+<div class="sprint-card" id="card-1">
+<div class="sprint-header" onclick="toggleCard('card-1')">
+<span class="sprint-number opus" style="background:#6366F1">1</span>
+<span class="sprint-title">Sprint 1 - iOS RFID Core (Zebra SDK)</span>
+<span class="sprint-meta">
 <span class="dep-tag">Sprint 0</span>
-<a href="https://app.clickup.com/t/86agn5dqd" target="_blank" class="dep-tag" style="text-decoration:none">ClickUp</a>
-</div>
-<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<span class="model-badge" style="background:#EEF2FF;color:#4F46E5">OPUS</span>
+<a href="https://app.clickup.com/t/86agn5dqd" style="font-size:11px;color:#6B7280;text-decoration:none" target="_blank">ClickUp</a>
+</span>
+<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2"/></svg>
 </div>
 <div class="sprint-body">
 <div class="prompt-container">
@@ -532,13 +347,13 @@ Sprint 1 (iOS) e Sprint 3 (Web) dependem do schema e dados estarem prontos.</div
 
 ```
 Antes de comecar:
-1. Fetch task 86agn5dqd e confirme status "IN PROGRESS"
+1. Fetch task 86agn5dqd e confirme status &quot;IN PROGRESS&quot;
 2. Verifique que Sprint 0 esta concluido (schema no Supabase, dados seeded)
-3. Poste comment: "Sprint 1 iniciado. iOS RFID core com Zebra SDK."
+3. Poste comment: &quot;Sprint 1 iniciado. iOS RFID core com Zebra SDK.&quot;
 
 Ao finalizar:
 1. Poste comment com resumo e link do PR
-2. Mova task para "REVIEW"
+2. Mova task para &quot;REVIEW&quot;
 ```
 
 ### Contexto
@@ -588,7 +403,10 @@ struct SerialNumber: Identifiable, Codable {
     let tagRfid: String?
     let qrCode: String?
     let status: String
-    let condicao: String
+    let estado: String
+    let desgaste: Int
+    let depreciacaoPct: Double?
+    let valorAtual: Double?
 }
 ```
 
@@ -625,9 +443,9 @@ class APIClient {
     let supabaseUrl: String
     let supabaseKey: String
 
-    func resolveRfidTags(_ tags: [String]) async throws -> [ResolvedItem]
-    func fetchItems() async throws -> [Equipment]
-    func fetchSerialNumbers(forItem id: UUID) async throws -> [SerialNumber]
+    func resolveRfidTags(_ tags: [String]) async throws -&gt; [ResolvedItem]
+    func fetchItems() async throws -&gt; [Equipment]
+    func fetchSerialNumbers(forItem id: UUID) async throws -&gt; [SerialNumber]
 }
 ```
 
@@ -641,17 +459,17 @@ Endpoint para resolver tags:
 
 ConnectReaderView:
 - Lista de leitores Bluetooth disponiveis
-- Botao "Buscar Leitores"
+- Botao &quot;Buscar Leitores&quot;
 - Tap para conectar
 - Indicador de status da conexao (conectado/desconectado/conectando)
 - Mostrar nivel de bateria do leitor quando disponivel
 
 ScanView:
-- Botao grande "Escanear" (inicia inventario RFID)
+- Botao grande &quot;Escanear&quot; (inicia inventario RFID)
 - Lista de tags detectadas em tempo real (atualiza conforme tags sao lidas)
 - Contador de tags encontradas
-- Botao "Parar"
-- Botao "Resolver" (envia tags para API)
+- Botao &quot;Parar&quot;
+- Botao &quot;Resolver&quot; (envia tags para API)
 
 ScanResultView:
 - Lista de itens resolvidos: nome, categoria (com icone/cor), status, foto
@@ -717,22 +535,23 @@ Sprint 2 precisa de:
 2. RFIDManager funcional (connect, scan, receive tags)
 3. APIClient com metodos base de comunicacao com Supabase
 4. Modelos de dados definidos
-5. Navegacao por tabs configurada</div>
+5. Navegacao por tabs configurada
+
+---</div>
 </div>
 </div>
 </div>
 
-<!-- Sprint 2 -->
-<div class="sprint-card" id="card-sprint-2">
-<div class="sprint-header" onclick="toggleCard('card-sprint-2')">
-<span class="sprint-number opus">S2</span>
-<span class="sprint-title">Sprint 2 — iOS Packing List + Check-in/out</span>
-<div class="sprint-meta">
-<span class="model-badge opus">opus</span>
+<div class="sprint-card" id="card-2">
+<div class="sprint-header" onclick="toggleCard('card-2')">
+<span class="sprint-number opus" style="background:#6366F1">2</span>
+<span class="sprint-title">Sprint 2 - iOS Packing List + Check-in/out</span>
+<span class="sprint-meta">
 <span class="dep-tag">Sprint 1</span>
-<a href="https://app.clickup.com/t/86agn5dqw" target="_blank" class="dep-tag" style="text-decoration:none">ClickUp</a>
-</div>
-<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<span class="model-badge" style="background:#EEF2FF;color:#4F46E5">OPUS</span>
+<a href="https://app.clickup.com/t/86agn5dqw" style="font-size:11px;color:#6B7280;text-decoration:none" target="_blank">ClickUp</a>
+</span>
+<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2"/></svg>
 </div>
 <div class="sprint-body">
 <div class="prompt-container">
@@ -749,13 +568,13 @@ Sprint 2 precisa de:
 
 ```
 Antes de comecar:
-1. Fetch task 86agn5dqw e confirme status "IN PROGRESS"
+1. Fetch task 86agn5dqw e confirme status &quot;IN PROGRESS&quot;
 2. Verifique que Sprint 1 esta concluido (app iOS builda, RFID scan funcional)
-3. Poste comment: "Sprint 2 iniciado. Packing list + checkout/return flows."
+3. Poste comment: &quot;Sprint 2 iniciado. Packing list + checkout/return flows.&quot;
 
 Ao finalizar:
 1. Poste comment com resumo e link do PR
-2. Mova task para "REVIEW"
+2. Mova task para &quot;REVIEW&quot;
 ```
 
 ### Contexto
@@ -772,7 +591,7 @@ O UX e inspirado no Rentman:
 **1. Tela de Projetos (ProjectsListView)**
 
 - Lista de projetos ativos: nome, cliente, data, status
-- Fetch via APIClient: `GET /rest/v1/projetos?status=in.(CONFIRMADO,EM_CAMPO)&order=data_inicio.asc`
+- Fetch via APIClient: `GET /rest/v1/projetos?status=in.(CONFIRMADO,EM_CAMPO)&amp;order=data_inicio.asc`
 - Pull-to-refresh
 - Tap em projeto abre PackingListView
 
@@ -780,23 +599,23 @@ O UX e inspirado no Rentman:
 
 - Header: nome do projeto, cliente, datas
 - Lista de items esperados com quantidade
-- Fetch: `GET /rest/v1/packing_list?projeto_id=eq.{id}&select=*,items(*)`
+- Fetch: `GET /rest/v1/packing_list?projeto_id=eq.{id}&amp;select=*,items(*)`
 - Cada item mostra: nome, quantidade esperada, quantidade escaneada, status (verde/amarelo/vermelho)
-- Botao "Iniciar Checkout" ou "Iniciar Retorno" (baseado no status do projeto)
+- Botao &quot;Iniciar Checkout&quot; ou &quot;Iniciar Retorno&quot; (baseado no status do projeto)
 
 **3. Fluxo de Checkout (CheckoutFlowView + CheckoutViewModel)**
 
 ```
 Selecionar Projeto
     → Ver Packing List
-    → "Iniciar Checkout"
+    → &quot;Iniciar Checkout&quot;
     → RFID Bulk Scan (reutilizar ScanView do Sprint 1)
     → Validacao em tempo real:
         Tag escaneada → resolve serial → match contra packing list
         Verde: match encontrado
         Vermelho: item nao pertence a esta packing list
         Amarelo: itens ainda nao escaneados
-    → "Finalizar Checkout"
+    → &quot;Finalizar Checkout&quot;
     → Confirmar: lista completa? Faltando itens?
     → POST movimentacoes: tipo=SAIDA, status_novo=EM_CAMPO
     → Update serial_numbers: status → EM_CAMPO
@@ -815,14 +634,14 @@ CheckoutViewModel deve:
 ```
 Selecionar Projeto (status EM_CAMPO)
     → Ver itens que sairam (status EM_CAMPO para este projeto)
-    → "Iniciar Retorno"
+    → &quot;Iniciar Retorno&quot;
     → RFID Bulk Scan
     → Validacao:
         Tag escaneada → resolve → match com itens que sairam
         Verde: voltou OK
         Amarelo: ainda nao escaneado (nao voltou ainda)
-    → Para cada item retornado: "Condicao OK?" / "Com defeito?"
-    → "Finalizar Retorno"
+    → Para cada item retornado: &quot;Condicao OK?&quot; / &quot;Com defeito?&quot;
+    → &quot;Finalizar Retorno&quot;
     → POST movimentacoes:
         Voltou OK → tipo=RETORNO, status_novo=DISPONIVEL
         Com defeito → tipo=DANO, status_novo=MANUTENCAO
@@ -832,7 +651,7 @@ Selecionar Projeto (status EM_CAMPO)
 
 ReturnViewModel deve:
 - Carregar itens que sairam neste projeto (movimentacoes tipo SAIDA)
-- Permitir marcar condicao por item (OK / DEFEITO)
+- Permitir marcar resultado por item (OK / COM DEFEITO, ajustando desgaste)
 - Campo de notas para itens com defeito
 - Alertar itens que nao foram escaneados no retorno
 
@@ -842,25 +661,26 @@ ReturnViewModel deve:
 - Ler QR code → extrair codigo_interno (MMD-XXX-NNNN)
 - Resolver contra API: `GET /rest/v1/serial_numbers?qr_code=eq.{codigo}`
 - Integrar no mesmo fluxo de checkout/retorno como alternativa ao RFID
-- Toggle na UI: "RFID" / "QR Code" para selecionar metodo de scan
+- Toggle na UI: &quot;RFID&quot; / &quot;QR Code&quot; para selecionar metodo de scan
 
-**6. Marcacao de Defeito**
+**6. Marcacao de Defeito + Atualizacao de Condicao**
 
-- No retorno, ao escanear item: modal de condicao
-- Opcoes: OK / DEFEITO / REVISAR
-- Se DEFEITO: campo de descricao obrigatorio
+- No retorno, ao escanear item: modal de avaliacao
+- Opcoes de resultado: OK / COM DEFEITO
+- Se COM DEFEITO: campo de descricao obrigatorio + ajustar desgaste (reduzir 1 ponto, minimo 1)
 - Registra na movimentacao: tipo=DANO, notas com descricao
+- O sistema recalcula valor_atual e depreciacao_pct automaticamente ao alterar desgaste
 
 **7. APIClient - novos metodos**
 
 ```swift
 extension APIClient {
-    func fetchProjects(status: [String]) async throws -> [Project]
-    func fetchPackingList(projectId: UUID) async throws -> [PackingListItem]
-    func fetchProjectMovements(projectId: UUID) async throws -> [Movement]
+    func fetchProjects(status: [String]) async throws -&gt; [Project]
+    func fetchPackingList(projectId: UUID) async throws -&gt; [PackingListItem]
+    func fetchProjectMovements(projectId: UUID) async throws -&gt; [Movement]
     func registerCheckout(projectId: UUID, serials: [CheckoutSerial]) async throws
     func registerReturn(projectId: UUID, returns: [ReturnSerial]) async throws
-    func updateSerialStatus(serialId: UUID, status: String, condicao: String?) async throws
+    func updateSerialStatus(serialId: UUID, status: String, desgaste: Int?) async throws
     func updateProjectStatus(projectId: UUID, status: String) async throws
 }
 ```
@@ -908,22 +728,23 @@ Sprint 5 precisa de:
 1. Fluxo de checkout/retorno funcional
 2. APIClient com metodos de movimentacao
 3. QRScanView funcional
-4. ViewModels de checkout/return como referencia para o linking flow</div>
+4. ViewModels de checkout/return como referencia para o linking flow
+
+---</div>
 </div>
 </div>
 </div>
 
-<!-- Sprint 3 -->
-<div class="sprint-card" id="card-sprint-3">
-<div class="sprint-header" onclick="toggleCard('card-sprint-3')">
-<span class="sprint-number sonnet">S3</span>
-<span class="sprint-title">Sprint 3 — Web Dashboard + CRUD</span>
-<div class="sprint-meta">
-<span class="model-badge sonnet">sonnet</span>
+<div class="sprint-card" id="card-3">
+<div class="sprint-header" onclick="toggleCard('card-3')">
+<span class="sprint-number sonnet" style="background:#10B981">3</span>
+<span class="sprint-title">Sprint 3 - Web Dashboard + CRUD</span>
+<span class="sprint-meta">
 <span class="dep-tag">Sprint 0</span>
-<a href="https://app.clickup.com/t/86agn5dr2" target="_blank" class="dep-tag" style="text-decoration:none">ClickUp</a>
-</div>
-<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<span class="model-badge" style="background:#ECFDF5;color:#059669">SONNET</span>
+<a href="https://app.clickup.com/t/86agn5dr2" style="font-size:11px;color:#6B7280;text-decoration:none" target="_blank">ClickUp</a>
+</span>
+<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2"/></svg>
 </div>
 <div class="sprint-body">
 <div class="prompt-container">
@@ -940,13 +761,13 @@ Sprint 5 precisa de:
 
 ```
 Antes de comecar:
-1. Fetch task 86agn5dr2 e confirme status "IN PROGRESS"
+1. Fetch task 86agn5dr2 e confirme status &quot;IN PROGRESS&quot;
 2. Verifique que Sprint 0 esta concluido (schema no Supabase, dados seeded)
-3. Poste comment: "Sprint 3 iniciado. Web dashboard + CRUD."
+3. Poste comment: &quot;Sprint 3 iniciado. Web dashboard + CRUD.&quot;
 
 Ao finalizar:
 1. Poste comment com resumo e link do PR
-2. Mova task para "REVIEW"
+2. Mova task para &quot;REVIEW&quot;
 ```
 
 ### Contexto
@@ -960,7 +781,7 @@ O schema Supabase ja tem dados seeded do Sprint 0.
 **1. Setup do projeto Next.js**
 
 ```bash
-npx create-next-app@latest mmd-estoque-web --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
+npx create-next-app@latest mmd-estoque-web --typescript --tailwind --eslint --app --src-dir --import-alias &quot;@/*&quot;
 ```
 
 - Next.js 14 com App Router
@@ -978,7 +799,7 @@ Configuracao:
 
 ```
 app/layout.tsx
-  - Header: logo "MMD Estoque", nav links
+  - Header: logo &quot;MMD Estoque&quot;, nav links
   - Sidebar (desktop) / Bottom nav (mobile)
   - Nav items: Dashboard, Equipamentos, Lotes
   - Footer minimal
@@ -993,6 +814,12 @@ Cards com metricas:
 - Valor patrimonial total (sum de valor_mercado_unitario * quantidade)
 - Itens em campo agora (com nome do projeto)
 - Ultimas movimentacoes (5 mais recentes)
+
+Secao &quot;Saude Patrimonial&quot;:
+- Desgaste medio por categoria (bar chart)
+- Itens com desgaste critico (1-2): lista com nome, categoria, desgaste, valor_atual
+- Depreciacao total: sum(valor_mercado - valor_atual) para itens com valor
+- Distribuicao de estados: NOVO / SEMI_NOVO / USADO / RECONDICIONADO (donut)
 
 Queries:
 ```sql
@@ -1009,9 +836,24 @@ SELECT SUM(valor_mercado_unitario * quantidade_total) FROM items WHERE valor_mer
 SELECT sn.*, i.nome, i.categoria, p.nome as projeto
 FROM serial_numbers sn
 JOIN items i ON sn.item_id = i.id
-LEFT JOIN movimentacoes m ON sn.id = m.serial_number_id AND m.tipo = 'SAIDA'
+LEFT JOIN movimentacoes m ON sn.id = m.serial_number_id AND m.tipo = &#x27;SAIDA&#x27;
 LEFT JOIN projetos p ON m.projeto_id = p.id
-WHERE sn.status = 'EM_CAMPO';
+WHERE sn.status = &#x27;EM_CAMPO&#x27;;
+
+-- Desgaste medio por categoria
+SELECT i.categoria, AVG(sn.desgaste)::numeric(3,1) as desgaste_medio
+FROM serial_numbers sn JOIN items i ON sn.item_id = i.id
+GROUP BY i.categoria;
+
+-- Itens com desgaste critico
+SELECT sn.codigo_interno, i.nome, i.categoria, sn.desgaste, sn.valor_atual
+FROM serial_numbers sn JOIN items i ON sn.item_id = i.id
+WHERE sn.desgaste &lt;= 2 ORDER BY sn.desgaste;
+
+-- Depreciacao total
+SELECT SUM(i.valor_mercado_unitario - sn.valor_atual) as depreciacao_total
+FROM serial_numbers sn JOIN items i ON sn.item_id = i.id
+WHERE sn.valor_atual IS NOT NULL;
 ```
 
 **4. Lista de Equipamentos (app/items/page.tsx)**
@@ -1027,9 +869,9 @@ WHERE sn.status = 'EM_CAMPO';
 **5. Detalhe do Item (app/items/[id]/page.tsx)**
 
 - Cabecalho: nome, categoria (badge colorido), marca, modelo, foto
-- Secao "Serial Numbers": lista de todas as unidades fisicas deste item
-  - Codigo interno, status (badge), condicao, tag RFID (se vinculada), QR code
-- Secao "Historico": ultimas movimentacoes de qualquer serial deste item
+- Secao &quot;Serial Numbers&quot;: lista de todas as unidades fisicas deste item
+  - Codigo interno, status (badge), estado, desgaste (barra visual 1-5), valor_atual, deprec.%, tag RFID (se vinculada), QR code
+- Secao &quot;Historico&quot;: ultimas movimentacoes de qualquer serial deste item
 - Botoes: Editar, Adicionar Serial
 
 **6. CRUD de Items**
@@ -1049,8 +891,8 @@ Deletar item:
 **7. CRUD de Serial Numbers**
 
 - Inline na pagina de detalhe do item, ou modal
-- Criar: codigo_interno (auto-gerar ou manual), serial_fabrica, condicao, notas
-- Editar: status, condicao, localizacao, notas
+- Criar: codigo_interno (auto-gerar ou manual), serial_fabrica, estado (select), desgaste (slider 1-5), notas. valor_atual e depreciacao_pct sao calculados automaticamente
+- Editar: status, estado, desgaste, localizacao, notas. valor_atual e depreciacao_pct recalculam ao salvar
 - Deletar: confirmacao (so se status DISPONIVEL)
 
 **8. Pagina de Lotes (app/lotes/page.tsx)**
@@ -1137,22 +979,23 @@ Sprint 4 precisa de:
 2. Layout e componentes base (StatusBadge, Pagination, etc.)
 3. Padroes de CRUD estabelecidos (form patterns, API calls)
 4. `lib/supabase.ts` e `lib/types.ts` prontos
-5. PR mergeado em `main`</div>
+5. PR mergeado em `main`
+
+---</div>
 </div>
 </div>
 </div>
 
-<!-- Sprint 4 -->
-<div class="sprint-card" id="card-sprint-4">
-<div class="sprint-header" onclick="toggleCard('card-sprint-4')">
-<span class="sprint-number sonnet">S4</span>
-<span class="sprint-title">Sprint 4 — Web Events + Packing List + QR</span>
-<div class="sprint-meta">
-<span class="model-badge sonnet">sonnet</span>
+<div class="sprint-card" id="card-4">
+<div class="sprint-header" onclick="toggleCard('card-4')">
+<span class="sprint-number sonnet" style="background:#10B981">4</span>
+<span class="sprint-title">Sprint 4 - Web Events + Packing List + QR</span>
+<span class="sprint-meta">
 <span class="dep-tag">Sprint 3</span>
-<a href="https://app.clickup.com/t/86agn5du3" target="_blank" class="dep-tag" style="text-decoration:none">ClickUp</a>
-</div>
-<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<span class="model-badge" style="background:#ECFDF5;color:#059669">SONNET</span>
+<a href="https://app.clickup.com/t/86agn5du3" style="font-size:11px;color:#6B7280;text-decoration:none" target="_blank">ClickUp</a>
+</span>
+<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2"/></svg>
 </div>
 <div class="sprint-body">
 <div class="prompt-container">
@@ -1169,13 +1012,13 @@ Sprint 4 precisa de:
 
 ```
 Antes de comecar:
-1. Fetch task 86agn5du3 e confirme status "IN PROGRESS"
+1. Fetch task 86agn5du3 e confirme status &quot;IN PROGRESS&quot;
 2. Verifique que Sprint 3 esta concluido (web app rodando, CRUD funcional)
-3. Poste comment: "Sprint 4 iniciado. Eventos + packing list + QR codes."
+3. Poste comment: &quot;Sprint 4 iniciado. Eventos + packing list + QR codes.&quot;
 
 Ao finalizar:
 1. Poste comment com resumo e link do PR
-2. Mova task para "REVIEW"
+2. Mova task para &quot;REVIEW&quot;
 ```
 
 ### Contexto
@@ -1190,16 +1033,16 @@ Lista (app/projetos/page.tsx):
 - Tabela/cards com: nome, cliente, data inicio, data fim, local, status (badge)
 - Filtro por status: PLANEJAMENTO, CONFIRMADO, EM_CAMPO, FINALIZADO, CANCELADO
 - Ordenacao por data
-- Botao "Novo Projeto"
+- Botao &quot;Novo Projeto&quot;
 
 Criar/Editar (app/projetos/new/page.tsx, app/projetos/[id]/edit/page.tsx):
 - Form: nome*, cliente, data_inicio, data_fim, local, status, notas
-- Validacao: data_fim >= data_inicio
+- Validacao: data_fim &gt;= data_inicio
 
 Detalhe (app/projetos/[id]/page.tsx):
 - Header: nome, cliente, datas, local, status
-- Secao "Packing List": link para editor
-- Secao "Movimentacoes": historico de saidas/retornos deste projeto
+- Secao &quot;Packing List&quot;: link para editor
+- Secao &quot;Movimentacoes&quot;: historico de saidas/retornos deste projeto
 - Botoes: Editar, Deletar (so PLANEJAMENTO ou CANCELADO)
 
 **2. Editor de Packing List (app/projetos/[id]/packing-list/page.tsx)**
@@ -1217,11 +1060,11 @@ Interface de montagem da lista de equipamentos para um evento:
 Regras:
 - Nao permitir adicionar mais unidades do que disponiveis
 - Alertar se algum serial sugerido ja esta alocado em outro projeto no mesmo periodo
-- Permitir designar serials especificos ou deixar "qualquer disponivel"
+- Permitir designar serials especificos ou deixar &quot;qualquer disponivel&quot;
 
 **3. Dashboard de Disponibilidade (app/disponibilidade/page.tsx)**
 
-"O que esta disponivel entre data X e data Y?"
+&quot;O que esta disponivel entre data X e data Y?&quot;
 
 - Dois inputs de data: inicio e fim
 - Tabela resultado: items com quantidade total, quantidade alocada em projetos naquele periodo, quantidade disponivel
@@ -1232,7 +1075,7 @@ Query logica:
 ```
 Para cada item:
   total = quantidade_total
-  alocado = SUM(packing_list.quantidade) WHERE projeto.data_inicio <= fim AND projeto.data_fim >= inicio AND projeto.status IN ('CONFIRMADO','EM_CAMPO')
+  alocado = SUM(packing_list.quantidade) WHERE projeto.data_inicio &lt;= fim AND projeto.data_fim &gt;= inicio AND projeto.status IN (&#x27;CONFIRMADO&#x27;,&#x27;EM_CAMPO&#x27;)
   disponivel = total - alocado
 ```
 
@@ -1251,12 +1094,12 @@ Usar biblioteca `qrcode` (npm) para geracao client-side.
 - Grid de QR codes: N colunas x M linhas
 - Formatos comuns de etiqueta: Pimaco 6080 (12 por folha), Pimaco 6081 (14 por folha)
 - CSS @media print para remover nav e ajustar margens
-- Botao "Imprimir" (window.print)
+- Botao &quot;Imprimir&quot; (window.print)
 
 **6. Pagina publica de serial (app/s/[codigo]/page.tsx)**
 
 - Acesso publico (sem auth)
-- Mostra: nome do item, codigo interno, categoria, marca, modelo, status atual, condicao
+- Mostra: nome do item, codigo interno, categoria, marca, modelo, status atual, estado, desgaste, valor_atual
 - Se EM_CAMPO: mostra nome do projeto
 - Layout simples, mobile-friendly (QR vai ser lido pelo celular)
 - Sem acoes de edicao (read-only)
@@ -1341,23 +1184,23 @@ Sprint 5 precisa de:
 2. Packing list editor funcional
 3. Pagina publica de serial (/s/[codigo])
 4. lib/qr.ts para geracao de QR codes
-5. PR mergeado em `main`</div>
+5. PR mergeado em `main`
+
+---</div>
 </div>
 </div>
 </div>
 
-<!-- Sprint 5 -->
-<div class="sprint-card" id="card-sprint-5">
-<div class="sprint-header" onclick="toggleCard('card-sprint-5')">
-<span class="sprint-number opus">S5</span>
-<span class="sprint-title">Sprint 5 — RFID Linking + Realtime</span>
-<div class="sprint-meta">
-<span class="model-badge opus">opus</span>
-<span class="dep-tag">Sprint 2</span>
-<span class="dep-tag">Sprint 4</span>
-<a href="https://app.clickup.com/t/86agn5dug" target="_blank" class="dep-tag" style="text-decoration:none">ClickUp</a>
-</div>
-<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div class="sprint-card" id="card-5">
+<div class="sprint-header" onclick="toggleCard('card-5')">
+<span class="sprint-number opus" style="background:#6366F1">5</span>
+<span class="sprint-title">Sprint 5 - RFID Linking + Realtime</span>
+<span class="sprint-meta">
+<span class="dep-tag">Sprint 2</span><span class="dep-tag">Sprint 4</span>
+<span class="model-badge" style="background:#EEF2FF;color:#4F46E5">OPUS</span>
+<a href="https://app.clickup.com/t/86agn5dug" style="font-size:11px;color:#6B7280;text-decoration:none" target="_blank">ClickUp</a>
+</span>
+<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2"/></svg>
 </div>
 <div class="sprint-body">
 <div class="prompt-container">
@@ -1374,13 +1217,13 @@ Sprint 5 precisa de:
 
 ```
 Antes de comecar:
-1. Fetch task 86agn5dug e confirme status "IN PROGRESS"
+1. Fetch task 86agn5dug e confirme status &quot;IN PROGRESS&quot;
 2. Verifique que Sprint 2 E Sprint 4 estao concluidos
-3. Poste comment: "Sprint 5 iniciado. RFID linking + Supabase Realtime."
+3. Poste comment: &quot;Sprint 5 iniciado. RFID linking + Supabase Realtime.&quot;
 
 Ao finalizar:
 1. Poste comment com resumo e link do PR
-2. Mova task para "REVIEW"
+2. Mova task para &quot;REVIEW&quot;
 ```
 
 ### Contexto
@@ -1398,8 +1241,8 @@ Fluxo:
 1. Selecionar item da lista (busca por nome/codigo)
 2. Ver serial_numbers deste item (os que ainda NAO tem tag_rfid)
 3. Selecionar um serial
-4. "Escanear Tag" → RFID single-read (um tag por vez)
-5. Tag lida → Preview: "Vincular tag {EPC} ao serial {MMD-ILU-0001}?"
+4. &quot;Escanear Tag&quot; → RFID single-read (um tag por vez)
+5. Tag lida → Preview: &quot;Vincular tag {EPC} ao serial {MMD-ILU-0001}?&quot;
 6. Confirmar → PATCH serial_numbers SET tag_rfid = {EPC}
 7. Sucesso → proximo serial
 ```
@@ -1407,7 +1250,7 @@ Fluxo:
 Consideracoes:
 - Validar que a tag nao esta ja vinculada a outro serial
 - Permitir desvincular (set tag_rfid = null)
-- Mostrar progresso: "15 de 42 serials vinculados"
+- Mostrar progresso: &quot;15 de 42 serials vinculados&quot;
 - Modo lote: escanear tag, associar ao proximo serial nao-vinculado automaticamente
 
 ```swift
@@ -1440,7 +1283,7 @@ MMD-ILU-0002,E2801160200050414154B7A3
 - Upload de arquivo CSV
 - Preview da importacao (tabela com: serial, tag, status da validacao)
 - Validacoes: serial existe, tag unica, formato valido
-- Botao "Importar" → batch update
+- Botao &quot;Importar&quot; → batch update
 - Relatorio: N sucesso, M erros (com detalhes)
 
 **4. Supabase Realtime**
@@ -1449,28 +1292,28 @@ Configurar Realtime para que mudancas nas tabelas propaguem para o dashboard:
 
 ```typescript
 // lib/realtime.ts
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from &#x27;@supabase/supabase-js&#x27;
 
-export function subscribeToSerialChanges(callback: (payload) => void) {
+export function subscribeToSerialChanges(callback: (payload) =&gt; void) {
   const supabase = createClient(url, key)
   return supabase
-    .channel('serial-changes')
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'serial_numbers'
+    .channel(&#x27;serial-changes&#x27;)
+    .on(&#x27;postgres_changes&#x27;, {
+      event: &#x27;*&#x27;,
+      schema: &#x27;public&#x27;,
+      table: &#x27;serial_numbers&#x27;
     }, callback)
     .subscribe()
 }
 
-export function subscribeToMovements(callback: (payload) => void) {
+export function subscribeToMovements(callback: (payload) =&gt; void) {
   // Similar para movimentacoes
 }
 ```
 
 Integrar no dashboard:
 - Quando um serial muda de status (equipe escaneou em campo), o dashboard atualiza automaticamente
-- Indicador visual de "ao vivo" no dashboard
+- Indicador visual de &quot;ao vivo&quot; no dashboard
 - Toast/notification quando item muda de status
 
 Habilitar Realtime no Supabase:
@@ -1539,7 +1382,7 @@ mmd-estoque-web/
 - [ ] Web: import CSV processa corretamente
 - [ ] Web: import CSV reporta erros (serial inexistente, tag duplicada)
 - [ ] Realtime: dashboard atualiza quando serial muda de status
-- [ ] Realtime: indicador "ao vivo" visivel
+- [ ] Realtime: indicador &quot;ao vivo&quot; visivel
 - [ ] E2E: fluxo checkout → retorno funciona
 - [ ] E2E: retorno com defeito registra MANUTENCAO
 - [ ] E2E: itens faltantes geram alerta
@@ -1551,22 +1394,23 @@ Sprint 6 precisa de:
 1. Todo o codigo iOS e Web finalizado e funcional
 2. Realtime configurado no Supabase
 3. Testes E2E passando
-4. PR mergeado em `main`</div>
+4. PR mergeado em `main`
+
+---</div>
 </div>
 </div>
 </div>
 
-<!-- Sprint 6 -->
-<div class="sprint-card" id="card-sprint-6">
-<div class="sprint-header" onclick="toggleCard('card-sprint-6')">
-<span class="sprint-number sonnet">S6</span>
-<span class="sprint-title">Sprint 6 — Deploy + Polish + Delivery</span>
-<div class="sprint-meta">
-<span class="model-badge sonnet">sonnet</span>
+<div class="sprint-card" id="card-6">
+<div class="sprint-header" onclick="toggleCard('card-6')">
+<span class="sprint-number sonnet" style="background:#10B981">6</span>
+<span class="sprint-title">Sprint 6 - Deploy + Polish + Delivery</span>
+<span class="sprint-meta">
 <span class="dep-tag">Sprint 5</span>
-<a href="https://app.clickup.com/t/86agn5dv1" target="_blank" class="dep-tag" style="text-decoration:none">ClickUp</a>
-</div>
-<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<span class="model-badge" style="background:#ECFDF5;color:#059669">SONNET</span>
+<a href="https://app.clickup.com/t/86agn5dv1" style="font-size:11px;color:#6B7280;text-decoration:none" target="_blank">ClickUp</a>
+</span>
+<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2"/></svg>
 </div>
 <div class="sprint-body">
 <div class="prompt-container">
@@ -1583,13 +1427,13 @@ Sprint 6 precisa de:
 
 ```
 Antes de comecar:
-1. Fetch task 86agn5dv1 e confirme status "IN PROGRESS"
+1. Fetch task 86agn5dv1 e confirme status &quot;IN PROGRESS&quot;
 2. Verifique que Sprint 5 esta concluido (RFID linking + Realtime funcional)
-3. Poste comment: "Sprint 6 iniciado. Deploy + polish + entrega."
+3. Poste comment: &quot;Sprint 6 iniciado. Deploy + polish + entrega.&quot;
 
 Ao finalizar:
 1. Poste comment com resumo final, URLs de producao e link do PR
-2. Mova task para "DONE"
+2. Mova task para &quot;DONE&quot;
 ```
 
 ### Contexto
@@ -1780,21 +1624,240 @@ mmd-estoque-web/
 - [ ] Error handling sem stack traces
 - [ ] Guia do Marcelo criado e revisado
 - [ ] Documento de handoff completo
-- [ ] Credenciais documentadas e compartilhadas</div>
+- [ ] Credenciais documentadas e compartilhadas
+
+---</div>
 </div>
 </div>
 </div>
 
+<div class="sprint-card" id="card-7">
+<div class="sprint-header" onclick="toggleCard('card-7')">
+<span class="sprint-number supervisor" style="background:#EF4444">SUP</span>
+<span class="sprint-title">Supervisor</span>
+<span class="sprint-meta">
+
+<span class="model-badge" style="background:#FEF2F2;color:#DC2626">SUPERVISOR</span>
+
+</span>
+<svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2"/></svg>
+</div>
+<div class="sprint-body">
+<div class="prompt-container">
+<button class="copy-btn" onclick="copyPrompt(this)">Copiar</button>
+<div class="prompt-box">## Prompt do Supervisor
+
+**Modelo:** Opus
+**Funcao:** Validacao de entregas (nao executa codigo)
+
+### Contexto
+
+Voce e o supervisor do projeto Estoque Inteligente MMD. Seu papel e validar a entrega de cada sprint contra o plano definido. Voce NAO executa codigo, NAO faz commits, NAO cria arquivos. Voce le, verifica e aprova ou rejeita.
+
+Referencia: `docs/plano-estoque-inteligente.md`
+Prompts de execucao: `docs/agent-prompts.md`
+
+### Protocolo de Validacao
+
+Para cada sprint entregue, execute este checklist:
+
+**1. Verificacao de Escopo**
+
+- Todos os itens listados na secao &quot;Tarefa&quot; do sprint foram implementados?
+- Algum item foi pulado ou feito parcialmente?
+- Algum item foi adicionado que nao estava no plano (scope creep)?
+
+**2. Verificacao de Arquivos**
+
+- Todos os arquivos listados em &quot;Arquivos para criar&quot; existem?
+- Arquivos modificados foram de fato modificados?
+- Algum arquivo fora do escopo foi tocado?
+
+**3. Verificacao de Qualidade**
+
+- Codigo TypeScript esta em strict mode sem erros?
+- Swift code compila sem warnings?
+- SQL e valido e executavel?
+- Testes existem e passam?
+- Nao ha TODO/FIXME/HACK sem justificativa?
+- Nao ha credenciais hardcoded?
+
+**4. Checklist de Verificacao**
+
+Percorrer cada item da secao &quot;Verificacao&quot; do sprint. Para cada item:
+- PASS: verificado e funcional
+- FAIL: nao funciona, com descricao do problema
+- SKIP: nao pode ser verificado (ex: hardware nao disponivel), com justificativa
+
+**5. Verificacao de Handoff**
+
+- Os pre-requisitos listados na secao &quot;Handoff&quot; estao prontos?
+- O sprint seguinte pode comecar sem bloqueios?
+- PR foi criado na branch correta?
+
+### Template de Report
+
+```markdown
+# Validacao Sprint {N} - {Nome}
+
+**Data:** YYYY-MM-DD
+**Agente executor:** {modelo usado}
+**Branch:** {branch name}
+**PR:** {link do PR}
+
+## Escopo
+- [x] Item A implementado
+- [x] Item B implementado
+- [ ] Item C: PARCIAL - falta X
+
+## Arquivos
+- [x] Todos os arquivos esperados existem
+- [ ] Arquivo extra nao planejado: {path} - {justificativa}
+
+## Qualidade
+- [x] Build sem erros
+- [x] Testes passam
+- [ ] Warning: {descricao}
+
+## Checklist de Verificacao
+- [PASS] Item 1
+- [PASS] Item 2
+- [FAIL] Item 3 - {descricao do problema}
+- [SKIP] Item 4 - {justificativa}
+
+## Handoff
+- [x] Pre-requisitos prontos para Sprint {N+1}
+- [ ] Bloqueio: {descricao}
+
+## Veredito
+**APROVADO** / **APROVADO COM RESSALVAS** / **REPROVADO**
+
+Ressalvas (se houver):
+1. ...
+
+Acoes necessarias antes de prosseguir:
+1. ...
+```
+
+### Validacao por Sprint
+
+**Sprint 0 - Data Cleanup:**
+- Rodar `python scripts/cleanup_inventory.py` e verificar output
+- Conferir que `data/cleanup_report.txt` nao tem erros criticos
+- Verificar schema no Supabase: tabelas, enums, indices, RLS
+- Contar items e serial_numbers no banco vs 1.064 esperados
+- Verificar que 8 categorias existem e nenhum item ficou sem categoria
+- Verificar codigos internos unicos (query: SELECT COUNT(*), COUNT(DISTINCT codigo_interno) FROM serial_numbers)
+- Verificar lotes criados (esperar 40-60)
+
+**Sprint 1 - iOS RFID Core:**
+- Abrir projeto Xcode e verificar build
+- Verificar Info.plist com permissoes Bluetooth
+- Verificar que RFIDManager implementa delegates do Zebra SDK
+- Verificar que MockRFIDManager existe para testes sem hardware
+- Verificar que APIClient conecta com Supabase
+- Revisar ConnectReaderView, ScanView, ScanResultView
+
+**Sprint 2 - iOS Packing List:**
+- Verificar fluxo de checkout: selecionar projeto → scan → validar → confirmar
+- Verificar fluxo de retorno: scan → comparar → alertar faltantes → confirmar
+- Verificar transicoes de status: EM_CAMPO no checkout, DISPONIVEL/MANUTENCAO no retorno
+- Verificar QR scan fallback
+- Verificar marcacao de defeito
+
+**Sprint 3 - Web Dashboard:**
+- `npm run build` sem erros
+- Dashboard mostra totais corretos (comparar com dados seeded)
+- CRUD de items funciona (criar, ler, editar, deletar)
+- Layout responsivo em 375px e 1440px
+- Busca e filtro funcionais
+- Console do browser sem erros
+
+**Sprint 4 - Web Events + QR:**
+- CRUD de projetos funciona
+- Editor de packing list adiciona/remove items
+- Disponibilidade filtra por data corretamente
+- QR codes geram e sao escaneaveis
+- Pagina publica /s/[codigo] funciona
+- Layout de impressao cabe em A4
+
+**Sprint 5 - RFID Linking + Realtime:**
+- Vinculacao RFID funciona no iOS
+- Vinculacao manual funciona no web
+- Import CSV funciona
+- Realtime propaga mudancas para o dashboard
+- Testes E2E passam
+
+**Sprint 6 - Deploy + Polish:**
+- Web live no Vercel, todos os fluxos funcionam
+- iOS distribuido (TestFlight ou ad-hoc)
+- Testes E2E passam em producao
+- Guia do Marcelo existe e esta claro
+- Handoff documentado com credenciais
+
+### Criterios de Bloqueio
+
+O supervisor BLOQUEIA o proximo sprint se:
+
+1. **Build quebrado:** o projeto nao compila/builda
+2. **Schema inconsistente:** dados nao conferem com o esperado
+3. **Fluxo critico quebrado:** checkout ou retorno nao funciona
+4. **Sem testes:** sprint sem nenhum teste automatizado
+5. **Credenciais hardcoded:** qualquer secret no codigo
+
+O supervisor APROVA COM RESSALVAS se:
+
+1. **Itens menores faltando:** ex: empty state nao implementado, mas fluxo funciona
+2. **Testes parciais:** alguns testes existem mas cobertura e baixa
+3. **UI rough:** funciona mas precisa de polish (aceitavel antes do Sprint 6)
+
+---
+
+## Notas de Execucao
+
+### Variaveis de Ambiente Necessarias
+
+```
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...  # Apenas para scripts de seed
+
+# App
+APP_URL=https://mmdestoque.vercel.app  # URL final
+```
+
+### Convencoes
+
+- Commits em ingles, mensagens descritivas
+- Branch naming: `cc/sprint-N-slug`
+- PR title: `[Sprint N] Descricao curta`
+- Codigo em ingles (nomes de variaveis, funcoes, componentes)
+- Comentarios em portugues quando necessario para contexto do dominio
+- Strings de UI em portugues (o usuario final e brasileiro)
+
+### Ordem de Execucao
+
+```
+1. Sprint 0 (Codex) — pode comecar imediatamente
+2. Sprint 1 (Opus) + Sprint 3 (Sonnet) — em paralelo, apos Sprint 0
+3. Sprint 2 (Opus) + Sprint 4 (Sonnet) — em paralelo, apos seus predecessores
+4. Sprint 5 (Opus) — apos Sprint 2 E Sprint 4
+5. Sprint 6 (Sonnet) — apos Sprint 5
+```
+
+Tempo total estimado: 7 dias uteis (com paralelismo entre iOS e Web).</div>
+</div>
+</div>
 </div>
 
 <div style="text-align:center;padding:40px 0;color:#9CA3AF;font-size:12px">
-MMD Estoque Inteligente Command Center — gerado por /cc<br>
-Plano: CLAUDE/projetos/mmd/PLANO-ESTOQUE-INTELIGENTE.md · Prompts: CLAUDE/projetos/mmd/estoque-inteligente-agent-prompts.md
+MMD Estoque Inteligente — Command Center<br>
+Plano: docs/plano-estoque-inteligente.md · Prompts: docs/agent-prompts.md
 </div>
 </div>
 <script>
 function toggleCard(id){document.getElementById(id).classList.toggle('open')}
-function switchTab(cardId,tabName){const card=document.getElementById(cardId);card.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tabName));card.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.dataset.tab===tabName))}
 function copyPrompt(btn){const box=btn.closest('.sprint-body').querySelector('.prompt-box');navigator.clipboard.writeText(box.textContent).then(()=>{btn.textContent='Copiado!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied')},2000)})}
 </script>
 </body>

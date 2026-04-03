@@ -9,7 +9,7 @@
 - [x] Implementar `scripts/seed_supabase.py` e `scripts/requirements.txt`
 - [x] Executar validacoes locais do cleanup, unicidade de codigos, categorias normalizadas e status
 - [x] Validar SQL gerado e registrar pendencias reais da base atual
-- [ ] Finalizar ClickUp com comentario de resumo e mover task para `REVIEW`
+- [x] Finalizar ClickUp com comentario de resumo, registrar PR `#1` e mover task para `REVIEW`
 
 ## Sprint 0 - Review
 
@@ -19,6 +19,7 @@
 - A aba `CABOS` existe e concentra os lotes genericos de cabo fora da estrutura tabular das abas de equipamentos.
 - O pipeline final usou `1050` linhas uteis em `EQUIPAMENTOS`, com `520` serials individuais e `530` unidades agregadas em `50` lotes.
 - O Supabase remoto foi validado com `277` items, `520` serial_numbers e `50` lotes, e as tabelas alvo ficaram com `rls=True` e `1` policy cada.
+- O PR desta entrega foi aberto em `main` como `#1`.
 
 - [x] Inspecionar a estrutura da planilha `data/inventario-limpo.xlsx`
 - [x] Medir lacunas de `Valor Unit. (R$)` em `ITENS` e `Valor (R$)` em `SERIAL NUMBERS`

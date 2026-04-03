@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Backups
+*.backup-*.xlsx
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+.next/
+
+# IDE
+.vscode/
+.idea/

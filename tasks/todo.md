@@ -20,6 +20,8 @@
 - O pipeline final usou `1050` linhas uteis em `EQUIPAMENTOS`, com `520` serials individuais e `530` unidades agregadas em `50` lotes.
 - O Supabase remoto foi validado com `277` items, `520` serial_numbers e `50` lotes, e as tabelas alvo ficaram com `rls=True` e `1` policy cada.
 - O PR desta entrega foi aberto em `main` como `#1`.
+- O teste `tests/test_depreciation_pipeline.py` ficou fora do PR porque depende de mudancas locais ainda nao versionadas no pipeline de pricing.
+- O proximo passo apos o merge do Sprint 0 e integrar o trabalho de pricing nos JSONs gerados, reaplicar valores financeiros e re-seedar o Supabase.
 
 - [x] Inspecionar a estrutura da planilha `data/inventario-limpo.xlsx`
 - [x] Medir lacunas de `Valor Unit. (R$)` em `ITENS` e `Valor (R$)` em `SERIAL NUMBERS`

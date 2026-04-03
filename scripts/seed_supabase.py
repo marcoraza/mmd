@@ -15,7 +15,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 ITEMS_PATH = ROOT_DIR / "data" / "items.json"
 SERIALS_PATH = ROOT_DIR / "data" / "serial_numbers.json"
 LOTES_PATH = ROOT_DIR / "data" / "lotes.json"
-MIGRATION_PATH = ROOT_DIR / "data" / "migration.sql"
+MIGRATION_PATH = ROOT_DIR / "supabase" / "migrations" / "00001_initial_schema.sql"
 
 ITEM_COLUMNS = [
     "id",
@@ -175,7 +175,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Faz seed dos JSONs no Supabase.")
     parser.add_argument("--dry-run", action="store_true", help="Nao escreve no Supabase, apenas mostra contagens.")
     parser.add_argument("--chunk-size", type=int, default=200, help="Tamanho do lote para upsert.")
-    parser.add_argument("--apply-migration", action="store_true", help="Aplica data/migration.sql via conexao Postgres antes do seed.")
+    parser.add_argument("--apply-migration", action="store_true", help="Aplica supabase/migrations/00001_initial_schema.sql via conexao Postgres antes do seed.")
     parser.add_argument("--stdin-secrets", action="store_true", help="Le credenciais via stdin em JSON e popula o ambiente do processo.")
     parser.add_argument("--prompt-secrets", action="store_true", help="Solicita credenciais de forma interativa sem eco no terminal.")
     return parser.parse_args()

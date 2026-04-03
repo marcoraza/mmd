@@ -18,8 +18,6 @@ targets:
     resources:
       - path: MMDEstoque/Resources/Fonts
         buildPhase: resources
-      - path: MMDEstoque/Resources/LaunchScreen.storyboard
-        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.emdash.mmdestoque
@@ -38,5 +36,5 @@ targets:
         Release:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: ""
     dependencies:
-      - framework: ExternalAccessory.framework
-      - framework: CoreBluetooth.framework
+      - sdk: ExternalAccessory.framework
+      - sdk: CoreBluetooth.framework

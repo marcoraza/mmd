@@ -34,8 +34,7 @@ struct DotGrid: View {
 
     var body: some View {
         Canvas { context, size in
-            let resolved = context.resolve(Shading.color(dotColor.opacity(dotOpacity)))
-
+            let shading = GraphicsContext.Shading.color(dotColor.opacity(dotOpacity))
             let cols = Int(size.width / spacing) + 1
             let rows = Int(size.height / spacing) + 1
 
@@ -49,7 +48,7 @@ struct DotGrid: View {
                         width: dotSize,
                         height: dotSize
                     )
-                    context.fill(Circle().path(in: rect), with: resolved)
+                    context.fill(Circle().path(in: rect), with: shading)
                 }
             }
         }

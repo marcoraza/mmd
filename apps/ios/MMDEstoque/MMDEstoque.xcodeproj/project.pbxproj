@@ -12,7 +12,6 @@
 		103A0084E558094C7264338C /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */; };
 		1B8B619FF7FDC83F5769E9B0 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3693B929629F89DF34776D4 /* ScanView.swift */; };
 		1C107A68EFE105D977195842 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AB7BD33ACC289E8E383823 /* Typography.swift */; };
-		299001027744613AC84FA5FD /* ZebraRFID in Frameworks */ = {isa = PBXBuildFile; productRef = 6519BCB2DC1C20D39ADD6050 /* ZebraRFID */; };
 		2A05F29086ED00B7BD8BBE5B /* RFIDReaderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */; };
 		312A9B1974CDC374D16D0190 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3868E82216FF16E0450A4003 /* CoreBluetooth.framework */; };
 		36BDE3A2CC2383D61C7B0BC1 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */; };
@@ -26,6 +25,7 @@
 		82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E2603B965BC0BCF3345FE4 /* WearBar.swift */; };
 		8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D783BB916661590B5F095A88 /* Theme.swift */; };
 		B38C0A694D23764EB5DEC33E /* SerialNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E012404B07763AD5EDFB000 /* SerialNumber.swift */; };
+		C55B16FF880B6D22699FBF2A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8020CF71E0524C28C9C1E3E1 /* LaunchScreen.storyboard */; };
 		CBA758122F52D8B985210F40 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB277F62D429AADEB3F854A /* StatusBadge.swift */; };
 		D432285F9D7BBFC391CD7DF1 /* ConnectReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */; };
 		D4B4C2225BBC61DB65998546 /* MockRFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */; };
@@ -59,6 +59,7 @@
 		697343529A7D932791D008B3 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		69E2603B965BC0BCF3345FE4 /* WearBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearBar.swift; sourceTree = "<group>"; };
 		6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		8020CF71E0524C28C9C1E3E1 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		94F6B766C87B3CAD8FC1BDA7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectReaderView.swift; sourceTree = "<group>"; };
 		9E012404B07763AD5EDFB000 /* SerialNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialNumber.swift; sourceTree = "<group>"; };
@@ -81,7 +82,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				299001027744613AC84FA5FD /* ZebraRFID in Frameworks */,
 				103A0084E558094C7264338C /* ExternalAccessory.framework in Frameworks */,
 				312A9B1974CDC374D16D0190 /* CoreBluetooth.framework in Frameworks */,
 			);
@@ -153,6 +153,7 @@
 			isa = PBXGroup;
 			children = (
 				94F6B766C87B3CAD8FC1BDA7 /* Info.plist */,
+				8020CF71E0524C28C9C1E3E1 /* LaunchScreen.storyboard */,
 				F115C8878A7AEF7CB61B418F /* Fonts */,
 			);
 			path = Resources;
@@ -234,7 +235,6 @@
 			);
 			name = MMDEstoque;
 			packageProductDependencies = (
-				6519BCB2DC1C20D39ADD6050 /* ZebraRFID */,
 			);
 			productName = MMDEstoque;
 			productReference = CEC1B1C61CA46E5ACBEF44A2 /* MMDEstoque.app */;
@@ -263,9 +263,6 @@
 			);
 			mainGroup = F6E431623D6F51DE352F6B3F;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-				059B5C61881247C7E7E844FA /* XCRemoteSwiftPackageReference "alt-rfid-ios-sdk" */,
-			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A554FE26975DA894A371472E /* Products */;
 			projectDirPath = "";
@@ -281,6 +278,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C55B16FF880B6D22699FBF2A /* LaunchScreen.storyboard in Resources */,
 				F51E87EBC0E1EF70FBA6E7C4 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -514,25 +512,6 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		059B5C61881247C7E7E844FA /* XCRemoteSwiftPackageReference "alt-rfid-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ZebraDevs/alt-rfid-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		6519BCB2DC1C20D39ADD6050 /* ZebraRFID */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 059B5C61881247C7E7E844FA /* XCRemoteSwiftPackageReference "alt-rfid-ios-sdk" */;
-			productName = ZebraRFID;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F8B248B3A459F5E71C7A64F9 /* Project object */;
 }

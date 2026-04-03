@@ -8,14 +8,14 @@ extension Font {
 
     /// Space Grotesk: body text, titles, item names.
     ///
-    /// Falls back to `.system(size:design:.default)` if the font isn't loaded.
+    /// Available static weights: Regular, Medium, Bold (no SemiBold TTF).
+    /// SemiBold maps to Bold as the closest available weight.
     static func spaceGrotesk(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         let name: String
         switch weight {
-        case .bold:      name = "SpaceGrotesk-Bold"
-        case .semibold:  name = "SpaceGrotesk-SemiBold"
-        case .medium:    name = "SpaceGrotesk-Medium"
-        default:         name = "SpaceGrotesk-Regular"
+        case .bold, .semibold:  name = "SpaceGrotesk-Bold"
+        case .medium:           name = "SpaceGrotesk-Medium"
+        default:                name = "SpaceGrotesk-Regular"
         }
         return .custom(name, size: size, relativeTo: .body)
     }
@@ -30,10 +30,11 @@ extension Font {
 
     /// Doto: hero numbers (scan count, progress, KPIs). 36px and above.
     ///
-    /// Falls back to `.system(size:design:.rounded)` if the font isn't loaded.
+    /// Uses the variable font Doto[ROND,wght] registered via UIAppFonts.
+    /// PostScript name is "Doto-Black" (default instance, Black weight — ideal
+    /// for large display numbers).
     static func doto(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        let name = weight == .bold ? "Doto-Bold" : "Doto-Regular"
-        return .custom(name, size: size, relativeTo: .largeTitle)
+        .custom("Doto-Black", size: size, relativeTo: .largeTitle)
     }
 
     // MARK: Semantic Scale

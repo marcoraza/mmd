@@ -8,10 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		08E5EB305BC462D804E54B32 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0759B327D10FBA0611616190 /* Equipment.swift */; };
+		0D8B3E9FFB9C9D3D1AD61EEE /* SpaceGrotesk-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */; };
 		0F3241F55B9796C6A82DC0A7 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697343529A7D932791D008B3 /* APIClient.swift */; };
 		103A0084E558094C7264338C /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */; };
 		1B8B619FF7FDC83F5769E9B0 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3693B929629F89DF34776D4 /* ScanView.swift */; };
 		1C107A68EFE105D977195842 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AB7BD33ACC289E8E383823 /* Typography.swift */; };
+		28DD05892BD412505E3D1D2B /* SpaceMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FD0EBB90366EF3CE4ED3E946 /* SpaceMono-Regular.ttf */; };
 		2A05F29086ED00B7BD8BBE5B /* RFIDReaderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */; };
 		312A9B1974CDC374D16D0190 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3868E82216FF16E0450A4003 /* CoreBluetooth.framework */; };
 		36BDE3A2CC2383D61C7B0BC1 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */; };
@@ -20,8 +22,11 @@
 		57CBF41E7EF073ABA2F0DF4C /* ZebraRFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A291F2455227FD8841936B9 /* ZebraRFIDManager.swift */; };
 		5D6BDB2C092015855ED8A32C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40C2DAC838AD374C6FACBDBF /* ContentView.swift */; };
 		5E8AA3066B9D8AAE3E7BA064 /* ResolvedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDBE8F0C685D70F520FA2BF /* ResolvedItem.swift */; };
+		5EFCF812CCD3CA2902600E81 /* SpaceGrotesk-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 339727BF88399EFB1848416D /* SpaceGrotesk-Bold.ttf */; };
 		66C4580A76D9FC91EEA0263E /* CoreBluetooth.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3868E82216FF16E0450A4003 /* CoreBluetooth.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		66FBA38D01C15D87DEDCE472 /* SpaceMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C5852437AFA7B876A30FCBAD /* SpaceMono-Bold.ttf */; };
 		73132BD5A735EE0E8F9A9FAC /* MMDEstoqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA8B1AC5E5ADEBDC3055D61D /* MMDEstoqueApp.swift */; };
+		76A043ADBA7B6DBA3A248220 /* SpaceGrotesk-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */; };
 		82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E2603B965BC0BCF3345FE4 /* WearBar.swift */; };
 		8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D783BB916661590B5F095A88 /* Theme.swift */; };
 		B38C0A694D23764EB5DEC33E /* SerialNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E012404B07763AD5EDFB000 /* SerialNumber.swift */; };
@@ -29,6 +34,7 @@
 		CBA758122F52D8B985210F40 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB277F62D429AADEB3F854A /* StatusBadge.swift */; };
 		D432285F9D7BBFC391CD7DF1 /* ConnectReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */; };
 		D4B4C2225BBC61DB65998546 /* MockRFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */; };
+		DE912E8CD5F8083590AF076B /* Doto[ROND,wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */; };
 		EA9675DC017F62C41E526297 /* ExternalAccessory.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F38FC1A4AE155AD056E9B332 /* DotGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = E333E0ED277DC56507062423 /* DotGrid.swift */; };
 		F51E87EBC0E1EF70FBA6E7C4 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 20325B3F78AF199143EC0DD9 /* README.md */; };
@@ -54,10 +60,13 @@
 		0759B327D10FBA0611616190 /* Equipment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
 		0A291F2455227FD8841936B9 /* ZebraRFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZebraRFIDManager.swift; sourceTree = "<group>"; };
 		20325B3F78AF199143EC0DD9 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		339727BF88399EFB1848416D /* SpaceGrotesk-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Bold.ttf"; sourceTree = "<group>"; };
 		3868E82216FF16E0450A4003 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CoreBluetooth.framework; sourceTree = "<group>"; };
 		40C2DAC838AD374C6FACBDBF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Medium.ttf"; sourceTree = "<group>"; };
 		697343529A7D932791D008B3 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		69E2603B965BC0BCF3345FE4 /* WearBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearBar.swift; sourceTree = "<group>"; };
+		6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Doto[ROND,wght].ttf"; sourceTree = "<group>"; };
 		6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		8020CF71E0524C28C9C1E3E1 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		94F6B766C87B3CAD8FC1BDA7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -66,6 +75,8 @@
 		A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ExternalAccessory.framework; sourceTree = "<group>"; };
 		AED1B9A1B4DA3DEE5CA71187 /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
 		BBDBE8F0C685D70F520FA2BF /* ResolvedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedItem.swift; sourceTree = "<group>"; };
+		C5852437AFA7B876A30FCBAD /* SpaceMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Bold.ttf"; sourceTree = "<group>"; };
+		CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Regular.ttf"; sourceTree = "<group>"; };
 		CEC1B1C61CA46E5ACBEF44A2 /* MMDEstoque.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MMDEstoque.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRFIDManager.swift; sourceTree = "<group>"; };
 		D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDReaderProtocol.swift; sourceTree = "<group>"; };
@@ -75,6 +86,7 @@
 		E333E0ED277DC56507062423 /* DotGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotGrid.swift; sourceTree = "<group>"; };
 		E3693B929629F89DF34776D4 /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
 		F0AB7BD33ACC289E8E383823 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		FD0EBB90366EF3CE4ED3E946 /* SpaceMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Regular.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -203,7 +215,13 @@
 		F115C8878A7AEF7CB61B418F /* Fonts */ = {
 			isa = PBXGroup;
 			children = (
+				6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */,
 				20325B3F78AF199143EC0DD9 /* README.md */,
+				339727BF88399EFB1848416D /* SpaceGrotesk-Bold.ttf */,
+				5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */,
+				CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */,
+				C5852437AFA7B876A30FCBAD /* SpaceMono-Bold.ttf */,
+				FD0EBB90366EF3CE4ED3E946 /* SpaceMono-Regular.ttf */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -278,8 +296,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE912E8CD5F8083590AF076B /* Doto[ROND,wght].ttf in Resources */,
 				C55B16FF880B6D22699FBF2A /* LaunchScreen.storyboard in Resources */,
 				F51E87EBC0E1EF70FBA6E7C4 /* README.md in Resources */,
+				5EFCF812CCD3CA2902600E81 /* SpaceGrotesk-Bold.ttf in Resources */,
+				0D8B3E9FFB9C9D3D1AD61EEE /* SpaceGrotesk-Medium.ttf in Resources */,
+				76A043ADBA7B6DBA3A248220 /* SpaceGrotesk-Regular.ttf in Resources */,
+				66FBA38D01C15D87DEDCE472 /* SpaceMono-Bold.ttf in Resources */,
+				28DD05892BD412505E3D1D2B /* SpaceMono-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

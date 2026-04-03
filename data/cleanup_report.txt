@@ -1,0 +1,162 @@
+Sprint 0 - Data Cleanup Report
+Gerado em: 2026-04-03 17:27:03
+Arquivo origem: /Users/marko/Desktop/CLAUDE/PROJETOS/mmd/data/inventario-original.xlsx
+
+Resumo da base observada
+- Linhas fisicas uteis em EQUIPAMENTOS: 1050
+- Linhas individuais (serial_numbers): 520
+- Linhas agrupadas em lotes: 530
+- Items gerados: 277
+- Serial numbers gerados: 520
+- Lotes gerados: 50
+- Quantidade total agregada em lotes: 530
+- Registros agrupados em EQUIPAMENTOS - MAIO: 152
+
+Divergencias relevantes do prompt
+- A aba atual se chama 'EQUIPAMENTOS - MAIO'.
+- A aba MAIO nao representa o inventario fisico completo. Ela foi usada como camada de enriquecimento por grupo de item.
+- A aba antiga contem 1050 linhas uteis. O prompt antigo citava outro numero.
+- O agrupamento em lotes foi aplicado a CABO e EXTENSOR, porque a base atual trata ambos como estoque generico sem serial de fabrica.
+
+Categorias brutas observadas em EQUIPAMENTOS
+- '', '67.0', 'AUDIO', 'Audio', 'CABO', 'CAPSULAS MIC', 'CASE', 'CASES', 'COMPUTADORES', 'EFEITOS', 'ELETRICA', 'EXTENSOR', 'Efeitos', 'Eletrica', 'Energia', 'Estrutura', 'FERRAMENTAS', 'FONTE', 'Fluido', 'Globo', 'INSTRUMENTO', 'Iluminação', 'LASER', 'LUZ NEGRA', 'LUZ', 'MIDI', 'MINI BRUTE', 'Mini Moving', 'Moving Beam', 'Notebook', 'OUTRAS LUZES', 'PAR LEDS', 'Praticável', 'REDE', 'REGUA', 'RIBALTA', 'Radio', 'Refrigeracao', 'Ribalta', 'Roteador', 'SUPORTE', 'Som', 'TRIPÉ', 'Tablet', 'VIDEO', 'audio', 'som'
+
+Distribuicao de items por categoria
+- ILUMINACAO: 97 items
+- AUDIO: 104 items
+- CABO: 19 items
+- ENERGIA: 10 items
+- ESTRUTURA: 13 items
+- EFEITO: 12 items
+- VIDEO: 9 items
+- ACESSORIO: 13 items
+
+Distribuicao de status nos serial_numbers
+- DISPONIVEL: 510
+- EMPRESTADO: 5
+- VENDIDO: 3
+- BAIXA: 2
+
+Match com EQUIPAMENTOS - MAIO
+- Match exato: 125
+- Match fuzzy: 9
+- Sem match: 123
+- Valores preenchidos a partir do MAIO: 32
+- Valores sobrescritos pelo MAIO: 0
+- Seriais de fabrica preenchidos a partir do MAIO: 0
+- Slots sem serial mesmo apos MAIO: 148
+- Seriais MAIO nao usados: 5
+
+Duplicatas de serial interno legado tratadas
+- Codigo legado duplicado 9: linha 10 e linha 11 -> renomeado para 9-2.
+- Codigo legado duplicado 177: linha 156 e linha 157 -> renomeado para 177-2.
+- Codigo legado duplicado 178: linha 158 e linha 159 -> renomeado para 178-2.
+- Codigo legado duplicado 254: linha 224 e linha 225 -> renomeado para 254-2.
+- Codigo legado duplicado 276: linha 247 e linha 248 -> renomeado para 276-2.
+- Codigo legado duplicado 454: linha 407 e linha 408 -> renomeado para 454-2.
+- Codigo legado duplicado 455: linha 409 e linha 410 -> renomeado para 455-2.
+- Codigo legado duplicado 609: linha 553 e linha 554 -> renomeado para 609-2.
+- Codigo legado duplicado 669: linha 600 e linha 601 -> renomeado para 669-2.
+- Codigo legado duplicado 687: linha 609 e linha 610 -> renomeado para 687-2.
+- Codigo legado duplicado 706: linha 625 e linha 626 -> renomeado para 706-2.
+- Codigo legado duplicado 708: linha 628 e linha 629 -> renomeado para 708-2.
+- Codigo legado duplicado 709: linha 630 e linha 631 -> renomeado para 709-2.
+- Codigo legado duplicado 710: linha 632 e linha 633 -> renomeado para 710-2.
+- Codigo legado duplicado 711: linha 634 e linha 635 -> renomeado para 711-2.
+- Codigo legado duplicado 712: linha 636 e linha 637 -> renomeado para 712-2.
+- Codigo legado duplicado 713: linha 638 e linha 639 -> renomeado para 713-2.
+- Codigo legado duplicado 715: linha 641 e linha 642 -> renomeado para 715-2.
+
+Warnings
+- [EQUIPAMENTOS:512] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:513] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:514] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:515] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:516] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:517] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:518] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:519] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:520] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'P10EXT - P10F'.
+- [EQUIPAMENTOS:561] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:562] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:563] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:564] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:565] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:566] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:567] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:568] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:569] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:570] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:571] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:572] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:573] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:574] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:575] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:576] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:577] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:578] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:579] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:580] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSOR AC'.
+- [EQUIPAMENTOS:589] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:590] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:591] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:592] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:593] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:594] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:595] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:596] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:597] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:598] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:599] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:605] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:606] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:607] Categoria ambigua EXTENSOR resolvida como ENERGIA com base na subcategoria 'EXTENSAO 1 PONTA'.
+- [EQUIPAMENTOS:651] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'extensor hdmi'.
+- [EQUIPAMENTOS:712] Categoria ambigua '' resolvida como AUDIO com base no contexto da linha.
+- [EQUIPAMENTOS:758] Categoria ambigua '67.0' resolvida como EFEITO com base no contexto da linha.
+- [EQUIPAMENTOS:840] Categoria ambigua '' resolvida como AUDIO com base no contexto da linha.
+- [EQUIPAMENTOS:841] Categoria ambigua '' resolvida como AUDIO com base no contexto da linha.
+- [EQUIPAMENTOS:882] Categoria ambigua '' resolvida como AUDIO com base no contexto da linha.
+- [EQUIPAMENTOS:945] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria ''.
+- [EQUIPAMENTOS:984] Categoria ambigua '' resolvida como ACESSORIO com base no contexto da linha.
+- [EQUIPAMENTOS:986] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR USB A'.
+- [EQUIPAMENTOS:993] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS:994] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:995] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS:996] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS:997] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS:998] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS:999] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS:1002] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1003] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1006] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS:1010] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1011] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1012] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1013] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1014] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1023] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1024] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P10'.
+- [EQUIPAMENTOS:1026] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS:1027] Categoria ambigua EXTENSOR resolvida como CABO com base na subcategoria 'EXTENSOR P2'.
+- [EQUIPAMENTOS - MAIO:130] Secao 'ITENS SOLTOS' inferida como ACESSORIO para 'APPLE ROUTER BRANCO'.
+- [EQUIPAMENTOS - MAIO:132] Secao 'ITENS SOLTOS' inferida como ACESSORIO para 'SENDERBOX'.
+- [EQUIPAMENTOS - MAIO:134] Secao 'ITENS SOLTOS' inferida como AUDIO para 'WATTSOM MXM 4 S AUDIO MIXER'.
+- [EQUIPAMENTOS - MAIO:135] Secao 'ITENS SOLTOS' inferida como ACESSORIO para 'TRAKTOR KONTROL X1 MK2'.
+- [EQUIPAMENTOS - MAIO:137] Secao 'ITENS SOLTOS' inferida como ACESSORIO para 'KORG MINI-KP KAOSS PAD'.
+- [EQUIPAMENTOS - MAIO:138] Secao 'ITENS SOLTOS' inferida como ACESSORIO para 'KORG KO-1 KAOSSILATOR'.
+- [EQUIPAMENTOS - MAIO:140] Secao 'ITENS SOLTOS' inferida como ACESSORIO para 'FISHMAN WIRELESS MIDI CONTROLLER GUITAR'.
+- [EQUIPAMENTOS - MAIO:142] Secao 'ITENS SOLTOS' inferida como ACESSORIO para 'BEHRINGER CABLE TESTER CT100'.
+- [EQUIPAMENTOS - MAIO:144] Secao 'ITENS SOLTOS' inferida como ILUMINACAO para '8 WAY DMX DISTRIBUTOR'.
+- [EQUIPAMENTOS - MAIO:146] Secao 'ITENS SOLTOS' inferida como ILUMINACAO para 'LUMYNA LIGHT SPLITTER DMX 4 SAÍDAS / 1 ENTRADA'.
+- [EQUIPAMENTOS - MAIO:148] Secao 'ITENS SOLTOS' inferida como ENERGIA para 'DISTRIBUIDOR DE TOMADA/ FILTRO DE LINHA PWS AC-3000 CD'.
+- [EQUIPAMENTOS - MAIO:150] Secao 'ITENS SOLTOS' inferida como ILUMINACAO para 'LUMIKIT PRO X4i'.
+- [MATCH FUZZY] 'Hot Machine LP-354' -> 'P354' (score 0.89).
+- [MATCH FUZZY] 'RIBALTA LASER 6 CABECAS RGB' -> 'RIBALTA LASER 6 SAIDAS RGB' (score 0.87).
+- [MATCH FUZZY] 'Dylan DSM-600 TX MONITOR TRASMITTER COM 2 BODYPACK' -> 'DYLAM DSM-600 TX MONITOR TRASMITTER COM 2 BODYPACK' (score 0.98).
+- [MATCH FUZZY] 'Phenyx Pro PTM-33 - PERSONAL MONITOR SYSTEM COM RECEIVER' -> 'PHENIX PRO PTM-33 - PERSONAL MONITOR SYSTEM COM RECEIVER' (score 0.98).
+- [MATCH FUZZY] 'Phenyx Pro PTU-7000B MADONNA' -> 'PHENIX PRO PTU-7000B MADONNA' (score 0.96).
+- [MATCH FUZZY] 'Shure T4V Diversity Receiver' -> 'SHURE T4V DIVERSITY RECEIVER - VOCAL' (score 0.90).
+- [MATCH FUZZY] 'OK DISTRIBUIDOR DE TOMADA/ FILTRO DE LINHA AC-3000 CD' -> 'DISTRIBUIDOR DE TOMADA/ FILTRO DE LINHA PWS AC-3000 CD' (score 0.96).
+- [MATCH FUZZY] 'ASUS X512FB' -> 'ASUS X512F' (score 0.95).
+- [MATCH FUZZY] 'Showtech ST-X251LAYX2' -> 'ST-X251LAY' (score 0.91).

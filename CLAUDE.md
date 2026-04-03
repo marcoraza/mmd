@@ -8,6 +8,16 @@ Sistema de estoque inteligente para empresa de locacao de equipamentos AV/evento
 - **Contrato:** R$3.000/mes, 3 meses
 - **Foco:** 100% estoque inteligente
 - **ClickUp:** PROJETOS > [MMD] MMD EVENTOS (folder 901317960993)
+- **Design System:** Nothing-inspired (docs/design-brief.md)
+- **Referencia Visual:** ~/Desktop/analytics-dashboard.html
+
+## Design
+
+Sistema visual baseado no Nothing Design System: tipografia Swiss, craft industrial, monocromatico. Dark mode (iOS inteiro + sidebar web) + light mode (content web).
+
+Fontes: Space Grotesk (body), Space Mono (labels/data ALL CAPS), Doto (hero numbers).
+Dispositivos: iPhone (campo) + MacBook (gestao).
+Detalhes completos: `docs/design-brief.md`
 
 ## Stack
 
@@ -40,7 +50,8 @@ mmd/
 ├── apps/
 │   ├── ios/               # App iOS (Swift/SwiftUI + Zebra SDK)
 │   └── web/               # Web app (Next.js)
-└── supabase/              # Schema, migrations, seed data
+└── supabase/
+    └── migrations/        # SQL migrations (00001_initial_schema.sql)
 ```
 
 ## Decisoes Tecnicas

@@ -1,0 +1,40 @@
+name: MMDEstoque
+
+options:
+  bundleIdPrefix: com.emdash
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+targets:
+  MMDEstoque:
+    type: application
+    platform: iOS
+    deploymentTarget:
+      iOS: "16.0"
+    sources:
+      - MMDEstoque
+    resources:
+      - path: MMDEstoque/Resources/Fonts
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.emdash.mmdestoque
+        PRODUCT_NAME: "MMD Estoque"
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.9"
+        DEVELOPMENT_TEAM: ""
+        INFOPLIST_FILE: MMDEstoque/Resources/Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        SUPPORTS_MACCATALYST: false
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+        Release:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: ""
+    dependencies:
+      - sdk: ExternalAccessory.framework
+      - sdk: CoreBluetooth.framework

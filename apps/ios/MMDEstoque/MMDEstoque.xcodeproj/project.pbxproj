@@ -1,0 +1,702 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		08E5EB305BC462D804E54B32 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0759B327D10FBA0611616190 /* Equipment.swift */; };
+		0D8B3E9FFB9C9D3D1AD61EEE /* SpaceGrotesk-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */; };
+		0F3241F55B9796C6A82DC0A7 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697343529A7D932791D008B3 /* APIClient.swift */; };
+		103A0084E558094C7264338C /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */; };
+		1B8B619FF7FDC83F5769E9B0 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3693B929629F89DF34776D4 /* ScanView.swift */; };
+		1C107A68EFE105D977195842 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AB7BD33ACC289E8E383823 /* Typography.swift */; };
+		28DD05892BD412505E3D1D2B /* SpaceMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FD0EBB90366EF3CE4ED3E946 /* SpaceMono-Regular.ttf */; };
+		2A05F29086ED00B7BD8BBE5B /* RFIDReaderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */; };
+		312A9B1974CDC374D16D0190 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3868E82216FF16E0450A4003 /* CoreBluetooth.framework */; };
+		36BDE3A2CC2383D61C7B0BC1 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */; };
+		3BCED949C8CF5437D3100DA4 /* RFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 055631E395FA08130AE30B7B /* RFIDManager.swift */; };
+		4AD2EAFC171B47C40E7BA5EE /* ScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AED1B9A1B4DA3DEE5CA71187 /* ScanResultView.swift */; };
+		57CBF41E7EF073ABA2F0DF4C /* ZebraRFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A291F2455227FD8841936B9 /* ZebraRFIDManager.swift */; };
+		5D6BDB2C092015855ED8A32C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40C2DAC838AD374C6FACBDBF /* ContentView.swift */; };
+		5E8AA3066B9D8AAE3E7BA064 /* ResolvedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDBE8F0C685D70F520FA2BF /* ResolvedItem.swift */; };
+		5EFCF812CCD3CA2902600E81 /* SpaceGrotesk-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 339727BF88399EFB1848416D /* SpaceGrotesk-Bold.ttf */; };
+		66FBA38D01C15D87DEDCE472 /* SpaceMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C5852437AFA7B876A30FCBAD /* SpaceMono-Bold.ttf */; };
+		73132BD5A735EE0E8F9A9FAC /* MMDEstoqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA8B1AC5E5ADEBDC3055D61D /* MMDEstoqueApp.swift */; };
+		76A043ADBA7B6DBA3A248220 /* SpaceGrotesk-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */; };
+		82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E2603B965BC0BCF3345FE4 /* WearBar.swift */; };
+		8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D783BB916661590B5F095A88 /* Theme.swift */; };
+		B38C0A694D23764EB5DEC33E /* SerialNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E012404B07763AD5EDFB000 /* SerialNumber.swift */; };
+		CBA758122F52D8B985210F40 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB277F62D429AADEB3F854A /* StatusBadge.swift */; };
+		D432285F9D7BBFC391CD7DF1 /* ConnectReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */; };
+		D4B4C2225BBC61DB65998546 /* MockRFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */; };
+		DE912E8CD5F8083590AF076B /* Doto[ROND,wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */; };
+		F38FC1A4AE155AD056E9B332 /* DotGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = E333E0ED277DC56507062423 /* DotGrid.swift */; };
+		F51E87EBC0E1EF70FBA6E7C4 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 20325B3F78AF199143EC0DD9 /* README.md */; };
+		C47EC581F5013EC670196E19 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88FECF7A98C8631A6E226D62 /* Project.swift */; };
+		EE560735BC857C5F70F0FA0D /* PackingListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01DB43D26B262E0926C6E00 /* PackingListItem.swift */; };
+		32F4162317A35522B8475CEA /* Movement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396212A3797FF036375F301E /* Movement.swift */; };
+		3284D62F7AE917B1FEFD0ED7 /* ProgressSegmentBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBCF0BCB361849A96F96AE0C /* ProgressSegmentBar.swift */; };
+		D04CC9600E3343FFB8505981 /* QRScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C68E3A5AD7FD8A9D139D507 /* QRScanView.swift */; };
+		7A23676F63799D714E832B7D /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F4A139ABFE9800270844471 /* ProjectsListView.swift */; };
+		8D5ECABB712D5D9050968B3D /* PackingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A503E1A6F1A2AC0099915A80 /* PackingListView.swift */; };
+		AB0FCEE2DCAF780511406A0E /* CheckoutFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E085CDA246281F7927048B74 /* CheckoutFlowView.swift */; };
+		7C3DF6AC424B42B7CF51C1B0 /* ReturnFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D2FD908B09FA0A46725C0A /* ReturnFlowView.swift */; };
+		F76F507D1E1A90CE2D0390B6 /* CheckoutViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97C625EBA268F5AC2C37C245 /* CheckoutViewModel.swift */; };
+		D8307781C6B40659E28357D7 /* ReturnViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 183B74FB01A6554E40B3C834 /* ReturnViewModel.swift */; };
+		1BA7DCEA89EFA0F89BCFE994 /* EquipmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C612F2E06F75BE88618D5177 /* EquipmentTests.swift */; };
+		A807E437D2242480398F3839 /* SerialNumberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F653E9EF7DB7D2691CD846 /* SerialNumberTests.swift */; };
+		6A148F6FEEC64D304F8EEA64 /* RFIDManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F03A166F285184B7643241DF /* RFIDManagerTests.swift */; };
+		3ADB7C9A1A4B7FDEA3E61F6A /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFF2F4094A4CAB21B4A70E49 /* APIClientTests.swift */; };
+		874F0242857B44F5ED385F06 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7C706DAC7A6591C0DD3AC3 /* ThemeTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		127F377B5C3E272503D9C19F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8B248B3A459F5E71C7A64F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E70DBF9CCB294761263BA41F;
+			remoteInfo = MMDEstoque;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		055631E395FA08130AE30B7B /* RFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDManager.swift; sourceTree = "<group>"; };
+		0759B327D10FBA0611616190 /* Equipment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
+		0A291F2455227FD8841936B9 /* ZebraRFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZebraRFIDManager.swift; sourceTree = "<group>"; };
+		20325B3F78AF199143EC0DD9 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		339727BF88399EFB1848416D /* SpaceGrotesk-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Bold.ttf"; sourceTree = "<group>"; };
+		3868E82216FF16E0450A4003 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		40C2DAC838AD374C6FACBDBF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Medium.ttf"; sourceTree = "<group>"; };
+		697343529A7D932791D008B3 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		69E2603B965BC0BCF3345FE4 /* WearBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearBar.swift; sourceTree = "<group>"; };
+		6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Doto[ROND,wght].ttf"; sourceTree = "<group>"; };
+		6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		94F6B766C87B3CAD8FC1BDA7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectReaderView.swift; sourceTree = "<group>"; };
+		9E012404B07763AD5EDFB000 /* SerialNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialNumber.swift; sourceTree = "<group>"; };
+		A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		AED1B9A1B4DA3DEE5CA71187 /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
+		BBDBE8F0C685D70F520FA2BF /* ResolvedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedItem.swift; sourceTree = "<group>"; };
+		C5852437AFA7B876A30FCBAD /* SpaceMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Bold.ttf"; sourceTree = "<group>"; };
+		CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Regular.ttf"; sourceTree = "<group>"; };
+		CEC1B1C61CA46E5ACBEF44A2 /* MMDEstoque.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MMDEstoque.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRFIDManager.swift; sourceTree = "<group>"; };
+		D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDReaderProtocol.swift; sourceTree = "<group>"; };
+		D783BB916661590B5F095A88 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		DA8B1AC5E5ADEBDC3055D61D /* MMDEstoqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MMDEstoqueApp.swift; sourceTree = "<group>"; };
+		DAB277F62D429AADEB3F854A /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		E333E0ED277DC56507062423 /* DotGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotGrid.swift; sourceTree = "<group>"; };
+		E3693B929629F89DF34776D4 /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
+		F0AB7BD33ACC289E8E383823 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		FD0EBB90366EF3CE4ED3E946 /* SpaceMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Regular.ttf"; sourceTree = "<group>"; };
+		88FECF7A98C8631A6E226D62 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		A01DB43D26B262E0926C6E00 /* PackingListItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListItem.swift; sourceTree = "<group>"; };
+		396212A3797FF036375F301E /* Movement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movement.swift; sourceTree = "<group>"; };
+		DBCF0BCB361849A96F96AE0C /* ProgressSegmentBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressSegmentBar.swift; sourceTree = "<group>"; };
+		4C68E3A5AD7FD8A9D139D507 /* QRScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanView.swift; sourceTree = "<group>"; };
+		4F4A139ABFE9800270844471 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
+		A503E1A6F1A2AC0099915A80 /* PackingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListView.swift; sourceTree = "<group>"; };
+		E085CDA246281F7927048B74 /* CheckoutFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutFlowView.swift; sourceTree = "<group>"; };
+		23D2FD908B09FA0A46725C0A /* ReturnFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnFlowView.swift; sourceTree = "<group>"; };
+		97C625EBA268F5AC2C37C245 /* CheckoutViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutViewModel.swift; sourceTree = "<group>"; };
+		183B74FB01A6554E40B3C834 /* ReturnViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnViewModel.swift; sourceTree = "<group>"; };
+		C612F2E06F75BE88618D5177 /* EquipmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentTests.swift; sourceTree = "<group>"; };
+		52F653E9EF7DB7D2691CD846 /* SerialNumberTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialNumberTests.swift; sourceTree = "<group>"; };
+		F03A166F285184B7643241DF /* RFIDManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDManagerTests.swift; sourceTree = "<group>"; };
+		AFF2F4094A4CAB21B4A70E49 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
+		CD7C706DAC7A6591C0DD3AC3 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
+		E6832A8E8C72B81FAE084CBB /* MMDEstoqueTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MMDEstoqueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DBBCEB951835CF5DF33DF4D8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				103A0084E558094C7264338C /* ExternalAccessory.framework in Frameworks */,
+				312A9B1974CDC374D16D0190 /* CoreBluetooth.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A13C01D694EED3EB8000B911 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		292DC28C740B13CEA10F63A2 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				0759B327D10FBA0611616190 /* Equipment.swift */,
+				BBDBE8F0C685D70F520FA2BF /* ResolvedItem.swift */,
+				9E012404B07763AD5EDFB000 /* SerialNumber.swift */,
+				396212A3797FF036375F301E /* Movement.swift */,
+				A01DB43D26B262E0926C6E00 /* PackingListItem.swift */,
+				88FECF7A98C8631A6E226D62 /* Project.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		68A8EA788B6444E5FA936405 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3868E82216FF16E0450A4003 /* CoreBluetooth.framework */,
+				A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		859180E7DC8F066DC34DB293 /* MMDEstoque */ = {
+			isa = PBXGroup;
+			children = (
+				D44AAE43C13D3D7C6889BA13 /* App */,
+				AEDAC127BE3C377441358254 /* Config */,
+				C6D637D5D278D7D212BB2E92 /* Design */,
+				292DC28C740B13CEA10F63A2 /* Models */,
+				B2E748A52C5DAC4DC68A131B /* Resources */,
+				D736582F537F4EF6FE0530FF /* Services */,
+				33C8E836AB032EA2AE4BBE2B /* ViewModels */,
+				D470E99DF0CA0236394F6DC6 /* Views */,
+			);
+			path = MMDEstoque;
+			sourceTree = "<group>";
+		};
+		9A0ECB696949AD430A52C0B3 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				E333E0ED277DC56507062423 /* DotGrid.swift */,
+				DAB277F62D429AADEB3F854A /* StatusBadge.swift */,
+				69E2603B965BC0BCF3345FE4 /* WearBar.swift */,
+				DBCF0BCB361849A96F96AE0C /* ProgressSegmentBar.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A554FE26975DA894A371472E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CEC1B1C61CA46E5ACBEF44A2 /* MMDEstoque.app */,
+				E6832A8E8C72B81FAE084CBB /* MMDEstoqueTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AEDAC127BE3C377441358254 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		B2E748A52C5DAC4DC68A131B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				94F6B766C87B3CAD8FC1BDA7 /* Info.plist */,
+				F115C8878A7AEF7CB61B418F /* Fonts */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		C6D637D5D278D7D212BB2E92 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				D783BB916661590B5F095A88 /* Theme.swift */,
+				F0AB7BD33ACC289E8E383823 /* Typography.swift */,
+				9A0ECB696949AD430A52C0B3 /* Components */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		D44AAE43C13D3D7C6889BA13 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				DA8B1AC5E5ADEBDC3055D61D /* MMDEstoqueApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D470E99DF0CA0236394F6DC6 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */,
+				40C2DAC838AD374C6FACBDBF /* ContentView.swift */,
+				AED1B9A1B4DA3DEE5CA71187 /* ScanResultView.swift */,
+				E3693B929629F89DF34776D4 /* ScanView.swift */,
+				4C68E3A5AD7FD8A9D139D507 /* QRScanView.swift */,
+				4F4A139ABFE9800270844471 /* ProjectsListView.swift */,
+				A503E1A6F1A2AC0099915A80 /* PackingListView.swift */,
+				E085CDA246281F7927048B74 /* CheckoutFlowView.swift */,
+				23D2FD908B09FA0A46725C0A /* ReturnFlowView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D736582F537F4EF6FE0530FF /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				697343529A7D932791D008B3 /* APIClient.swift */,
+				D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */,
+				055631E395FA08130AE30B7B /* RFIDManager.swift */,
+				D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */,
+				0A291F2455227FD8841936B9 /* ZebraRFIDManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F115C8878A7AEF7CB61B418F /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */,
+				20325B3F78AF199143EC0DD9 /* README.md */,
+				339727BF88399EFB1848416D /* SpaceGrotesk-Bold.ttf */,
+				5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */,
+				CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */,
+				C5852437AFA7B876A30FCBAD /* SpaceMono-Bold.ttf */,
+				FD0EBB90366EF3CE4ED3E946 /* SpaceMono-Regular.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		F6E431623D6F51DE352F6B3F = {
+			isa = PBXGroup;
+			children = (
+				859180E7DC8F066DC34DB293 /* MMDEstoque */,
+				6F18F9114E7E33C86FFACC8F /* MMDEstoqueTests */,
+				68A8EA788B6444E5FA936405 /* Frameworks */,
+				A554FE26975DA894A371472E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		33C8E836AB032EA2AE4BBE2B /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				97C625EBA268F5AC2C37C245 /* CheckoutViewModel.swift */,
+				183B74FB01A6554E40B3C834 /* ReturnViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		6F18F9114E7E33C86FFACC8F /* MMDEstoqueTests */ = {
+			isa = PBXGroup;
+			children = (
+				C612F2E06F75BE88618D5177 /* EquipmentTests.swift */,
+				52F653E9EF7DB7D2691CD846 /* SerialNumberTests.swift */,
+				F03A166F285184B7643241DF /* RFIDManagerTests.swift */,
+				AFF2F4094A4CAB21B4A70E49 /* APIClientTests.swift */,
+				CD7C706DAC7A6591C0DD3AC3 /* ThemeTests.swift */,
+			);
+			path = MMDEstoqueTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E70DBF9CCB294761263BA41F /* MMDEstoque */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ACC279DDAD539F9137F17A4E /* Build configuration list for PBXNativeTarget "MMDEstoque" */;
+			buildPhases = (
+				8F32F000490AFDC4F5C2765A /* Sources */,
+				267E7D84B69AD732DABE4BDB /* Resources */,
+				DBBCEB951835CF5DF33DF4D8 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MMDEstoque;
+			packageProductDependencies = (
+			);
+			productName = MMDEstoque;
+			productReference = CEC1B1C61CA46E5ACBEF44A2 /* MMDEstoque.app */;
+			productType = "com.apple.product-type.application";
+		};
+		96827E71C825C3519A231AC0 /* MMDEstoqueTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 11576047C9AB5759A09B97B8 /* Build configuration list for PBXNativeTarget "MMDEstoqueTests" */;
+			buildPhases = (
+				27CD4BBBE07071C1E8FFE25A /* Sources */,
+				A13C01D694EED3EB8000B911 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9BCEE6D80238CA10C3E80822 /* PBXTargetDependency */,
+			);
+			name = MMDEstoqueTests;
+			productName = MMDEstoqueTests;
+			productReference = E6832A8E8C72B81FAE084CBB /* MMDEstoqueTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXTargetDependency section */
+		9BCEE6D80238CA10C3E80822 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E70DBF9CCB294761263BA41F /* MMDEstoque */;
+			targetProxy = 127F377B5C3E272503D9C19F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+
+
+/* Begin PBXProject section */
+		F8B248B3A459F5E71C7A64F9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					E70DBF9CCB294761263BA41F = {
+						DevelopmentTeam = "";
+					};
+					96827E71C825C3519A231AC0 = {
+						DevelopmentTeam = "";
+						TestTargetID = E70DBF9CCB294761263BA41F;
+					};
+				};
+			};
+			buildConfigurationList = 2AD3761C5903E15C352CA42C /* Build configuration list for PBXProject "MMDEstoque" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F6E431623D6F51DE352F6B3F;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A554FE26975DA894A371472E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E70DBF9CCB294761263BA41F /* MMDEstoque */,
+				96827E71C825C3519A231AC0 /* MMDEstoqueTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		267E7D84B69AD732DABE4BDB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE912E8CD5F8083590AF076B /* Doto[ROND,wght].ttf in Resources */,
+				F51E87EBC0E1EF70FBA6E7C4 /* README.md in Resources */,
+				5EFCF812CCD3CA2902600E81 /* SpaceGrotesk-Bold.ttf in Resources */,
+				0D8B3E9FFB9C9D3D1AD61EEE /* SpaceGrotesk-Medium.ttf in Resources */,
+				76A043ADBA7B6DBA3A248220 /* SpaceGrotesk-Regular.ttf in Resources */,
+				66FBA38D01C15D87DEDCE472 /* SpaceMono-Bold.ttf in Resources */,
+				28DD05892BD412505E3D1D2B /* SpaceMono-Regular.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8F32F000490AFDC4F5C2765A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F3241F55B9796C6A82DC0A7 /* APIClient.swift in Sources */,
+				36BDE3A2CC2383D61C7B0BC1 /* AppConfig.swift in Sources */,
+				D432285F9D7BBFC391CD7DF1 /* ConnectReaderView.swift in Sources */,
+				5D6BDB2C092015855ED8A32C /* ContentView.swift in Sources */,
+				F38FC1A4AE155AD056E9B332 /* DotGrid.swift in Sources */,
+				08E5EB305BC462D804E54B32 /* Equipment.swift in Sources */,
+				73132BD5A735EE0E8F9A9FAC /* MMDEstoqueApp.swift in Sources */,
+				D4B4C2225BBC61DB65998546 /* MockRFIDManager.swift in Sources */,
+				3BCED949C8CF5437D3100DA4 /* RFIDManager.swift in Sources */,
+				2A05F29086ED00B7BD8BBE5B /* RFIDReaderProtocol.swift in Sources */,
+				5E8AA3066B9D8AAE3E7BA064 /* ResolvedItem.swift in Sources */,
+				4AD2EAFC171B47C40E7BA5EE /* ScanResultView.swift in Sources */,
+				1B8B619FF7FDC83F5769E9B0 /* ScanView.swift in Sources */,
+				B38C0A694D23764EB5DEC33E /* SerialNumber.swift in Sources */,
+				CBA758122F52D8B985210F40 /* StatusBadge.swift in Sources */,
+				8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */,
+				1C107A68EFE105D977195842 /* Typography.swift in Sources */,
+				82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */,
+				57CBF41E7EF073ABA2F0DF4C /* ZebraRFIDManager.swift in Sources */,
+				C47EC581F5013EC670196E19 /* Project.swift in Sources */,
+				EE560735BC857C5F70F0FA0D /* PackingListItem.swift in Sources */,
+				32F4162317A35522B8475CEA /* Movement.swift in Sources */,
+				3284D62F7AE917B1FEFD0ED7 /* ProgressSegmentBar.swift in Sources */,
+				D04CC9600E3343FFB8505981 /* QRScanView.swift in Sources */,
+				7A23676F63799D714E832B7D /* ProjectsListView.swift in Sources */,
+				8D5ECABB712D5D9050968B3D /* PackingListView.swift in Sources */,
+				AB0FCEE2DCAF780511406A0E /* CheckoutFlowView.swift in Sources */,
+				7C3DF6AC424B42B7CF51C1B0 /* ReturnFlowView.swift in Sources */,
+				F76F507D1E1A90CE2D0390B6 /* CheckoutViewModel.swift in Sources */,
+				D8307781C6B40659E28357D7 /* ReturnViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		27CD4BBBE07071C1E8FFE25A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1BA7DCEA89EFA0F89BCFE994 /* EquipmentTests.swift in Sources */,
+				A807E437D2242480398F3839 /* SerialNumberTests.swift in Sources */,
+				6A148F6FEEC64D304F8EEA64 /* RFIDManagerTests.swift in Sources */,
+				3ADB7C9A1A4B7FDEA3E61F6A /* APIClientTests.swift in Sources */,
+				874F0242857B44F5ED385F06 /* ThemeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2D3136E15DA8488758988659 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = MMDEstoque/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.mmdestoque;
+				PRODUCT_NAME = "MMD Estoque";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		2D449662D3233BF9FB590266 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E3EBB15FD72B8EEEC3FE067B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = MMDEstoque/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.mmdestoque;
+				PRODUCT_NAME = "MMD Estoque";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		E79ED483788B7561D975AC4C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9BB37F63FECCF89582E2C5BA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.mmdestoque.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MMD Estoque.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MMD Estoque";
+			};
+			name = Debug;
+		};
+		657A9ED561ED483061B8B7B4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.mmdestoque.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MMD Estoque.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MMD Estoque";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2AD3761C5903E15C352CA42C /* Build configuration list for PBXProject "MMDEstoque" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D449662D3233BF9FB590266 /* Debug */,
+				E79ED483788B7561D975AC4C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		ACC279DDAD539F9137F17A4E /* Build configuration list for PBXNativeTarget "MMDEstoque" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E3EBB15FD72B8EEEC3FE067B /* Debug */,
+				2D3136E15DA8488758988659 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		11576047C9AB5759A09B97B8 /* Build configuration list for PBXNativeTarget "MMDEstoqueTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9BB37F63FECCF89582E2C5BA /* Debug */,
+				657A9ED561ED483061B8B7B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F8B248B3A459F5E71C7A64F9 /* Project object */;
+}

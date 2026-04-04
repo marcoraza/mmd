@@ -9,6 +9,11 @@ import type { Item, SerialNumber, Movimentacao } from '@/lib/types'
 import { DeleteItemButton } from './DeleteItemButton'
 import { SerialNumberSection } from './SerialNumberSection'
 
+export async function generateStaticParams() {
+  const { data } = await supabase.from('items').select('id')
+  return (data ?? []).map((item) => ({ id: item.id }))
+}
+
 interface Props {
   params: Promise<{ id: string }>
 }

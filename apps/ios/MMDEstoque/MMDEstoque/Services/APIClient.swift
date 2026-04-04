@@ -89,6 +89,11 @@ final class APIClient: ObservableObject {
         return d
     }()
 
+    private lazy var encoder: JSONEncoder = {
+        let e = JSONEncoder()
+        return e
+    }()
+
     // MARK: - Init
 
     init(session: URLSession = .shared) {
@@ -164,6 +169,197 @@ final class APIClient: ObservableObject {
         return try await perform(request)
     }
 
+    // MARK: - Projects
+
+    /// Fetch projects filtered by status.
+    func fetchProjects(status: [StatusProjeto]) async throws -> [Project] {
+        let statusValues = status.map { "\"\($0.rawValue)\"" }.joined(separator: ",")
+        let queryItems = [
+            URLQueryItem(name: "status", value: "in.(\(statusValues))"),
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "order", value: "data_inicio.asc")
+        ]
+        let request = try makeRequest(path: "/rest/v1/projetos", queryItems: queryItems)
+        return try await perform(request)
+    }
+
+    // MARK: - Packing List
+
+    /// Fetch packing list items for a project, with joined equipment data.
+    func fetchPackingList(projectId: UUID) async throws -> [PackingListItem] {
+        let queryItems = [
+            URLQueryItem(name: "projeto_id", value: "eq.\(projectId.uuidString)"),
+            URLQueryItem(name: "select", value: "*,item:items(*)")
+        ]
+        let request = try makeRequest(path: "/rest/v1/packing_list", queryItems: queryItems)
+        return try await perform(request)
+    }
+
+    // MARK: - Movements
+
+    /// Fetch movements for a project, optionally filtered by type.
+    func fetchProjectMovements(projectId: UUID, tipo: TipoMovimentacao? = nil) async throws -> [Movement] {
+        var queryItems = [
+            URLQueryItem(name: "projeto_id", value: "eq.\(projectId.uuidString)"),
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "order", value: "timestamp.desc")
+        ]
+        if let tipo = tipo {
+            queryItems.append(URLQueryItem(name: "tipo", value: "eq.\(tipo.rawValue)"))
+        }
+        let request = try makeRequest(path: "/rest/v1/movimentacoes", queryItems: queryItems)
+        return try await perform(request)
+    }
+
+    // MARK: - QR Code Resolution
+
+    /// Resolve a QR code string to a serial number with equipment data.
+    func resolveQRCode(_ code: String) async throws -> SerialNumber? {
+        let queryItems = [
+            URLQueryItem(name: "qr_code", value: "eq.\(code)"),
+            URLQueryItem(name: "select", value: "*,item:items(*)")
+        ]
+        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
+        let results: [SerialNumber] = try await perform(request)
+        return results.first
+    }
+
+    // MARK: - Serial Numbers by IDs
+
+    /// Fetch serial numbers by their IDs, with joined equipment data.
+    func fetchSerialsByIds(_ ids: [UUID]) async throws -> [SerialNumber] {
+        guard !ids.isEmpty else { return [] }
+        let quoted = ids.map { "\"\($0.uuidString)\"" }.joined(separator: ",")
+        let queryItems = [
+            URLQueryItem(name: "id", value: "in.(\(quoted))"),
+            URLQueryItem(name: "select", value: "*,item:items(*)")
+        ]
+        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
+        return try await perform(request)
+    }
+
+    // MARK: - Checkout Operations
+
+    /// Register a checkout: batch POST movements + bulk PATCH serial statuses to EM_CAMPO.
+    func registerCheckout(
+        projectId: UUID,
+        serials: [(serialId: UUID, currentStatus: String, metodoScan: MetodoScan)]
+    ) async throws {
+        // 1. POST movimentacoes
+        let movements = serials.map { serial in
+            CheckoutMovementRequest(
+                serialNumberId: serial.serialId,
+                projetoId: projectId,
+                statusAnterior: serial.currentStatus,
+                metodoScan: serial.metodoScan.rawValue
+            )
+        }
+
+        let movementBody = try encoder.encode(movements)
+        let movementRequest = try makeRequest(
+            path: "/rest/v1/movimentacoes",
+            method: "POST",
+            body: movementBody,
+            additionalHeaders: ["Prefer": "return=minimal"]
+        )
+        try await performVoid(movementRequest)
+
+        // 2. PATCH serial_numbers status to EM_CAMPO
+        let serialIds = serials.map { "\"\($0.serialId.uuidString)\"" }.joined(separator: ",")
+        let statusBody = try encoder.encode(["status": StatusSerial.emCampo.rawValue])
+        let patchRequest = try makeRequest(
+            path: "/rest/v1/serial_numbers",
+            method: "PATCH",
+            queryItems: [URLQueryItem(name: "id", value: "in.(\(serialIds))")],
+            body: statusBody,
+            additionalHeaders: ["Prefer": "return=minimal"]
+        )
+        try await performVoid(patchRequest)
+
+        logger.info("Checkout registered: \(serials.count) items for project \(projectId)")
+    }
+
+    // MARK: - Return Operations
+
+    /// Register returns: batch POST movements + PATCH serials by outcome.
+    func registerReturn(
+        projectId: UUID,
+        returns: [(serialId: UUID, tipo: TipoMovimentacao, statusNovo: String, desgaste: Int?, metodoScan: MetodoScan, notas: String?)]
+    ) async throws {
+        // 1. POST all movimentacoes
+        let movements = returns.map { r in
+            ReturnMovementRequest(
+                serialNumberId: r.serialId,
+                projetoId: projectId,
+                tipo: r.tipo,
+                statusNovo: r.statusNovo,
+                metodoScan: r.metodoScan.rawValue,
+                notas: r.notas
+            )
+        }
+
+        let movementBody = try encoder.encode(movements)
+        let movementRequest = try makeRequest(
+            path: "/rest/v1/movimentacoes",
+            method: "POST",
+            body: movementBody,
+            additionalHeaders: ["Prefer": "return=minimal"]
+        )
+        try await performVoid(movementRequest)
+
+        // 2. Bulk PATCH OK items (status -> DISPONIVEL)
+        let okIds = returns.filter { $0.statusNovo == StatusSerial.disponivel.rawValue }
+            .map { "\"\($0.serialId.uuidString)\"" }
+        if !okIds.isEmpty {
+            let okBody = try encoder.encode(["status": StatusSerial.disponivel.rawValue])
+            let okPatch = try makeRequest(
+                path: "/rest/v1/serial_numbers",
+                method: "PATCH",
+                queryItems: [URLQueryItem(name: "id", value: "in.(\(okIds.joined(separator: ",")))")],
+                body: okBody,
+                additionalHeaders: ["Prefer": "return=minimal"]
+            )
+            try await performVoid(okPatch)
+        }
+
+        // 3. Individual PATCH for defect items (varying desgaste values)
+        let defectItems = returns.filter { $0.statusNovo == StatusSerial.manutencao.rawValue }
+        for item in defectItems {
+            var updates: [String: Any] = ["status": StatusSerial.manutencao.rawValue]
+            if let desgaste = item.desgaste {
+                updates["desgaste"] = desgaste
+            }
+            let body = try JSONSerialization.data(withJSONObject: updates)
+            let patch = try makeRequest(
+                path: "/rest/v1/serial_numbers",
+                method: "PATCH",
+                queryItems: [URLQueryItem(name: "id", value: "eq.\(item.serialId.uuidString)")],
+                body: body,
+                additionalHeaders: ["Prefer": "return=minimal"]
+            )
+            try await performVoid(patch)
+        }
+
+        logger.info("Return registered: \(returns.count) items for project \(projectId)")
+    }
+
+    // MARK: - Project Status
+
+    /// Update a project's status.
+    func updateProjectStatus(projectId: UUID, status: StatusProjeto) async throws {
+        let body = try encoder.encode(["status": status.rawValue])
+        let request = try makeRequest(
+            path: "/rest/v1/projetos",
+            method: "PATCH",
+            queryItems: [URLQueryItem(name: "id", value: "eq.\(projectId.uuidString)")],
+            body: body,
+            additionalHeaders: ["Prefer": "return=minimal"]
+        )
+        try await performVoid(request)
+
+        logger.info("Project \(projectId) status updated to \(status.rawValue)")
+    }
+
     // MARK: - Private Helpers
 
     /// Build an authenticated URLRequest for the Supabase REST API.
@@ -193,6 +389,53 @@ final class APIClient: ObservableObject {
 
         #if DEBUG
         logger.debug("Request: \(request.httpMethod ?? "GET") \(url.absoluteString)")
+        #endif
+
+        return request
+    }
+
+    /// Build an authenticated URLRequest with configurable HTTP method and body.
+    private func makeRequest(
+        path: String,
+        method: String,
+        queryItems: [URLQueryItem] = [],
+        body: Data? = nil,
+        additionalHeaders: [String: String] = [:]
+    ) throws -> URLRequest {
+        guard !baseURL.isEmpty, !apiKey.isEmpty else {
+            throw APIError.notConfigured
+        }
+
+        let sanitizedBase = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
+
+        guard var components = URLComponents(string: sanitizedBase + path) else {
+            throw APIError.invalidURL
+        }
+
+        if !queryItems.isEmpty {
+            components.queryItems = queryItems
+        }
+
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue(apiKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        if let body = body {
+            request.httpBody = body
+        }
+
+        for (key, value) in additionalHeaders {
+            request.setValue(value, forHTTPHeaderField: key)
+        }
+
+        #if DEBUG
+        logger.debug("Request: \(method) \(url.absoluteString)")
         #endif
 
         return request
@@ -251,6 +494,44 @@ final class APIClient: ObservableObject {
             }
             #endif
 
+            throw apiError
+        }
+    }
+
+    /// Execute a request expecting no decoded response body (writes with Prefer: return=minimal).
+    private func performVoid(_ request: URLRequest) async throws {
+        isLoading = true
+        lastError = nil
+
+        defer { isLoading = false }
+
+        let data: Data
+        let response: URLResponse
+
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            let apiError = APIError.networkError(error)
+            lastError = apiError
+            throw apiError
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            let apiError = APIError.networkError(
+                URLError(.badServerResponse, userInfo: [NSLocalizedDescriptionKey: "Resposta nao HTTP"])
+            )
+            lastError = apiError
+            throw apiError
+        }
+
+        #if DEBUG
+        logger.debug("Response: \(httpResponse.statusCode) (\(data.count) bytes)")
+        #endif
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let body = String(data: data, encoding: .utf8)
+            let apiError = APIError.httpError(statusCode: httpResponse.statusCode, body: body)
+            lastError = apiError
             throw apiError
         }
     }

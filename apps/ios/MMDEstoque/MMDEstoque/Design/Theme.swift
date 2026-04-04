@@ -130,3 +130,35 @@ extension Int {
         }
     }
 }
+
+// MARK: - Project Status Color Mapping
+
+extension StatusProjeto {
+
+    /// The Nothing Design System color for this project status.
+    var color: Color {
+        switch self {
+        case .planejamento: return .ndTextSecondary
+        case .confirmado:   return .ndSuccess
+        case .emCampo:      return .ndWarning
+        case .finalizado:   return .ndTextDisabled
+        case .cancelado:    return .ndAccent
+        }
+    }
+}
+
+// MARK: - Movement Type Color Mapping
+
+extension TipoMovimentacao {
+
+    /// The Nothing Design System color for this movement type.
+    var color: Color {
+        switch self {
+        case .saida:         return .ndWarning
+        case .retorno:       return .ndSuccess
+        case .manutencao:    return .ndAccent
+        case .transferencia: return .ndInteractive
+        case .dano:          return .ndAccent
+        }
+    }
+}

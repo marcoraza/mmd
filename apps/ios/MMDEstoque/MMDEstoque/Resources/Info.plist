@@ -28,6 +28,8 @@
 	<string>MMD Estoque usa Bluetooth para comunicar com o leitor RFID.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>MMD Estoque precisa de rede local para descoberta de leitores RFID.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MMD Estoque usa a camera para ler QR codes de equipamentos.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>external-accessory</string>

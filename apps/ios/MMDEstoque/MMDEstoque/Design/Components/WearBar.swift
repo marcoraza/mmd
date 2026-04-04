@@ -100,3 +100,77 @@ struct WearBarLabeled: View {
     .padding(NDSpacing.wide)
     .background(Color.ndBlack)
 }
+
+// MARK: - InteractiveWearBar
+
+/// Tappable variant of WearBar. Each segment is a tap target that sets the wear level.
+struct InteractiveWearBar: View {
+
+    @Binding var level: Int
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(1...5, id: \.self) { segment in
+                Rectangle()
+                    .fill(segment <= level ? level.wearColor : Color.ndBorder)
+                    .frame(height: 8)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            level = segment
+                        }
+                    }
+            }
+        }
+    }
+}
+
+// MARK: - InteractiveWearBarLabeled
+
+/// InteractiveWearBar with label showing current level and description.
+struct InteractiveWearBarLabeled: View {
+
+    @Binding var level: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: NDSpacing.tight) {
+            Text("DESGASTE")
+                .ndLabelSmall()
+
+            HStack(spacing: NDSpacing.compact) {
+                InteractiveWearBar(level: $level)
+                    .frame(maxWidth: .infinity)
+
+                Text("\(level)/5")
+                    .font(.spaceMono(14))
+                    .foregroundStyle(level.wearColor)
+            }
+
+            Text(wearLabel)
+                .font(.spaceMono(9))
+                .foregroundStyle(level.wearColor)
+        }
+    }
+
+    private var wearLabel: String {
+        switch level {
+        case 5: return "EXCELENTE"
+        case 4: return "BOM"
+        case 3: return "REGULAR"
+        case 2: return "DESGASTADO"
+        case 1: return "CRITICO"
+        default: return "DESCONHECIDO"
+        }
+    }
+}
+
+#if DEBUG
+struct InteractiveWearBar_Previews: PreviewProvider {
+    static var previews: some View {
+        InteractiveWearBarLabeled(level: .constant(3))
+            .padding()
+            .background(Color.ndBlack)
+            .preferredColorScheme(.dark)
+    }
+}
+#endif

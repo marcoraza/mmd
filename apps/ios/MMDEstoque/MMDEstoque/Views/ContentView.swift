@@ -14,7 +14,7 @@ struct ContentView: View {
                 case .scan:
                     ScanFlowView()
                 case .projetos:
-                    ProjectsPlaceholderView()
+                    ProjectsFlowView()
                 case .config:
                     ConfigView()
                 }
@@ -114,31 +114,43 @@ struct ScanFlowView: View {
     }
 }
 
-// MARK: - ProjectsPlaceholderView
+// MARK: - ProjectNavDestination
 
-struct ProjectsPlaceholderView: View {
+enum ProjectNavDestination: Hashable {
+    case checkout(Project)
+    case returnFlow(Project)
+}
+
+// MARK: - ProjectsFlowView
+
+/// NavigationStack wrapper that owns the projects -> packing list -> checkout/return flow.
+struct ProjectsFlowView: View {
+
+    @EnvironmentObject private var apiClient: APIClient
+    @EnvironmentObject private var rfidManager: RFIDManager
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: NDSpacing.medium) {
-                Image(systemName: "folder")
-                    .font(.system(size: 48, weight: .thin))
-                    .foregroundStyle(Color.ndTextDisabled)
-
-                Text("Projetos")
-                    .font(.ndHeading)
-                    .foregroundStyle(Color.ndTextPrimary)
-
-                Text("DISPONIVEL NO SPRINT 2")
-                    .font(.spaceMono(11))
-                    .textCase(.uppercase)
-                    .tracking(11 * 0.08)
-                    .foregroundStyle(Color.ndTextSecondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.ndBlack)
-            .navigationTitle("Projetos")
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            ProjectsListView()
+                .navigationDestination(for: Project.self) { project in
+                    PackingListView(project: project)
+                }
+                .navigationDestination(for: ProjectNavDestination.self) { destination in
+                    switch destination {
+                    case .checkout(let project):
+                        CheckoutFlowView(
+                            project: project,
+                            apiClient: apiClient,
+                            rfidManager: rfidManager
+                        )
+                    case .returnFlow(let project):
+                        ReturnFlowView(
+                            project: project,
+                            apiClient: apiClient,
+                            rfidManager: rfidManager
+                        )
+                    }
+                }
         }
     }
 }
@@ -286,7 +298,7 @@ struct ConfigView: View {
             Text("SOBRE")
                 .ndLabelSmall()
 
-            infoRow("VERSAO", value: "1.0.0 (Sprint 1)")
+            infoRow("VERSAO", value: "1.1.0 (Sprint 2)")
 
             infoRow(
                 "BUILD",

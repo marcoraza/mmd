@@ -78,3 +78,9 @@
 - O maior descolamento identificado vinha do uso antigo de depreciacao/fallback local em vez de mercado atual, com destaque para `8003-AS II 2200W`, `K8/K10`, `Evox J8`, `X32 RACK`, `XDJ-RX PIONEER` e `DXS12`.
 - Ainda restam muitas linhas em fallback explicito ou estimativa no markdown, mas a base agora diferencia claramente o que veio de pesquisa web atual (`web_atual_curado`) do que ainda depende de proxy ou historico local.
 - O registro `PARA MICROFONE SM58` tinha sido interpretado errado como acessorio; apos correcao do Marco, ele foi reaplicado como o proprio microfone `Shure SM58`, subindo de `R$ 30,00` para `R$ 1.119,00` e levando o dashboard a `Valor Atual = R$ 709.481,39`.
+- A rodada de pesquisa em paralelo com subagentes deixou de aceitar kit/set inteiro como fonte para componente avulso e passou a derrubar overrides suspeitos quando o titulo da fonte indica sistema completo.
+- O exportador agora prioriza overrides curados do codigo sobre o CSV gerado, aplica salvaguarda conservadora para inferencias infladas e preserva a formula de `Deprec.%` no `.xlsx`.
+- Foram saneados os blocos mais contaminados de wireless e percussao eletronica, com `SPD-SX SAMPLING PAD = R$ 6.619,00`, `HANDSONIC HPD-20 = R$ 7.839,00`, `EWD1 = R$ 3.581,65`, `ewd skm-s freq.q1-6 = R$ 3.581,65`, `SKM100s G4 - Freq g = R$ 2.250,00` e `T2 Wireless Transmitter = R$ 334,01`.
+- O markdown de importacao passou a exibir moeda em formato visual brasileiro (`R$ 6.922,00`), enquanto o importador continua tolerante a esse formato cosmetico.
+- A reaplicacao consolidada desta passada atualizou `519` linhas, manteve `0` codigos orfaos e fechou o dashboard em `Valor Original = R$ 796.323,50` e `Valor Atual = R$ 707.348,99`.
+- O grafico de pizza do dashboard foi movido para a faixa vazia da direita, sem legenda, e agora mostra em cada fatia `Categoria + R$` usando exatamente `Valor Original` por categoria, como `AUDIO R$ 446.936,35` e `VIDEO R$ 13.022,82`.

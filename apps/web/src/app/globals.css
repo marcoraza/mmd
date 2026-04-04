@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  /* Fonts */
+  --font-display: "Doto", "Space Mono", monospace;
+  --font-body: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "Space Mono", "JetBrains Mono", monospace;
+
+  /* MMD Dark palette */
+  --color-mmd-black: #000000;
+  --color-mmd-surface: #111111;
+  --color-mmd-surface-raised: #1a1a1a;
+  --color-mmd-border: #222222;
+  --color-mmd-border-visible: #333333;
+  --color-mmd-text-disabled: #666666;
+  --color-mmd-text-secondary: #999999;
+  --color-mmd-text-primary: #e8e8e8;
+  --color-mmd-text-display: #ffffff;
+
+  /* MMD Light palette */
+  --color-mmd-light-bg: #f5f5f5;
+  --color-mmd-light-surface: #ffffff;
+  --color-mmd-light-surface-raised: #f0f0f0;
+  --color-mmd-light-border: #e8e8e8;
+  --color-mmd-light-border-visible: #cccccc;
+  --color-mmd-light-text-disabled: #999999;
+  --color-mmd-light-text-secondary: #666666;
+  --color-mmd-light-text-primary: #1a1a1a;
+  --color-mmd-light-text-display: #000000;
+
+  /* Status / accent */
+  --color-mmd-accent: #d71921;
+  --color-mmd-success: #4a9e5c;
+  --color-mmd-warning: #d4a843;
+  --color-mmd-interactive: #5b9bf6;
+}
+
+/* Base */
+body {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Dot-grid background for dark sidebar */
+.dot-grid {
+  background-image: radial-gradient(circle, #333 0.5px, transparent 0.5px);
+  background-size: 16px 16px;
+  opacity: 0.6;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Segmented wear bar */
+.wear-block {
+  width: 14px;
+  height: 5px;
+  border-radius: 0;
+}
+
+/* Scrollbar minimal */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}

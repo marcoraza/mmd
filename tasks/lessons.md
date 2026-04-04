@@ -13,3 +13,5 @@
 - Scripts que reaplicam valores no `.xlsx` nao podem congelar colunas derivadas. Se a regra vive na planilha, reescrever a formula e forcar recalc ao salvar.
 - Nomes ambigguos de item nao podem ser inferidos so pelo texto. Antes de reprecificar um registro como acessorio ou capsula, validar com o Marco quando o nome puder apontar para o equipamento principal, como em `PARA MICROFONE SM58`.
 - Antes de citar um teste como parte de um PR, conferir se ele esta versionado e se roda contra o codigo realmente commitado. Teste local em arquivo untracked nao conta como cobertura entregue.
+- Em saida voltada para leitura humana na planilha ou no markdown, moeda em BRL deve sair no formato visual brasileiro, como `R$ 6.922,00`, mesmo que a estrutura interna continue numerica para processamento.
+- Em grafico do dashboard, o texto exibido na fatia precisa usar a mesma metrica da serie do grafico. Se o pie chart usa `Valor Original`, o rotulo tambem precisa usar `Valor Original`, nao `Valor Atual`.

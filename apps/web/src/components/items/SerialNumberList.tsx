@@ -31,7 +31,7 @@ export function SerialNumberList({ serials, onEdit, onDelete }: SerialNumberList
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #CCCCCC' }}>
-              {['Código', 'Status', 'Estado', 'Desgaste', 'Valor Atual', ''].map((col) => (
+              {['Código', 'Status', 'Estado', 'Desgaste', 'Valor Atual', 'Tag RFID', 'QR Code', 'Localização', ''].map((col) => (
                 <th
                   key={col}
                   style={{
@@ -70,6 +70,15 @@ export function SerialNumberList({ serials, onEdit, onDelete }: SerialNumberList
                 </td>
                 <td style={{ padding: '10px 12px', fontFamily: '"Space Mono", monospace', fontSize: 12, color: '#666666' }}>
                   {sn.valor_atual ? formatCurrencyFull(sn.valor_atual) : '—'}
+                </td>
+                <td style={{ padding: '10px 12px', fontFamily: '"Space Mono", monospace', fontSize: 10, color: '#666666', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {sn.tag_rfid ?? '—'}
+                </td>
+                <td style={{ padding: '10px 12px', fontFamily: '"Space Mono", monospace', fontSize: 10, color: '#666666', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {sn.qr_code ?? '—'}
+                </td>
+                <td style={{ padding: '10px 12px', fontFamily: '"Space Grotesk", sans-serif', fontSize: 12, color: '#666666' }}>
+                  {sn.localizacao ?? '—'}
                 </td>
                 <td style={{ padding: '10px 12px' }}>
                   <div className="flex items-center gap-3">

@@ -8,8 +8,27 @@ import { CategoryRanking } from '@/components/dashboard/CategoryRanking'
 import { WearByCategory } from '@/components/dashboard/WearByCategory'
 import { CriticalItems } from '@/components/dashboard/CriticalItems'
 import { StatusChips } from '@/components/dashboard/StatusChips'
-import { formatCurrency } from '@/lib/design-tokens'
-import type { CategoriaStats, StatusStats, ItemCritico } from '@/lib/types'
+import { CategoryBadge } from '@/components/ui/CategoryBadge'
+import { WearBar } from '@/components/ui/WearBar'
+import { formatCurrency, formatCurrencyFull } from '@/lib/design-tokens'
+import type { Categoria, CategoriaStats, StatusStats, ItemCritico } from '@/lib/types'
+
+interface TopItem {
+  codigo_interno: string
+  nome: string
+  categoria: Categoria
+  valor_original: number
+  desgaste: number
+  valor_atual: number
+}
+
+interface PerdaCategoria {
+  categoria: Categoria
+  valor_original: number
+  valor_atual: number
+  perda: number
+  deprec_pct: number
+}
 
 async function getDashboardData() {
   const [
@@ -20,6 +39,8 @@ async function getDashboardData() {
     wearCatRes,
     criticalRes,
     movRes,
+    lotesRes,
+    top10Res,
   ] = await Promise.all([
     supabase.from('serial_numbers').select('valor_atual, desgaste'),
     supabase
@@ -43,6 +64,13 @@ async function getDashboardData() {
       .select('id, tipo, timestamp, notas, serial_numbers!inner(codigo_interno, items!inner(nome))')
       .order('timestamp', { ascending: false })
       .limit(5),
+    supabase.from('lotes').select('id', { count: 'exact' }).limit(1),
+    supabase
+      .from('serial_numbers')
+      .select('codigo_interno, desgaste, valor_atual, items!inner(nome, categoria, valor_mercado_unitario)')
+      .not('valor_atual', 'is', null)
+      .order('valor_atual', { ascending: false })
+      .limit(10),
   ])
 
   // Patrimônio
@@ -58,6 +86,12 @@ async function getDashboardData() {
   const taxaDepreciacao = valorOriginal > 0
     ? ((valorOriginal - valorAtual) / valorOriginal) * 100
     : 0
+
+  // Lotes count
+  const lotesCount = lotesRes.count ?? 0
+
+  // Critical count (desgaste <= 2)
+  const criticalCount = sns.filter((r) => r.desgaste <= 2).length
 
   // Status distribution
   const statusMap: Record<string, number> = {}
@@ -76,6 +110,7 @@ async function getDashboardData() {
 
   const disponiveis = (allSnRes.data ?? []).filter((r) => r.status === 'DISPONIVEL').length
   const emCampo = (allSnRes.data ?? []).filter((r) => r.status === 'EM_CAMPO').length
+  const manutencao = (allSnRes.data ?? []).filter((r) => r.status === 'MANUTENCAO').length
   const totalItens = allSnRes.count ?? allSnRes.data?.length ?? 0
 
   // Categoria stats
@@ -144,6 +179,45 @@ async function getDashboardData() {
     color: m.tipo === 'SAIDA' ? '#D4A843' : m.tipo === 'RETORNO' ? '#4A9E5C' : '#D71921',
   }))
 
+  // Top 10 mais valiosos
+  type Top10Sn = {
+    codigo_interno: string
+    desgaste: number
+    valor_atual: number
+    items: { nome: string; categoria: string; valor_mercado_unitario?: number } | null
+  }
+  const top10: TopItem[] = ((top10Res.data ?? []) as unknown as Top10Sn[]).map((sn) => ({
+    codigo_interno: sn.codigo_interno,
+    nome: sn.items?.nome ?? '',
+    categoria: (sn.items?.categoria ?? 'ACESSORIO') as Categoria,
+    valor_original: sn.items?.valor_mercado_unitario ?? 0,
+    desgaste: sn.desgaste,
+    valor_atual: sn.valor_atual,
+  }))
+
+  // Perda patrimonial por categoria
+  const perdaSnRes = await supabase
+    .from('serial_numbers')
+    .select('valor_atual, items!inner(categoria, valor_mercado_unitario)')
+  type PerdaSn = { valor_atual?: number; items: { categoria: string; valor_mercado_unitario?: number } | null }
+  const perdaSns = (perdaSnRes.data ?? []) as unknown as PerdaSn[]
+  const perdaCatMap: Record<string, { original: number; atual: number }> = {}
+  for (const sn of perdaSns) {
+    const cat = sn.items?.categoria ?? 'ACESSORIO'
+    if (!perdaCatMap[cat]) perdaCatMap[cat] = { original: 0, atual: 0 }
+    perdaCatMap[cat].original += sn.items?.valor_mercado_unitario ?? 0
+    perdaCatMap[cat].atual += sn.valor_atual ?? 0
+  }
+  const perdaPatrimonial: PerdaCategoria[] = Object.entries(perdaCatMap)
+    .map(([cat, v]) => ({
+      categoria: cat as Categoria,
+      valor_original: v.original,
+      valor_atual: v.atual,
+      perda: v.original - v.atual,
+      deprec_pct: v.original > 0 ? ((v.original - v.atual) / v.original) * 100 : 0,
+    }))
+    .sort((a, b) => b.perda - a.perda)
+
   return {
     valorAtual,
     valorOriginal,
@@ -152,11 +226,16 @@ async function getDashboardData() {
     itensSemValor,
     disponiveis,
     emCampo,
+    manutencao,
+    criticalCount,
+    lotesCount,
     statusStats,
     categoriaStats,
     wearStats,
     criticalItems,
     activities,
+    top10,
+    perdaPatrimonial,
   }
 }
 
@@ -181,11 +260,11 @@ export default async function DashboardPage() {
     <div>
       <PageHeader title={title} />
 
-      {/* KPI row */}
+      {/* KPI row 1 — main */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: 'repeat(4, 1fr)',
           borderBottom: '1px solid #E8E8E8',
         }}
       >
@@ -195,16 +274,53 @@ export default async function DashboardPage() {
           borderRight
         />
         <KPICard
-          label="Taxa Depreciação"
+          label="Valor Atual"
+          value={formatCurrency(data.valorAtual)}
+          borderRight
+        />
+        <KPICard
+          label="Depreciação"
           value={`${Math.round(data.taxaDepreciacao)}%`}
           gauge={{ value: data.taxaDepreciacao, label: 'DEPREC.', color: '#D4A843' }}
           borderRight
         />
         <KPICard
-          label="Itens Sem Valor"
-          value={String(data.itensSemValor)}
-          segmented={{ filled: data.itensSemValor, total: data.totalItens }}
+          label="Críticos"
+          value={String(data.criticalCount)}
+          delta={data.criticalCount > 0 ? 'DESGASTE ≤ 2' : undefined}
+          deltaColor="#D71921"
         />
+      </div>
+
+      {/* KPI row 2 — secondary */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          borderBottom: '1px solid #E8E8E8',
+        }}
+      >
+        {[
+          { label: 'TOTAL ITENS', value: data.totalItens },
+          { label: 'DISPONÍVEIS', value: data.disponiveis },
+          { label: 'MANUTENÇÃO', value: data.manutencao },
+          { label: 'LOTES', value: data.lotesCount },
+        ].map((kpi, i) => (
+          <div
+            key={kpi.label}
+            style={{
+              padding: '12px 24px',
+              borderRight: i < 3 ? '1px solid #E8E8E8' : undefined,
+            }}
+          >
+            <div style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, color: '#999999', letterSpacing: '0.12em', marginBottom: 4 }}>
+              {kpi.label}
+            </div>
+            <div style={{ fontFamily: '"Doto", sans-serif', fontSize: 32, fontWeight: 700, color: '#000000', lineHeight: 1 }}>
+              {kpi.value}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Charts row */}
@@ -239,6 +355,118 @@ export default async function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
           <WearByCategory data={data.wearStats} />
           <CriticalItems items={data.criticalItems} />
+        </div>
+      </div>
+
+      {/* Top 10 mais valiosos */}
+      <div style={{ borderBottom: '1px solid #E8E8E8' }}>
+        <div style={{ padding: '16px 24px 0', fontFamily: '"Space Mono", monospace', fontSize: 9, color: '#999999', letterSpacing: '0.12em' }}>
+          TOP 10 MAIS VALIOSOS
+        </div>
+        <div style={{ padding: '12px 24px 16px', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: '"Space Grotesk", sans-serif', fontSize: 13 }}>
+            <thead>
+              <tr>
+                {['#', 'NOME', 'CATEGORIA', 'VALOR ORIGINAL', 'DESGASTE', 'VALOR ATUAL'].map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      fontFamily: '"Space Mono", monospace',
+                      fontSize: 9,
+                      color: '#999999',
+                      letterSpacing: '0.1em',
+                      textAlign: h === '#' ? 'center' : 'left',
+                      padding: '8px 8px',
+                      borderBottom: '1px solid #E8E8E8',
+                      fontWeight: 400,
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.top10.map((item, i) => (
+                <tr key={item.codigo_interno} style={{ borderBottom: '1px solid #F2F2F2' }}>
+                  <td style={{ fontFamily: '"Space Mono", monospace', fontSize: 11, color: '#999999', textAlign: 'center', padding: '8px' }}>
+                    {i + 1}
+                  </td>
+                  <td style={{ padding: '8px', color: '#000000' }}>
+                    <div>{item.nome}</div>
+                    <div style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, color: '#999999', marginTop: 2 }}>
+                      {item.codigo_interno}
+                    </div>
+                  </td>
+                  <td style={{ padding: '8px' }}>
+                    <CategoryBadge categoria={item.categoria} />
+                  </td>
+                  <td style={{ padding: '8px', fontFamily: '"Space Mono", monospace', fontSize: 13, color: '#000000' }}>
+                    {formatCurrencyFull(item.valor_original)}
+                  </td>
+                  <td style={{ padding: '8px' }}>
+                    <WearBar desgaste={item.desgaste} />
+                  </td>
+                  <td style={{ padding: '8px', fontFamily: '"Space Mono", monospace', fontSize: 13, fontWeight: 700, color: '#000000' }}>
+                    {formatCurrencyFull(item.valor_atual)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Perda patrimonial por categoria */}
+      <div style={{ borderBottom: '1px solid #E8E8E8' }}>
+        <div style={{ padding: '16px 24px 0', fontFamily: '"Space Mono", monospace', fontSize: 9, color: '#999999', letterSpacing: '0.12em' }}>
+          PERDA PATRIMONIAL POR CATEGORIA
+        </div>
+        <div style={{ padding: '12px 24px 16px', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: '"Space Grotesk", sans-serif', fontSize: 13 }}>
+            <thead>
+              <tr>
+                {['CATEGORIA', 'VALOR ORIGINAL', 'VALOR ATUAL', 'PERDA (R$)', 'DEPREC. %'].map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      fontFamily: '"Space Mono", monospace',
+                      fontSize: 9,
+                      color: '#999999',
+                      letterSpacing: '0.1em',
+                      textAlign: 'left',
+                      padding: '8px 8px',
+                      borderBottom: '1px solid #E8E8E8',
+                      fontWeight: 400,
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.perdaPatrimonial.map((row) => (
+                <tr key={row.categoria} style={{ borderBottom: '1px solid #F2F2F2' }}>
+                  <td style={{ padding: '8px' }}>
+                    <CategoryBadge categoria={row.categoria} />
+                  </td>
+                  <td style={{ padding: '8px', fontFamily: '"Space Mono", monospace', fontSize: 13, color: '#000000' }}>
+                    {formatCurrencyFull(row.valor_original)}
+                  </td>
+                  <td style={{ padding: '8px', fontFamily: '"Space Mono", monospace', fontSize: 13, color: '#000000' }}>
+                    {formatCurrencyFull(row.valor_atual)}
+                  </td>
+                  <td style={{ padding: '8px', fontFamily: '"Space Mono", monospace', fontSize: 13, color: '#D71921', fontWeight: 700 }}>
+                    {formatCurrencyFull(row.perda)}
+                  </td>
+                  <td style={{ padding: '8px', fontFamily: '"Space Mono", monospace', fontSize: 13, color: '#D4A843', fontWeight: 700 }}>
+                    {row.deprec_pct.toFixed(1)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

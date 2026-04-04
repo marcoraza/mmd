@@ -11,7 +11,7 @@ import { SearchInput } from '@/components/ui/SearchInput'
 import type { Lote, StatusLote } from '@/lib/types'
 
 type LoteWithItem = Lote & {
-  items: { nome: string; categoria: string } | null
+  items: { nome: string; categoria: string; subcategoria: string | null } | null
 }
 
 const inputStyle = {
@@ -53,6 +53,8 @@ export default function LotesPage() {
     descricao: '',
     quantidade: 1,
     status: 'DISPONIVEL' as StatusLote,
+    tag_rfid: '',
+    qr_code: '',
   })
 
   useEffect(() => {
@@ -67,7 +69,7 @@ export default function LotesPage() {
     setLoading(true)
     let query = supabase
       .from('lotes')
-      .select('*, items(nome, categoria)', { count: 'exact' })
+      .select('*, items(nome, categoria, subcategoria)', { count: 'exact' })
       .order('created_at', { ascending: false })
 
     if (search) {
@@ -83,7 +85,7 @@ export default function LotesPage() {
   useEffect(() => { fetchLotes() }, [fetchLotes])
 
   function openCreate() {
-    setForm({ item_id: items[0]?.id ?? '', codigo_lote: '', descricao: '', quantidade: 1, status: 'DISPONIVEL' })
+    setForm({ item_id: items[0]?.id ?? '', codigo_lote: '', descricao: '', quantidade: 1, status: 'DISPONIVEL', tag_rfid: '', qr_code: '' })
     setEditTarget(null)
     setShowForm(true)
   }
@@ -95,6 +97,8 @@ export default function LotesPage() {
       descricao: lote.descricao ?? '',
       quantidade: lote.quantidade,
       status: lote.status,
+      tag_rfid: lote.tag_rfid ?? '',
+      qr_code: lote.qr_code ?? '',
     })
     setEditTarget(lote)
     setShowForm(true)
@@ -108,6 +112,8 @@ export default function LotesPage() {
         descricao: form.descricao || undefined,
         quantidade: form.quantidade,
         status: form.status,
+        tag_rfid: form.tag_rfid || null,
+        qr_code: form.qr_code || null,
       }).eq('id', editTarget.id)
     } else {
       await supabase.from('lotes').insert({
@@ -116,6 +122,8 @@ export default function LotesPage() {
         descricao: form.descricao || undefined,
         quantidade: form.quantidade,
         status: form.status,
+        tag_rfid: form.tag_rfid || null,
+        qr_code: form.qr_code || null,
       })
     }
     setSaving(false)
@@ -197,6 +205,14 @@ export default function LotesPage() {
               <label style={labelStyle}>DESCRIÇÃO</label>
               <input style={inputStyle} value={form.descricao} onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))} placeholder="Ex: Kit cabos XLR 5m" />
             </div>
+            <div>
+              <label style={labelStyle}>TAG RFID</label>
+              <input style={inputStyle} value={form.tag_rfid} onChange={(e) => setForm((f) => ({ ...f, tag_rfid: e.target.value }))} placeholder="Ex: E2801170..." />
+            </div>
+            <div>
+              <label style={labelStyle}>QR CODE</label>
+              <input style={inputStyle} value={form.qr_code} onChange={(e) => setForm((f) => ({ ...f, qr_code: e.target.value }))} placeholder="Ex: MMD-CAB-L001" />
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button type="submit" disabled={saving} style={{ fontFamily: '"Space Mono", monospace', fontSize: 11, letterSpacing: '0.1em', color: '#FFFFFF', backgroundColor: '#000000', border: 'none', borderRadius: 999, padding: '6px 16px', cursor: 'pointer' }}>
@@ -219,7 +235,7 @@ export default function LotesPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #CCCCCC' }}>
-                {['Código', 'Item', 'Descrição', 'Qtd', 'Status', ''].map((col) => (
+                {['Código', 'Item', 'Descrição', 'Qtd', 'Status', 'Tag RFID', 'QR Code', ''].map((col) => (
                   <th key={col} style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, color: '#999999', letterSpacing: '0.12em', padding: '0 16px 10px', textAlign: 'left' }}>
                     {col.toUpperCase()}
                   </th>
@@ -229,7 +245,7 @@ export default function LotesPage() {
             <tbody>
               {lotes.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '24px 16px', fontFamily: '"Space Mono", monospace', fontSize: 11, color: '#CCCCCC', textAlign: 'center' }}>
+                  <td colSpan={8} style={{ padding: '24px 16px', fontFamily: '"Space Mono", monospace', fontSize: 11, color: '#CCCCCC', textAlign: 'center' }}>
                     NENHUM LOTE ENCONTRADO
                   </td>
                 </tr>
@@ -242,6 +258,11 @@ export default function LotesPage() {
                     <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 13, color: '#1A1A1A' }}>
                       {lote.items?.nome ?? '—'}
                     </div>
+                    {lote.items?.subcategoria && (
+                      <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 11, color: '#999999', marginTop: 2 }}>
+                        {lote.items.subcategoria}
+                      </div>
+                    )}
                     {lote.items?.categoria && <CategoryBadge categoria={lote.items.categoria} className="mt-1" />}
                   </td>
                   <td style={{ padding: '12px 16px', fontFamily: '"Space Grotesk", sans-serif', fontSize: 13, color: '#666666' }}>
@@ -252,6 +273,12 @@ export default function LotesPage() {
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <StatusBadge status={lote.status} />
+                  </td>
+                  <td style={{ padding: '12px 16px', fontFamily: '"Space Mono", monospace', fontSize: 11, color: '#1A1A1A', whiteSpace: 'nowrap' }}>
+                    {lote.tag_rfid ? (lote.tag_rfid.length > 12 ? lote.tag_rfid.slice(0, 12) + '...' : lote.tag_rfid) : '—'}
+                  </td>
+                  <td style={{ padding: '12px 16px', fontFamily: '"Space Mono", monospace', fontSize: 11, color: '#1A1A1A', whiteSpace: 'nowrap' }}>
+                    {lote.qr_code ? (lote.qr_code.length > 12 ? lote.qr_code.slice(0, 12) + '...' : lote.qr_code) : '—'}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>

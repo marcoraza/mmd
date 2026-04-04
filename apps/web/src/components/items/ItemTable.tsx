@@ -78,6 +78,11 @@ export function ItemTable({ items, sortBy, sortDir, onSort }: ItemTableProps) {
                 </td>
                 <td style={{ padding: '12px 16px' }}>
                   <CategoryBadge categoria={item.categoria} />
+                  {item.subcategoria && (
+                    <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 11, color: '#999999', marginTop: 2 }}>
+                      {item.subcategoria}
+                    </div>
+                  )}
                 </td>
                 <td style={{ padding: '12px 16px', fontFamily: '"Space Mono", monospace', fontSize: 12, color: '#666666' }}>
                   {item.marca ?? '—'}

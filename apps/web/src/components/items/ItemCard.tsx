@@ -25,7 +25,14 @@ export function ItemCard({ item }: ItemCardProps) {
         <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>
           {item.nome}
         </span>
-        <CategoryBadge categoria={item.categoria} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+          <CategoryBadge categoria={item.categoria} />
+          {item.subcategoria && (
+            <span style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 11, color: '#999999' }}>
+              {item.subcategoria}
+            </span>
+          )}
+        </div>
       </div>
       {item.marca && (
         <div style={{ fontFamily: '"Space Mono", monospace', fontSize: 10, color: '#999999', letterSpacing: '0.08em', marginBottom: 8 }}>

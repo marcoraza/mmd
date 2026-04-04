@@ -80,7 +80,25 @@ export default async function ItemDetailPage({ params }: Props) {
       {/* Hero section */}
       <div style={{ padding: '24px 32px', borderBottom: '1px solid #E8E8E8', display: 'flex', gap: 32, alignItems: 'flex-start' }}>
         <div>
-          <CategoryBadge categoria={item.categoria} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <CategoryBadge categoria={item.categoria} />
+            {item.subcategoria && (
+              <span style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, color: '#999999', letterSpacing: '0.12em' }}>
+                {item.subcategoria.toUpperCase()}
+              </span>
+            )}
+            <span style={{
+              fontFamily: '"Space Mono", monospace',
+              fontSize: 9,
+              letterSpacing: '0.1em',
+              color: '#666666',
+              border: '1px solid #E8E8E8',
+              borderRadius: 999,
+              padding: '2px 8px',
+            }}>
+              {item.tipo_rastreamento}
+            </span>
+          </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 32 }}>
             <Stat label="Total" value={String(item.quantidade_total)} />
             <Stat label="Disponíveis" value={String(serials.filter((s) => s.status === 'DISPONIVEL').length)} valueColor="#4A9E5C" />
@@ -88,6 +106,22 @@ export default async function ItemDetailPage({ params }: Props) {
             <Stat label="Valor Unitário" value={item.valor_mercado_unitario ? formatCurrencyFull(item.valor_mercado_unitario) : '—'} />
             <Stat label="Valor Total Atual" value={valorTotal > 0 ? formatCurrencyFull(valorTotal) : '—'} />
           </div>
+
+          {item.notas && (
+            <div style={{
+              marginTop: 16,
+              padding: '10px 14px',
+              backgroundColor: '#FAFAFA',
+              border: '1px solid #E8E8E8',
+            }}>
+              <div style={{ fontFamily: '"Space Mono", monospace', fontSize: 9, color: '#999999', letterSpacing: '0.12em', marginBottom: 4 }}>
+                NOTAS
+              </div>
+              <div style={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: 13, color: '#666666', lineHeight: 1.5 }}>
+                {item.notas}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

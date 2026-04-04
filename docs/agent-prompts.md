@@ -4,6 +4,26 @@ Prompts de execucao para cada sprint do projeto Estoque Inteligente.
 Cada prompt e autocontido: o agente recebe tudo que precisa para executar sem contexto externo.
 
 Plano de referencia: `docs/plano-estoque-inteligente.md`
+Design de referencia: `docs/design-brief.md`
+Referencia visual: `~/Desktop/analytics-dashboard.html`
+
+## Design System (obrigatorio para Sprints 1-6)
+
+Todos os sprints com UI DEVEM seguir o design brief em `docs/design-brief.md`. Resumo:
+
+- **Fontes:** Space Grotesk (body), Space Mono (labels/data ALL CAPS), Doto (hero numbers 36px+)
+- **Dark mode:** #000 OLED black, dot-grid background, #1A1A1A surfaces. iOS e 100% dark.
+- **Light mode:** #F5F5F5 off-white, #FFF cards. Web content panel.
+- **Layout web:** Split dark sidebar 380px + light content scrollavel. Mobile: bottom nav dark.
+- **Status colors no VALOR, nao no background:** success=#4A9E5C, warning=#D4A843, accent=#D71921
+- **Sem sombras, sem gradients, sem border-radius > 16px.** Card-less: secoes por 1px border.
+- **Labels:** Space Mono, ALL CAPS, 9-11px, letter-spacing 0.08-0.12em
+- **Uma surpresa visual por tela** (um hero number, uma gauge, uma barra segmentada)
+- **Hierarquia de 3 camadas:** primaria (Doto grande), secundaria (Space Grotesk body), terciaria (Space Mono micro)
+
+O agente DEVE ler `docs/design-brief.md` antes de comecar qualquer trabalho de UI.
+
+---
 
 ## Mapa de Sprints
 
@@ -398,28 +418,58 @@ Endpoint para resolver tags:
 - POST para Supabase RPC ou query: buscar serial_numbers WHERE tag_rfid IN (array de tags)
 - JOIN com items para retornar nome, categoria, status
 
-**5. Telas**
+**5. Design (OBRIGATORIO - ler `docs/design-brief.md` antes)**
+
+O app iOS e 100% dark mode. Fundo OLED #000000. Sem light mode.
+
+Fontes (bundled no Xcode, registradas no Info.plist):
+- Space Grotesk: body, titulos, nomes de item
+- Space Mono: labels ALL CAPS, codigos MMD-XXX-NNNN, contadores, badges
+- Doto: hero numbers (contagem de scan, progresso checkout)
+
+Cores (definir em Color extension, ver `docs/design-brief.md` para hex completos):
+- ndBlack #000, ndSurface #111, ndSurfaceRaised #1A1A1A
+- ndTextDisplay #FFF, ndTextPrimary #E8E8E8, ndTextSecondary #999, ndTextDisabled #666
+- ndAccent #D71921, ndSuccess #4A9E5C, ndWarning #D4A843, ndInteractive #5B9BF6
+- ndBorder #222, ndBorderVisible #333
+
+Status badges: Space Mono ALL CAPS 9px, pill shape (999px radius), border 1px cor do status, texto cor do status. Fundo transparente.
+
+Desgaste: barra segmentada horizontal de 5 blocos (5px altura, 2px gap). Cor varia com nivel (ver design-brief.md).
+
+Tab bar: fundo #000, items em Space Mono ALL CAPS 9px. Ativo: ndTextDisplay. Inativo: ndTextDisabled.
+
+Regras visuais do app:
+- Sem sombras. Flat surfaces, border separation (#222 ou #333).
+- Sem border-radius > 16px em cards. Botoes: pill (999px) ou tecnico (4-8px).
+- Labels SEMPRE Space Mono ALL CAPS com letter-spacing 0.08em.
+- Numeros SEMPRE Space Mono (ou Doto pra hero). Nunca Space Grotesk pra numeros.
+- Icones monoline 1.5px stroke, sem fill. SF Symbols thin weight.
+
+**6. Telas**
 
 ConnectReaderView:
-- Lista de leitores Bluetooth disponiveis
-- Botao "Buscar Leitores"
-- Tap para conectar
-- Indicador de status da conexao (conectado/desconectado/conectando)
-- Mostrar nivel de bateria do leitor quando disponivel
+- Fundo: #000 com dot-grid sutil (radial-gradient #222 0.5px, 12px spacing, opacity 0.3)
+- Label terciaria "LEITORES BLUETOOTH" (Space Mono 9px ALL CAPS #999)
+- Lista de leitores: cada row com nome em Space Grotesk 16px #E8E8E8, status em Space Mono 9px (conectado=#4A9E5C, desconectado=#666)
+- Botao "BUSCAR" pill: fundo #FFF, texto #000, Space Mono 13px ALL CAPS
+- Indicador de conexao: dot 5px (#4A9E5C conectado, #D71921 desconectado, #D4A843 conectando)
+- Bateria: barra segmentada de 4 blocos pequenos + percentual em Space Mono 9px
 
 ScanView:
-- Botao grande "Escanear" (inicia inventario RFID)
-- Lista de tags detectadas em tempo real (atualiza conforme tags sao lidas)
-- Contador de tags encontradas
-- Botao "Parar"
-- Botao "Resolver" (envia tags para API)
+- Hero: contagem de tags em Doto 72px #FFF, centralizado verticalmente no topo
+- Unidade "TAGS" em Space Mono 11px #999 logo abaixo do numero
+- Lista de tags: scroll vertical, cada tag em Space Mono 14px #E8E8E8, truncado
+- Botao "ESCANEAR": pill grande, fundo #FFF texto #000. Quando ativo, muda pra borda #FFF fundo transparente texto #FFF com label "PARAR"
+- Botao "RESOLVER": pill secundario, borda #333 texto #E8E8E8
 
 ScanResultView:
-- Lista de itens resolvidos: nome, categoria (com icone/cor), status, foto
-- Itens nao resolvidos (tags sem match no banco): listar separado com tag ID
-- Resumo: N resolvidos, M nao resolvidos
+- Resumo hero: "N RESOLVIDOS" em Doto 48px #FFF + "M SEM MATCH" em Space Mono 14px #D71921
+- Secao "RESOLVIDOS" (label Space Mono 9px #999): lista com nome (Space Grotesk 16px #E8E8E8), categoria badge (pill, borda #333, Space Mono 9px), status badge (cor do status)
+- Secao "NAO RESOLVIDOS" (label Space Mono 9px #D71921): lista com tag ID em Space Mono 14px #666
+- Separacao entre secoes: 1px border #222, 32px gap
 
-**6. Navegacao**
+**7. Navegacao**
 
 ```
 TabView:
@@ -427,6 +477,8 @@ TabView:
   - Tab 2: Projetos (placeholder, Sprint 2)
   - Tab 3: Config (Supabase URL, etc)
 ```
+
+Tab bar: fundo #000, borda top 1px #222. Labels Space Mono 9px ALL CAPS. Ativo: #FFF com dot 3px #D71921 acima. Inativo: #666.
 
 ### Arquivos para criar
 
@@ -446,9 +498,20 @@ MMDEstoque/
       ScanView.swift
       ScanResultView.swift
       ContentView.swift      # TabView principal
+    Design/
+      Theme.swift            # Color extension (ndBlack, ndAccent, etc.)
+      Typography.swift       # Font helpers (Space Grotesk, Space Mono, Doto)
+      Components/
+        StatusBadge.swift    # Pill badge com cor de status
+        WearBar.swift        # Barra segmentada de desgaste 5 blocos
+        DotGrid.swift        # Background dot-grid reutilizavel
     Config/
       AppConfig.swift        # Supabase URL, API key
+    Resources/
+      Fonts/                 # TTF: SpaceGrotesk, SpaceMono, Doto
 ```
+
+**IMPORTANTE:** Bundlar as fontes Space Grotesk, Space Mono e Doto como TTF no projeto Xcode. Registrar no Info.plist em UIAppFonts. Sem Google Fonts em runtime.
 
 ### Decisoes de Design (para o agente Opus)
 
@@ -507,10 +570,40 @@ Ao finalizar:
 
 Este sprint adiciona os fluxos operacionais do dia a dia ao app iOS: a equipe de campo seleciona um projeto (evento), ve a packing list, escaneia os equipamentos via RFID ou QR, e o sistema valida se tudo confere. Mesmo fluxo no retorno, com deteccao de itens faltantes e marcacao de defeitos.
 
-O UX e inspirado no Rentman:
-- **Verde:** item na packing list, escaneado OK
-- **Amarelo:** item na packing list, ainda nao escaneado
-- **Vermelho:** item escaneado que NAO esta na packing list (erro)
+O UX e inspirado no Rentman. Cores de validacao aplicadas nos VALORES (texto do item), nao no background da row:
+- **ndSuccess (#4A9E5C):** item na packing list, escaneado OK
+- **ndWarning (#D4A843):** item na packing list, ainda nao escaneado
+- **ndAccent (#D71921):** item escaneado que NAO esta na packing list (erro)
+
+### Design (herda do Sprint 1, ler `docs/design-brief.md`)
+
+Usar Theme.swift, Typography.swift e componentes de Design/ criados no Sprint 1.
+
+Novas diretivas visuais pra este sprint:
+
+**ProjectsListView:**
+- Label terciaria "PROJETOS ATIVOS" (Space Mono 9px ALL CAPS #999)
+- Cada projeto: nome em Space Grotesk 16px #E8E8E8, cliente em Space Mono 11px #999
+- Status badge: pill com cor do status (CONFIRMADO=#4A9E5C, EM_CAMPO=#D4A843)
+- Data em Space Mono 9px #666, alinhada direita
+- Separador: 1px #222 entre rows
+
+**PackingListView:**
+- Header: nome do projeto em Space Grotesk 24px #FFF, cliente em Space Mono 11px #999
+- Hero progresso: "8/12" em Doto 48px #FFF com barra segmentada de 12 blocos embaixo
+- Cada item: nome Space Grotesk 14px, quantidade "3/5" em Space Mono 14px (cor = status da validacao)
+- Toggle RFID/QR: segmented control pill, Space Mono ALL CAPS 11px
+
+**CheckoutFlowView:**
+- Tela de scan: reutilizar layout do ScanView (Doto hero + lista)
+- Validacao em tempo real: cada item muda de cor conforme escaneado (amarelo→verde, ou vermelho se extra)
+- Botao "FINALIZAR" aparece so quando todos os items estao verdes. Pill, fundo #FFF texto #000.
+- Modal de confirmacao: fundo rgba(0,0,0,0.8), dialog #111 borda #333 16px radius
+
+**ReturnFlowView:**
+- Resumo hero: 3 numeros Doto 36px lado a lado: "15 OK" (#4A9E5C) / "2 DEFEITO" (#D71921) / "1 FALTA" (#D4A843)
+- Lista de items com status de retorno (icone dot 5px cor do resultado)
+- Modal de defeito: campo de notas underline input, slider de desgaste (barra segmentada interativa)
 
 ### Tarefa
 
@@ -526,7 +619,7 @@ O UX e inspirado no Rentman:
 - Header: nome do projeto, cliente, datas
 - Lista de items esperados com quantidade
 - Fetch: `GET /rest/v1/packing_list?projeto_id=eq.{id}&select=*,items(*)`
-- Cada item mostra: nome, quantidade esperada, quantidade escaneada, status (verde/amarelo/vermelho)
+- Cada item mostra: nome, quantidade esperada, quantidade escaneada, status (cor de validacao no valor, nao no background)
 - Botao "Iniciar Checkout" ou "Iniciar Retorno" (baseado no status do projeto)
 
 **3. Fluxo de Checkout (CheckoutFlowView + CheckoutViewModel)**
@@ -681,9 +774,72 @@ Ao finalizar:
 
 ### Contexto
 
-Web app de gestao para Marcelo usar no dia a dia. Ele acessa pelo celular (iPhone) a maior parte do tempo, entao o layout precisa ser mobile-first. Dashboard mostra visao geral do patrimonio, lista de equipamentos com busca/filtro, e CRUD completo.
+Web app de gestao para Marcelo usar no dia a dia. Ele acessa pelo MacBook (gestao) e iPhone (campo), entao o layout e desktop-first com responsividade mobile. Dashboard mostra visao geral do patrimonio, lista de equipamentos com busca/filtro, e CRUD completo.
 
 O schema Supabase ja tem dados seeded do Sprint 0.
+
+### Design (OBRIGATORIO - ler `docs/design-brief.md` antes de codar)
+
+**Referencia visual:** `~/Desktop/analytics-dashboard.html` - abrir no browser e replicar a linguagem visual.
+
+**Layout split screen (desktop, MacBook):**
+```
++----[380px dark sidebar]----+--------[flex light content]--------+
+| Fundo: #000 + dot-grid     | Fundo: #F5F5F5                    |
+| Brand: MMD·ESTOQUE          | Titulo pagina + avatar             |
+|   (Space Mono 11px ALL CAPS | KPI row (3 cols, 1px border)       |
+|    "MMD" #FFF, dot #D71921) | Charts area (2 cols)               |
+| Hero: valor em Doto 88px   | Activity feed + Rankings           |
+| Mini-widgets 2x2 grid      | Status chips                       |
+| Nav vertical com border-L  |                                    |
++----------------------------+------------------------------------+
+```
+
+**Layout mobile (iPhone):**
+- Sidebar desaparece. Conteudo ocupa 100% largura.
+- Nav vira bottom bar dark (#000), Space Mono 9px ALL CAPS, dot ativo.
+- Hero/widgets movem pro topo do content area.
+- KPI row empilha vertical (1 col).
+
+**Fontes (Google Fonts via `<link>` no layout.tsx):**
+```html
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@400;700&family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+```
+
+**Tailwind config:** Estender com as fontes e cores do design system. Criar tokens CSS custom.
+
+```js
+// tailwind.config.ts extend
+fontFamily: {
+  display: ['"Doto"', '"Space Mono"', 'monospace'],
+  body: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+  mono: ['"Space Mono"', '"JetBrains Mono"', 'monospace'],
+},
+colors: {
+  mmd: {
+    black: '#000000',
+    surface: '#111111',
+    'surface-raised': '#1A1A1A',
+    border: '#222222',
+    'border-visible': '#333333',
+    accent: '#D71921',
+    success: '#4A9E5C',
+    warning: '#D4A843',
+    interactive: '#5B9BF6',
+  }
+}
+```
+
+**shadcn/ui:** Usar como base funcional mas SOBRESCREVER todos os estilos visuais pra seguir o design system. Sem shadows, sem border-radius padrao. Forcar o estilo Nothing.
+
+**Regras visuais web:**
+- SEM sombras. SEM gradients. Card-less: secoes separadas por 1px border #E8E8E8.
+- Labels: Space Mono ALL CAPS 9px letter-spacing 0.12em #999 (light) / #666 (dark)
+- Numeros: Space Mono (body) ou Doto (hero). NUNCA Space Grotesk pra numeros.
+- Status no VALOR (texto colorido), nao no background da row.
+- Botoes: pill (border-radius 999px) ou tecnico (4-8px). Primary: fundo #000 texto #FFF. Secondary: borda #CCC texto #1A1A1A.
+- Dot-grid: so na sidebar dark. radial-gradient(circle, #333 0.5px, transparent 0.5px) 16px 16px, opacity 0.6.
+- UMA surpresa visual por tela (hero number, gauge circular, barra segmentada grande).
 
 ### Tarefa
 
@@ -695,40 +851,75 @@ npx create-next-app@latest mmd-estoque-web --typescript --tailwind --eslint --ap
 
 - Next.js 14 com App Router
 - TypeScript
-- Tailwind CSS
-- shadcn/ui para componentes (botoes, tabelas, modais, forms)
+- Tailwind CSS (configurado com tokens do design system)
+- shadcn/ui para componentes base (sobrescrever estilos)
 - Supabase JS client (`@supabase/supabase-js`)
 
 Configuracao:
 - `.env.local`: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
 - `lib/supabase.ts`: createClient singleton
 - `lib/types.ts`: tipos TypeScript espelhando o schema (Database types)
+- `lib/design-tokens.ts`: cores, fontes e spacing como constantes exportadas
 
-**2. Layout**
+**2. Layout (seguir exatamente o design-brief.md)**
 
 ```
 app/layout.tsx
-  - Header: logo "MMD Estoque", nav links
-  - Sidebar (desktop) / Bottom nav (mobile)
-  - Nav items: Dashboard, Equipamentos, Lotes
-  - Footer minimal
-  - Responsive: sidebar collapsa em mobile
+  - DESKTOP: grid 380px + 1fr
+    - Dark sidebar (380px): #000, dot-grid, brand "MMD·ESTOQUE", hero metric, 4 mini-widgets, nav vertical
+    - Light content (1fr): #F5F5F5, scroll, secoes por 1px border
+  - MOBILE (< 768px): stack vertical
+    - Bottom nav dark (#000), 5 items Space Mono 9px ALL CAPS
+    - Content ocupa 100%, hero/widgets no topo
+  - Nav items: Overview, Inventario, Lotes, Projetos (Sprint 4), Config
+  - SEM header separado. SEM footer.
 ```
 
-**3. Dashboard (app/page.tsx)**
+**3. Dark Sidebar (componente Sidebar.tsx)**
 
-Cards com metricas:
-- Total de itens por categoria (8 cards com contagem)
-- Breakdown de status: Disponivel / Em campo / Manutencao / etc (bar chart ou donuts)
-- Valor patrimonial total (sum de valor_mercado_unitario * quantidade)
-- Itens em campo agora (com nome do projeto)
-- Ultimas movimentacoes (5 mais recentes)
+Brand: "MMD" em Space Mono 11px bold ALL CAPS #FFF + "·" em #D71921 + "ESTOQUE" em #FFF.
 
-Secao "Saude Patrimonial":
-- Desgaste medio por categoria (bar chart)
-- Itens com desgaste critico (1-2): lista com nome, categoria, desgaste, valor_atual
-- Depreciacao total: sum(valor_mercado - valor_atual) para itens com valor
-- Distribuicao de estados: NOVO / SEMI_NOVO / USADO / RECONDICIONADO (donut)
+Hero block:
+- Label: "VALOR ATUAL DO PATRIMONIO" (Space Mono 10px ALL CAPS #666)
+- Valor: "R$335.2" em Doto 88px #FFF + "K" em Space Mono 22px #999
+- Trend: "▼ −59.3%" em Space Mono 12px #D4A843 + "depreciacao" em #666
+
+Mini-widgets (grid 2x2, separados por 1px #222):
+- Total Itens: "520" Doto 32px #FFF, label "TOTAL ITENS" Space Mono 9px #666
+- Disponiveis: "510" Doto 32px #4A9E5C, label "DISPONIVEIS"
+- Em Campo: "0" Doto 32px #999, label "EM CAMPO"
+- Desgaste: "3.0" Doto 32px #FFF + "/5" Space Mono 11px #999, barra segmentada 5 blocos
+
+Nav: items com icone monoline 13px + label Space Grotesk 13px. Ativo: borda esquerda 2px #FFF, fundo #111, texto #FFF. Inativo: texto #999. Badge: pill Space Mono 9px fundo #FFF texto #000.
+
+Notification bell: 30x30 borda #333 radius 6px, icone 13px stroke #999, dot 5px #D71921.
+
+**4. Dashboard (app/page.tsx) — Light Panel**
+
+Topbar: titulo "Visao Geral — Abril 2026" Space Grotesk 18px #000. Avatar pill direita.
+
+KPI row (3 colunas, 1px border separando):
+- Valor Original: "R$824.7K" Space Mono 34px bold #000, label "VALOR ORIGINAL" Space Mono 9px #999, delta "▲ +12.4% vs estimado" Space Mono 10px #4A9E5C
+- Taxa Depreciacao: "39%" Space Mono 34px bold #D4A843, gauge circular SVG 72px direita (arco mostrando 39/100, "39%" centro, "DEPREC." abaixo)
+- Itens Sem Valor: "385" Space Mono 34px bold #000 + "/520" Space Mono 14px #999, barra segmentada mostrando proporcao
+
+Charts area (2 colunas):
+- Esquerda (3fr): bar chart vertical de valor por categoria (8 barras, preenchimento #000, labels Space Mono 8px ALL CAPS). Label "VALOR POR CATEGORIA"
+- Direita (2fr): distribuicao de status como barras segmentadas empilhadas. Cada status com label + contagem + barra proporcional
+
+Bottom area (2 colunas):
+- Esquerda: "ATIVIDADE RECENTE" feed com pip colorido 5px + texto Space Grotesk 13px + timestamp Space Mono 9px
+- Direita: "TOP CATEGORIAS — VALOR" ranking com numero ordinal Space Mono 9px + nome + valor Space Mono 12px bold + mini-bar proporcional
+
+Status chips: row de pills "RFID PENDENTE" / "QR PENDENTE" / "SUPABASE OK" (Space Mono 9px ALL CAPS, pill border)
+
+**5. Dashboard — Saude Patrimonial (secao abaixo)**
+
+Secao "SAUDE PATRIMONIAL" (label Space Mono 9px):
+- Desgaste medio por categoria: 8 rows com nome categoria + barra segmentada 5 blocos + valor numerico
+- Itens criticos (desgaste 1-2): lista compacta com codigo, nome, desgaste (cor accent), valor_atual
+- Depreciacao total: sum(valor_mercado - valor_atual)
+- SEM donuts. SEM pie charts. Usar barras segmentadas e numeros.
 
 Queries:
 ```sql
@@ -765,23 +956,24 @@ FROM serial_numbers sn JOIN items i ON sn.item_id = i.id
 WHERE sn.valor_atual IS NOT NULL;
 ```
 
-**4. Lista de Equipamentos (app/items/page.tsx)**
+**6. Lista de Equipamentos (app/items/page.tsx)**
 
-- Tabela responsiva (card view no mobile)
-- Colunas: Nome, Categoria, Marca, Qtd Total, Qtd Disponivel, Valor Unit.
-- Busca por texto (nome, marca, modelo)
-- Filtros: categoria (multi-select), status, disponibilidade
-- Ordenacao por coluna
-- Paginacao (20 por pagina)
-- Link para detalhe
+Design da lista:
+- Desktop: tabela com header Space Mono 9px ALL CAPS #999, bottom border #CCC. Cell text Space Mono numeric, Space Grotesk text. Cell padding 12px 16px. Numeros alinhados direita. SEM zebra striping.
+- Mobile: card view, cada item como bloco com nome Space Grotesk 16px, categoria pill badge, quantidade Space Mono 14px
+- Busca: input underline (1px bottom border #CCC), focus border → #000. Space Mono placeholder.
+- Filtros: chips pill selecionaveis (ativo: border #000 texto #000, inativo: border #CCC texto #999)
+- Paginacao: Space Mono 9px, "01 02 03 ..." ativo = #000 bold
+- Colunas: Nome, Categoria (pill badge), Marca, Qtd Total, Qtd Disponivel, Valor Unit.
+- Ordenacao por coluna (seta monoline 1.5px no header)
 
-**5. Detalhe do Item (app/items/[id]/page.tsx)**
+**7. Detalhe do Item (app/items/[id]/page.tsx)**
 
-- Cabecalho: nome, categoria (badge colorido), marca, modelo, foto
-- Secao "Serial Numbers": lista de todas as unidades fisicas deste item
-  - Codigo interno, status (badge), estado, desgaste (barra visual 1-5), valor_atual, deprec.%, tag RFID (se vinculada), QR code
-- Secao "Historico": ultimas movimentacoes de qualquer serial deste item
-- Botoes: Editar, Adicionar Serial
+- Hero: nome em Space Grotesk 36px #000 + categoria pill badge
+- Marca/modelo em Space Mono 11px ALL CAPS #999
+- Secao "SERIAL NUMBERS" (label Space Mono 9px): tabela com codigo_interno Space Mono 14px, status badge (pill, cor do status), desgaste (barra segmentada 5 blocos), valor_atual Space Mono 14px. Tag RFID e QR em Space Mono 9px #999.
+- Secao "HISTORICO": feed de movimentacoes com pip colorido + texto + timestamp
+- Botoes: "EDITAR" pill secondary, "ADICIONAR SERIAL" pill primary
 
 **6. CRUD de Items**
 
@@ -810,26 +1002,38 @@ Deletar item:
 - CRUD similar aos items
 - Detalhe do lote com historico
 
-**9. Componentes reutilizaveis**
+**11. Componentes reutilizaveis**
 
 ```
 components/
+  Layout/
+    Sidebar.tsx            # Dark sidebar 380px com dot-grid, hero, widgets, nav
+    BottomNav.tsx          # Mobile bottom nav dark
+    PageHeader.tsx         # Titulo + avatar no light panel
   Dashboard/
-    StatCard.tsx           # Card de metrica
-    StatusChart.tsx        # Grafico de status
-    RecentMovements.tsx    # Lista de movimentacoes
+    HeroMetric.tsx         # Numero Doto grande + label + trend
+    MiniWidget.tsx         # Widget compacto pra grid 2x2
+    KPICard.tsx            # KPI com label/valor/delta (light panel)
+    CircularGauge.tsx      # SVG gauge circular com % centro
+    SegmentedBar.tsx       # Barra de blocos (5px, 2px gap, N segmentos)
+    WearBar.tsx            # SegmentedBar especializada pra desgaste 1-5
+    BarChart.tsx           # Bar chart vertical inline SVG
+    ActivityFeed.tsx       # Feed com pip colorido + texto + timestamp
+    CategoryRanking.tsx    # Ranking com ordinal + nome + valor + mini-bar
+    StatusChips.tsx        # Row de pills de status do sistema
   Items/
-    ItemCard.tsx           # Card de item (mobile view)
-    ItemTable.tsx          # Tabela de items (desktop view)
+    ItemCard.tsx           # Card de item (mobile)
+    ItemTable.tsx          # Tabela de items (desktop)
     ItemForm.tsx           # Form de create/edit
-    SerialNumberList.tsx   # Lista de serials de um item
+    SerialNumberList.tsx   # Lista de serials com desgaste bar
   UI/
-    StatusBadge.tsx        # Badge colorido por status
-    CategoryBadge.tsx      # Badge por categoria
-    SearchBar.tsx          # Busca com debounce
-    FilterPanel.tsx        # Painel de filtros
-    ConfirmDialog.tsx      # Modal de confirmacao
-    Pagination.tsx         # Controle de paginacao
+    StatusBadge.tsx        # Pill badge: Space Mono 9px ALL CAPS, borda cor status
+    CategoryBadge.tsx      # Pill badge: categoria
+    SearchInput.tsx        # Input underline com debounce
+    FilterChips.tsx        # Chips pill selecionaveis
+    ConfirmDialog.tsx      # Modal: backdrop rgba(0,0,0,0.8), dialog #FFF borda #E8E8E8
+    Pagination.tsx         # Space Mono numeros
+    DotGrid.tsx            # Background dot-grid reutilizavel (CSS)
 ```
 
 ### Arquivos para criar
@@ -865,6 +1069,7 @@ mmd-estoque-web/
   lib/
     supabase.ts
     types.ts
+    design-tokens.ts       # Cores, fontes, spacing como constantes
 ```
 
 ### Verificacao
@@ -877,9 +1082,19 @@ mmd-estoque-web/
 - [ ] CRUD de items funciona (criar, editar, deletar)
 - [ ] CRUD de serial numbers funciona
 - [ ] Pagina de lotes funciona
-- [ ] Layout responsivo: testado em 375px (iPhone) e 1440px (desktop)
+- [ ] Layout responsivo: testado em 375px (iPhone) e 1440px (MacBook)
 - [ ] Nenhum erro no console do browser
 - [ ] TypeScript strict mode sem erros
+- [ ] **DESIGN:** Split layout dark/light funcionando no desktop
+- [ ] **DESIGN:** Bottom nav dark no mobile (< 768px)
+- [ ] **DESIGN:** Fontes Space Grotesk + Space Mono + Doto carregando
+- [ ] **DESIGN:** Dot-grid visivel na sidebar dark
+- [ ] **DESIGN:** Hero metric em Doto na sidebar
+- [ ] **DESIGN:** Status badges com cores corretas (pill, sem background)
+- [ ] **DESIGN:** Barras segmentadas de desgaste com 5 blocos
+- [ ] **DESIGN:** Gauge circular SVG na taxa de depreciacao
+- [ ] **DESIGN:** SEM sombras, SEM gradients em nenhum componente
+- [ ] **DESIGN:** Comparar visualmente com ~/Desktop/analytics-dashboard.html
 
 ### Handoff para Sprint 4
 
@@ -917,23 +1132,38 @@ Ao finalizar:
 
 Este sprint adiciona gestao de eventos e packing lists ao web app, alem de geracao e impressao de QR codes. Marcelo usa isso para planejar eventos: cria o projeto, monta a lista de equipamentos necessarios, e imprime QR codes para colar nos equipamentos.
 
+### Design (herda do Sprint 3, ler `docs/design-brief.md`)
+
+Usar todos os componentes e tokens de design criados no Sprint 3. Mesmo layout split, mesmas fontes, mesmas regras.
+
+Novas diretivas:
+
+**Projetos:** Hero do detalhe = nome do projeto em Space Grotesk 36px #000. Status badge pill grande. Datas em Space Mono 11px #999.
+
+**Packing List Editor:** Layout split dentro do light panel: esquerda = items disponiveis (lista compacta), direita = items alocados (com quantidade). Progresso hero "12/15" em Doto 48px #000 com barra segmentada.
+
+**QR Code Page:** Grid de QR codes em layout A4. QR preto sobre branco. Label abaixo: codigo Space Mono 9px + nome Space Grotesk 11px. Print-friendly com @media print.
+
+**Pagina publica /s/[codigo]:** Mobile-first, dark mode (#000 fundo). Codigo em Doto 36px #FFF no topo. Status badge grande. Desgaste barra segmentada. Valor Space Mono. Sem nav, sem sidebar, single-purpose.
+
 ### Tarefa
 
 **1. CRUD de Projetos/Eventos (app/projetos/)**
 
 Lista (app/projetos/page.tsx):
-- Tabela/cards com: nome, cliente, data inicio, data fim, local, status (badge)
-- Filtro por status: PLANEJAMENTO, CONFIRMADO, EM_CAMPO, FINALIZADO, CANCELADO
-- Ordenacao por data
-- Botao "Novo Projeto"
+- Tabela desktop / cards mobile: nome, cliente, datas, status badge (pill, cor do status)
+- Filtro: chips pill por status (PLANEJAMENTO, CONFIRMADO, EM_CAMPO, FINALIZADO, CANCELADO)
+- Ordenacao: seta no header da tabela
+- Botao "NOVO PROJETO": pill primary (fundo #000 texto #FFF)
 
 Criar/Editar (app/projetos/new/page.tsx, app/projetos/[id]/edit/page.tsx):
-- Form: nome*, cliente, data_inicio, data_fim, local, status, notas
-- Validacao: data_fim >= data_inicio
+- Form: inputs underline (1px bottom border), labels Space Mono 9px ALL CAPS
+- Validacao: data_fim >= data_inicio. Erro em Space Mono 9px #D71921
 
 Detalhe (app/projetos/[id]/page.tsx):
-- Header: nome, cliente, datas, local, status
-- Secao "Packing List": link para editor
+- Hero: nome Space Grotesk 36px #000, status badge pill grande
+- Datas + local em Space Mono 11px #999
+- Secao "PACKING LIST": link para editor
 - Secao "Movimentacoes": historico de saidas/retornos deste projeto
 - Botoes: Editar, Deletar (so PLANEJAMENTO ou CANCELADO)
 
@@ -991,9 +1221,15 @@ Usar biblioteca `qrcode` (npm) para geracao client-side.
 **6. Pagina publica de serial (app/s/[codigo]/page.tsx)**
 
 - Acesso publico (sem auth)
-- Mostra: nome do item, codigo interno, categoria, marca, modelo, status atual, estado, desgaste, valor_atual
-- Se EM_CAMPO: mostra nome do projeto
-- Layout simples, mobile-friendly (QR vai ser lido pelo celular)
+- **Dark mode, mobile-first** (esta pagina e acessada via scan de QR no celular)
+- Fundo #000, sem sidebar, sem nav. Single-purpose.
+- Hero: codigo interno em Doto 36px #FFF centralizado
+- Nome do item em Space Grotesk 18px #E8E8E8
+- Categoria pill badge, marca/modelo em Space Mono 11px #999
+- Status: badge grande (pill, cor do status, Space Mono 13px)
+- Desgaste: barra segmentada 5 blocos
+- Valor atual: Space Mono 24px #FFF (se disponivel)
+- Se EM_CAMPO: nome do projeto em Space Grotesk 14px #D4A843
 - Sem acoes de edicao (read-only)
 
 **7. Componentes novos**
@@ -1068,6 +1304,10 @@ mmd-estoque-web/
 - [ ] Layout de impressao cabe em A4
 - [ ] Tudo responsivo (375px e 1440px)
 - [ ] `npm run build` sem erros
+- [ ] **DESIGN:** Pagina publica /s/ em dark mode, hero Doto, status badge grande
+- [ ] **DESIGN:** Packing list editor com progresso Doto + barra segmentada
+- [ ] **DESIGN:** QR labels em Space Mono, grid limpo pra impressao
+- [ ] **DESIGN:** Forms com inputs underline, labels Space Mono ALL CAPS
 
 ### Handoff para Sprint 5
 
@@ -1297,6 +1537,24 @@ Ao finalizar:
 ### Contexto
 
 Sprint final. Colocar tudo no ar, polir UX, rodar testes finais e entregar pro Marcelo com um guia de uso.
+
+### Design Review (OBRIGATORIO antes de declarar done)
+
+Antes de entregar, o agente DEVE fazer um design review completo contra `docs/design-brief.md`:
+
+**Checklist de design final:**
+1. Abrir `~/Desktop/analytics-dashboard.html` no browser e comparar visualmente com o dashboard MMD
+2. Verificar que TODAS as telas seguem: fontes corretas (Space Grotesk/Mono/Doto), sem sombras, sem gradients, labels ALL CAPS, numeros em Space Mono
+3. Verificar dark sidebar com dot-grid, hero Doto, nav com border-left ativo
+4. Verificar cores de status aplicadas nos VALORES, nao backgrounds
+5. Verificar barras segmentadas de desgaste em todas as telas que mostram desgaste
+6. Verificar gauge circular na taxa de depreciacao
+7. iOS: confirmar 100% dark mode, tab bar dark, fontes bundled
+8. Mobile web: confirmar bottom nav dark, layout single-column
+9. Pagina publica /s/: confirmar dark mode, hero Doto, mobile-first
+10. Print QR: confirmar layout A4 limpo
+
+Qualquer desvio do design system deve ser corrigido neste sprint. O polish NAO e retrabalho, e ajuste fino, porque os sprints anteriores ja receberam diretivas de design.
 
 ### Tarefa
 

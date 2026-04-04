@@ -7,14 +7,30 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from openpyxl.chart import PieChart, Reference
+from openpyxl.chart.label import DataLabelList
+from openpyxl.chart.marker import DataPoint
+from openpyxl.chart.shapes import GraphicalProperties
 from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 WORKBOOK_PATH = PROJECT_DIR / "data" / "inventario-limpo.xlsx"
 MARKDOWN_PATH = PROJECT_DIR / "data" / "valores-para-importacao.md"
-ACTIVE_SHEETS = ["ILUMINACAO", "AUDIO", "ENERGIA", "ESTRUTURA", "EFEITO", "VIDEO", "ACESSORIO"]
+ACTIVE_SHEETS = ["ILUMINACAO", "AUDIO", "ENERGIA", "ESTRUTURA", "EFEITO", "VIDEO", "ACESSORIO", "FORA DE OPERACAO"]
 CURRENCY_FORMAT = 'R$ #,##0.00'
+PIE_CHART_ANCHOR = "J15"
+PIE_CHART_WIDTH = 8.8
+PIE_CHART_HEIGHT = 11.5
+PIE_LABEL_COLUMN = "X"
+PIE_COLORS = ["6366F1", "10B981", "F59E0B", "EF4444", "3B82F6", "8B5CF6", "14B8A6", "F97316"]
+
+
+def depreciation_formula(row_idx: int, original_col: int, current_col: int) -> str:
+    original_ref = f"{get_column_letter(original_col)}{row_idx}"
+    current_ref = f"{get_column_letter(current_col)}{row_idx}"
+    return f'=IF({original_ref}>0,({original_ref}-{current_ref})/{original_ref},"")'
 
 
 def extract_csv_block(markdown_text: str) -> str:
@@ -85,6 +101,51 @@ def star_rating(value: float) -> str:
     return ("★" * rating) + ("☆" * (5 - rating))
 
 
+def build_dashboard_pie_chart(ws) -> PieChart:
+    pie = PieChart()
+    labels = Reference(ws, min_col=24, min_row=17, max_row=24)
+    data = Reference(ws, min_col=4, min_row=16, max_row=24)
+    pie.add_data(data, titles_from_data=True)
+    pie.set_categories(labels)
+    pie.title = "Distribuicao do Patrimonio por Categoria"
+    pie.varyColors = True
+    pie.height = PIE_CHART_HEIGHT
+    pie.width = PIE_CHART_WIDTH
+    pie.legend = None
+    pie.anchor = PIE_CHART_ANCHOR
+
+    pie.dLbls = DataLabelList()
+    pie.dLbls.showCatName = True
+    pie.dLbls.showVal = False
+    pie.dLbls.showPercent = False
+    pie.dLbls.showLeaderLines = True
+
+    if pie.ser:
+        points = []
+        for idx, color in enumerate(PIE_COLORS):
+            point = DataPoint(idx=idx)
+            point.graphicalProperties = GraphicalProperties(solidFill=color)
+            points.append(point)
+        pie.ser[0].dPt = points
+
+    return pie
+
+
+def refresh_dashboard_pie_chart(ws) -> None:
+    ws.column_dimensions[PIE_LABEL_COLUMN].hidden = True
+
+    for row in range(17, 25):
+        category = ws.cell(row=row, column=2).value
+        value = ws.cell(row=row, column=4).value
+        if category in (None, "") or value in (None, ""):
+            ws[f"{PIE_LABEL_COLUMN}{row}"] = None
+            continue
+        ws[f"{PIE_LABEL_COLUMN}{row}"] = f"{category}\nR$ {format_brl(float(value))}"
+
+    ws._charts = [chart for chart in ws._charts if type(chart).__name__ != "PieChart"]
+    ws.add_chart(build_dashboard_pie_chart(ws))
+
+
 def collect_sheet_records(ws) -> list[dict[str, object]]:
     row_idx = header_row_index(ws)
     if row_idx is None:
@@ -96,11 +157,18 @@ def collect_sheet_records(ws) -> list[dict[str, object]]:
     for row in ws.iter_rows(min_row=row_idx + 1, values_only=True):
         codigo = row[idx["Codigo"]] if idx.get("Codigo") is not None else None
         nome = row[idx["Nome"]] if idx.get("Nome") is not None else None
-        if not codigo or not nome:
+        if not codigo:
             continue
+        codigo_text = str(codigo).strip()
+        if not codigo_text.startswith("MMD-"):
+            continue
+        subcategoria = (row[idx["Subcategoria"]] or "").strip() if idx.get("Subcategoria") is not None and row[idx["Subcategoria"]] else ""
+        nome_text = str(nome).strip() if nome not in (None, "") else subcategoria or "SEM NOME"
         records.append(
             {
-                "codigo": str(codigo).strip(),
+                "codigo": codigo_text,
+                "nome": nome_text,
+                "categoria": ws.title,
                 "status": (row[idx["Status"]] or "").strip() if idx.get("Status") is not None and row[idx["Status"]] else "",
                 "desgaste": safe_float(row[idx["Desgaste"]]) if idx.get("Desgaste") is not None else 0.0,
                 "valor_original": safe_float(row[idx["Valor Original"]]) if idx.get("Valor Original") is not None else 0.0,
@@ -144,7 +212,7 @@ def refresh_dashboard(wb) -> None:
     total_atual = sum(record["valor_atual"] for record in active_records)
     avg_wear = (sum(record["desgaste"] for record in active_records) / total) if total else 0.0
     criticos = sum(1 for record in active_records if record["desgaste"] <= 2)
-    deprec_pct = round((total_atual / total_original) * 100, 2) if total_original else 0.0
+    deprec_pct = round(((total_original - total_atual) / total_original) * 100, 2) if total_original else 0.0
 
     dashboard["B3"] = f"Inventario Inteligente  ·  {datetime.now().strftime('%d/%m/%Y')}"
     dashboard["B5"] = total
@@ -164,17 +232,54 @@ def refresh_dashboard(wb) -> None:
     for sheet_name in ACTIVE_SHEETS:
         records = active_data.get(sheet_name, [])
         category_total = sum(record["valor_original"] for record in records)
+        category_current = sum(record["valor_atual"] for record in records)
         dashboard.cell(row=row, column=2).value = sheet_name
         dashboard.cell(row=row, column=3).value = len(records)
         dashboard.cell(row=row, column=4).value = round(category_total, 2)
-        dashboard.cell(row=row, column=5).value = (category_total / total_original) if total_original else 0
+        dashboard.cell(row=row, column=5).value = round(category_current, 2)
+        dashboard.cell(row=row, column=6).value = (category_total / total_original) if total_original else 0
         dashboard.cell(row=row, column=4).number_format = CURRENCY_FORMAT
+        dashboard.cell(row=row, column=5).number_format = CURRENCY_FORMAT
+        dashboard.cell(row=row, column=6).number_format = "0.0%"
         row += 1
 
     while row <= 24:
-        for col in range(2, 6):
+        for col in range(2, 7):
             dashboard.cell(row=row, column=col).value = None
         row += 1
+
+    status_rows = {
+        "DISPONIVEL": 28,
+        "EM_CAMPO": 29,
+        "PACKED": 30,
+        "MANUTENCAO": 31,
+    }
+    for status, row_idx in status_rows.items():
+        count = sum(1 for record in active_records if record["status"] == status)
+        pct = (count / total) if total else 0
+        dashboard.cell(row=row_idx, column=2).value = status
+        dashboard.cell(row=row_idx, column=3).value = count
+        dashboard.cell(row=row_idx, column=4).value = pct
+        dashboard.cell(row=row_idx, column=4).number_format = "0.0%"
+
+    top_records = sorted(active_records, key=lambda record: record["valor_original"], reverse=True)[:10]
+    top_row = 35
+    for record in top_records:
+        dashboard.cell(row=top_row, column=2).value = record["nome"]
+        dashboard.cell(row=top_row, column=3).value = record["categoria"]
+        dashboard.cell(row=top_row, column=4).value = round(record["valor_original"], 2)
+        dashboard.cell(row=top_row, column=5).value = star_rating(record["desgaste"])
+        dashboard.cell(row=top_row, column=6).value = round(record["valor_atual"], 2)
+        dashboard.cell(row=top_row, column=4).number_format = CURRENCY_FORMAT
+        dashboard.cell(row=top_row, column=6).number_format = CURRENCY_FORMAT
+        top_row += 1
+
+    while top_row <= 44:
+        for col in range(2, 7):
+            dashboard.cell(row=top_row, column=col).value = None
+        top_row += 1
+
+    refresh_dashboard_pie_chart(dashboard)
 
 
 def main() -> int:
@@ -211,22 +316,26 @@ def main() -> int:
                 continue
 
             try:
-                valor_original = float(payload["Valor Original (R$)"])
-                valor_atual = float(payload["Valor Atual (R$)"])
-                dep_pct = float(payload["Deprec. (%)"])
+                valor_original = safe_float(payload["Valor Original (R$)"])
+                valor_atual = safe_float(payload["Valor Atual (R$)"])
             except (TypeError, ValueError) as exc:
                 raise RuntimeError(f"Valores invalidos no markdown para {code}: {payload}") from exc
 
             ws.cell(row=data_row[0].row, column=orig_col).value = valor_original
             ws.cell(row=data_row[0].row, column=curr_col).value = valor_atual
-            ws.cell(row=data_row[0].row, column=dep_col).value = dep_pct
+            ws.cell(row=data_row[0].row, column=dep_col).value = depreciation_formula(data_row[0].row, orig_col, curr_col)
             ws.cell(row=data_row[0].row, column=orig_col).number_format = CURRENCY_FORMAT
             ws.cell(row=data_row[0].row, column=curr_col).number_format = CURRENCY_FORMAT
+            ws.cell(row=data_row[0].row, column=dep_col).number_format = "0%"
             applied += 1
             unmatched_markdown.discard(code)
 
     backup_path = WORKBOOK_PATH.with_name(f"{WORKBOOK_PATH.stem}.backup-apply-{datetime.now().strftime('%Y%m%d-%H%M%S')}{WORKBOOK_PATH.suffix}")
     shutil.copy2(WORKBOOK_PATH, backup_path)
+    wb.calculation.calcMode = "auto"
+    wb.calculation.fullCalcOnLoad = True
+    wb.calculation.forceFullCalc = True
+    wb.calculation.calcOnSave = True
     refresh_dashboard(wb)
     wb.save(WORKBOOK_PATH)
 

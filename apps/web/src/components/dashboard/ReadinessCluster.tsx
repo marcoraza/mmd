@@ -99,7 +99,7 @@ export function ReadinessCluster({
 
       {satellites.map((s, i) => {
         const total = Math.max(satellites.length, 1)
-        const angle = (i / total) * Math.PI * 2 - Math.PI / 2
+        const angle = (i / total) * Math.PI * 2 - Math.PI / 6
         const radius = size / 2 + 18
         const x = size / 2 + Math.cos(angle) * radius
         const y = size / 2 + Math.sin(angle) * radius

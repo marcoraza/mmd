@@ -218,17 +218,22 @@ body {
   border-color: var(--glass-border-strong);
 }
 
-/* ─── scrollbar ─── */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+/* ─── scrollbar (hidden, global) ─── */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 10px;
+*::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
 }
 
 /* ─── focus ring ─── */

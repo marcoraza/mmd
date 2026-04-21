@@ -65,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               flex: 1,
               position: 'relative',
               overflowY: 'auto',
+              overflowX: 'hidden',
               paddingBottom: 'env(safe-area-inset-bottom)',
             }}
           >

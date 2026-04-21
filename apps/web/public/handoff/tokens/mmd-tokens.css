@@ -1,0 +1,109 @@
+/*
+ * Estoque Inteligente MMD — Design Tokens
+ * Source: tokens/mmd-tokens.json
+ * Liquid Glass 2030 · dark-first, caustic-accented
+ */
+
+:root {
+  /* ─── color · neutrals ─────────────────────── */
+  --mmd-bg-0: oklch(0.12 0.015 250);
+  --mmd-bg-1: oklch(0.16 0.018 250);
+  --mmd-bg-2: oklch(0.20 0.02 250);
+
+  --mmd-fg-0: oklch(0.98 0.005 250);
+  --mmd-fg-1: oklch(0.85 0.008 250);
+  --mmd-fg-2: oklch(0.65 0.01 250);
+  --mmd-fg-3: oklch(0.48 0.012 250);
+
+  /* ─── color · accent ───────────────────────── */
+  --mmd-cyan:   oklch(0.75 0.14 210);
+  --mmd-violet: oklch(0.70 0.17 295);
+  --mmd-amber:  oklch(0.80 0.15 75);
+  --mmd-green:  oklch(0.80 0.17 150);
+  --mmd-red:    oklch(0.70 0.18 25);
+
+  /* ─── glass surface ────────────────────────── */
+  --mmd-glass-bg:           rgba(255,255,255,0.05);
+  --mmd-glass-bg-strong:    rgba(255,255,255,0.09);
+  --mmd-glass-border:       rgba(255,255,255,0.10);
+  --mmd-glass-border-strong:rgba(255,255,255,0.18);
+  --mmd-glass-highlight:    rgba(255,255,255,0.18);
+
+  /* ─── type ─────────────────────────────────── */
+  --mmd-font-sans: "Inter Tight", -apple-system, system-ui, sans-serif;
+  --mmd-font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* type scale */
+  --mmd-size-display: 42px;
+  --mmd-size-title:   28px;
+  --mmd-size-h2:      22px;
+  --mmd-size-h3:      17px;
+  --mmd-size-body:    14px;
+  --mmd-size-small:   12px;
+  --mmd-size-mono:    10px;
+
+  /* ─── radii ───────────────────────────────── */
+  --mmd-r-sm: 10px;
+  --mmd-r-md: 16px;
+  --mmd-r-lg: 24px;
+  --mmd-r-xl: 32px;
+
+  /* ─── spacing ─────────────────────────────── */
+  --mmd-sp-1: 4px;
+  --mmd-sp-2: 8px;
+  --mmd-sp-3: 12px;
+  --mmd-sp-4: 16px;
+  --mmd-sp-5: 20px;
+  --mmd-sp-6: 24px;
+  --mmd-sp-8: 32px;
+  --mmd-sp-10: 40px;
+  --mmd-sp-12: 48px;
+  --mmd-sp-16: 64px;
+
+  /* ─── blur ────────────────────────────────── */
+  --mmd-blur-sm: 12px;
+  --mmd-blur-md: 24px;
+  --mmd-blur-lg: 40px;
+
+  /* ─── shadow ──────────────────────────────── */
+  --mmd-shadow-glass:    0 2px 6px rgba(0,0,0,0.25), 0 20px 60px rgba(0,0,0,0.35);
+  --mmd-shadow-elevated: 0 4px 12px rgba(0,0,0,0.35), 0 30px 80px rgba(0,0,0,0.45);
+  --mmd-glow-cyan:   0 0 24px color-mix(in oklch, var(--mmd-cyan) 40%, transparent);
+  --mmd-glow-violet: 0 0 24px color-mix(in oklch, var(--mmd-violet) 40%, transparent);
+
+  /* ─── motion ──────────────────────────────── */
+  --mmd-motion-instant: 80ms  cubic-bezier(0.4, 0, 0.2, 1);
+  --mmd-motion-fast:    180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --mmd-motion-default: 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  --mmd-motion-slow:    420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── light mode ────────────────────────────── */
+:root.light {
+  --mmd-bg-0: oklch(0.97 0.005 250);
+  --mmd-bg-1: oklch(0.94 0.008 250);
+  --mmd-bg-2: oklch(0.90 0.01 250);
+  --mmd-fg-0: oklch(0.15 0.01 250);
+  --mmd-fg-1: oklch(0.30 0.01 250);
+  --mmd-fg-2: oklch(0.50 0.01 250);
+  --mmd-fg-3: oklch(0.65 0.01 250);
+
+  --mmd-glass-bg:           rgba(255,255,255,0.55);
+  --mmd-glass-bg-strong:    rgba(255,255,255,0.75);
+  --mmd-glass-border:       rgba(0,0,0,0.07);
+  --mmd-glass-border-strong:rgba(0,0,0,0.12);
+  --mmd-glass-highlight:    rgba(255,255,255,0.9);
+  --mmd-shadow-glass:    0 2px 6px rgba(0,0,0,0.05), 0 20px 60px rgba(0,0,0,0.10);
+  --mmd-shadow-elevated: 0 4px 12px rgba(0,0,0,0.08), 0 30px 80px rgba(0,0,0,0.15);
+}
+
+/* ─── utility classes ───────────────────────── */
+.mmd-glass {
+  background: var(--mmd-glass-bg);
+  border: 1px solid var(--mmd-glass-border);
+  border-radius: var(--mmd-r-lg);
+  backdrop-filter: blur(var(--mmd-blur-md)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--mmd-blur-md)) saturate(180%);
+  box-shadow: var(--mmd-shadow-glass);
+}
+.mmd-mono { font-family: var(--mmd-font-mono); }

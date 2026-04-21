@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Estoque Inteligente MMD · protótipo clicável</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/glass.css">
+<style>
+  body {
+    background: radial-gradient(ellipse at top, oklch(0.18 0.04 250) 0%, oklch(0.08 0.02 250) 60%);
+    min-height: 100vh; overflow-x: hidden;
+  }
+  :root.light body { background: radial-gradient(ellipse at top, oklch(0.97 0.01 250) 0%, oklch(0.92 0.015 250) 60%); }
+
+  .shell { max-width: 1600px; margin: 0 auto; padding: 28px 40px 80px; }
+
+  .proto-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .proto-header .eyebrow {
+    font-family: var(--font-mono); font-size: 10px; color: var(--fg-2);
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .proto-header h1 { font-size: 26px; font-weight: 500; letter-spacing: -0.4px; margin: 0; line-height: 1.1; }
+  .proto-header p { font-size: 12px; color: var(--fg-2); margin: 2px 0 0; }
+
+  /* Breadcrumb / flow visualizer */
+  .flow-map {
+    display: flex; align-items: center; gap: 0; padding: 8px 12px; border-radius: 14px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .flow-node {
+    padding: 6px 10px; border-radius: 8px; font-size: 11px; color: var(--fg-2);
+    cursor: pointer; font-family: inherit; background: none; border: 1px solid transparent;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;
+  }
+  .flow-node:hover { color: var(--fg-0); background: var(--glass-bg); }
+  .flow-node.active { color: var(--fg-0); background: var(--glass-bg-strong); border-color: var(--glass-border-strong); font-weight: 500; }
+  .flow-node.visited { color: var(--accent-cyan); }
+  .flow-node .mono { font-family: var(--font-mono); font-size: 9px; opacity: 0.6; letter-spacing: 0.1em; text-transform: uppercase; }
+  .flow-arrow { color: var(--fg-3); margin: 0 2px; font-size: 10px; }
+
+  /* Hotspot overlay — highlights tappable regions when hotspots on */
+  .hotspots-on .hotspot {
+    outline: 2px dashed var(--accent-cyan);
+    outline-offset: 2px;
+    background: color-mix(in oklch, var(--accent-cyan) 10%, transparent) !important;
+    border-radius: 6px;
+    animation: hsPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes hsPulse {
+    0%, 100% { outline-color: var(--accent-cyan); }
+    50% { outline-color: transparent; }
+  }
+  .hotspot { cursor: pointer; transition: background 0.15s; }
+  .hotspot:hover { background: color-mix(in oklch, var(--accent-cyan) 8%, transparent) !important; }
+
+  /* Screen stage */
+  .stage { position: relative; display: flex; justify-content: center; min-height: 880px; }
+  .stage-slide {
+    animation: slideIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.995); filter: blur(6px); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
+
+  /* Persistent HUD — bottom right */
+  .hud {
+    position: fixed; bottom: 20px; right: 20px; padding: 12px 14px; border-radius: 16px;
+    background: var(--glass-bg-strong); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--glass-border-strong); box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    display: flex; flex-direction: column; gap: 10px; z-index: 100; min-width: 200px;
+  }
+  .hud-title { font-family: var(--font-mono); font-size: 9px; color: var(--fg-2); letter-spacing: 0.14em; text-transform: uppercase; }
+  .hud-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--fg-1); }
+  .hud-toggle {
+    margin-left: auto; width: 34px; height: 18px; border-radius: 9px;
+    background: var(--glass-border); position: relative; cursor: pointer; transition: background 0.2s; flex: none;
+  }
+  .hud-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--fg-0); transition: transform 0.2s;
+  }
+  .hud-toggle.on { background: var(--accent-cyan); }
+  .hud-toggle.on::after { transform: translateX(16px); background: #fff; }
+  .hud-btn { padding: 7px 10px; border-radius: 8px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--fg-1); font-size: 11px; cursor: pointer; font-family: inherit; }
+  .hud-btn:hover { background: var(--glass-bg-strong); color: var(--fg-0); }
+  .hud-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Nav arrows */
+  .nav-arrow {
+    position: fixed; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 22px;
+    background: var(--glass-bg-strong); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border-strong); color: var(--fg-1); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; z-index: 50; font-size: 18px;
+  }
+  .nav-arrow:hover { color: var(--fg-0); background: var(--glass-bg); }
+  .nav-arrow:disabled { opacity: 0.2; cursor: not-allowed; }
+  .nav-arrow.prev { left: 16px; }
+  .nav-arrow.next { right: 16px; }
+
+  /* A little toast */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    padding: 10px 16px; border-radius: 12px;
+    background: var(--glass-bg-strong); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--accent-cyan); color: var(--fg-0); font-size: 12px; z-index: 200;
+    animation: toastIn 0.3s ease-out;
+    display: flex; align-items: center; gap: 10px;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  .screen-caption {
+    text-align: center; margin-bottom: 14px;
+  }
+  .screen-caption h2 { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: -0.2px; }
+  .screen-caption .mono { font-family: var(--font-mono); font-size: 10px; color: var(--fg-2); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="frames/browser-window.jsx"></script>
+<script type="text/babel" src="components/primitives.jsx"></script>
+<script type="text/babel" src="components/screen-dashboard.jsx"></script>
+<script type="text/babel" src="components/screen-projects.jsx"></script>
+<script type="text/babel" src="components/screen-item-detail.jsx"></script>
+<script type="text/babel" src="components/screen-rfid-scan.jsx"></script>
+<script type="text/babel" src="components/screen-checkout-combined.jsx"></script>
+<script type="text/babel" src="components/support-screens.jsx"></script>
+<script type="text/babel" src="components/catalog-calendar.jsx"></script>
+<script type="text/babel" src="components/conflict-resolver.jsx"></script>
+
+<script type="text/babel">
+// The flow — a real product journey, not a tab list:
+// Dashboard → Projects → Item → RFID scan → Checkout → Packing → (back to Dashboard)
+// With side trips: QR sheet, Tag bind, Onboarding, Lost item, Packing
+
+const FLOW = [
+  { id: 'onboarding',  label: 'Onboarding',           platform: 'ios', Cmp: Onboarding,       group: 'setup',   hint: 'Toque em "Próximo" para começar' },
+  { id: 'dashboard',   label: 'Dashboard',            platform: 'web', Cmp: DashboardV2,      group: 'main',    hint: 'Toque no próximo evento (Casamento Santos)' },
+  { id: 'projects',    label: 'Projeto · packing',    platform: 'web', Cmp: ProjectsV3,       group: 'main',    hint: 'Abra um item da lista pra ver detalhes' },
+  { id: 'item',        label: 'Item & condição',      platform: 'web', Cmp: ItemDetailV2,     group: 'main',    hint: 'Toque em "Preparar saída" pra ir pro scan' },
+  { id: 'qrsheet',     label: 'QR print sheet',       platform: 'web', Cmp: QRPrintSheet,     group: 'side',    hint: 'Imprima etiquetas antes de vincular tags' },
+  { id: 'tagbind',     label: 'Vincular tag RFID',    platform: 'ios', Cmp: TagBind,          group: 'side',    hint: 'Confirme o vínculo da tag' },
+  { id: 'rfid',        label: 'RFID scan ★',          platform: 'ios', Cmp: RfidScanV1,       group: 'main',    hint: 'Puxe o gatilho — 214 tags chegam como partículas' },
+  { id: 'checkout',    label: 'Check-out · validação',platform: 'ios', Cmp: CheckoutCombined, group: 'main',    hint: 'Confira a grade · confirme a saída' },
+  { id: 'packing',     label: 'Modo packing',         platform: 'ios', Cmp: PackingMap,       group: 'side',    hint: 'Rota otimizada pelo galpão' },
+  { id: 'lost',        label: 'Item perdido',         platform: 'ios', Cmp: ItemLost,         group: 'side',    hint: 'Buscador de sinal ativo' },
+  { id: 'catalog',     label: 'Catálogo mestre',      platform: 'web', Cmp: CatalogMaster,    group: 'side',    hint: 'Abra um produto pra ver estoque' },
+  { id: 'calendar',    label: 'Disponibilidade',      platform: 'web', Cmp: AvailCalendar,    group: 'side',    hint: 'Timeline · resolva os conflitos' },
+  { id: 'conflict',    label: 'Resolver conflito',    platform: 'web', Cmp: ConflictResolver, group: 'side',    hint: 'Escolha uma das 4 alternativas' },
+];
+
+const FLOW_MAIN = FLOW.filter(s => s.group !== 'side');
+
+// Hotspot definitions — where to tap on each screen to go where
+const HOTSPOTS = {
+  onboarding: [{ top: '84%', left: '55%', width: '38%', height: '7%', to: 'dashboard', label: 'Próximo' }],
+  dashboard:  [
+    { top: '22%', left: '17%', width: '46%', height: '18%', to: 'projects', label: 'Casamento Santos' },
+  ],
+  projects:   [{ top: '55%', left: '20%', width: '55%', height: '8%', to: 'item', label: 'Moving Head Beam 230W' }],
+  item:       [
+    { top: '88%', left: '72%', width: '22%', height: '7%', to: 'rfid', label: 'Preparar saída' },
+    { top: '88%', left: '48%', width: '20%', height: '7%', to: 'packing', label: 'Ver packing' },
+  ],
+  rfid:       [{ top: '85%', left: '10%', width: '80%', height: '10%', to: 'checkout', label: 'Finalizar scan' }],
+  checkout:   [{ top: '92%', left: '10%', width: '80%', height: '6%', to: 'dashboard', label: 'Confirmar saída → dashboard' }],
+  packing:    [{ top: '92%', left: '10%', width: '80%', height: '6%', to: 'rfid', label: 'Iniciar coleta' }],
+  qrsheet:    [{ top: '92%', left: '80%', width: '16%', height: '5%', to: 'tagbind', label: 'Ir pra vínculo' }],
+  tagbind:    [{ top: '92%', left: '45%', width: '50%', height: '5%', to: 'dashboard', label: 'Confirmar' }],
+  lost:       [{ top: '92%', left: '10%', width: '80%', height: '5%', to: 'dashboard', label: 'Voltar' }],
+};
+
+function WebFrame({ children }) {
+  const targetW = 1280, targetH = 820;
+  const scale = Math.min(1, 1320 / targetW);
+  return (
+    <div style={{ width: targetW * scale, height: (targetH + 84) * scale, position: 'relative' }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: targetW, height: targetH + 84 }}>
+        <ChromeWindow tabs={[{ title: 'Estoque Inteligente MMD' }]} activeIndex={0} url="app.mmd.com.br" width={targetW} height={targetH + 84}>
+          {children}
+        </ChromeWindow>
+      </div>
+    </div>
+  );
+}
+
+function HotspotLayer({ spots, onTap, hotspotsOn }) {
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      {(spots || []).map((h, i) => (
+        <div
+          key={i}
+          className="hotspot"
+          onClick={(e) => { e.stopPropagation(); onTap(h.to); }}
+          style={{
+            position: 'absolute',
+            top: h.top, left: h.left, width: h.width, height: h.height,
+            pointerEvents: 'auto',
+            background: 'transparent',
+          }}
+          title={h.label}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ScreenFrame({ screen, onTap, hotspotsOn }) {
+  const Cmp = screen.Cmp;
+  const spots = HOTSPOTS[screen.id] || [];
+  if (screen.platform === 'web') {
+    return (
+      <div style={{ position: 'relative' }}>
+        <WebFrame><Cmp /></WebFrame>
+        {/* Web hotspots live inside the web-content area (after the 84px chrome) */}
+        <div style={{ position: 'absolute', top: 84 * Math.min(1, 1320/1280), left: 0, right: 0, bottom: 0 }}>
+          <HotspotLayer spots={spots} onTap={onTap} hotspotsOn={hotspotsOn} />
+        </div>
+      </div>
+    );
+  }
+  // iOS
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <Cmp />
+      {/* Place hotspots over the inner iOS screen area — approximate, screens are 402x874 inside phone frame */}
+      <div style={{ position: 'absolute', inset: 0 }}>
+        <HotspotLayer spots={spots} onTap={onTap} hotspotsOn={hotspotsOn} />
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [currentId, setCurrentId] = React.useState(() => localStorage.getItem('mmd-proto-cur') || 'onboarding');
+  const [visited, setVisited] = React.useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('mmd-proto-visited') || '[]')); }
+    catch(e) { return new Set(); }
+  });
+  const [hotspotsOn, setHotspotsOn] = React.useState(true);
+  const [toast, setToast] = React.useState(null);
+
+  React.useEffect(() => {
+    localStorage.setItem('mmd-proto-cur', currentId);
+    setVisited(prev => {
+      const next = new Set(prev); next.add(currentId);
+      localStorage.setItem('mmd-proto-visited', JSON.stringify([...next]));
+      return next;
+    });
+  }, [currentId]);
+
+  const current = FLOW.find(s => s.id === currentId) || FLOW[0];
+  const mainIdx = FLOW_MAIN.findIndex(s => s.id === currentId);
+
+  const go = (id) => {
+    const target = FLOW.find(s => s.id === id);
+    if (!target) return;
+    setCurrentId(id);
+    setToast(`→ ${target.label}`);
+    setTimeout(() => setToast(null), 1400);
+  };
+
+  const reset = () => {
+    setVisited(new Set(['onboarding']));
+    localStorage.removeItem('mmd-proto-visited');
+    setCurrentId('onboarding');
+  };
+
+  // Keyboard nav
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'ArrowLeft' && mainIdx > 0) go(FLOW_MAIN[mainIdx - 1].id);
+      if (e.key === 'ArrowRight' && mainIdx < FLOW_MAIN.length - 1) go(FLOW_MAIN[mainIdx + 1].id);
+      if (e.key === 'h' || e.key === 'H') setHotspotsOn(v => !v);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mainIdx]);
+
+  return (
+    <div className={`shell ${hotspotsOn ? 'hotspots-on' : ''}`}>
+      <div className="proto-header">
+        <div style={{ flex: 1 }}>
+          <div className="eyebrow">Protótipo clicável · fluxo único</div>
+          <h1>Do primeiro scan até a saída do evento.</h1>
+          <p>Setas ou teclado ← → pra navegar · <b style={{color:'var(--fg-1)'}}>H</b> toca hotspots · toque nas áreas destacadas pra seguir o fluxo</p>
+        </div>
+      </div>
+
+      {/* Flow map */}
+      <div className="flow-map">
+        {FLOW_MAIN.map((s, i) => (
+          <React.Fragment key={s.id}>
+            <button
+              className={`flow-node ${currentId === s.id ? 'active' : ''} ${visited.has(s.id) && currentId !== s.id ? 'visited' : ''}`}
+              onClick={() => go(s.id)}
+            >
+              <span>{i + 1}. {s.label}</span>
+              <span className="mono">{s.platform}</span>
+            </button>
+            {i < FLOW_MAIN.length - 1 && <span className="flow-arrow">→</span>}
+          </React.Fragment>
+        ))}
+        <div style={{ flex: 1 }} />
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-3)', letterSpacing: 0.12, textTransform: 'uppercase', marginRight: 8 }}>Side trips</span>
+        {FLOW.filter(s => s.group === 'side').map(s => (
+          <button key={s.id} className={`flow-node ${currentId === s.id ? 'active' : ''} ${visited.has(s.id) && currentId !== s.id ? 'visited' : ''}`} onClick={() => go(s.id)}>
+            <span>{s.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="screen-caption" key={current.id + '-cap'}>
+        <span className="mono">passo {mainIdx >= 0 ? `${mainIdx + 1}/${FLOW_MAIN.length}` : 'side trip'} · {current.platform}</span>
+        <h2>{current.label}</h2>
+        <div style={{ fontSize: 12, color: 'var(--fg-2)', marginTop: 6 }}>{current.hint}</div>
+      </div>
+
+      <div className="stage">
+        <div className="stage-slide" key={current.id}>
+          <ScreenFrame screen={current} onTap={go} hotspotsOn={hotspotsOn} />
+        </div>
+      </div>
+
+      {/* Arrows */}
+      <button className="nav-arrow prev" onClick={() => mainIdx > 0 && go(FLOW_MAIN[mainIdx - 1].id)} disabled={mainIdx <= 0}>‹</button>
+      <button className="nav-arrow next" onClick={() => mainIdx < FLOW_MAIN.length - 1 && go(FLOW_MAIN[mainIdx + 1].id)} disabled={mainIdx >= FLOW_MAIN.length - 1}>›</button>
+
+      {/* HUD */}
+      <div className="hud">
+        <div className="hud-title">Protótipo · controles</div>
+        <div className="hud-row">
+          <span>Mostrar hotspots</span>
+          <div className={`hud-toggle ${hotspotsOn ? 'on' : ''}`} onClick={() => setHotspotsOn(v => !v)} />
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="hud-btn" style={{ flex: 1 }} onClick={reset}>Reiniciar</button>
+          <button className="hud-btn" style={{ flex: 1 }} onClick={() => go('dashboard')}>Home</button>
+        </div>
+        <div style={{ fontSize: 10, color: 'var(--fg-3)', lineHeight: 1.5 }}>
+          {visited.size}/{FLOW.length} telas visitadas · atalhos: ← → H
+        </div>
+      </div>
+
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+document.documentElement.classList.add('light');
+</script>
+
+</body>
+</html>

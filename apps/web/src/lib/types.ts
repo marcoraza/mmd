@@ -161,3 +161,6 @@ export type UpdateSerialNumber = Partial<Omit<CreateSerialNumber, 'item_id' | 'c
 
 export type CreateLote = Omit<Lote, 'id' | 'created_at' | 'updated_at' | 'item'>
 export type UpdateLote = Partial<Omit<CreateLote, 'item_id'>>
+
+export type CreateProjeto = Omit<Projeto, 'id' | 'created_at' | 'updated_at'>
+export type UpdateProjeto = Partial<CreateProjeto>

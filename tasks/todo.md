@@ -84,3 +84,138 @@
 - O markdown de importacao passou a exibir moeda em formato visual brasileiro (`R$ 6.922,00`), enquanto o importador continua tolerante a esse formato cosmetico.
 - A reaplicacao consolidada desta passada atualizou `519` linhas, manteve `0` codigos orfaos e fechou o dashboard em `Valor Original = R$ 796.323,50` e `Valor Atual = R$ 707.348,99`.
 - O grafico de pizza do dashboard foi movido para a faixa vazia da direita, sem legenda, e agora mostra em cada fatia `Categoria + R$` usando exatamente `Valor Original` por categoria, como `AUDIO R$ 446.936,35` e `VIDEO R$ 13.022,82`.
+
+## Sprint 4 - Web Projects + Validation
+
+- [x] Corrigir o parser numerico de `scripts/apply-pricing-markdown.py` para nao inflar valores com decimal em ponto
+- [x] Revalidar `tests/test_depreciation_pipeline.py`
+- [x] Rodar a suite local existente do pipeline Python
+- [x] Substituir o placeholder de `apps/web/src/app/projetos/page.tsx` por uma listagem real com filtros e progresso por projeto
+- [x] Restaurar o `node_modules` de `apps/web` com `npm ci`
+- [x] Rodar `eslint` no web e confirmar que voltou a executar
+- [x] Rodar `npm run build` no web
+- [x] Definir a estrategia das rotas dinamicas `/items/[id]` para o modo `output: "export"`
+
+## Sprint 4 - Review
+
+- O parser antigo removia todos os pontos antes de converter numero, entao `950.00` virava `95000`.
+- A regressao foi corrigida em `scripts/apply-pricing-markdown.py` e a suite Python local fechou com `7 passed`.
+- A pagina de projetos do web deixou de ser placeholder e agora carrega projetos reais via Supabase, com filtro por status, busca textual e progresso calculado a partir de `packing_list` e `movimentacoes`.
+- O `apps/web/node_modules` foi reconstruido com `npm ci`, destravando `tsc` e a execucao do `eslint`.
+- O web saiu de `/items/[id]` e passou a usar paginas estaticas com query string em `/items/detalhe` e `/items/editar`, preservando o fluxo de detalhe e edicao sem quebrar `output: "export"`.
+- `npm run build` agora fecha com export estatico completo e `tsc --noEmit` volta a passar no `apps/web`.
+- `npm run lint` fecha sem erros; sobrou apenas 1 warning conhecido em `src/app/layout.tsx` sobre fonte custom carregada via layout.
+
+## Sprint 5 - Web Events + Packing List
+
+- [x] Criar paginas estaticas de projeto em `/projetos/novo`, `/projetos/editar?id=` e `/projetos/detalhe?id=`
+- [x] Adicionar CRUD basico de projetos no web
+- [x] Implementar editor de packing list no detalhe do projeto
+- [x] Atualizar listagem de projetos com links para detalhe/edicao
+- [x] Implementar dashboard de disponibilidade por data no web
+- [x] Implementar pagina de etiquetas QR para impressao no web
+- [x] Validar `npm run lint`, `npm run build` e `tsc --noEmit` no `apps/web`
+
+## Sprint 5 - Review
+
+- O fluxo de projetos passou a ter paginas estaticas em `/projetos/novo`, `/projetos/editar?id=` e `/projetos/detalhe?id=`, mantendo compatibilidade com `output: "export"`.
+- A listagem de projetos ganhou links de abrir/editar, CTA para novo projeto e atalhos diretos para `Disponibilidade` e `Etiquetas QR`.
+- O detalhe do projeto agora concentra o editor de packing list com CRUD de linhas, totalizadores e refresh dos numeros do projeto apos cada alteracao.
+- A pagina `/projetos/disponibilidade` calcula reserva por intervalo de datas com base em projetos `CONFIRMADO` e `EM_CAMPO`, agregando packing list por item e sinalizando gargalos de disponibilidade.
+- A pagina `/qrcodes` gera uma grade imprimivel em A4 para serial numbers e lotes, usando o valor salvo em `qr_code` ou fallback para o codigo interno/codigo de lote.
+- `npm run build` fecha com export estatico completo, `tsc --noEmit` volta a passar e `npm run lint` fica sem erros; restam apenas 2 warnings conhecidos em `src/app/layout.tsx` (fonte custom) e `src/app/qrcodes/page.tsx` (`<img>` para QR remoto).
+
+## Sprint 6 - RFID Linking + Realtime
+
+- [x] Criar pagina web de vinculacao RFID para `serial_numbers` e `lotes`
+- [x] Adicionar importacao CSV em massa para `tag_rfid`
+- [x] Integrar Supabase Realtime nas paginas principais de `items`, `lotes` e `projetos`
+- [x] Atualizar navegacao com entrada dedicada para RFID
+- [x] Validar `npm run lint`, `npm run build`, `tsc --noEmit` e preview local das rotas afetadas
+
+## Sprint 6 - Review
+
+- O web ganhou a rota estatica `/rfid`, com visao unica de seriais e lotes, filtros por tipo e status de vinculacao, formulario manual de `tag_rfid` e suporte a limpar uma tag existente.
+- A mesma tela passou a aceitar importacao CSV com template baixavel, autodeteccao de `,` ou `;`, aliases de cabecalho (`tipo`, `codigo`, `tag_rfid`, `codigo_interno`, `codigo_lote`, `rfid_tag`) e relatorio de alertas por linha.
+- A navegacao principal agora expoe `RFID` tanto no sidebar desktop quanto no bottom nav mobile.
+- Foi criado um hook compartilhado de Supabase Realtime para evitar duplicacao, com debounce leve de refresh, e ele passou a atualizar automaticamente as paginas de `items`, `lotes` e `projetos` quando entram mudancas em `items`, `serial_numbers`, `lotes`, `packing_list`, `movimentacoes` ou `projetos`.
+- `npm run build`, `tsc --noEmit` e `curl -I` nas rotas `/nmd/rfid/`, `/nmd/projetos/` e `/nmd/lotes/` ficaram verdes.
+- `npm run lint` continua sem erros e preserva os 2 warnings antigos: `src/app/layout.tsx` sobre fonte custom no layout e `src/app/qrcodes/page.tsx` pelo uso de `<img>` para QR remoto.
+
+## iOS - RFID Runtime Config
+
+- [x] Persistir `useMockRFID` em `AppConfig`
+- [x] Permitir troca dinamica de implementacao no `RFIDManager`
+- [x] Fazer a tela de Config salvar e aplicar a troca de mock/real na hora
+- [x] Cobrir o swap de implementacao com teste do wrapper
+- [x] Validar compilacao do alvo de testes com `xcodebuild build-for-testing`
+
+## iOS - RFID Runtime Config Review
+
+- O toggle de leitor simulado em Config deixou de ser cosmetico e passou a persistir em `UserDefaults`, com fallback inicial diferente entre `DEBUG` e `RELEASE` apenas quando ainda nao existe preferencia salva.
+- O `RFIDManager` agora consegue trocar a implementacao em runtime, desligando a anterior, limpando tags, rebinding dos publishers e expondo o modo efetivo (`Simulado`, `Zebra SDK` ou `Simulado (fallback)`).
+- A tela de Config passou a incluir o modo efetivo do leitor e aplica a troca imediatamente apos salvar, sem exigir reinicio do app.
+- O alvo de testes compila com as mudancas via `xcodebuild build-for-testing -project apps/ios/MMDEstoque/MMDEstoque.xcodeproj -scheme MMDEstoque -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.3.1'`.
+- A execucao completa de `xcodebuild test` continuou bloqueada pelo runner do simulador neste ambiente, entao a validacao desta rodada ficou em build-for-testing + revisao dos testes afetados.
+
+## Web - Polish + Handoff
+
+- [x] Corrigir os warnings restantes do `apps/web`
+- [x] Migrar as fontes do layout para `next/font/google`
+- [x] Trocar a imagem remota de QR para `next/image`
+- [x] Substituir a tela rasa de Config por uma central operacional real
+- [x] Validar `npm run lint`, `npm run build`, `tsc --noEmit` e preview local das rotas atualizadas
+
+## Web - Polish + Handoff Review
+
+- O warning de fonte custom no layout foi removido ao migrar `Doto`, `Space Grotesk` e `Space Mono` para `next/font/google`, preservando a mesma identidade visual sem depender de `<link>` manual no `<head>`.
+- O warning de `<img>` na tela de etiquetas QR foi removido com `next/image` em modo `unoptimized`, mantendo compatibilidade com QR remoto e export estatico.
+- A pagina `/config` deixou de ser um bloco estatico e passou a funcionar como central de status operacional, com resumo de ambiente, contagens da base, rotas-chave e checklist de prontidao para entrega.
+- `npm run lint` ficou sem warnings nem erros, `npm run build` continua verde e `tsc --noEmit` tambem volta a passar depois do build.
+- O preview local respondeu `200` para `/nmd/config/` e `/nmd/qrcodes/`, confirmando que as rotas alteradas seguem acessiveis no servidor de desenvolvimento.
+
+## Web - Backend Unavailable UX
+
+- [x] Diagnosticar por que o web nao estava servindo dados do backend
+- [x] Confirmar variaveis publicas do Supabase e validar reachability do host configurado
+- [x] Corrigir estados de erro para nao exibir contagens zeradas quando o backend cair
+- [x] Expor o estado `backend indisponivel` no dashboard, sidebar e configuracoes
+- [x] Revalidar `npm run lint`, `npm run build` e preview local das telas afetadas
+
+## Web - Backend Unavailable UX Review
+
+- O problema nao estava no parser do frontend nem na ausencia de `.env.local`; as variaveis publicas existem, mas o host configurado em `NEXT_PUBLIC_SUPABASE_URL` nao resolve em DNS.
+- O endpoint `bphmxticdyuctovfumcj.supabase.co` falha tanto em resolucao via `python3 socket.gethostbyname(...)` quanto em acesso HTTP, o que indica backend inacessivel ou projeto removido.
+- A `SidebarWrapper` passou a propagar erro real de leitura do Supabase, em vez de mascarar falhas como zeros silenciosos.
+- A sidebar agora mostra `BACKEND OFFLINE` e troca os widgets numericos por `—` quando nao ha leitura valida da base.
+- O dashboard principal distingue `SUPABASE NAO CONFIGURADO` de `BACKEND INDISPONIVEL`, evitando diagnostico enganoso quando as envs existem mas a base nao responde.
+- A tela `/config` passou a exibir o host configurado, o status `DOWN` e um alerta operacional explicando que o ambiente esta configurado, mas o backend nao respondeu.
+- `npm run lint` e `npm run build` seguiram verdes apos as mudancas, e o preview local confirmou os novos estados de indisponibilidade em `/nmd/` e `/nmd/config/`.
+
+## Web - Backend Recovery Check
+
+- [x] Validar diretamente no perfil `mmd` do Chrome se a configuracao do Supabase no web estava correta
+- [x] Extrair sessao autenticada do dashboard do Supabase a partir do perfil logado
+- [x] Confirmar status real do projeto `MMD` via Management API
+- [x] Validar as API keys do projeto e testar a API REST publica com a `anon key` configurada no web
+
+## Web - Backend Recovery Check Review
+
+- O perfil `mmd` do Chrome confirmou que o projeto correto e o mesmo configurado no `apps/web/.env.local`, com `ref = bphmxticdyuctovfumcj`.
+- A `anon key` configurada no web bate com a chave legacy `anon` retornada pela Management API do Supabase para o projeto `MMD`.
+- O problema nao era credencial errada. O painel do Supabase mostrou o projeto primeiro em `RESTORING` e logo depois em `ACTIVE_HEALTHY`, indicando recuperacao do ambiente.
+- A API REST publica voltou a responder `200` em `GET /rest/v1/items?select=id&limit=1` usando exatamente a URL e a `anon key` do `.env.local`.
+- O host principal `https://bphmxticdyuctovfumcj.supabase.co` voltou a responder na borda do Supabase, entao o bloco real saiu de configuracao invalida para indisponibilidade temporaria do projeto.
+
+## Web - Static Export Freeze Fix
+
+- [x] Identificar por que o IAB seguia mostrando `BACKEND INDISPONIVEL` mesmo com o Supabase ativo
+- [x] Migrar `sidebar`, `dashboard` e `config` do web para fetch client-side em vez de leitura no build
+- [x] Prover um preview local emergencial que consulte o Supabase em runtime sem depender do export antigo
+
+## Web - Static Export Freeze Fix Review
+
+- O estado `offline` visto no IAB nao vinha mais do backend em si, e sim do `out/` estatico gerado quando o projeto Supabase ainda estava pausado.
+- `SidebarWrapper`, `app/page.tsx` e `app/config/page.tsx` foram ajustados para ler o Supabase no cliente, evitando congelar o estado do backend no momento do build/export.
+- O runtime local do Next continuou instavel neste ambiente, com `next build` e `next dev` presos antes do bootstrap, entao a validacao visual imediata foi destravada por um preview estatico leve em `/tmp/mmd-preview/nmd`, que consulta o Supabase direto via REST usando a `anon key` publica.
+- O preview emergencial respondeu `200` em `/nmd/`, `/nmd/items/`, `/nmd/projetos/` e `/nmd/config/`, e o Supabase confirmou CORS liberado para `http://localhost:3000`.

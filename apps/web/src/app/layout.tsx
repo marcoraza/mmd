@@ -1,45 +1,76 @@
 import type { Metadata } from 'next'
+import { Inter_Tight, JetBrains_Mono, Instrument_Serif } from 'next/font/google'
 import './globals.css'
-import { SidebarWrapper } from '@/components/layout/SidebarWrapper'
-import { BottomNav } from '@/components/layout/BottomNav'
+import { SideRail } from '@/components/mmd/SideRail'
+
+const interTight = Inter_Tight({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter-tight',
+  display: 'swap',
+})
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-jb-mono',
+  display: 'swap',
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'MMD Estoque',
-  description: 'Sistema de gestão de estoque MMD Eventos',
+  title: 'MMD Estoque Inteligente',
+  description: 'Gestão de estoque RFID · MMD Eventos',
 }
+
+const themeInitScript = `
+(function(){try{var t=localStorage.getItem('mmd-theme');if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();
+`
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={`${interTight.variable} ${jetBrainsMono.variable} ${instrumentSerif.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Doto:wght@400;700&family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body style={{ margin: 0, padding: 0, backgroundColor: '#F5F5F5' }}>
-        <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden' }}>
-          {/* Dark sidebar — desktop only, hidden on mobile via JS */}
-          <SidebarWrapper />
-
-          {/* Light content area */}
+      <body
+        style={{
+          margin: 0,
+          padding: 0,
+          minHeight: '100dvh',
+          background: 'var(--bg-0)',
+          color: 'var(--fg-0)',
+          fontFamily: 'var(--font-sans-raw)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            minHeight: '100dvh',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <SideRail />
           <main
             id="main-content"
             style={{
               flex: 1,
+              position: 'relative',
               overflowY: 'auto',
-              backgroundColor: '#F5F5F5',
               paddingBottom: 'env(safe-area-inset-bottom)',
             }}
           >
             {children}
           </main>
         </div>
-
-        {/* Bottom nav overlay — mobile only */}
-        <BottomNav />
       </body>
     </html>
   )

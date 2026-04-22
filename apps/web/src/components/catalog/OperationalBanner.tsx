@@ -1,17 +1,72 @@
-import Link from 'next/link'
 import type { CatalogBannerStats } from '@/lib/data/items'
-import { Stars } from './Stars'
-import { roundStars } from './helpers'
 
-export function OperationalBanner({ stats }: { stats: CatalogBannerStats }) {
-  const cells = [
-    { label: 'Disponível', value: stats.disponivel.toString(), color: 'var(--accent-green)' },
-    { label: 'Em campo', value: stats.em_campo.toString(), color: 'var(--accent-cyan)' },
-    { label: 'Manutenção', value: stats.manutencao.toString(), color: 'var(--accent-amber)' },
+export type BannerFilter =
+  | 'disponivel'
+  | 'em_campo'
+  | 'manutencao'
+  | 'criticos'
+  | 'a_repor'
+
+type Cell = {
+  label: string
+  value: string
+  color: string
+  filter: BannerFilter | null
+}
+
+export function OperationalBanner({
+  stats,
+  active,
+  onFilter,
+}: {
+  stats: CatalogBannerStats
+  active: BannerFilter | null
+  onFilter: (f: BannerFilter) => void
+}) {
+  const utilizacao = Math.round(stats.utilizacao_pct)
+  const utilColor =
+    utilizacao >= 70
+      ? 'var(--accent-green)'
+      : utilizacao >= 40
+      ? 'var(--accent-cyan)'
+      : 'var(--fg-1)'
+
+  const cells: Cell[] = [
+    {
+      label: 'Disponível',
+      value: stats.disponivel.toString(),
+      color: 'var(--accent-green)',
+      filter: 'disponivel',
+    },
+    {
+      label: 'Em campo',
+      value: stats.em_campo.toString(),
+      color: 'var(--accent-cyan)',
+      filter: 'em_campo',
+    },
+    {
+      label: 'Manutenção',
+      value: stats.manutencao.toString(),
+      color: 'var(--accent-amber)',
+      filter: 'manutencao',
+    },
     {
       label: 'Críticos',
       value: stats.criticos.toString(),
       color: stats.criticos > 0 ? 'var(--accent-red)' : 'var(--fg-2)',
+      filter: 'criticos',
+    },
+    {
+      label: 'Utilização',
+      value: `${utilizacao}%`,
+      color: utilColor,
+      filter: null,
+    },
+    {
+      label: 'A repor',
+      value: stats.a_repor.toString(),
+      color: stats.a_repor > 0 ? 'var(--accent-amber)' : 'var(--fg-2)',
+      filter: 'a_repor',
     },
   ]
 
@@ -23,129 +78,108 @@ export function OperationalBanner({ stats }: { stats: CatalogBannerStats }) {
         borderRadius: 'var(--r-lg)',
         padding: 0,
         display: 'grid',
-        gridTemplateColumns: 'repeat(5, minmax(0, 1fr)) auto',
+        gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
         overflow: 'hidden',
       }}
     >
-      {cells.map((c, i) => (
-        <div
-          key={c.label}
-          className="catalog-banner__cell"
-          style={{
-            padding: '20px 22px',
-            borderLeft: i === 0 ? 'none' : '1px solid var(--glass-border-strong)',
-            minWidth: 0,
-          }}
-        >
-          <div
-            className="mono"
-            style={{
-              fontSize: 10,
-              color: 'var(--fg-2)',
-              letterSpacing: 0.1,
-              textTransform: 'uppercase',
-            }}
-          >
-            {c.label}
-          </div>
-          <div
-            style={{
-              fontSize: 26,
-              fontWeight: 500,
-              marginTop: 4,
-              color: c.color,
-              letterSpacing: -0.5,
-            }}
-          >
-            {c.value}
-          </div>
-        </div>
-      ))}
-      <div
-        className="catalog-banner__cell"
-        style={{
+      {cells.map((c, i) => {
+        const isActive = c.filter !== null && active === c.filter
+        const isClickable = c.filter !== null
+        const commonStyle: React.CSSProperties = {
           padding: '20px 22px',
-          borderLeft: '1px solid var(--glass-border-strong)',
+          borderLeft: i === 0 ? 'none' : '1px solid var(--glass-border-strong)',
           minWidth: 0,
-        }}
-      >
-        <div
-          className="mono"
-          style={{
-            fontSize: 10,
-            color: 'var(--fg-2)',
-            letterSpacing: 0.1,
-            textTransform: 'uppercase',
-          }}
-        >
-          Condição média
-        </div>
-        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Stars value={stats.condicao_media} size={14} />
-          <span className="mono" style={{ fontSize: 12, color: 'var(--fg-2)' }}>
-            {roundStars(stats.condicao_media)}/5
-          </span>
-        </div>
-      </div>
-      <Link
-        href="/patrimonio"
-        className="catalog-banner__link"
-        style={{
-          padding: '20px 22px',
-          borderLeft: '1px solid var(--glass-border-strong)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          gap: 4,
-          color: 'var(--fg-1)',
-          textDecoration: 'none',
-          whiteSpace: 'nowrap',
-          minWidth: 140,
-          transition: 'background var(--motion-fast), color var(--motion-fast)',
-        }}
-      >
-        <span
-          className="mono"
-          style={{
-            fontSize: 10,
-            color: 'var(--fg-2)',
-            letterSpacing: 0.1,
-            textTransform: 'uppercase',
-          }}
-        >
-          Financeiro
-        </span>
-        <span style={{ fontSize: 14, fontWeight: 500, letterSpacing: -0.2 }}>
-          Ver patrimônio →
-        </span>
-      </Link>
+          textAlign: 'left',
+          background: isActive ? 'var(--glass-bg-strong)' : 'transparent',
+          color: 'inherit',
+          fontFamily: 'inherit',
+          position: 'relative',
+        }
+        const content = (
+          <>
+            <div
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: 'var(--fg-2)',
+                letterSpacing: 0.1,
+                textTransform: 'uppercase',
+              }}
+            >
+              {c.label}
+            </div>
+            <div
+              style={{
+                fontSize: 26,
+                fontWeight: 500,
+                marginTop: 4,
+                color: c.color,
+                letterSpacing: -0.5,
+              }}
+            >
+              {c.value}
+            </div>
+            {isActive && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 2,
+                  background: c.color,
+                }}
+              />
+            )}
+          </>
+        )
+        if (isClickable) {
+          return (
+            <button
+              key={c.label}
+              type="button"
+              className="catalog-banner__cell"
+              onClick={() => onFilter(c.filter as BannerFilter)}
+              aria-pressed={isActive}
+              title={isActive ? `Limpar filtro: ${c.label}` : `Filtrar por ${c.label.toLowerCase()}`}
+              style={{
+                ...commonStyle,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background var(--motion-fast)',
+              }}
+            >
+              {content}
+            </button>
+          )
+        }
+        return (
+          <div key={c.label} className="catalog-banner__cell" style={commonStyle}>
+            {content}
+          </div>
+        )
+      })}
       <style>{`
-        .catalog-banner__link:hover { background: var(--glass-bg-strong); color: var(--accent-cyan); }
+        .catalog-banner__cell:hover:not([aria-pressed="true"]) {
+          background: var(--glass-bg) !important;
+        }
         @media (max-width: 1100px) {
           .catalog-banner { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-          .catalog-banner__cell, .catalog-banner__link {
-            border-left: none !important;
-          }
-          .catalog-banner .catalog-banner__cell:not(:nth-child(3n+1)),
-          .catalog-banner__link:not(:nth-child(3n+1)) {
+          .catalog-banner__cell { border-left: none !important; }
+          .catalog-banner .catalog-banner__cell:not(:nth-child(3n+1)) {
             border-left: 1px solid var(--glass-border-strong) !important;
           }
-          .catalog-banner .catalog-banner__cell:nth-child(n+4),
-          .catalog-banner__link:nth-child(n+4) {
+          .catalog-banner .catalog-banner__cell:nth-child(n+4) {
             border-top: 1px solid var(--glass-border-strong);
           }
         }
         @media (max-width: 700px) {
           .catalog-banner { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-          .catalog-banner__cell, .catalog-banner__link {
-            border-left: none !important;
-          }
-          .catalog-banner .catalog-banner__cell:nth-child(even),
-          .catalog-banner__link:nth-child(even) {
+          .catalog-banner__cell { border-left: none !important; }
+          .catalog-banner .catalog-banner__cell:nth-child(even) {
             border-left: 1px solid var(--glass-border-strong) !important;
           }
-          .catalog-banner .catalog-banner__cell:nth-child(n+3),
-          .catalog-banner__link:nth-child(n+3) {
+          .catalog-banner .catalog-banner__cell:nth-child(n+3) {
             border-top: 1px solid var(--glass-border-strong);
           }
         }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import type { CatalogItem } from '@/lib/data/items'
 import type {
   ColumnKey,
@@ -27,22 +27,20 @@ type ColumnDef = {
   label: string
   width: string
   align?: 'left' | 'right'
-  groupTarget: GroupBy | null
 }
 
 const ALL_COLUMNS: ColumnDef[] = [
-  { key: 'codigo', sortKey: 'codigo', label: 'Código', width: '120px', groupTarget: null },
-  { key: 'tipo', sortKey: 'tipo', label: 'Tipo', width: '170px', groupTarget: 'subcategoria' },
-  { key: 'marca', sortKey: 'marca', label: 'Marca', width: '120px', groupTarget: null },
-  { key: 'qtd', sortKey: 'qtd', label: 'Qtd', width: '80px', align: 'right', groupTarget: null },
-  { key: 'situacao', sortKey: 'situacao', label: 'Situação', width: '120px', groupTarget: 'situacao' },
-  { key: 'ciclo', sortKey: 'ciclo', label: 'Ciclo', width: '100px', groupTarget: 'ciclo' },
-  { key: 'condicao', sortKey: 'condicao', label: 'Condição', width: '130px', groupTarget: null },
-  { key: 'valor', sortKey: 'valor', label: 'Valor', width: '120px', align: 'right', groupTarget: null },
+  { key: 'codigo', sortKey: 'codigo', label: 'Código', width: '120px' },
+  { key: 'tipo', sortKey: 'tipo', label: 'Tipo', width: '170px' },
+  { key: 'marca', sortKey: 'marca', label: 'Marca', width: '120px' },
+  { key: 'qtd', sortKey: 'qtd', label: 'Qtd', width: '80px', align: 'right' },
+  { key: 'situacao', sortKey: 'situacao', label: 'Situação', width: '120px' },
+  { key: 'ciclo', sortKey: 'ciclo', label: 'Ciclo', width: '100px' },
+  { key: 'condicao', sortKey: 'condicao', label: 'Condição', width: '130px' },
+  { key: 'valor', sortKey: 'valor', label: 'Valor', width: '120px', align: 'right' },
 ]
 
 const ITEM_MIN_WIDTH = '200px'
-const ACTIONS_WIDTH = '40px'
 
 export function ItemTable({
   items,
@@ -51,8 +49,6 @@ export function ItemTable({
   sortKey,
   sortDir,
   onSort,
-  onGroup,
-  onToggleColumn,
   onSelect,
   selectedId,
   onCondicaoChange,
@@ -65,8 +61,6 @@ export function ItemTable({
   sortKey: SortKey
   sortDir: SortDir
   onSort: (key: SortKey, dir: SortDir) => void
-  onGroup: (g: GroupBy) => void
-  onToggleColumn: (key: ColumnKey) => void
   onSelect: (item: CatalogItem) => void
   selectedId: string | null
   onCondicaoChange: (itemId: string, desgaste: number) => void
@@ -75,11 +69,6 @@ export function ItemTable({
 }) {
   const activeCols = useMemo(
     () => ALL_COLUMNS.filter((c) => columns[c.key]),
-    [columns]
-  )
-
-  const hiddenCols = useMemo(
-    () => ALL_COLUMNS.filter((c) => !columns[c.key]),
     [columns]
   )
 
@@ -96,7 +85,6 @@ export function ItemTable({
       parts.push(c.width)
       if (c.key === itemSlotAfter) parts.push(`minmax(${ITEM_MIN_WIDTH}, 1fr)`)
     }
-    parts.push(ACTIONS_WIDTH)
     return parts.join(' ')
   }, [activeCols, itemSlotAfter])
 
@@ -121,15 +109,11 @@ export function ItemTable({
       <div role="table" style={{ width: '100%', fontSize: 13 }}>
         <HeaderRow
           activeCols={activeCols}
-          hiddenCols={hiddenCols}
           itemSlotAfter={itemSlotAfter}
           gridTemplate={gridTemplate}
           sortKey={sortKey}
           sortDir={sortDir}
-          groupBy={groupBy}
           onSort={onSort}
-          onGroup={onGroup}
-          onToggleColumn={onToggleColumn}
         />
         <div style={{ maxHeight: 640, overflowY: 'auto' }}>
           {groupBy === 'none' ? (
@@ -173,26 +157,18 @@ export function ItemTable({
 
 function HeaderRow({
   activeCols,
-  hiddenCols,
   itemSlotAfter,
   gridTemplate,
   sortKey,
   sortDir,
-  groupBy,
   onSort,
-  onGroup,
-  onToggleColumn,
 }: {
   activeCols: ColumnDef[]
-  hiddenCols: ColumnDef[]
   itemSlotAfter: ColumnKey | null
   gridTemplate: string
   sortKey: SortKey
   sortDir: SortDir
-  groupBy: GroupBy
   onSort: (key: SortKey, dir: SortDir) => void
-  onGroup: (g: GroupBy) => void
-  onToggleColumn: (key: ColumnKey) => void
 }) {
   const cells = buildCells(
     activeCols,
@@ -202,27 +178,18 @@ function HeaderRow({
         label={col.label}
         sortKey={col.sortKey}
         align={col.align ?? 'left'}
-        columnKey={col.key}
-        groupTarget={col.groupTarget}
         currentSortKey={sortKey}
         currentSortDir={sortDir}
-        currentGroupBy={groupBy}
         onSort={onSort}
-        onGroup={onGroup}
-        onHide={() => onToggleColumn(col.key)}
       />
     ),
     <HeaderMenu
       label="Item"
       sortKey="nome"
       align="left"
-      columnKey="__item__"
-      groupTarget={null}
       currentSortKey={sortKey}
       currentSortDir={sortDir}
-      currentGroupBy={groupBy}
       onSort={onSort}
-      onGroup={onGroup}
     />
   )
   return (
@@ -244,134 +211,6 @@ function HeaderRow({
       }}
     >
       {cells}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        {hiddenCols.length > 0 && (
-          <HiddenColumnsButton
-            hidden={hiddenCols}
-            onRestore={(k) => onToggleColumn(k)}
-          />
-        )}
-      </div>
-    </div>
-  )
-}
-
-function HiddenColumnsButton({
-  hidden,
-  onRestore,
-}: {
-  hidden: ColumnDef[]
-  onRestore: (k: ColumnKey) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function onDoc(e: MouseEvent) {
-      if (rootRef.current?.contains(e.target as Node)) return
-      setOpen(false)
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDoc)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDoc)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
-
-  return (
-    <div ref={rootRef} style={{ position: 'relative' }}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        title={`Mostrar colunas ocultas (${hidden.length})`}
-        className="mono"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          background: open ? 'var(--glass-bg-strong)' : 'transparent',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 'var(--r-sm)',
-          padding: '2px 8px',
-          color: 'var(--fg-1)',
-          fontSize: 10,
-          letterSpacing: 0.2,
-          textTransform: 'uppercase',
-          cursor: 'pointer',
-        }}
-      >
-        +{hidden.length}
-      </button>
-      {open && (
-        <div
-          role="menu"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            right: 0,
-            marginTop: 4,
-            width: 180,
-            background: 'var(--bg-1)',
-            border: '1px solid var(--glass-border-strong)',
-            borderRadius: 'var(--r-md)',
-            boxShadow: 'var(--glass-shadow-elevated)',
-            zIndex: 1000,
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <div
-            className="mono"
-            style={{
-              fontSize: 9,
-              color: 'var(--fg-2)',
-              padding: '6px 10px',
-              letterSpacing: 0.3,
-              textTransform: 'uppercase',
-            }}
-          >
-            Mostrar coluna
-          </div>
-          {hidden.map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                onRestore(c.key)
-                setOpen(false)
-              }}
-              style={{
-                textAlign: 'left',
-                background: 'transparent',
-                border: 'none',
-                padding: '8px 10px',
-                borderRadius: 'var(--r-sm)',
-                color: 'var(--fg-0)',
-                fontFamily: 'inherit',
-                fontSize: 13,
-                textTransform: 'none',
-                letterSpacing: 'normal',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--glass-bg)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-              }}
-            >
-              + {c.label}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
@@ -576,7 +415,6 @@ function ItemRow({
       }}
     >
       {cells}
-      <div />
     </div>
   )
 }

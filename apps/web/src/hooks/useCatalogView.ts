@@ -57,7 +57,7 @@ function sanitize(raw: unknown): CatalogView {
     sortKey: v.sortKey ?? DEFAULT_VIEW.sortKey,
     sortDir: v.sortDir ?? DEFAULT_VIEW.sortDir,
     groupBy: v.groupBy ?? DEFAULT_VIEW.groupBy,
-    columns: { ...DEFAULT_VIEW.columns, ...(v.columns ?? {}) },
+    columns: DEFAULT_VIEW.columns,
   }
 }
 

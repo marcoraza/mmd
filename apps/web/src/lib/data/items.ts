@@ -28,7 +28,8 @@ export type CatalogBannerStats = {
   em_campo: number
   manutencao: number
   criticos: number
-  condicao_media: number
+  utilizacao_pct: number
+  a_repor: number
   total_ativos: number
 }
 
@@ -143,7 +144,7 @@ export async function loadCatalog(): Promise<CatalogData> {
   let emCampo = 0
   let manutencao = 0
   let criticos = 0
-  let desgasteSum = 0
+  let aRepor = 0
   let ativosCount = 0
 
   for (const it of items) {
@@ -154,7 +155,7 @@ export async function loadCatalog(): Promise<CatalogData> {
     const ativos =
       it.disponivel_count + it.em_campo_count + it.manutencao_count
     ativosCount += ativos
-    desgasteSum += it.condicao_media * ativos
+    if (it.situacao === 'BAIXA') aRepor += 1
   }
 
   const banner: CatalogBannerStats = {
@@ -162,7 +163,8 @@ export async function loadCatalog(): Promise<CatalogData> {
     em_campo: emCampo,
     manutencao,
     criticos,
-    condicao_media: ativosCount > 0 ? desgasteSum / ativosCount : 0,
+    utilizacao_pct: ativosCount > 0 ? (emCampo / ativosCount) * 100 : 0,
+    a_repor: aRepor,
     total_ativos: ativosCount,
   }
 

@@ -6,6 +6,7 @@ import type { Categoria } from '@/lib/types'
 import { CategoryNav } from './CategoryNav'
 import { OperationalBanner } from './OperationalBanner'
 import { CatalogToolbar } from './CatalogToolbar'
+import type { BannerFilter } from './OperationalBanner'
 import { ItemTable } from './ItemTable'
 import { ItemSidePanel } from './ItemSidePanel'
 import { LotesCard } from './LotesCard'
@@ -16,9 +17,10 @@ import { SITUACAO_LABEL } from './helpers'
 
 export function CatalogClient({ data }: { data: CatalogData }) {
   const [selectedCategoria, setSelectedCategoria] = useState<Categoria | 'ALL'>('ALL')
+  const [bannerFilter, setBannerFilter] = useState<BannerFilter | null>(null)
   const [query, setQuery] = useState('')
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null)
-  const { view, update, toggleColumn } = useCatalogView()
+  const { view, update } = useCatalogView()
   const { updateDesgaste, updateQuantidade, pending } = useItemMutation()
 
   // Estado local editável; parte dos dados vindos do server.
@@ -76,6 +78,9 @@ export function CatalogClient({ data }: { data: CatalogData }) {
     if (selectedCategoria !== 'ALL') {
       rows = rows.filter((i) => i.categoria === selectedCategoria)
     }
+    if (bannerFilter) {
+      rows = rows.filter((i) => matchBannerFilter(i, bannerFilter))
+    }
     if (q) {
       rows = rows.filter((i) =>
         [i.nome, i.marca, i.modelo, i.subcategoria, i.codigo_interno, i.id]
@@ -114,7 +119,7 @@ export function CatalogClient({ data }: { data: CatalogData }) {
     })
 
     return sorted
-  }, [items, selectedCategoria, query, view.sortKey, view.sortDir])
+  }, [items, selectedCategoria, bannerFilter, query, view.sortKey, view.sortDir])
 
   const totalAtivos = data.banner.total_ativos
 
@@ -127,7 +132,11 @@ export function CatalogClient({ data }: { data: CatalogData }) {
         onSelect={setSelectedCategoria}
       />
 
-      <OperationalBanner stats={data.banner} />
+      <OperationalBanner
+        stats={data.banner}
+        active={bannerFilter}
+        onFilter={(f) => setBannerFilter((prev) => (prev === f ? null : f))}
+      />
 
       <div style={{ marginTop: 20 }}>
         <CatalogToolbar
@@ -146,8 +155,6 @@ export function CatalogClient({ data }: { data: CatalogData }) {
           sortKey={view.sortKey}
           sortDir={view.sortDir}
           onSort={(key, dir) => update({ sortKey: key, sortDir: dir })}
-          onGroup={(g) => update({ groupBy: g })}
-          onToggleColumn={toggleColumn}
           onSelect={setSelectedItem}
           selectedId={selectedItem?.id ?? null}
           onCondicaoChange={handleCondicaoChange}
@@ -166,4 +173,19 @@ export function CatalogClient({ data }: { data: CatalogData }) {
       />
     </>
   )
+}
+
+function matchBannerFilter(item: CatalogItem, filter: BannerFilter): boolean {
+  switch (filter) {
+    case 'disponivel':
+      return item.disponivel_count > 0
+    case 'em_campo':
+      return item.em_campo_count > 0
+    case 'manutencao':
+      return item.manutencao_count > 0
+    case 'criticos':
+      return item.criticos_count > 0
+    case 'a_repor':
+      return item.situacao === 'BAIXA'
+  }
 }

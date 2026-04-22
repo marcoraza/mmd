@@ -185,7 +185,9 @@ function matchBannerFilter(item: CatalogItem, filter: BannerFilter): boolean {
       return item.manutencao_count > 0
     case 'criticos':
       return item.criticos_count > 0
-    case 'a_repor':
-      return item.situacao === 'BAIXA'
+    case 'regular':
+      return item.regular_count > 0
+    case 'otimo':
+      return item.otimo_count > 0
   }
 }

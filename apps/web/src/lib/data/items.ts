@@ -21,6 +21,8 @@ export type CatalogItem = {
   em_campo_count: number
   manutencao_count: number
   criticos_count: number
+  regular_count: number
+  otimo_count: number
 }
 
 export type CatalogBannerStats = {
@@ -28,8 +30,9 @@ export type CatalogBannerStats = {
   em_campo: number
   manutencao: number
   criticos: number
+  regular: number
+  otimo: number
   utilizacao_pct: number
-  a_repor: number
   total_ativos: number
 }
 
@@ -80,6 +83,8 @@ function aggregateItem(row: ItemRow): CatalogItem {
   const campo = serials.filter((s) => s.status === 'EM_CAMPO' || s.status === 'PACKED').length
   const manut = serials.filter((s) => s.status === 'MANUTENCAO').length
   const criticos = active.filter((s) => s.desgaste <= 2).length
+  const regular = active.filter((s) => s.desgaste === 3).length
+  const otimo = active.filter((s) => s.desgaste >= 4).length
 
   const condicaoMedia =
     active.length > 0
@@ -118,6 +123,8 @@ function aggregateItem(row: ItemRow): CatalogItem {
     em_campo_count: campo,
     manutencao_count: manut,
     criticos_count: criticos,
+    regular_count: regular,
+    otimo_count: otimo,
   }
 }
 
@@ -144,7 +151,8 @@ export async function loadCatalog(): Promise<CatalogData> {
   let emCampo = 0
   let manutencao = 0
   let criticos = 0
-  let aRepor = 0
+  let regular = 0
+  let otimo = 0
   let ativosCount = 0
 
   for (const it of items) {
@@ -152,10 +160,11 @@ export async function loadCatalog(): Promise<CatalogData> {
     emCampo += it.em_campo_count
     manutencao += it.manutencao_count
     criticos += it.criticos_count
+    regular += it.regular_count
+    otimo += it.otimo_count
     const ativos =
       it.disponivel_count + it.em_campo_count + it.manutencao_count
     ativosCount += ativos
-    if (it.situacao === 'BAIXA') aRepor += 1
   }
 
   const banner: CatalogBannerStats = {
@@ -163,8 +172,9 @@ export async function loadCatalog(): Promise<CatalogData> {
     em_campo: emCampo,
     manutencao,
     criticos,
+    regular,
+    otimo,
     utilizacao_pct: ativosCount > 0 ? (emCampo / ativosCount) * 100 : 0,
-    a_repor: aRepor,
     total_ativos: ativosCount,
   }
 

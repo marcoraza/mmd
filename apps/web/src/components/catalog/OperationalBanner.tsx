@@ -5,7 +5,8 @@ export type BannerFilter =
   | 'em_campo'
   | 'manutencao'
   | 'criticos'
-  | 'a_repor'
+  | 'regular'
+  | 'otimo'
 
 type Cell = {
   label: string
@@ -51,22 +52,28 @@ export function OperationalBanner({
       filter: 'manutencao',
     },
     {
-      label: 'Críticos',
+      label: 'Crítico',
       value: stats.criticos.toString(),
       color: stats.criticos > 0 ? 'var(--accent-red)' : 'var(--fg-2)',
       filter: 'criticos',
+    },
+    {
+      label: 'Regular',
+      value: stats.regular.toString(),
+      color: 'var(--accent-amber)',
+      filter: 'regular',
+    },
+    {
+      label: 'Ótimo',
+      value: stats.otimo.toString(),
+      color: 'var(--accent-green)',
+      filter: 'otimo',
     },
     {
       label: 'Utilização',
       value: `${utilizacao}%`,
       color: utilColor,
       filter: null,
-    },
-    {
-      label: 'A repor',
-      value: stats.a_repor.toString(),
-      color: stats.a_repor > 0 ? 'var(--accent-amber)' : 'var(--fg-2)',
-      filter: 'a_repor',
     },
   ]
 
@@ -78,7 +85,7 @@ export function OperationalBanner({
         borderRadius: 'var(--r-lg)',
         padding: 0,
         display: 'grid',
-        gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
         overflow: 'hidden',
       }}
     >
@@ -163,13 +170,13 @@ export function OperationalBanner({
         .catalog-banner__cell:hover:not([aria-pressed="true"]) {
           background: var(--glass-bg) !important;
         }
-        @media (max-width: 1100px) {
-          .catalog-banner { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        @media (max-width: 1200px) {
+          .catalog-banner { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
           .catalog-banner__cell { border-left: none !important; }
-          .catalog-banner .catalog-banner__cell:not(:nth-child(3n+1)) {
+          .catalog-banner .catalog-banner__cell:not(:nth-child(4n+1)) {
             border-left: 1px solid var(--glass-border-strong) !important;
           }
-          .catalog-banner .catalog-banner__cell:nth-child(n+4) {
+          .catalog-banner .catalog-banner__cell:nth-child(n+5) {
             border-top: 1px solid var(--glass-border-strong);
           }
         }

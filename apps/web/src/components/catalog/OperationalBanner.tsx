@@ -24,14 +24,6 @@ export function OperationalBanner({
   active: BannerFilter | null
   onFilter: (f: BannerFilter) => void
 }) {
-  const utilizacao = Math.round(stats.utilizacao_pct)
-  const utilColor =
-    utilizacao >= 70
-      ? 'var(--accent-green)'
-      : utilizacao >= 40
-      ? 'var(--accent-cyan)'
-      : 'var(--fg-1)'
-
   const cells: Cell[] = [
     {
       label: 'Disponível',
@@ -69,12 +61,6 @@ export function OperationalBanner({
       color: 'var(--accent-green)',
       filter: 'otimo',
     },
-    {
-      label: 'Utilização',
-      value: `${utilizacao}%`,
-      color: utilColor,
-      filter: null,
-    },
   ]
 
   return (
@@ -85,7 +71,7 @@ export function OperationalBanner({
         borderRadius: 'var(--r-lg)',
         padding: 0,
         display: 'grid',
-        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+        gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
         overflow: 'hidden',
       }}
     >
@@ -134,7 +120,7 @@ export function OperationalBanner({
                   right: 0,
                   bottom: 0,
                   height: 2,
-                  background: c.color,
+                  background: 'var(--glass-border-strong)',
                 }}
               />
             )}
@@ -170,13 +156,13 @@ export function OperationalBanner({
         .catalog-banner__cell:hover:not([aria-pressed="true"]) {
           background: var(--glass-bg) !important;
         }
-        @media (max-width: 1200px) {
-          .catalog-banner { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+        @media (max-width: 1100px) {
+          .catalog-banner { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
           .catalog-banner__cell { border-left: none !important; }
-          .catalog-banner .catalog-banner__cell:not(:nth-child(4n+1)) {
+          .catalog-banner .catalog-banner__cell:not(:nth-child(3n+1)) {
             border-left: 1px solid var(--glass-border-strong) !important;
           }
-          .catalog-banner .catalog-banner__cell:nth-child(n+5) {
+          .catalog-banner .catalog-banner__cell:nth-child(n+4) {
             border-top: 1px solid var(--glass-border-strong);
           }
         }

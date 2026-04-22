@@ -25,6 +25,18 @@ type IconKey =
   | 'event_default'
   | 'chevron_left'
   | 'chevron_right'
+  | 'cat_iluminacao'
+  | 'cat_audio'
+  | 'cat_energia'
+  | 'cat_estrutura'
+  | 'cat_efeito'
+  | 'cat_video'
+  | 'cat_acessorio'
+  | 'cat_cabo'
+  | 'star'
+  | 'star_filled'
+  | 'filter'
+  | 'sort'
 
 export const Icons: Record<IconKey, ReactElement> = {
   search: (
@@ -181,6 +193,73 @@ export const Icons: Record<IconKey, ReactElement> = {
   chevron_right: (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
       <path d="M4.5 2L8 6l-3.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  cat_iluminacao: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 1.5v2M3 3l1.4 1.4M13 3l-1.4 1.4M2 7.5h2M12 7.5h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="8" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M6.5 11.5h3M7 13.5h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  ),
+  cat_audio: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M7.5 2.5L4 5.5H1.5v5H4l3.5 3v-11z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M10.5 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6 6 0 0 1 0 9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  ),
+  cat_energia: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M9 1.5L3 9h4l-1 5.5L12 7H8l1-5.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  ),
+  cat_estrutura: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="2" width="12" height="12" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  ),
+  cat_efeito: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2v3M8 11v3M2 8h3M11 8h3M3.5 3.5l2 2M10.5 10.5l2 2M3.5 12.5l2-2M10.5 5.5l2-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" />
+    </svg>
+  ),
+  cat_video: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="1.5" y="4" width="9" height="8" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M10.5 7l4-2v6l-4-2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  ),
+  cat_acessorio: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3M3.5 3.5l2 2M10.5 10.5l2 2M3.5 12.5l2-2M10.5 5.5l2-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  ),
+  cat_cabo: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M2 12c2 0 2-8 4-8s2 8 4 8 2-8 4-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+    </svg>
+  ),
+  star: (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M6 1l1.55 3.15L11 4.65l-2.5 2.43.6 3.45L6 8.9 2.9 10.53l.6-3.45L1 4.65l3.45-.5L6 1z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  star_filled: (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M6 1l1.55 3.15L11 4.65l-2.5 2.43.6 3.45L6 8.9 2.9 10.53l.6-3.45L1 4.65l3.45-.5L6 1z" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" />
+    </svg>
+  ),
+  filter: (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M1.5 2.5h11l-4 5v4l-3 1.5v-5.5l-4-5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  ),
+  sort: (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M4 2v10M4 2l-2 2M4 2l2 2M10 12V2M10 12l-2-2M10 12l2-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 }

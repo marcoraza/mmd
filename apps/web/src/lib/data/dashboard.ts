@@ -39,10 +39,18 @@ export type DashboardUpcomingEvent = {
   status: EventStatus
 }
 
+import { loadStockStats } from '@/lib/data/stock'
+
 export type OperationalPulse = {
   technicians_in_field: number
   events_in_progress: number
   next_checkout_label: string
+}
+
+function formatPatrimonioCompact(v: number): string {
+  if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1).replace('.', ',')}M`
+  if (v >= 1_000) return `R$ ${Math.round(v / 1000)}k`
+  return `R$ ${Math.round(v)}`
 }
 
 export type DashboardData = {
@@ -65,6 +73,7 @@ function currentGreeting(): string {
 }
 
 export async function loadDashboard(): Promise<DashboardData> {
+  const stock = await loadStockStats()
   return {
     greeting: currentGreeting(),
     user: { nome: 'Marcelo', iniciais: 'MS' },
@@ -85,11 +94,16 @@ export async function loadDashboard(): Promise<DashboardData> {
       ],
     },
     stat_strip: [
-      { label: 'Disponível', value: '847', color: 'var(--accent-green)' },
-      { label: 'Em campo', value: '142', color: 'var(--accent-cyan)' },
-      { label: 'Retornando', value: '30', color: 'var(--accent-violet)' },
-      { label: 'Manutenção', value: '38', color: 'var(--accent-amber)' },
-      { label: 'Patrimônio', value: 'R$ 372k', color: 'var(--fg-0)', mono: true },
+      { label: 'Disponível', value: String(stock.disponivel), color: 'var(--accent-green)' },
+      { label: 'Em campo', value: String(stock.em_campo), color: 'var(--accent-cyan)' },
+      { label: 'Retornando', value: String(stock.retornando), color: 'var(--accent-violet)' },
+      { label: 'Manutenção', value: String(stock.manutencao), color: 'var(--accent-amber)' },
+      {
+        label: 'Patrimônio',
+        value: formatPatrimonioCompact(stock.patrimonio_total),
+        color: 'var(--fg-0)',
+        mono: true,
+      },
     ],
     upcoming_events: [
       {

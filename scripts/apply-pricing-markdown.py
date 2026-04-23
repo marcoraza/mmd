@@ -81,7 +81,31 @@ def safe_float(value) -> float:
         return 0.0
     if "★" in text or "☆" in text:
         return float(text.count("★"))
-    cleaned = text.replace("R$", "").replace(".", "").replace(",", ".")
+    cleaned = re.sub(r"[^\d,.\-]", "", text.replace("R$", ""))
+    if not cleaned:
+        return 0.0
+
+    if "," in cleaned and "." in cleaned:
+        if cleaned.rfind(",") > cleaned.rfind("."):
+            cleaned = cleaned.replace(".", "").replace(",", ".")
+        else:
+            cleaned = cleaned.replace(",", "")
+    elif "," in cleaned:
+        parts = cleaned.split(",")
+        if len(parts) > 1 and len(parts[-1]) in {1, 2}:
+            cleaned = "".join(parts[:-1]) + "." + parts[-1]
+        else:
+            cleaned = "".join(parts)
+    elif "." in cleaned:
+        parts = cleaned.split(".")
+        if len(parts) > 2:
+            if len(parts[-1]) in {1, 2}:
+                cleaned = "".join(parts[:-1]) + "." + parts[-1]
+            else:
+                cleaned = "".join(parts)
+        elif len(parts) == 2 and len(parts[-1]) == 3:
+            cleaned = "".join(parts)
+
     match = re.search(r"-?\d+(?:\.\d+)?", cleaned)
     if match:
         return float(match.group(0))

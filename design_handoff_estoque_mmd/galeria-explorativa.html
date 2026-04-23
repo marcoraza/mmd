@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Estoque Inteligente MMD · v3 completo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles/glass.css">
+
+<style>
+  body {
+    background: radial-gradient(ellipse at top, oklch(0.18 0.04 250) 0%, oklch(0.08 0.02 250) 60%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  :root.light body {
+    background: radial-gradient(ellipse at top, oklch(0.97 0.01 250) 0%, oklch(0.92 0.015 250) 60%);
+  }
+
+  .page-shell { max-width: 1600px; margin: 0 auto; padding: 40px 48px 80px; }
+
+  .header { margin-bottom: 28px; }
+  .header .eyebrow {
+    font-family: var(--font-mono); font-size: 11px; color: var(--fg-2);
+    letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .header h1 {
+    font-size: 42px; font-weight: 500; letter-spacing: -1px; margin: 0; line-height: 1.1;
+  }
+  .header p {
+    font-size: 15px; color: var(--fg-2); max-width: 620px; margin: 12px 0 0; line-height: 1.5;
+  }
+
+  .intro-card {
+    padding: 18px 22px; border-radius: 16px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+    font-size: 13px; color: var(--fg-1); line-height: 1.6; max-width: 760px; margin: 20px 0 32px;
+  }
+  .intro-card b { color: var(--fg-0); font-weight: 500; }
+  .intro-card .mono { color: var(--accent-cyan); font-size: 11px; font-family: var(--font-mono); }
+
+  .tabs {
+    display: flex; gap: 6px; padding: 6px; border-radius: 18px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-border); margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .tab {
+    padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 500;
+    color: var(--fg-2); cursor: pointer; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid transparent; background: transparent; font-family: inherit;
+  }
+  .tab:hover { color: var(--fg-1); }
+  .tab.active {
+    background: var(--glass-bg-strong); border-color: var(--glass-border-strong);
+    color: var(--fg-0); box-shadow: inset 0 1px 0 var(--glass-highlight);
+  }
+  .tab .mono { font-size: 10px; color: var(--fg-3); letter-spacing: 0.08em; font-family: var(--font-mono); }
+  .tab.active .mono { color: var(--accent-cyan); }
+  .tab .star { color: var(--accent-violet); font-size: 10px; }
+
+  .screen-meta {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .screen-meta h2 {
+    margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.3px; color: var(--fg-0);
+  }
+  .screen-meta .desc { color: var(--fg-2); font-size: 14px; }
+
+  /* Seg control for Projects view */
+  .seg {
+    display: inline-flex; padding: 4px; border-radius: 12px; gap: 2px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  }
+  .seg button {
+    padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500;
+    color: var(--fg-2); background: transparent; border: 1px solid transparent;
+    cursor: pointer; font-family: inherit;
+  }
+  .seg button.active {
+    background: var(--glass-bg-strong); color: var(--fg-0); border-color: var(--glass-border-strong);
+  }
+
+  .notes-card {
+    margin-top: 24px; padding: 18px 22px; border-radius: 16px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+    font-size: 13px; color: var(--fg-1); line-height: 1.7;
+  }
+  .notes-card h3 {
+    font-size: 11px; font-family: var(--font-mono); color: var(--fg-2);
+    letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 10px; font-weight: 500;
+  }
+  .notes-card b { color: var(--fg-0); font-weight: 500; }
+  .notes-card ul { margin: 0; padding-left: 18px; }
+  .notes-card li { margin-bottom: 6px; }
+
+  /* Tweaks panel */
+  .tweaks-panel {
+    position: fixed; bottom: 24px; right: 24px; padding: 16px; border-radius: 20px;
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    display: none; flex-direction: column; gap: 12px; z-index: 100; min-width: 220px;
+  }
+  .tweaks-panel.open { display: flex; }
+  .tweaks-title {
+    font-size: 11px; font-family: var(--font-mono); color: var(--fg-2);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .tweaks-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--fg-1); }
+  .tweaks-toggle {
+    margin-left: auto; width: 40px; height: 22px; border-radius: 11px;
+    background: var(--glass-border); position: relative; cursor: pointer; transition: background 0.2s;
+  }
+  .tweaks-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--fg-0); transition: transform 0.2s;
+  }
+  .tweaks-toggle.on { background: var(--accent-cyan); }
+  .tweaks-toggle.on::after { transform: translateX(18px); background: #fff; }
+
+  .screen-block {
+    display: flex; justify-content: center;
+  }
+  .ios-row {
+    display: flex; justify-content: center; gap: 32px;
+  }
+  .ios-row .variation-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .var-caption {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+    color: var(--fg-2); text-transform: uppercase;
+  }
+
+  /* Subtle reveal — avoid heavy animation */
+  .fade-in { animation: fadeIn 0.25s ease-out; }
+  @keyframes fadeIn { from { opacity: 0.4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<div class="tweaks-panel" id="tweaks">
+  <div class="tweaks-title">Tweaks</div>
+  <div class="tweaks-row">
+    <span>Modo claro</span>
+    <div class="tweaks-toggle" id="toggle-light"></div>
+  </div>
+</div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Components -->
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="frames/browser-window.jsx"></script>
+<script type="text/babel" src="components/primitives.jsx"></script>
+<script type="text/babel" src="components/screen-dashboard.jsx"></script>
+<script type="text/babel" src="components/screen-projects.jsx"></script>
+<script type="text/babel" src="components/screen-item-detail.jsx"></script>
+<script type="text/babel" src="components/screen-rfid-scan.jsx"></script>
+<script type="text/babel" src="components/screen-checkout.jsx"></script>
+<script type="text/babel" src="components/screen-checkout-combined.jsx"></script>
+<script type="text/babel" src="components/support-screens.jsx"></script>
+<script type="text/babel" src="components/catalog-calendar.jsx"></script>
+<script type="text/babel" src="components/conflict-resolver.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "light": true
+}/*EDITMODE-END*/;
+
+// ─────────────────────────────────────────
+// Consolidated screen definitions
+// ─────────────────────────────────────────
+const SCREENS = [
+  {
+    id: 'dashboard', label: 'Dashboard', platform: 'web',
+    title: 'Dashboard · Cinematic',
+    desc: 'Tipografia grande · próximo evento como protagonista · readiness no hero',
+    render: () => <DashboardV2 />,
+  },
+  {
+    id: 'projects', label: 'Projetos & Packing', platform: 'web',
+    title: 'Projetos & Packing',
+    desc: 'Kanban como default · alterne pra Timeline ou Split view · mesmas projeções, óticas diferentes',
+    render: 'projects-switcher',
+  },
+  {
+    id: 'item', label: 'Item & Condição', platform: 'web',
+    title: 'Item · Card 3D flutuante',
+    desc: 'Hero card com depth + dials de condição · o item como protagonista',
+    render: () => <ItemDetailV2 />,
+  },
+  {
+    id: 'rfid', label: 'RFID · scan ★', platform: 'ios', hero: true,
+    title: 'RFID scan · Partículas ao vivo ★',
+    desc: 'Hero moment — cada tag lida nasce como partícula brilhante · o momento WOW que vende o sistema',
+    render: () => <RfidScanV1 />,
+  },
+  {
+    id: 'checkout', label: 'Check-out', platform: 'ios',
+    title: 'Check-out · Híbrido (grade + lista)',
+    desc: 'Grade visual no topo pro glance · lista com status embaixo pra ação · chips filtram ambos',
+    render: () => <CheckoutCombined />,
+  },
+  // ─── Support screens ───
+  {
+    id: 'qrsheet', label: 'QR print sheet', platform: 'web', group: 'suporte',
+    title: 'QR em lote · impressão',
+    desc: 'Gerar etiquetas QR pros itens recém-cadastrados · 3 layouts · 12 QRs por A4',
+    render: () => <QRPrintSheet />,
+  },
+  {
+    id: 'tagbind', label: 'Vincular tag', platform: 'ios', group: 'suporte',
+    title: 'Vinculação tag RFID ↔ serial',
+    desc: 'Passo 2 do cadastro: leia a tag e ela fica presa ao serial MMD pra sempre',
+    render: () => <TagBind />,
+  },
+  {
+    id: 'lost', label: 'Item perdido', platform: 'ios', group: 'suporte',
+    title: 'Item não encontrado · busca ativa',
+    desc: 'Quando a contagem dá negativa, o app vira um detector de sinal · vai esquentando',
+    render: () => <ItemLost />,
+  },
+  {
+    id: 'onboarding', label: 'Onboarding', platform: 'ios', group: 'suporte',
+    title: 'Primeiro scan · onboarding',
+    desc: 'Ensina o técnico a usar o leitor em 3 telas · partícula como metáfora didática',
+    render: () => <Onboarding />,
+  },
+  {
+    id: 'packing', label: 'Packing mode', platform: 'ios', group: 'suporte',
+    title: 'Modo empacotamento · 2 variações',
+    desc: 'Checkout invertido: em vez de validar o que tá saindo, sugere o que ainda falta pegar',
+    render: 'packing-switcher',
+  },
+  {
+    id: 'catalog', label: 'Catálogo mestre', platform: 'web', group: 'suporte',
+    title: 'Catálogo mestre · produtos',
+    desc: 'Fonte da verdade vindo do Supabase · grid visual com disponibilidade em tempo real',
+    render: () => <CatalogMaster />,
+  },
+  {
+    id: 'calendar', label: 'Disponibilidade', platform: 'web', group: 'suporte',
+    title: 'Calendário de disponibilidade',
+    desc: 'Timeline 21 dias · conflitos de alocação destacados automaticamente',
+    render: () => <AvailCalendar />,
+  },
+  {
+    id: 'conflict', label: 'Resolver conflito', platform: 'web', group: 'suporte',
+    title: 'Resolver conflito · alternativas',
+    desc: 'Quando falta item: 4 caminhos (modelo alt, deslocar data, split, sub-locação) com custo e trade-off',
+    render: () => <ConflictResolver />,
+  },
+];
+
+function PackingSwitcherInline() {
+  const [view, setView] = React.useState(() => localStorage.getItem('mmd-pack-view') || 'mirror');
+  React.useEffect(() => { localStorage.setItem('mmd-pack-view', view); }, [view]);
+  const Cmp = view === 'mirror' ? PackingMirror : PackingMap;
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-2)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Variação</span>
+        <div className="seg">
+          <button className={view === 'mirror' ? 'active' : ''} onClick={() => setView('mirror')}>Lista + sugestão</button>
+          <button className={view === 'map' ? 'active' : ''} onClick={() => setView('map')}>Mapa do galpão</button>
+        </div>
+      </div>
+      <div className="screen-block fade-in" key={view}><Cmp /></div>
+    </div>
+  );
+}
+
+function ProjectsSwitcherInline() {
+  const [view, setView] = React.useState(() => localStorage.getItem('mmd-proj-view') || 'kanban');
+  React.useEffect(() => { localStorage.setItem('mmd-proj-view', view); }, [view]);
+
+  const Views = { kanban: ProjectsV3, timeline: ProjectsV2, split: ProjectsV1 };
+  const Cmp = Views[view];
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-2)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Visão</span>
+        <div className="seg">
+          <button className={view === 'kanban' ? 'active' : ''} onClick={() => setView('kanban')}>Kanban <span style={{opacity:0.5, fontSize:10, marginLeft:4}}>default</span></button>
+          <button className={view === 'timeline' ? 'active' : ''} onClick={() => setView('timeline')}>Timeline</button>
+          <button className={view === 'split' ? 'active' : ''} onClick={() => setView('split')}>Split view</button>
+        </div>
+      </div>
+      <div className="screen-block fade-in" key={view}>
+        <WebFrame><Cmp /></WebFrame>
+      </div>
+    </div>
+  );
+}
+
+function WebFrame({ children }) {
+  // Scale 1280x820 → ~1100px
+  const targetW = 1280;
+  const maxW = 1360;
+  const scale = Math.min(1, maxW / targetW);
+  return (
+    <div style={{ width: targetW * scale, height: 820 * scale + 84 }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: targetW, height: 820 + 84 }}>
+        <ChromeWindow
+          tabs={[{ title: 'Estoque Inteligente MMD' }]}
+          activeIndex={0}
+          url="app.mmd.com.br"
+          width={targetW} height={820 + 84}
+        >
+          {children}
+        </ChromeWindow>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = React.useState(() => localStorage.getItem('mmd-tab-v2') || 'dashboard');
+  React.useEffect(() => { localStorage.setItem('mmd-tab-v2', tab); }, [tab]);
+  const screen = SCREENS.find(s => s.id === tab);
+
+  return (
+    <div className="page-shell">
+      <div className="header">
+        <div className="eyebrow">Estoque Inteligente MMD · v2 consolidado</div>
+        <h1>A direção está definida.<br/><span style={{ color: 'var(--fg-2)' }}>Agora é aprofundar.</span></h1>
+        <p>
+          Variações eleitas, consolidadas num fluxo único. Projetos tem switch entre 3 visões.
+          Checkout virou um híbrido: glance por cima, ação por baixo. ★ marca o hero.
+        </p>
+      </div>
+
+      <div className="intro-card">
+        <b>Escolhas consolidadas:</b>
+        <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+          <li><b>Dashboard</b> → <span className="mono">Cinematic</span></li>
+          <li><b>Projetos</b> → <span className="mono">Kanban (default)</span> · com switch pra Timeline e Split</li>
+          <li><b>Item</b> → <span className="mono">Card 3D flutuante</span></li>
+          <li><b>RFID ★</b> → <span className="mono">Partículas ao vivo</span> · o hero moment</li>
+          <li><b>Checkout</b> → <span className="mono">Híbrido</span>: grade visual (glance) + lista com status (ação) · filtros sincronizam ambos</li>
+        </ul>
+      </div>
+
+      <div className="tabs">
+        {SCREENS.filter(s => !s.group).map(s => (
+          <button key={s.id} className={`tab ${tab === s.id ? 'active' : ''}`} onClick={() => setTab(s.id)}>
+            <span>{s.label}</span>
+            <span className="mono">{s.platform === 'ios' ? 'iOS' : 'WEB'}</span>
+            {s.hero && <span className="star">★</span>}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 12px', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+        <div style={{ flex: 'none' }}>Telas de suporte</div>
+        <div style={{ flex: 1, height: 1, background: 'var(--glass-border)' }} />
+      </div>
+      <div className="tabs" style={{ marginBottom: 28 }}>
+        {SCREENS.filter(s => s.group === 'suporte').map(s => (
+          <button key={s.id} className={`tab ${tab === s.id ? 'active' : ''}`} onClick={() => setTab(s.id)}>
+            <span>{s.label}</span>
+            <span className="mono">{s.platform === 'ios' ? 'iOS' : 'WEB'}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="screen-meta">
+        <h2>{screen.title}</h2>
+        <span className="desc">· {screen.desc}</span>
+      </div>
+
+      {screen.render === 'projects-switcher' ? (
+        <ProjectsSwitcherInline />
+      ) : screen.render === 'packing-switcher' ? (
+        <PackingSwitcherInline />
+      ) : (
+        <div className="screen-block fade-in" key={tab} data-screen-label={screen.title}>
+          {screen.platform === 'web' ? <WebFrame>{screen.render()}</WebFrame> : screen.render()}
+        </div>
+      )}
+
+      {tab === 'checkout' && (
+        <div className="notes-card">
+          <h3>Como o híbrido funciona</h3>
+          <ul>
+            <li><b>Grade (topo)</b>: 214 células = 214 unidades. Verde = prontas, vermelho = faltando. Um olhar e você sabe o tamanho do problema.</li>
+            <li><b>Tocar numa célula</b> faz ela crescer com anel branco — funciona como "onde está esse serial?". Próxima iteração: scroll da lista até o item correspondente.</li>
+            <li><b>Lista (baixo)</b>: agregada por produto, não por serial. Mesma info do sistema antigo mas com progresso numérico proeminente (12/12, 0/12, 6/8).</li>
+            <li><b>Chips filtram ambos</b>: "Faltando" esconde as verdes da grade e as linhas OK da lista. O foco aparece instantaneamente.</li>
+            <li><b>Ação principal (Confirmar saída)</b> fica bloqueada enquanto houver faltantes — ou libera com confirmação explícita de "sair mesmo assim".</li>
+          </ul>
+        </div>
+      )}
+
+      {tab === 'rfid' && (
+        <div className="notes-card">
+          <h3>Por que partículas funcionam aqui</h3>
+          <ul>
+            <li><b>Feedback imediato</b>: RFID lê 20 tags/segundo. Uma lista rolando vira ruído. Uma partícula por tag = confirmação visual calma mesmo em volume alto.</li>
+            <li><b>Sensação de magia</b>: o momento "WOW" que vende a transição. Técnicos que nunca usaram RFID entendem em 3 segundos.</li>
+            <li><b>Informação por camadas</b>: o contador grande pra gerente, a partícula pra operador, o drawer inferior pra auditor.</li>
+            <li><b>Próximo passo</b>: validar com Marcelo + 1 técnico de campo, rodando leitor real. Se o hardware escolhido tiver latência &gt;200ms, simplificar pra V2 (contador + feed).</li>
+          </ul>
+        </div>
+      )}
+
+      <div className="notes-card" style={{ marginTop: 16 }}>
+        <h3>Próximos passos</h3>
+        <ul>
+          <li><b>Protótipo clicável</b> — ligar Dashboard → Projetos (Kanban) → Item → RFID → Checkout num fluxo único, com transições reais</li>
+          <li><b>Telas de suporte</b> — (1) QR print sheet pros itens recém-cadastrados, (2) tela de vinculação tag RFID ↔ serial, (3) estado de "item perdido" / "ativar busca", (4) onboarding do primeiro scan</li>
+          <li><b>Sistema de design</b> — extrair tokens (cores, tipo, rings, caustics) num arquivo compartilhável pro handoff com dev</li>
+          <li><b>Validação de campo</b> — levar partículas RFID + checkout híbrido pro Marcelo com um técnico real, filmar o teste</li>
+          <li><b>Modo empacotamento</b> — versão do checkout pra *preparar* (não validar) um evento · mesma anatomia híbrida mas com fluxo inverso</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+// Tweaks wiring
+(function() {
+  const state = { ...TWEAK_DEFAULTS };
+  const applyState = () => {
+    document.documentElement.classList.toggle('light', state.light);
+    const t = document.getElementById('toggle-light');
+    if (t) t.classList.toggle('on', state.light);
+  };
+  try {
+    const saved = JSON.parse(localStorage.getItem('mmd-tweaks') || '{}');
+    Object.assign(state, saved);
+  } catch(e) {}
+  applyState();
+
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === '__activate_edit_mode') {
+      document.getElementById('tweaks').classList.add('open');
+    } else if (e.data.type === '__deactivate_edit_mode') {
+      document.getElementById('tweaks').classList.remove('open');
+    }
+  });
+
+  document.getElementById('toggle-light').addEventListener('click', () => {
+    state.light = !state.light;
+    applyState();
+    localStorage.setItem('mmd-tweaks', JSON.stringify(state));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { light: state.light } }, '*');
+  });
+
+  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Design Tokens · Estoque Inteligente MMD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="tokens/mmd-tokens.css">
+
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at top, oklch(0.18 0.04 250) 0%, oklch(0.08 0.02 250) 60%);
+    min-height: 100vh;
+    color: var(--mmd-fg-0);
+    font-family: var(--mmd-font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :root.light body {
+    background: radial-gradient(ellipse at top, oklch(0.97 0.01 250) 0%, oklch(0.92 0.015 250) 60%);
+  }
+
+  .page { max-width: 1280px; margin: 0 auto; padding: 56px 48px 120px; }
+
+  .hero { margin-bottom: 56px; }
+  .hero .eyebrow {
+    font-family: var(--mmd-font-mono); font-size: 11px; color: var(--mmd-fg-2);
+    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .hero h1 {
+    font-size: 56px; font-weight: 500; letter-spacing: -1.5px; margin: 0;
+    line-height: 1.05;
+  }
+  .hero h1 .soft { color: var(--mmd-fg-2); }
+  .hero p {
+    font-size: 16px; color: var(--mmd-fg-1); max-width: 640px;
+    margin: 16px 0 0; line-height: 1.55;
+  }
+  .hero .actions {
+    display: flex; gap: 10px; margin-top: 24px;
+  }
+  .btn {
+    padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 500;
+    background: var(--mmd-glass-bg-strong); border: 1px solid var(--mmd-glass-border-strong);
+    color: var(--mmd-fg-0); cursor: pointer; font-family: inherit;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  }
+  .btn:hover { background: var(--mmd-glass-bg-strong); border-color: var(--mmd-fg-2); }
+  .btn .mono { font-family: var(--mmd-font-mono); font-size: 11px; color: var(--mmd-fg-2); }
+
+  section { margin-bottom: 72px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px; margin-bottom: 28px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--mmd-glass-border);
+  }
+  .section-head .num {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--mmd-glass-bg-strong); border: 1px solid var(--mmd-glass-border-strong);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--mmd-font-mono); font-size: 12px; color: var(--mmd-fg-0);
+  }
+  .section-head h2 {
+    margin: 0; font-size: 24px; font-weight: 500; letter-spacing: -0.3px;
+  }
+  .section-head .count {
+    font-family: var(--mmd-font-mono); font-size: 11px; color: var(--mmd-fg-3);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-left: auto;
+  }
+
+  /* Color swatches */
+  .swatches {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .swatch {
+    border-radius: var(--mmd-r-md); overflow: hidden;
+    background: var(--mmd-glass-bg); border: 1px solid var(--mmd-glass-border);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  }
+  .swatch-color {
+    height: 96px; position: relative;
+    border-bottom: 1px solid var(--mmd-glass-border);
+  }
+  .swatch-color.bordered { border: 1px dashed rgba(255,255,255,0.15); border-radius: var(--mmd-r-md) var(--mmd-r-md) 0 0; }
+  .swatch-meta { padding: 10px 14px 12px; }
+  .swatch-name {
+    font-size: 12px; font-weight: 500; color: var(--mmd-fg-0);
+  }
+  .swatch-val {
+    font-family: var(--mmd-font-mono); font-size: 10px; color: var(--mmd-fg-2);
+    margin-top: 3px; letter-spacing: 0.02em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .swatch-note { font-size: 11px; color: var(--mmd-fg-3); margin-top: 4px; line-height: 1.4; }
+
+  .token-tag {
+    display: inline-block; padding: 2px 6px; border-radius: 4px;
+    font-family: var(--mmd-font-mono); font-size: 9px; color: var(--mmd-fg-2);
+    background: var(--mmd-glass-bg-strong); letter-spacing: 0.05em;
+  }
+
+  /* Typography */
+  .type-row {
+    display: grid; grid-template-columns: 180px 1fr 200px;
+    gap: 24px; align-items: baseline;
+    padding: 20px 0; border-bottom: 1px solid var(--mmd-glass-border);
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-label {
+    font-family: var(--mmd-font-mono); font-size: 10px;
+    color: var(--mmd-fg-2); letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .type-sample { color: var(--mmd-fg-0); }
+  .type-specs {
+    font-family: var(--mmd-font-mono); font-size: 11px;
+    color: var(--mmd-fg-2); text-align: right; line-height: 1.5;
+  }
+
+  /* Radii */
+  .radii-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  }
+  .radii-card {
+    padding: 24px; height: 160px;
+    background: var(--mmd-glass-bg); border: 1px solid var(--mmd-glass-border);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .radii-preview {
+    width: 80px; height: 60px;
+    background: linear-gradient(135deg, var(--mmd-cyan), var(--mmd-violet));
+    border: 1px solid var(--mmd-glass-border-strong);
+  }
+  .radii-meta {
+    font-family: var(--mmd-font-mono); font-size: 11px; color: var(--mmd-fg-0);
+  }
+  .radii-meta .name { font-weight: 500; font-size: 13px; color: var(--mmd-fg-0); font-family: var(--mmd-font-sans); }
+  .radii-meta .val { color: var(--mmd-fg-2); margin-top: 2px; }
+
+  /* Spacing ruler */
+  .spacing-list {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .spacing-row {
+    display: grid; grid-template-columns: 60px 80px 1fr;
+    align-items: center; gap: 16px;
+    padding: 10px 14px;
+    background: var(--mmd-glass-bg); border: 1px solid var(--mmd-glass-border);
+    border-radius: var(--mmd-r-sm);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+  .spacing-name { font-weight: 500; font-size: 13px; font-family: var(--mmd-font-mono); }
+  .spacing-val { font-family: var(--mmd-font-mono); font-size: 11px; color: var(--mmd-fg-2); }
+  .spacing-bar { height: 16px; background: linear-gradient(90deg, var(--mmd-cyan), var(--mmd-violet)); border-radius: 4px; }
+
+  /* Shadows */
+  .shadow-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+  }
+  .shadow-card {
+    height: 160px; border-radius: var(--mmd-r-md);
+    background: var(--mmd-glass-bg-strong); border: 1px solid var(--mmd-glass-border-strong);
+    padding: 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  }
+  .shadow-name { font-weight: 500; font-size: 13px; }
+  .shadow-val { font-family: var(--mmd-font-mono); font-size: 10px; color: var(--mmd-fg-2); line-height: 1.5; }
+
+  /* Rings */
+  .rings-row {
+    display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap;
+    padding: 32px;
+    background: var(--mmd-glass-bg); border: 1px solid var(--mmd-glass-border);
+    border-radius: var(--mmd-r-md);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  }
+  .ring-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .ring-label { font-family: var(--mmd-font-mono); font-size: 10px; color: var(--mmd-fg-2); letter-spacing: 0.1em; }
+
+  /* Caustic demo */
+  .caustic-demo {
+    position: relative; height: 280px; border-radius: var(--mmd-r-lg);
+    overflow: hidden; border: 1px solid var(--mmd-glass-border);
+    background: oklch(0.10 0.015 250);
+  }
+  .caustic-demo .orb {
+    position: absolute; border-radius: 50%; filter: blur(60px);
+    mix-blend-mode: screen;
+  }
+  :root.light .caustic-demo .orb { mix-blend-mode: multiply; opacity: 0.4 !important; }
+  .caustic-demo .caption {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mmd-font-mono); font-size: 11px; color: var(--mmd-fg-1);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-shadow: 0 0 20px rgba(0,0,0,0.6);
+  }
+
+  /* Glass samples */
+  .glass-row {
+    position: relative; height: 240px;
+    border-radius: var(--mmd-r-lg); overflow: hidden;
+    background: linear-gradient(135deg,
+      oklch(0.25 0.12 210), oklch(0.22 0.14 295), oklch(0.20 0.15 150));
+    padding: 20px;
+    display: flex; gap: 16px; align-items: center; justify-content: center;
+  }
+  .glass-sample {
+    flex: 1; padding: 20px; border-radius: var(--mmd-r-md);
+    min-height: 140px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .gs-normal {
+    background: var(--mmd-glass-bg); border: 1px solid var(--mmd-glass-border);
+    backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: var(--mmd-shadow-glass);
+  }
+  .gs-strong {
+    background: var(--mmd-glass-bg-strong); border: 1px solid var(--mmd-glass-border-strong);
+    backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: var(--mmd-shadow-elevated);
+  }
+  .gs-name { font-size: 13px; font-weight: 500; color: #fff; }
+  .gs-val { font-family: var(--mmd-font-mono); font-size: 10px; color: rgba(255,255,255,0.75); }
+
+  /* Tweaks panel */
+  .tweaks-panel {
+    position: fixed; bottom: 24px; right: 24px; padding: 16px; border-radius: 20px;
+    background: var(--mmd-glass-bg-strong);
+    backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--mmd-glass-border-strong);
+    box-shadow: var(--mmd-shadow-elevated);
+    display: none; flex-direction: column; gap: 12px; z-index: 100; min-width: 220px;
+  }
+  .tweaks-panel.open { display: flex; }
+  .tweaks-title {
+    font-size: 11px; font-family: var(--mmd-font-mono); color: var(--mmd-fg-2);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .tweaks-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--mmd-fg-1); }
+  .tweaks-toggle {
+    margin-left: auto; width: 40px; height: 22px; border-radius: 11px;
+    background: var(--mmd-glass-border); position: relative; cursor: pointer; transition: background 0.2s;
+  }
+  .tweaks-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--mmd-fg-0); transition: transform 0.2s;
+  }
+  .tweaks-toggle.on { background: var(--mmd-cyan); }
+  .tweaks-toggle.on::after { transform: translateX(18px); background: #fff; }
+
+  .callout {
+    padding: 20px 24px; border-radius: var(--mmd-r-md);
+    background: var(--mmd-glass-bg); border: 1px solid var(--mmd-glass-border);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    font-size: 13px; color: var(--mmd-fg-1); line-height: 1.6;
+  }
+  .callout b { color: var(--mmd-fg-0); font-weight: 500; }
+  .callout code {
+    font-family: var(--mmd-font-mono); font-size: 11px;
+    background: var(--mmd-glass-bg-strong); padding: 1px 6px; border-radius: 4px;
+    color: var(--mmd-fg-0);
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="eyebrow">Estoque Inteligente MMD · Design Tokens v0.1</div>
+    <h1>O sistema em tokens.<br/><span class="soft">Uma fonte, três formatos.</span></h1>
+    <p>
+      A linguagem visual do MMD destilada em tokens: cores em oklch, tipografia, raios,
+      espaçamento, sombras, movimento e o motivo-hero (rings de readiness). Consuma em JSON pro sistema de build,
+      CSS pra dev, ou esta página pra review.
+    </p>
+    <div class="actions">
+      <a class="btn" href="tokens/mmd-tokens.json" download>
+        <span>Download JSON</span><span class="mono">5.4 KB</span>
+      </a>
+      <a class="btn" href="tokens/mmd-tokens.css" download>
+        <span>Download CSS</span><span class="mono">3.8 KB</span>
+      </a>
+      <a class="btn" href="Estoque Inteligente MMD v2.html">
+        <span>Ver telas →</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 01 Colors -->
+  <section>
+    <div class="section-head">
+      <span class="num">01</span>
+      <h2>Cores</h2>
+      <span class="count">12 tokens · oklch</span>
+    </div>
+
+    <div class="callout" style="margin-bottom: 24px;">
+      <b>Por que oklch?</b> — uniformidade perceptual. Ajustar lightness não mexe o matiz.
+      Dois azuis com mesmo L se sentem igualmente brilhantes. Todos os tokens seguem o mesmo padrão
+      <code>oklch(L C H)</code> pra facilitar derivação de escalas e temas.
+    </div>
+
+    <!-- Neutrals -->
+    <div style="margin-bottom: 28px;">
+      <div style="font-family: var(--mmd-font-mono); font-size: 10px; color: var(--mmd-fg-2); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px;">Neutros · backgrounds</div>
+      <div class="swatches">
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-bg-0);"></div><div class="swatch-meta"><div class="swatch-name">bg-0</div><div class="swatch-val">oklch(0.12 0.015 250)</div><div class="swatch-note">App background</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-bg-1);"></div><div class="swatch-meta"><div class="swatch-name">bg-1</div><div class="swatch-val">oklch(0.16 0.018 250)</div><div class="swatch-note">Secundário</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-bg-2);"></div><div class="swatch-meta"><div class="swatch-name">bg-2</div><div class="swatch-val">oklch(0.20 0.02 250)</div><div class="swatch-note">Painéis elevados</div></div></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 28px;">
+      <div style="font-family: var(--mmd-font-mono); font-size: 10px; color: var(--mmd-fg-2); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px;">Neutros · foreground</div>
+      <div class="swatches">
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-fg-0);"></div><div class="swatch-meta"><div class="swatch-name">fg-0</div><div class="swatch-val">oklch(0.98 0.005 250)</div><div class="swatch-note">Títulos, hi-contrast</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-fg-1);"></div><div class="swatch-meta"><div class="swatch-name">fg-1</div><div class="swatch-val">oklch(0.85 0.008 250)</div><div class="swatch-note">Body</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-fg-2);"></div><div class="swatch-meta"><div class="swatch-name">fg-2</div><div class="swatch-val">oklch(0.65 0.01 250)</div><div class="swatch-note">Labels, secondary</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-fg-3);"></div><div class="swatch-meta"><div class="swatch-name">fg-3</div><div class="swatch-val">oklch(0.48 0.012 250)</div><div class="swatch-note">Disabled, tertiary</div></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-family: var(--mmd-font-mono); font-size: 10px; color: var(--mmd-fg-2); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px;">Accent · status + ação</div>
+      <div class="swatches">
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-cyan);"></div><div class="swatch-meta"><div class="swatch-name">cyan</div><div class="swatch-val">oklch(0.75 0.14 210)</div><div class="swatch-note">Ação primária, foco</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-violet);"></div><div class="swatch-meta"><div class="swatch-name">violet</div><div class="swatch-val">oklch(0.70 0.17 295)</div><div class="swatch-note">Secundária, hero</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-green);"></div><div class="swatch-meta"><div class="swatch-name">green</div><div class="swatch-val">oklch(0.80 0.17 150)</div><div class="swatch-note">Sucesso, OK, pronto</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-amber);"></div><div class="swatch-meta"><div class="swatch-name">amber</div><div class="swatch-val">oklch(0.80 0.15 75)</div><div class="swatch-note">Warning, parcial</div></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: var(--mmd-red);"></div><div class="swatch-meta"><div class="swatch-name">red</div><div class="swatch-val">oklch(0.70 0.18 25)</div><div class="swatch-note">Erro, faltando, crítico</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 Glass -->
+  <section>
+    <div class="section-head">
+      <span class="num">02</span>
+      <h2>Glass · superfícies translúcidas</h2>
+      <span class="count">2 níveis · blur + saturate</span>
+    </div>
+    <div class="callout" style="margin-bottom: 20px;">
+      <b>A assinatura do sistema.</b> Vidro sobre caustic. <code>blur: 24px</code>, <code>saturate: 180%</code>,
+      highlight interno fake a espessura. <b>strong</b> = cards ativos/hover; <b>normal</b> = descanso.
+    </div>
+    <div class="glass-row">
+      <div class="glass-sample gs-normal">
+        <div class="gs-name">glass · normal</div>
+        <div>
+          <div class="gs-val">bg: rgba(255,255,255,0.05)</div>
+          <div class="gs-val">border: rgba(255,255,255,0.10)</div>
+          <div class="gs-val">blur: 24px saturate 180%</div>
+        </div>
+      </div>
+      <div class="glass-sample gs-strong">
+        <div class="gs-name">glass · strong</div>
+        <div>
+          <div class="gs-val">bg: rgba(255,255,255,0.09)</div>
+          <div class="gs-val">border: rgba(255,255,255,0.18)</div>
+          <div class="gs-val">+ elevated shadow</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 Caustic -->
+  <section>
+    <div class="section-head">
+      <span class="num">03</span>
+      <h2>Caustic · orbs iridescentes</h2>
+      <span class="count">3 orbs · cyan · violet · green</span>
+    </div>
+    <div class="callout" style="margin-bottom: 20px;">
+      <b>A luz que vive debaixo do vidro.</b> Três orbs com <code>blur: 60–80px</code> e
+      <code>mix-blend-mode: screen</code> criam a assinatura iridescente. No modo claro,
+      viram <code>multiply</code>. Cada tela usa 2–3 orbs posicionados pra guiar o olho.
+    </div>
+    <div class="caustic-demo">
+      <div class="orb" style="width: 50%; aspect-ratio: 1; left: -10%; top: -15%; background: radial-gradient(circle, oklch(0.75 0.18 210), transparent 60%); opacity: 0.65;"></div>
+      <div class="orb" style="width: 55%; aspect-ratio: 1; right: -15%; bottom: -20%; background: radial-gradient(circle, oklch(0.72 0.20 295), transparent 60%); opacity: 0.65;"></div>
+      <div class="orb" style="width: 40%; aspect-ratio: 1; left: 40%; top: 30%; background: radial-gradient(circle, oklch(0.80 0.15 150), transparent 60%); opacity: 0.4; filter: blur(80px);"></div>
+      <div class="caption">Caustic layer · underneath every glass surface</div>
+    </div>
+  </section>
+
+  <!-- 04 Typography -->
+  <section>
+    <div class="section-head">
+      <span class="num">04</span>
+      <h2>Tipografia</h2>
+      <span class="count">Inter Tight + JetBrains Mono · 7 steps</span>
+    </div>
+    <div style="background: var(--mmd-glass-bg); border: 1px solid var(--mmd-glass-border); border-radius: var(--mmd-r-md); padding: 8px 28px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+      <div class="type-row">
+        <div class="type-label">Display</div>
+        <div class="type-sample" style="font-size: 42px; font-weight: 500; letter-spacing: -1px; line-height: 1.1;">Liquid glass</div>
+        <div class="type-specs">42 / 46 · 500<br/>-1.0 tracking</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">Title</div>
+        <div class="type-sample" style="font-size: 28px; font-weight: 500; letter-spacing: -0.6px; line-height: 1.15;">Próximo evento · hoje 14h</div>
+        <div class="type-specs">28 / 32 · 500<br/>-0.6 tracking</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">H2</div>
+        <div class="type-sample" style="font-size: 22px; font-weight: 500; letter-spacing: -0.3px; line-height: 1.2;">Packing list · Casamento Santos</div>
+        <div class="type-specs">22 / 26 · 500<br/>-0.3 tracking</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">H3</div>
+        <div class="type-sample" style="font-size: 17px; font-weight: 500; letter-spacing: -0.1px; line-height: 1.3;">Moving Head Beam 230W · 8 unidades</div>
+        <div class="type-specs">17 / 22 · 500<br/>-0.1 tracking</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">Body</div>
+        <div class="type-sample" style="font-size: 14px; line-height: 1.5; color: var(--mmd-fg-1);">214 itens validados de 214 esperados — tudo pronto pro transporte. Tempo total de scan: 3 min 18 s com leitor RFID de gatilho.</div>
+        <div class="type-specs">14 / 21 · 400<br/>0 tracking</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">Small</div>
+        <div class="type-sample" style="font-size: 12px; line-height: 1.4; color: var(--mmd-fg-2);">Última sincronização: há 2 minutos · Rentman</div>
+        <div class="type-specs">12 / 17 · 400<br/>0 tracking</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">Mono · label</div>
+        <div class="type-sample mmd-mono" style="font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--mmd-fg-2);">MMD-ILU-0042 · readiness 87%</div>
+        <div class="type-specs">10 · 500<br/>1.2 tracking · upper</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 Radii -->
+  <section>
+    <div class="section-head">
+      <span class="num">05</span>
+      <h2>Raios</h2>
+      <span class="count">4 passos · 10 → 32</span>
+    </div>
+    <div class="radii-grid">
+      <div class="radii-card">
+        <div class="radii-preview" style="border-radius: var(--mmd-r-sm);"></div>
+        <div class="radii-meta"><div class="name">sm</div><div class="val">10px · chips, botões</div></div>
+      </div>
+      <div class="radii-card">
+        <div class="radii-preview" style="border-radius: var(--mmd-r-md);"></div>
+        <div class="radii-meta"><div class="name">md</div><div class="val">16px · cards, inputs</div></div>
+      </div>
+      <div class="radii-card">
+        <div class="radii-preview" style="border-radius: var(--mmd-r-lg);"></div>
+        <div class="radii-meta"><div class="name">lg</div><div class="val">24px · painéis, sheets</div></div>
+      </div>
+      <div class="radii-card">
+        <div class="radii-preview" style="border-radius: var(--mmd-r-xl);"></div>
+        <div class="radii-meta"><div class="name">xl</div><div class="val">32px · hero, device</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 Spacing -->
+  <section>
+    <div class="section-head">
+      <span class="num">06</span>
+      <h2>Spacing</h2>
+      <span class="count">Escala 4px · 12 passos</span>
+    </div>
+    <div class="spacing-list">
+      <div class="spacing-row"><div class="spacing-name">sp-1</div><div class="spacing-val">4px</div><div class="spacing-bar" style="width: 4px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-2</div><div class="spacing-val">8px</div><div class="spacing-bar" style="width: 8px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-3</div><div class="spacing-val">12px</div><div class="spacing-bar" style="width: 12px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-4</div><div class="spacing-val">16px</div><div class="spacing-bar" style="width: 16px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-5</div><div class="spacing-val">20px</div><div class="spacing-bar" style="width: 20px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-6</div><div class="spacing-val">24px</div><div class="spacing-bar" style="width: 24px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-8</div><div class="spacing-val">32px</div><div class="spacing-bar" style="width: 32px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-10</div><div class="spacing-val">40px</div><div class="spacing-bar" style="width: 40px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-12</div><div class="spacing-val">48px</div><div class="spacing-bar" style="width: 48px;"></div></div>
+      <div class="spacing-row"><div class="spacing-name">sp-16</div><div class="spacing-val">64px</div><div class="spacing-bar" style="width: 64px;"></div></div>
+    </div>
+  </section>
+
+  <!-- 07 Shadow -->
+  <section>
+    <div class="section-head">
+      <span class="num">07</span>
+      <h2>Sombras & glow</h2>
+      <span class="count">2 sombras · 2 glows</span>
+    </div>
+    <div class="shadow-grid">
+      <div class="shadow-card" style="box-shadow: var(--mmd-shadow-glass);">
+        <div class="shadow-name">glass</div>
+        <div class="shadow-val">0 2 6 rgba<br/>0 20 60 rgba</div>
+      </div>
+      <div class="shadow-card" style="box-shadow: var(--mmd-shadow-elevated);">
+        <div class="shadow-name">elevated</div>
+        <div class="shadow-val">0 4 12 rgba<br/>0 30 80 rgba</div>
+      </div>
+      <div class="shadow-card" style="box-shadow: var(--mmd-glow-cyan); border-color: var(--mmd-cyan);">
+        <div class="shadow-name">glow · cyan</div>
+        <div class="shadow-val">Foco, ação<br/>primária</div>
+      </div>
+      <div class="shadow-card" style="box-shadow: var(--mmd-glow-violet); border-color: var(--mmd-violet);">
+        <div class="shadow-name">glow · violet</div>
+        <div class="shadow-val">Hero, RFID<br/>moment</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 Rings -->
+  <section>
+    <div class="section-head">
+      <span class="num">08</span>
+      <h2>Readiness rings</h2>
+      <span class="count">Motivo hero · 4 tamanhos</span>
+    </div>
+    <div class="callout" style="margin-bottom: 20px;">
+      <b>O símbolo do sistema.</b> Toda tela tem um ring de readiness. Gradient indica o estado:
+      <span style="color: var(--mmd-red);">vermelho→amber (missing)</span> ·
+      <span style="color: var(--mmd-amber);">amber→cyan (partial)</span> ·
+      <span style="color: var(--mmd-green);">green→cyan (ready)</span>.
+    </div>
+    <div class="rings-row">
+      <div class="ring-wrap"><svg width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/><circle cx="24" cy="24" r="20" fill="none" stroke="url(#g-sm)" stroke-width="4" stroke-dasharray="109" stroke-dashoffset="22" stroke-linecap="round" transform="rotate(-90 24 24)"/><defs><linearGradient id="g-sm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6dd18e"/><stop offset="1" stop-color="#7cc4ff"/></linearGradient></defs></svg><div class="ring-label">sm · 48</div></div>
+
+      <div class="ring-wrap"><svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6"/><circle cx="36" cy="36" r="30" fill="none" stroke="url(#g-md)" stroke-width="6" stroke-dasharray="188" stroke-dashoffset="38" stroke-linecap="round" transform="rotate(-90 36 36)"/><defs><linearGradient id="g-md" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6dd18e"/><stop offset="1" stop-color="#7cc4ff"/></linearGradient></defs><text x="36" y="42" text-anchor="middle" font-family="Inter Tight" font-size="20" font-weight="500" fill="#fff">87</text></svg><div class="ring-label">md · 72</div></div>
+
+      <div class="ring-wrap"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="10"/><circle cx="60" cy="60" r="50" fill="none" stroke="url(#g-lg)" stroke-width="10" stroke-dasharray="314" stroke-dashoffset="66" stroke-linecap="round" transform="rotate(-90 60 60)"/><defs><linearGradient id="g-lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb75c"/><stop offset="1" stop-color="#7cc4ff"/></linearGradient></defs><text x="60" y="66" text-anchor="middle" font-family="Inter Tight" font-size="28" font-weight="500" fill="#fff">79</text></svg><div class="ring-label">lg · 120</div></div>
+
+      <div class="ring-wrap"><svg width="200" height="200" viewBox="0 0 200 200"><circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="14"/><circle cx="100" cy="100" r="85" fill="none" stroke="url(#g-xl)" stroke-width="14" stroke-dasharray="534" stroke-dashoffset="267" stroke-linecap="round" transform="rotate(-90 100 100)"/><defs><linearGradient id="g-xl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#ffb75c"/></linearGradient></defs><text x="100" y="108" text-anchor="middle" font-family="Inter Tight" font-size="46" font-weight="500" fill="#fff">50</text></svg><div class="ring-label">xl · 200 (hero)</div></div>
+    </div>
+  </section>
+
+  <!-- 09 Motion -->
+  <section>
+    <div class="section-head">
+      <span class="num">09</span>
+      <h2>Motion</h2>
+      <span class="count">4 durations · 1 curve</span>
+    </div>
+    <div class="callout">
+      <b>Uma curva, quatro velocidades.</b> Tudo usa <code>cubic-bezier(0.4, 0, 0.2, 1)</code> —
+      a curva padrão Material, que soa "natural" em qualquer contexto.<br/><br/>
+      <b>instant · 80ms</b> — hover, toggle · feedback imediato<br/>
+      <b>fast · 180ms</b> — chips, botões, cards aparecem<br/>
+      <b>default · 240ms</b> — page transitions, modals<br/>
+      <b>slow · 420ms</b> — hero moments (partícula RFID nascendo, contador subindo)
+    </div>
+  </section>
+
+  <div class="callout" style="margin-top: 80px; text-align: center; padding: 32px;">
+    <b>Consumo pelo dev</b><br/>
+    <code>import tokens from './tokens/mmd-tokens.json'</code> pra sistema de build ·
+    <code>&lt;link rel="stylesheet" href="tokens/mmd-tokens.css"&gt;</code> pra uso direto<br/><br/>
+    Tokens são prefixados com <code>--mmd-</code> pra não conflitar. Modo claro via <code>:root.light</code>.
+  </div>
+
+</div>
+
+<div class="tweaks-panel" id="tweaks">
+  <div class="tweaks-title">Tweaks</div>
+  <div class="tweaks-row">
+    <span>Modo claro</span>
+    <div class="tweaks-toggle" id="toggle-light"></div>
+  </div>
+</div>
+
+<script>
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "light": false
+}/*EDITMODE-END*/;
+
+(function() {
+  const state = { ...TWEAK_DEFAULTS };
+  const apply = () => {
+    document.documentElement.classList.toggle('light', state.light);
+    document.getElementById('toggle-light').classList.toggle('on', state.light);
+  };
+  try { Object.assign(state, JSON.parse(localStorage.getItem('mmd-tokens-tweaks') || '{}')); } catch(e){}
+  apply();
+
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === '__activate_edit_mode') document.getElementById('tweaks').classList.add('open');
+    if (e.data.type === '__deactivate_edit_mode') document.getElementById('tweaks').classList.remove('open');
+  });
+
+  document.getElementById('toggle-light').addEventListener('click', () => {
+    state.light = !state.light;
+    apply();
+    localStorage.setItem('mmd-tokens-tweaks', JSON.stringify(state));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { light: state.light } }, '*');
+  });
+  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+})();
+</script>
+
+</body>
+</html>

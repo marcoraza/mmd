@@ -21,3 +21,12 @@ node_modules/
 # IDE
 .vscode/
 .idea/
+
+# Claude Code local
+.claude/
+
+# Playwright MCP cache
+.playwright-mcp/
+
+# Supabase CLI temp
+supabase/.temp/

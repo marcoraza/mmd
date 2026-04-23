@@ -2,15 +2,15 @@ import { Suspense } from 'react'
 import { Caustic } from '@/components/mmd/Primitives'
 import { TopBar } from '@/components/mmd/TopBar'
 import { CatalogClient } from '@/components/catalog/CatalogClient'
-import { loadCatalog } from '@/lib/data/items'
+import { loadCatalog, loadUnits } from '@/lib/data/items'
 
 async function CatalogContent() {
-  const data = await loadCatalog()
+  const [data, units] = await Promise.all([loadCatalog(), loadUnits()])
   return (
     <>
       <TopBar kicker="MMD Eventos" title="Catálogo" notifications={0} />
       <div style={{ marginTop: 24 }}>
-        <CatalogClient data={data} />
+        <CatalogClient data={data} units={units} />
       </div>
     </>
   )

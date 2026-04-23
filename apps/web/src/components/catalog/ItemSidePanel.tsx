@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect } from 'react'
 import { Icons } from '@/components/mmd/Icons'
 import type { CatalogItem } from '@/lib/data/items'
@@ -241,6 +242,25 @@ export function ItemSidePanel({
               borderTop: '1px solid var(--glass-border)',
             }}
           >
+            <Link
+              href={`/items/${item.id}`}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid var(--accent-cyan-soft)',
+                borderRadius: 'var(--r-sm)',
+                background: 'color-mix(in oklch, var(--accent-cyan) 14%, transparent)',
+                color: 'var(--accent-cyan)',
+                fontFamily: 'inherit',
+                fontSize: 12,
+                fontWeight: 500,
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              Ver detalhe completo →
+            </Link>
             <ActionButton disabled>Editar</ActionButton>
             <ActionButton disabled>Marcar manutenção</ActionButton>
             <ActionButton disabled>Imprimir etiqueta</ActionButton>

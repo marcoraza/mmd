@@ -1,7 +1,10 @@
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { Caustic } from '@/components/mmd/Primitives'
 import { TopBar } from '@/components/mmd/TopBar'
-import { UnderConstruction } from '@/components/mmd/UnderConstruction'
+import { CATEGORIA_LABEL } from '@/components/catalog/helpers'
+import { ItemDetailClient } from '@/components/item-detail/ItemDetailClient'
+import { getItemById } from '@/lib/data/items'
 
 export default async function ItemDetailPage({
   params,
@@ -9,6 +12,10 @@ export default async function ItemDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  const detail = await getItemById(id)
+  if (!detail) notFound()
+
+  const { item, notas, serials, timeline } = detail
 
   return (
     <div style={{ position: 'relative', minHeight: '100dvh' }}>
@@ -29,30 +36,37 @@ export default async function ItemDetailPage({
               ← Catálogo
             </Link>
           }
-          title={`Item ${id}`}
+          title={item.nome}
           notifications={0}
         />
 
-        <UnderConstruction
-          phase="stub"
-          planned={
-            <>
-              Página dedicada de detalhe de item. Hoje o detalhe só existe como
-              side panel em /items, o que limita compartilhamento de link e
-              visão completa. Esta rota é pra substituir isso por uma tela full
-              com timeline, fotos e ações.
-            </>
-          }
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginTop: 14,
+            marginBottom: 18,
+            fontSize: 12,
+            color: 'var(--fg-2)',
+            flexWrap: 'wrap',
+          }}
         >
-          <strong style={{ color: 'var(--fg-1)' }}>Blocos previstos (handoff tela 04):</strong>
-          <ul style={{ margin: '8px 0 0', paddingLeft: 20, color: 'var(--fg-2)' }}>
-            <li>Header: foto, código interno, marca/modelo, ring de condição</li>
-            <li>Status: estado, desgaste, depreciação, valor atual</li>
-            <li>Timeline de movimentações (check-out, check-in, manutenção, reparo)</li>
-            <li>Histórico de projetos (eventos que levou)</li>
-            <li>Ações: editar, marcar manutenção, baixar, imprimir QR</li>
-          </ul>
-        </UnderConstruction>
+          <Link href="/items" style={{ color: 'var(--fg-2)', textDecoration: 'none' }}>
+            Inventário
+          </Link>
+          <span style={{ color: 'var(--fg-3)' }}>/</span>
+          <span>{CATEGORIA_LABEL[item.categoria]}</span>
+          <span style={{ color: 'var(--fg-3)' }}>/</span>
+          <span style={{ color: 'var(--fg-0)' }}>{item.nome}</span>
+        </div>
+
+        <ItemDetailClient
+          item={item}
+          serials={serials}
+          timeline={timeline}
+          notas={notas}
+        />
       </div>
     </div>
   )

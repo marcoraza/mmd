@@ -11,6 +11,16 @@ export type StatusProjeto =
 
 export type PackingStatus = 'ok' | 'partial' | 'missing' | 'conflict'
 
+export type ConflictRef = {
+  projeto_id: string
+  projeto_nome: string
+  data_inicio: string
+  data_fim: string
+  status: StatusProjeto
+  qtd_necessaria: number
+  qtd_alocada: number
+}
+
 export type PackingItem = {
   id: string
   item_id: string
@@ -20,7 +30,7 @@ export type PackingItem = {
   qtd_necessaria: number
   qtd_alocada: number
   status: PackingStatus
-  conflicts_with?: { projeto_id: string; projeto_nome: string }[]
+  conflicts_with?: ConflictRef[]
 }
 
 export type Projeto = {
@@ -84,14 +94,24 @@ function annotateConflicts(projetos: Projeto[]): Projeto[] {
   return projetos.map((projeto) => {
     if (!ACTIVE.includes(projeto.status)) return projeto
     const packing = projeto.packing.map((pi) => {
-      const conflicts: { projeto_id: string; projeto_nome: string }[] = []
+      const conflicts: ConflictRef[] = []
       for (const other of ativos) {
         if (other.id === projeto.id) continue
         if (!rangesOverlap(projeto.data_inicio, projeto.data_fim, other.data_inicio, other.data_fim)) {
           continue
         }
         const match = other.packing.find((op) => op.item_id === pi.item_id)
-        if (match) conflicts.push({ projeto_id: other.id, projeto_nome: other.nome })
+        if (match) {
+          conflicts.push({
+            projeto_id: other.id,
+            projeto_nome: other.nome,
+            data_inicio: other.data_inicio,
+            data_fim: other.data_fim,
+            status: other.status,
+            qtd_necessaria: match.qtd_necessaria,
+            qtd_alocada: match.qtd_alocada,
+          })
+        }
       }
       if (conflicts.length === 0) return pi
       return {

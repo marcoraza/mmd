@@ -1,6 +1,12 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-server'
-import type { Categoria, Estado, StatusSerial } from '@/lib/types'
+import type {
+  Categoria,
+  Estado,
+  MetodoScan,
+  StatusSerial,
+  TipoMovimentacao,
+} from '@/lib/types'
 
 export type CatalogItem = {
   id: string
@@ -48,6 +54,27 @@ export type CatalogData = {
   total_lotes: number
 }
 
+export type CatalogUnit = {
+  id: string
+  codigo_interno: string
+  serial_fabrica: string | null
+  tag_rfid: string | null
+  qr_code: string | null
+  status: StatusSerial
+  estado: Estado
+  desgaste: number
+  valor_atual: number | null
+  localizacao: string | null
+  updated_at: string
+  item_id: string
+  item_nome: string
+  item_categoria: Categoria
+  item_subcategoria: string | null
+  item_marca: string | null
+  item_modelo: string | null
+  item_valor_mercado_unitario: number | null
+}
+
 type ItemRow = {
   id: string
   codigo_interno: string | null
@@ -65,6 +92,42 @@ type ItemRow = {
     desgaste: number
     valor_atual: number | null
   }>
+}
+
+export type SerialRow = {
+  id: string
+  codigo_interno: string
+  serial_fabrica: string | null
+  tag_rfid: string | null
+  qr_code: string | null
+  status: StatusSerial
+  estado: Estado
+  desgaste: number
+  valor_atual: number | null
+  localizacao: string | null
+  notas: string | null
+  updated_at: string
+}
+
+export type MovimentacaoTimeline = {
+  id: string
+  tipo: TipoMovimentacao
+  timestamp: string
+  status_anterior: string | null
+  status_novo: string | null
+  registrado_por: string | null
+  metodo_scan: MetodoScan | null
+  notas: string | null
+  serial_codigo: string | null
+  projeto_id: string | null
+  projeto_nome: string | null
+}
+
+export type ItemDetail = {
+  item: CatalogItem
+  notas: string | null
+  serials: SerialRow[]
+  timeline: MovimentacaoTimeline[]
 }
 
 const ACTIVE_STATUSES: StatusSerial[] = [
@@ -194,5 +257,172 @@ export async function loadCatalog(): Promise<CatalogData> {
     banner,
     categories,
     total_lotes: lotesCount ?? 0,
+  }
+}
+
+type UnitFlatRow = {
+  id: string
+  codigo_interno: string
+  serial_fabrica: string | null
+  tag_rfid: string | null
+  qr_code: string | null
+  status: StatusSerial
+  estado: Estado
+  desgaste: number
+  valor_atual: number | null
+  localizacao: string | null
+  updated_at: string
+  items: {
+    id: string
+    nome: string
+    categoria: Categoria
+    subcategoria: string | null
+    marca: string | null
+    modelo: string | null
+    valor_mercado_unitario: number | null
+  } | null
+}
+
+export async function loadUnits(): Promise<CatalogUnit[]> {
+  const { data, error } = await supabaseAdmin
+    .from('serial_numbers')
+    .select(
+      `id, codigo_interno, serial_fabrica, tag_rfid, qr_code,
+       status, estado, desgaste, valor_atual, localizacao, updated_at,
+       items!inner (id, nome, categoria, subcategoria, marca, modelo, valor_mercado_unitario)`
+    )
+    .order('codigo_interno', { ascending: true })
+
+  if (error) throw error
+
+  const rows = (data ?? []) as unknown as UnitFlatRow[]
+  return rows
+    .filter((r) => r.items != null)
+    .map((r) => ({
+      id: r.id,
+      codigo_interno: r.codigo_interno,
+      serial_fabrica: r.serial_fabrica,
+      tag_rfid: r.tag_rfid,
+      qr_code: r.qr_code,
+      status: r.status,
+      estado: r.estado,
+      desgaste: r.desgaste,
+      valor_atual: r.valor_atual,
+      localizacao: r.localizacao,
+      updated_at: r.updated_at,
+      item_id: r.items!.id,
+      item_nome: r.items!.nome,
+      item_categoria: r.items!.categoria,
+      item_subcategoria: r.items!.subcategoria,
+      item_marca: r.items!.marca,
+      item_modelo: r.items!.modelo,
+      item_valor_mercado_unitario: r.items!.valor_mercado_unitario,
+    }))
+}
+
+type ItemDetailRow = ItemRow & {
+  notas: string | null
+  serial_numbers_full: SerialRow[]
+}
+
+type MovimentacaoRow = {
+  id: string
+  tipo: TipoMovimentacao
+  timestamp: string
+  status_anterior: string | null
+  status_novo: string | null
+  registrado_por: string | null
+  metodo_scan: MetodoScan | null
+  notas: string | null
+  serial_numbers: {
+    codigo_interno: string
+    item_id: string
+  } | null
+  projetos: {
+    id: string
+    nome: string
+  } | null
+}
+
+export async function getItemById(id: string): Promise<ItemDetail | null> {
+  const { data: itemData, error: itemErr } = await supabaseAdmin
+    .from('items')
+    .select(
+      `id, codigo_interno, nome, categoria, subcategoria, marca, modelo,
+       quantidade_total, valor_mercado_unitario, foto_url, notas,
+       serial_numbers ( id, codigo_interno, serial_fabrica, tag_rfid, qr_code,
+                        status, estado, desgaste, valor_atual, localizacao, notas, updated_at )`
+    )
+    .eq('id', id)
+    .maybeSingle()
+
+  if (itemErr) throw itemErr
+  if (!itemData) return null
+
+  const row = itemData as unknown as ItemDetailRow
+  const serials = (row.serial_numbers ?? []) as unknown as SerialRow[]
+
+  // Reuse aggregate by mapping to ItemRow shape
+  const aggregated = aggregateItem({
+    id: row.id,
+    codigo_interno: row.codigo_interno,
+    nome: row.nome,
+    categoria: row.categoria,
+    subcategoria: row.subcategoria,
+    marca: row.marca,
+    modelo: row.modelo,
+    quantidade_total: row.quantidade_total,
+    valor_mercado_unitario: row.valor_mercado_unitario,
+    foto_url: row.foto_url,
+    serial_numbers: serials.map((s) => ({
+      status: s.status,
+      estado: s.estado,
+      desgaste: s.desgaste,
+      valor_atual: s.valor_atual,
+    })),
+  })
+
+  let timeline: MovimentacaoTimeline[] = []
+  const serialIds = serials.map((s) => s.id)
+  if (serialIds.length > 0) {
+    const { data: movData, error: movErr } = await supabaseAdmin
+      .from('movimentacoes')
+      .select(
+        `id, tipo, timestamp, status_anterior, status_novo, registrado_por,
+         metodo_scan, notas,
+         serial_numbers!inner ( codigo_interno, item_id ),
+         projetos ( id, nome )`
+      )
+      .in('serial_number_id', serialIds)
+      .order('timestamp', { ascending: false })
+      .limit(100)
+
+    if (movErr) throw movErr
+
+    timeline = (movData as unknown as MovimentacaoRow[]).map((m) => ({
+      id: m.id,
+      tipo: m.tipo,
+      timestamp: m.timestamp,
+      status_anterior: m.status_anterior,
+      status_novo: m.status_novo,
+      registrado_por: m.registrado_por,
+      metodo_scan: m.metodo_scan,
+      notas: m.notas,
+      serial_codigo: m.serial_numbers?.codigo_interno ?? null,
+      projeto_id: m.projetos?.id ?? null,
+      projeto_nome: m.projetos?.nome ?? null,
+    }))
+  }
+
+  // Sort serials by codigo_interno for stable display
+  const sortedSerials = [...serials].sort((a, b) =>
+    a.codigo_interno.localeCompare(b.codigo_interno)
+  )
+
+  return {
+    item: aggregated,
+    notas: row.notas,
+    serials: sortedSerials,
+    timeline,
   }
 }

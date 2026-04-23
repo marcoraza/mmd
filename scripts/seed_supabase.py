@@ -15,7 +15,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 ITEMS_PATH = ROOT_DIR / "data" / "items.json"
 SERIALS_PATH = ROOT_DIR / "data" / "serial_numbers.json"
 LOTES_PATH = ROOT_DIR / "data" / "lotes.json"
-MIGRATION_PATH = ROOT_DIR / "supabase" / "migrations" / "00001_initial_schema.sql"
+MIGRATIONS_DIR = ROOT_DIR / "supabase" / "migrations"
 
 ITEM_COLUMNS = [
     "id",
@@ -129,12 +129,22 @@ def open_db_connection():
     )
 
 
-def apply_migration_sql() -> None:
+def apply_migration_sql(only: str | None = None) -> None:
+    files = sorted(MIGRATIONS_DIR.glob("*.sql"))
+    if only:
+        target = MIGRATIONS_DIR / only
+        if not target.exists():
+            raise SystemExit(f"Migration nao encontrada: {target}")
+        files = [target]
+    if not files:
+        raise SystemExit(f"Nenhuma migration encontrada em {MIGRATIONS_DIR}")
     connection = open_db_connection()
     try:
         with connection:
             with connection.cursor() as cursor:
-                cursor.execute(MIGRATION_PATH.read_text(encoding="utf-8"))
+                for path in files:
+                    print(f"  applying {path.name}...")
+                    cursor.execute(path.read_text(encoding="utf-8"))
                 cursor.execute("NOTIFY pgrst, 'reload schema';")
     finally:
         connection.close()
@@ -175,7 +185,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Faz seed dos JSONs no Supabase.")
     parser.add_argument("--dry-run", action="store_true", help="Nao escreve no Supabase, apenas mostra contagens.")
     parser.add_argument("--chunk-size", type=int, default=200, help="Tamanho do lote para upsert.")
-    parser.add_argument("--apply-migration", action="store_true", help="Aplica supabase/migrations/00001_initial_schema.sql via conexao Postgres antes do seed.")
+    parser.add_argument("--apply-migration", action="store_true", help="Aplica todas as migrations em supabase/migrations/*.sql (em ordem) antes do seed.")
+    parser.add_argument("--migration-file", type=str, default=None, help="Nome de um arquivo unico em supabase/migrations/ a aplicar (ex: 00006_rfid_infrastructure.sql). Requer --apply-migration.")
     parser.add_argument("--stdin-secrets", action="store_true", help="Le credenciais via stdin em JSON e popula o ambiente do processo.")
     parser.add_argument("--prompt-secrets", action="store_true", help="Solicita credenciais de forma interativa sem eco no terminal.")
     return parser.parse_args()
@@ -201,9 +212,11 @@ def main() -> None:
         return
 
     if args.apply_migration:
-        print("Aplicando migration.sql...")
-        apply_migration_sql()
-        print("Migration aplicada.")
+        print("Aplicando migrations...")
+        apply_migration_sql(only=args.migration_file)
+        print("Migrations aplicadas.")
+    elif args.migration_file:
+        raise SystemExit("--migration-file exige --apply-migration")
 
     client = create_supabase_client()
     upsert_in_batches(client, "items", items, args.chunk_size)

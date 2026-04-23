@@ -6,6 +6,7 @@ import { EditableQty } from '@/components/catalog/EditableQty'
 import { Icons } from '@/components/mmd/Icons'
 import type { Projeto, PackingItem, PackingStatus } from '@/lib/data/projects'
 import { InlineItemPicker } from './InlineItemPicker'
+import { ConflictModal } from './ConflictModal'
 
 const DATE_FMT = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' })
 
@@ -58,6 +59,7 @@ export function ProjectListView({
     ativos[0]?.id ?? projetos[0]?.id ?? ''
   )
   const selected = projetos.find((p) => p.id === selectedId) ?? projetos[0]
+  const [conflictItem, setConflictItem] = useState<PackingItem | null>(null)
 
   if (projetos.length === 0) {
     return (
@@ -71,6 +73,7 @@ export function ProjectListView({
   }
 
   return (
+    <>
     <div
       style={{
         display: 'grid',
@@ -136,10 +139,25 @@ export function ProjectListView({
           onAddItem={onAddItem}
           onRemoveItem={onRemoveItem}
           onUpdateQty={onUpdateQty}
+          onConflictClick={setConflictItem}
           pending={pending}
         />
       )}
     </div>
+    {selected && (
+      <ConflictModal
+        item={conflictItem}
+        projetoAtualNome={selected.nome}
+        projetoAtualDataInicio={selected.data_inicio}
+        projetoAtualDataFim={selected.data_fim}
+        onClose={() => setConflictItem(null)}
+        onGoToProject={(id) => {
+          setSelectedId(id)
+          setConflictItem(null)
+        }}
+      />
+    )}
+    </>
   )
 }
 
@@ -148,12 +166,14 @@ function ProjectDetail({
   onAddItem,
   onRemoveItem,
   onUpdateQty,
+  onConflictClick,
   pending,
 }: {
   projeto: Projeto
   onAddItem: (projetoId: string, itemId: string, qtd: number) => void
   onRemoveItem: (packingId: string) => void
   onUpdateQty: (packingId: string, qtd: number) => void
+  onConflictClick: (item: PackingItem) => void
   pending: boolean
 }) {
   const [sort, setSort] = useState(DEFAULT_SORT)
@@ -268,6 +288,7 @@ function ProjectDetail({
                   pending={pending}
                   onRemove={() => onRemoveItem(item.id)}
                   onQty={(n) => onUpdateQty(item.id, n)}
+                  onConflictClick={() => onConflictClick(item)}
                 />
               ))}
               {adding && (
@@ -374,19 +395,19 @@ function PackingRow({
   pending,
   onRemove,
   onQty,
+  onConflictClick,
 }: {
   item: PackingItem
   pending: boolean
   onRemove: () => void
   onQty: (n: number) => void
+  onConflictClick: () => void
 }) {
   const meta = STATUS_META[item.status]
   const pct =
     item.qtd_necessaria > 0 ? (item.qtd_alocada / item.qtd_necessaria) * 100 : 0
-  const conflictTitle =
-    item.status === 'conflict' && item.conflicts_with
-      ? `Também em: ${item.conflicts_with.map((c) => c.projeto_nome).join(', ')}`
-      : undefined
+  const isConflict = item.status === 'conflict'
+  const conflictCount = item.conflicts_with?.length ?? 0
 
   return (
     <tr style={{ borderTop: '1px solid var(--glass-border)' }}>
@@ -417,24 +438,68 @@ function PackingRow({
         </div>
       </td>
       <td style={{ padding: 12 }}>
-        <span
-          title={conflictTitle}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 11,
-            color: meta.color,
-            fontWeight: 500,
-            padding: '3px 10px',
-            borderRadius: 999,
-            background: `color-mix(in oklch, ${meta.color} 15%, transparent)`,
-            border: `1px solid color-mix(in oklch, ${meta.color} 30%, transparent)`,
-            cursor: conflictTitle ? 'help' : 'default',
-          }}
-        >
-          <StatusDot color={meta.color} size={6} glow={false} /> {meta.label(item)}
-        </span>
+        {isConflict ? (
+          <button
+            type="button"
+            onClick={onConflictClick}
+            aria-label={`Ver ${conflictCount} projeto${conflictCount === 1 ? '' : 's'} em conflito`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 11,
+              color: meta.color,
+              fontWeight: 500,
+              padding: '3px 10px',
+              borderRadius: 999,
+              background: `color-mix(in oklch, ${meta.color} 15%, transparent)`,
+              border: `1px solid color-mix(in oklch, ${meta.color} 30%, transparent)`,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'background var(--motion-fast)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `color-mix(in oklch, ${meta.color} 25%, transparent)`
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = `color-mix(in oklch, ${meta.color} 15%, transparent)`
+            }}
+          >
+            <StatusDot color={meta.color} size={6} glow={false} /> {meta.label(item)}
+            {conflictCount > 0 && (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  padding: '1px 6px',
+                  borderRadius: 999,
+                  background: `color-mix(in oklch, ${meta.color} 30%, transparent)`,
+                  color: meta.color,
+                  marginLeft: 2,
+                }}
+              >
+                {conflictCount}
+              </span>
+            )}
+          </button>
+        ) : (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 11,
+              color: meta.color,
+              fontWeight: 500,
+              padding: '3px 10px',
+              borderRadius: 999,
+              background: `color-mix(in oklch, ${meta.color} 15%, transparent)`,
+              border: `1px solid color-mix(in oklch, ${meta.color} 30%, transparent)`,
+            }}
+          >
+            <StatusDot color={meta.color} size={6} glow={false} /> {meta.label(item)}
+          </span>
+        )}
       </td>
       <td style={{ padding: 12, color: 'var(--fg-3)', width: 40, textAlign: 'right' }}>
         <button

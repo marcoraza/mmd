@@ -37,13 +37,6 @@ const items: RailItem[] = [
     matches: (p) => p.startsWith('/projetos'),
   },
   {
-    id: 'disponibilidade',
-    href: '/disponibilidade',
-    icon: Icons.calendar,
-    label: 'Disponibilidade',
-    matches: (p) => p.startsWith('/disponibilidade'),
-  },
-  {
     id: 'rfid',
     href: '/rfid',
     icon: Icons.rfid,

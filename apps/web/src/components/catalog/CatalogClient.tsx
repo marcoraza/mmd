@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { CatalogData, CatalogItem } from '@/lib/data/items'
+import type { CatalogData, CatalogItem, CatalogUnit } from '@/lib/data/items'
 import type { Categoria } from '@/lib/types'
 import { CategoryNav } from './CategoryNav'
 import { OperationalBanner } from './OperationalBanner'
@@ -10,17 +10,31 @@ import type { BannerFilter } from './OperationalBanner'
 import { ItemTable } from './ItemTable'
 import { ItemSidePanel } from './ItemSidePanel'
 import { LotesCard } from './LotesCard'
+import { UnitsTable } from './UnitsTable'
+import { ViewModeToggle, type CatalogMode } from './ViewModeToggle'
 import { useCatalogView } from '@/hooks/useCatalogView'
+import { useUnitsView } from '@/hooks/useUnitsView'
 import { useItemMutation } from '@/hooks/useItemMutation'
 import { resolveTipo } from '@/lib/nomenclature'
 import { SITUACAO_LABEL } from './helpers'
 
-export function CatalogClient({ data }: { data: CatalogData }) {
+const MODE_STORAGE_KEY = 'mmd.catalog.mode.v1'
+
+export function CatalogClient({
+  data,
+  units,
+}: {
+  data: CatalogData
+  units: CatalogUnit[]
+}) {
   const [selectedCategoria, setSelectedCategoria] = useState<Categoria | 'ALL'>('ALL')
   const [bannerFilter, setBannerFilter] = useState<BannerFilter | null>(null)
   const [query, setQuery] = useState('')
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null)
+  const [mode, setMode] = useState<CatalogMode>('tipos')
+
   const { view, update } = useCatalogView()
+  const { view: unitsView, toggleSort: toggleUnitSort } = useUnitsView()
   const { updateDesgaste, updateQuantidade, pending } = useItemMutation()
 
   // Estado local editável; parte dos dados vindos do server.
@@ -28,6 +42,21 @@ export function CatalogClient({ data }: { data: CatalogData }) {
   useEffect(() => {
     setItems(data.items)
   }, [data.items])
+
+  // Hydrate mode from localStorage.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(MODE_STORAGE_KEY)
+      if (raw === 'tipos' || raw === 'unidades') setMode(raw)
+    } catch {}
+  }, [])
+
+  const handleModeChange = useCallback((next: CatalogMode) => {
+    setMode(next)
+    try {
+      window.localStorage.setItem(MODE_STORAGE_KEY, next)
+    } catch {}
+  }, [])
 
   const handleCondicaoChange = useCallback(
     async (itemId: string, desgaste: number) => {
@@ -121,7 +150,49 @@ export function CatalogClient({ data }: { data: CatalogData }) {
     return sorted
   }, [items, selectedCategoria, bannerFilter, query, view.sortKey, view.sortDir])
 
+  const filteredUnits = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    let rows = units
+
+    if (selectedCategoria !== 'ALL') {
+      rows = rows.filter((u) => u.item_categoria === selectedCategoria)
+    }
+    if (bannerFilter) {
+      rows = rows.filter((u) => matchUnitBannerFilter(u, bannerFilter))
+    }
+    if (q) {
+      rows = rows.filter((u) =>
+        [
+          u.codigo_interno,
+          u.serial_fabrica,
+          u.tag_rfid,
+          u.qr_code,
+          u.item_nome,
+          u.item_marca,
+          u.item_modelo,
+          u.item_subcategoria,
+          u.localizacao,
+        ]
+          .filter(Boolean)
+          .some((v) => (v as string).toLowerCase().includes(q))
+      )
+    }
+
+    return rows
+  }, [units, selectedCategoria, bannerFilter, query])
+
+  const visibleCount = mode === 'tipos' ? filtered.length : filteredUnits.length
+  const totalCount = mode === 'tipos' ? data.items.length : units.length
+
   const totalAtivos = data.banner.total_ativos
+
+  const handleSelectUnitItem = useCallback(
+    (itemId: string) => {
+      const target = items.find((i) => i.id === itemId)
+      if (target) setSelectedItem(target)
+    },
+    [items]
+  )
 
   return (
     <>
@@ -138,29 +209,56 @@ export function CatalogClient({ data }: { data: CatalogData }) {
         onFilter={(f) => setBannerFilter((prev) => (prev === f ? null : f))}
       />
 
-      <div style={{ marginTop: 20 }}>
-        <CatalogToolbar
-          query={query}
-          onQueryChange={setQuery}
-          visibleCount={filtered.length}
-          totalCount={data.items.length}
+      <div
+        style={{
+          marginTop: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <ViewModeToggle
+          mode={mode}
+          onChange={handleModeChange}
+          tiposCount={data.items.length}
+          unidadesCount={units.length}
         />
+        <div style={{ flex: 1, minWidth: 280 }}>
+          <CatalogToolbar
+            query={query}
+            onQueryChange={setQuery}
+            visibleCount={visibleCount}
+            totalCount={totalCount}
+          />
+        </div>
       </div>
 
       <div style={{ marginTop: 16 }}>
-        <ItemTable
-          items={filtered}
-          columns={view.columns}
-          groupBy={view.groupBy}
-          sortKey={view.sortKey}
-          sortDir={view.sortDir}
-          onSort={(key, dir) => update({ sortKey: key, sortDir: dir })}
-          onSelect={setSelectedItem}
-          selectedId={selectedItem?.id ?? null}
-          onCondicaoChange={handleCondicaoChange}
-          onQtdChange={handleQtdChange}
-          pending={pending}
-        />
+        {mode === 'tipos' ? (
+          <ItemTable
+            items={filtered}
+            columns={view.columns}
+            groupBy={view.groupBy}
+            sortKey={view.sortKey}
+            sortDir={view.sortDir}
+            onSort={(key, dir) => update({ sortKey: key, sortDir: dir })}
+            onSelect={setSelectedItem}
+            selectedId={selectedItem?.id ?? null}
+            onCondicaoChange={handleCondicaoChange}
+            onQtdChange={handleQtdChange}
+            pending={pending}
+          />
+        ) : (
+          <UnitsTable
+            units={filteredUnits}
+            groupBy={unitsView.groupBy}
+            sortKey={unitsView.sortKey}
+            sortDir={unitsView.sortDir}
+            onSort={toggleUnitSort}
+            onSelectItem={handleSelectUnitItem}
+          />
+        )}
       </div>
 
       <LotesCard total={data.total_lotes} />
@@ -189,5 +287,22 @@ function matchBannerFilter(item: CatalogItem, filter: BannerFilter): boolean {
       return item.regular_count > 0
     case 'otimo':
       return item.otimo_count > 0
+  }
+}
+
+function matchUnitBannerFilter(unit: CatalogUnit, filter: BannerFilter): boolean {
+  switch (filter) {
+    case 'disponivel':
+      return unit.status === 'DISPONIVEL'
+    case 'em_campo':
+      return unit.status === 'EM_CAMPO' || unit.status === 'PACKED' || unit.status === 'RETORNANDO'
+    case 'manutencao':
+      return unit.status === 'MANUTENCAO'
+    case 'criticos':
+      return unit.desgaste <= 2
+    case 'regular':
+      return unit.desgaste === 3
+    case 'otimo':
+      return unit.desgaste >= 4
   }
 }

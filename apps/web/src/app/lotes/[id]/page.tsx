@@ -1,7 +1,10 @@
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { Caustic } from '@/components/mmd/Primitives'
 import { TopBar } from '@/components/mmd/TopBar'
-import { UnderConstruction } from '@/components/mmd/UnderConstruction'
+import { CATEGORIA_LABEL } from '@/components/catalog/helpers'
+import { LoteDetailClient } from '@/components/lotes/LoteDetailClient'
+import { getLoteById, getRelatedLotes } from '@/lib/data/lotes'
 
 export default async function LoteDetailPage({
   params,
@@ -9,6 +12,10 @@ export default async function LoteDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  const lote = await getLoteById(id)
+  if (!lote) notFound()
+
+  const related = await getRelatedLotes(lote.item_id, lote.id)
 
   return (
     <div style={{ position: 'relative', minHeight: '100dvh' }}>
@@ -29,28 +36,32 @@ export default async function LoteDetailPage({
               ← Lotes
             </Link>
           }
-          title={`Lote ${id}`}
+          title={lote.codigo_lote}
           notifications={0}
         />
 
-        <UnderConstruction
-          phase="stub"
-          planned={
-            <>
-              Detalhe de um lote individual. Composição completa (quantidade por
-              tipo de cabo), QR grande imprimível, histórico de uso em eventos,
-              perdas registradas.
-            </>
-          }
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginTop: 14,
+            marginBottom: 18,
+            fontSize: 12,
+            color: 'var(--fg-2)',
+            flexWrap: 'wrap',
+          }}
         >
-          <strong style={{ color: 'var(--fg-1)' }}>Blocos previstos:</strong>
-          <ul style={{ margin: '8px 0 0', paddingLeft: 20, color: 'var(--fg-2)' }}>
-            <li>Header com QR grande + código interno do lote</li>
-            <li>Composição: lista de cabos por categoria e metragem</li>
-            <li>Timeline de uso: eventos que levaram esse lote</li>
-            <li>Ações: editar composição, marcar perda, imprimir QR, baixar lote</li>
-          </ul>
-        </UnderConstruction>
+          <Link href="/lotes" style={{ color: 'var(--fg-2)', textDecoration: 'none' }}>
+            Lotes
+          </Link>
+          <span style={{ color: 'var(--fg-3)' }}>/</span>
+          <span>{CATEGORIA_LABEL[lote.item_categoria]}</span>
+          <span style={{ color: 'var(--fg-3)' }}>/</span>
+          <span style={{ color: 'var(--fg-0)' }}>{lote.codigo_lote}</span>
+        </div>
+
+        <LoteDetailClient lote={lote} related={related} />
       </div>
     </div>
   )

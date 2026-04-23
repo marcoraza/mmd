@@ -42,6 +42,9 @@ type IconKey =
   | 'caretUp'
   | 'trash'
   | 'settings'
+  | 'scan'
+  | 'checkout'
+  | 'checkin'
 
 export const Icons: Record<IconKey, ReactElement> = {
   search: (
@@ -297,6 +300,53 @@ export const Icons: Record<IconKey, ReactElement> = {
         stroke="currentColor"
         strokeWidth="1.3"
         strokeLinecap="round"
+      />
+    </svg>
+  ),
+  scan: (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path
+        d="M2 4.5V3a1 1 0 0 1 1-1h1.5M9.5 2H11a1 1 0 0 1 1 1v1.5M12 9.5V11a1 1 0 0 1-1 1H9.5M4.5 12H3a1 1 0 0 1-1-1V9.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+      <path d="M2 7h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  ),
+  checkout: (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path
+        d="M8 2.5H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 7h5.5M10 4.5L12.5 7 10 9.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  checkin: (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path
+        d="M6 2.5h5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H6"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M1.5 7H7M4 4.5L1.5 7 4 9.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   ),

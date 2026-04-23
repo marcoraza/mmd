@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { GlassCard, Ring, StatusDot, GhostBtn, PrimaryBtn } from '@/components/mmd/Primitives'
+import { GlassCard, Ring, StatusDot, GhostBtn } from '@/components/mmd/Primitives'
 import { EditableQty } from '@/components/catalog/EditableQty'
 import { Icons } from '@/components/mmd/Icons'
 import type { Projeto, PackingItem, PackingStatus } from '@/lib/data/projects'
@@ -233,7 +234,26 @@ function ProjectDetail({
           </div>
           <Ring value={projeto.readiness_pct} size={90} stroke={6} label="readiness" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <PrimaryBtn small>Gerar QR codes</PrimaryBtn>
+            <Link
+              href={`/projetos/${projeto.id}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'var(--bg-0)',
+                background: 'var(--fg-0)',
+                textDecoration: 'none',
+                transition: 'opacity var(--motion-fast)',
+              }}
+            >
+              Abrir página completa →
+            </Link>
+            <GhostBtn small>Gerar QR codes</GhostBtn>
             <GhostBtn small>Exportar PDF</GhostBtn>
           </div>
         </div>

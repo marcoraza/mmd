@@ -252,7 +252,7 @@ function ProjectsV2() {
 }
 
 // ─────────────────────────────────────────────────────────
-// V3 — Kanban-style lanes (Status do Rentman)
+// V3. Kanban-style lanes (status de projeto)
 // ─────────────────────────────────────────────────────────
 function ProjectsV3() {
   const lanes = [

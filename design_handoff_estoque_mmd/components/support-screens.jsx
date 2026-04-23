@@ -1,4 +1,4 @@
-// support-screens.jsx — QR sheet, Tag binding, Item lost, Onboarding, Packing, Rentman
+// support-screens.jsx. QR sheet, Tag binding, Item lost, Onboarding, Packing
 
 // ═══════════════════════════════════════════════════════════
 // 01 — QR Print Sheet (web, print-optimized)

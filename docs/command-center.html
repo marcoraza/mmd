@@ -381,7 +381,7 @@ ACESSORIO   - Case, Ferramenta, Roteador, MIDI
 
 Criar um mapeamento explicito de cada categoria bruta para o enum. Nenhuma categoria pode ficar sem mapeamento. Logar warnings para categorias ambiguas.
 
-c) Criar a estrutura Item + Serial Number (modelo Rentman):
+c) Criar a estrutura Item + Serial Number (vocabulario de locacao AV):
 - Um "QSC K12.2" com 6 unidades = 1 item com 6 serial_numbers
 - Agrupar por: nome + marca + modelo (case-insensitive, trim whitespace)
 - Cada serial_number recebe um codigo_interno unico
@@ -918,7 +918,7 @@ Ao finalizar:
 
 Este sprint adiciona os fluxos operacionais do dia a dia ao app iOS: a equipe de campo seleciona um projeto (evento), ve a packing list, escaneia os equipamentos via RFID ou QR, e o sistema valida se tudo confere. Mesmo fluxo no retorno, com deteccao de itens faltantes e marcacao de defeitos.
 
-O UX e inspirado no Rentman. Cores de validacao aplicadas nos VALORES (texto do item), nao no background da row:
+O UX segue o padrao de locacao AV. Cores de validacao aplicadas nos VALORES (texto do item), nao no background da row:
 - **ndSuccess (#4A9E5C):** item na packing list, escaneado OK
 - **ndWarning (#D4A843):** item na packing list, ainda nao escaneado
 - **ndAccent (#D71921):** item escaneado que NAO esta na packing list (erro)

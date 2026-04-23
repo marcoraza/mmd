@@ -1,7 +1,7 @@
 # Handoff · Estoque Inteligente MMD
 
 > **Sistema de gestão de estoque para locadoras de equipamento de show, com RFID como núcleo operacional.**
-> Cliente: MMD Audio. Integra com Rentman (ERP de locação) via API como fonte-de-verdade de projetos e bookings; o app assume a camada física (o que foi escaneado, embalado, devolvido, em qual condição).
+> Cliente: MMD Eventos. Sistema in-house completo (sem integração externa), Supabase como fonte-de-verdade única para catálogo, projetos, bookings, packing lists, alocações e condição física.
 
 ---
 
@@ -17,28 +17,28 @@ A tarefa do dev é **recriar estes designs no codebase do projeto**, usando os p
 Se ainda não há codebase, a recomendação é:
 - **Frontend web**: Next.js (App Router) + Tailwind + shadcn/ui + Framer Motion
 - **Mobile**: SwiftUI (iOS-only no MVP — Android fica pra fase 2)
-- **Backend**: o que já existe no Rentman + uma camada fininha (Supabase/PostgREST ou Node/Hono) pra guardar o que é específico do app (leituras RFID, fotos de condição, packing history)
+- **Backend**: Supabase (Postgres + Auth + Realtime + Storage) como fonte de verdade única. Projetos, packing lists, alocações, leituras RFID, fotos de condição e histórico, tudo no mesmo banco.
 
 ## 2. Fidelidade
 
 **Alta fidelidade (hifi).** Cores, tipografia, espaçamentos, border-radius, sombras e transições estão todos definidos nos tokens e devem ser respeitados pixel-a-pixel. Onde há componente do shadcn/ui equivalente, usar o do shadcn — mas estilizado com os tokens daqui (NÃO com o default indigo/slate do shadcn).
 
-Os conteúdos textuais (copy, dados fictícios de projetos, seriais, modelos de equipamento) são **ilustrativos** — serão substituídos por dados reais do Rentman e pelo catálogo da MMD. Mas a **estrutura informacional** de cada tela é proposital e deve ser seguida.
+Os conteúdos textuais (copy, dados fictícios de projetos, seriais, modelos de equipamento) são **ilustrativos**, serão substituídos pelo catálogo real da MMD. Mas a **estrutura informacional** de cada tela é proposital e deve ser seguida.
 
 ---
 
 ## 3. Contexto do produto (ler antes de codar)
 
 ### O problema
-A MMD loca equipamento de áudio, luz e vídeo para shows e eventos. Hoje a gestão do estoque é **planilha + Rentman + memória do galpão**. Quando um projeto volta, itens somem, vão pra manutenção sem registro, ou são alocados pra dois eventos no mesmo fim de semana. Rentman sabe o que foi vendido; não sabe o que voltou.
+A MMD loca equipamento de áudio, luz e vídeo para shows e eventos. Hoje a gestão do estoque é **planilha + memória do galpão**. Quando um projeto volta, itens somem, vão pra manutenção sem registro, ou são alocados pra dois eventos no mesmo fim de semana. Ninguém sabe o que voltou em que condição.
 
 ### A solução
 Cada item físico ganha uma **tag RFID UHF** colada. Quatro pontos de verdade:
 
-1. **Saída (check-out)** — leitor de portal confere que o que sai bate com a packing list do Rentman
-2. **Retorno (check-in)** — mesmo leitor, operador marca condição (OK, sujo, precisa reparo, faltando)
-3. **Inventário contínuo** — operador com leitor handheld varre o galpão e localiza
-4. **Alocação** — dashboard mostra disponibilidade real (livre vs. em evento vs. em reparo) alinhada com o calendário do Rentman
+1. **Saída (check-out).** Leitor de portal confere que o que sai bate com a packing list do projeto.
+2. **Retorno (check-in).** Mesmo leitor, operador marca condição (OK, sujo, precisa reparo, faltando).
+3. **Inventário contínuo.** Operador com leitor handheld varre o galpão e localiza.
+4. **Alocação.** Dashboard mostra disponibilidade real (livre vs. em evento vs. em reparo) alinhada com o calendário de projetos.
 
 ### Princípios de design
 - **Dark-first.** Operadores ficam no galpão ou backstage — telas claras queimam retina. Light mode existe como acessibilidade.
@@ -175,22 +175,22 @@ Produto          (catálogo — "Par LED 18x10W", tem N unidades)
   └─ Item        (unidade física — serial, tag RFID, condição, histórico)
        └─ Leitura (log de scan: timestamp, local, operador)
 
-Projeto          (vem do Rentman — cliente, datas, local)
+Projeto          (cliente, datas, local, criado direto no app)
   └─ PackingList (lista de Produtos+qty pedidos)
        └─ Alocação (Items específicos designados pra esse projeto)
 
-Conflito         (derivado — quando PackingList.pedido > Alocação.disponível)
+Conflito         (derivado, quando PackingList.pedido > Alocação.disponível)
 ```
 
-### Sincronização Rentman
-- Projetos + packing lists são **read-only vindos do Rentman** (pull a cada 5min + webhook no create/update)
-- Alocações (qual item físico foi pra qual projeto) são **do app** — Rentman só sabe "foram 20 par LEDs", o app sabe quais 20
-- Condição, histórico de reparos, fotos: **do app**
+### Fonte de verdade
+- Projetos, packing lists, alocações, condição, histórico e fotos: **tudo no Supabase**.
+- Sem integração com Rentman ou qualquer ERP externo. O app é a fonte única.
+- Catálogo inicial veio da planilha MAIO e é mantido dentro do app.
 
 ### Auth
-- Operadores: login simples (email/senha) + biometria no mobile
-- Admin: mesma auth, role diferente
-- Não há multi-tenant no MVP — só MMD
+- MVP sai **sem login**. Uso interno, galpão controlado, foco em destravar fluxo operacional.
+- Auth (email/senha + biometria no iOS, roles operador/admin) entra em fase pós-MVP.
+- Sem multi-tenant, só MMD.
 
 ---
 
@@ -230,14 +230,15 @@ design_handoff_estoque_mmd/
 
 ## 9. Ordem sugerida de implementação
 
-1. **Tokens + primitives** (Ring, Glass, Pill, Badge, Btn) — sem isso nada bate
-2. **Dashboard web** — valida que stack + tokens ficaram certos
-3. **Catálogo + item detail web** — CRUD básico, testa Rentman sync
-4. **iOS shell + auth + RFID scan** — destrava o fluxo operacional
-5. **Check-out + check-in iOS** — fluxo crítico do galpão
-6. **Projetos + packing list web** — fecha o loop com Rentman
-7. **Calendário + conflitos** — polish de gestão
-8. **QR print, onboarding, busca, vinculação** — suportes
+1. **Tokens + primitives** (Ring, Glass, Pill, Badge, Btn). Sem isso nada bate.
+2. **Dashboard web.** Valida stack + tokens ficaram certos.
+3. **Catálogo + item detail web.** CRUD básico, timeline de movimentações.
+4. **Projetos + packing list web.** Criação, alocação, resolução de conflito.
+5. **Check-out + check-in web.** Fluxo operacional via desktop antes do iOS.
+6. **Calendário + conflitos.** Polish de gestão.
+7. **QR print + suportes web.** Fecha o MVP desktop.
+8. **iOS shell + RFID scan + check-out/in.** Entra depois que o web tá completo.
+9. **Onboarding, vinculação, busca, item perdido no iOS.** Suportes mobile.
 
 ---
 

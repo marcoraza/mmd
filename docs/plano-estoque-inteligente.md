@@ -2,7 +2,7 @@
 
 ## Contexto
 
-Consultoria de otimizacao operacional para Marcelo Santos, empresa de locacao de equipamentos AV/eventos (6-8 eventos/mes). O projeto principal e o sistema de estoque inteligente com RFID + QR Code, construido in-house, espelhando a arquitetura e UX do Rentman.
+Consultoria de otimizacao operacional para Marcelo Santos, empresa de locacao de equipamentos AV/eventos (6-8 eventos/mes). O projeto principal e o sistema de estoque inteligente com RFID + QR Code, construido 100% in-house. Supabase e a fonte de verdade unica, sem integracao com Rentman ou qualquer ERP externo.
 
 **Cliente:** Marcelo Santos (MMD)
 **Consultor:** Marco Aquilino
@@ -93,7 +93,7 @@ Consultoria de otimizacao operacional para Marcelo Santos, empresa de locacao de
     └─────────────────────────────────────────────────────┘
 ```
 
-### Fluxo de Status (espelhando Rentman)
+### Fluxo de Status
 
 ```
                     CICLO DE VIDA DO EQUIPAMENTO
@@ -308,24 +308,25 @@ O dashboard exibe metricas de saude patrimonial: desgaste medio por categoria, i
 
 ---
 
-## Referencia: Rentman
+## Modelo de dados (in-house)
 
-Arquitetura e UX espelham o Rentman, adaptados pro contexto.
+Nao ha integracao com Rentman ou qualquer ERP externo. Supabase e a fonte de verdade unica.
 
-**Conceitos replicados:**
-- Item (tipo) vs Serial Number (unidade fisica)
-- Projeto com packing list
+**Conceitos centrais:**
+- Item (tipo/catalogo) vs Serial Number (unidade fisica)
+- Projeto com packing list criado direto no app
 - Status por serial: Disponivel → Packed → Em campo → Retorno
 - RFID scan em lote + QR Code individual
 - Validacao packing list vs scan
 - Dashboard de disponibilidade em tempo real
 
-**Nao replicado (futuro):**
+**Fora do MVP (fase 2):**
 - Flight cases como containers
 - Workflow de reparo/dano automatizado
 - Multi-warehouse
 - Sub-rentals
 - Statuses customizaveis
+- Auth com roles (operador vs admin) e biometria
 
 ---
 

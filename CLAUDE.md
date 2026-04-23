@@ -2,22 +2,22 @@
 
 ## Projeto
 
-Sistema de estoque inteligente para empresa de locacao de equipamentos AV/eventos (MMD, Marcelo Santos). RFID + QR Code in-house, espelhando Rentman.
+Sistema de estoque inteligente para empresa de locacao de equipamentos AV/eventos (MMD, Marcelo Santos). RFID + QR Code, tudo in-house, sem integracoes externas. Supabase e a fonte de verdade unica pra catalogo, projetos, packing lists, alocacoes, movimentacoes e condicao.
 
 - **Cliente:** Marcelo Santos (MMD Eventos)
 - **Contrato:** R$3.000/mes, 3 meses
 - **Foco:** 100% estoque inteligente
 - **ClickUp:** PROJETOS > [MMD] MMD EVENTOS (folder 901317960993)
-- **Design System:** Nothing-inspired (docs/design-brief.md)
-- **Referencia Visual:** ~/Desktop/analytics-dashboard.html
+- **Design System:** Liquid Glass 2030 (design_handoff_estoque_mmd/README.md)
+- **Referencia Visual:** design_handoff_estoque_mmd/
 
 ## Design
 
-Sistema visual baseado no Nothing Design System: tipografia Swiss, craft industrial, monocromatico. Dark mode (iOS inteiro + sidebar web) + light mode (content web).
+Sistema visual Liquid Glass 2030: superficies viterias com caustics iridescentes (orbs ciano/violeta desfocados), Ring de prontidao como motivo central, dark-first. Tokens em oklch, componentes em `apps/web/src/components/mmd/Primitives.tsx`.
 
-Fontes: Space Grotesk (body), Space Mono (labels/data ALL CAPS), Doto (hero numbers).
-Dispositivos: iPhone (campo) + MacBook (gestao).
-Detalhes completos: `docs/design-brief.md`
+Fontes: Inter Tight (UI, headings, body), JetBrains Mono (seriais, timestamps, labels).
+Dispositivos: iPhone (campo, galpao) + MacBook (gestao, escritorio).
+Handoff completo: `design_handoff_estoque_mmd/README.md`
 
 ## Stack
 
@@ -56,11 +56,13 @@ mmd/
 
 ## Decisoes Tecnicas
 
+- **Tudo in-house.** Sem integracao com Rentman ou qualquer ERP externo. Supabase e a fonte de verdade unica.
 - **RFID e prioridade.** QR Code e complemento/fallback.
 - **RFID roda no iPhone (iOS).** RFD40 conecta via Bluetooth. SDK iOS nativo.
 - **Cabos por lote.** Cabos genericos agrupados em kits com QR Code unico.
-- **Modelo de dados espelha Rentman.** Item (tipo) + Serial Number (unidade fisica).
-- **Sheet MAIO e a fonte da verdade** do inventario original.
+- **Modelo de dados:** Item (tipo) + Serial Number (unidade fisica), espelhando vocabulario de locacao AV.
+- **Sheet MAIO e a fonte da verdade** do inventario original (pre-importacao).
+- **Auth fica pra pos-MVP.** Primeiro entrega o loop operacional, depois a camada de seguranca.
 
 ## Convencoes
 

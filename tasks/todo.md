@@ -219,3 +219,123 @@
 - `SidebarWrapper`, `app/page.tsx` e `app/config/page.tsx` foram ajustados para ler o Supabase no cliente, evitando congelar o estado do backend no momento do build/export.
 - O runtime local do Next continuou instavel neste ambiente, com `next build` e `next dev` presos antes do bootstrap, entao a validacao visual imediata foi destravada por um preview estatico leve em `/tmp/mmd-preview/nmd`, que consulta o Supabase direto via REST usando a `anon key` publica.
 - O preview emergencial respondeu `200` em `/nmd/`, `/nmd/items/`, `/nmd/projetos/` e `/nmd/config/`, e o Supabase confirmou CORS liberado para `http://localhost:3000`.
+
+---
+
+## Plano MVP: Web-first depois iOS
+
+Fonte canonica: `design_handoff_estoque_mmd/README.md` (Liquid Glass 2030).
+Decisoes locked:
+- Tudo in-house. Sem Rentman. Supabase e a fonte de verdade unica.
+- Auth fica pra pos-MVP. Uso interno, galpao controlado.
+- Design System: Liquid Glass 2030 em tudo. iOS existente sera reescrito quando chegar a vez.
+- Particulas no RFID scan sao o herói do app iOS. Implementar.
+- Sequencia: terminar WEB completo antes de tocar iOS.
+
+### Fase W1. Design System Alignment (web)
+
+- [ ] Auditar `apps/web` tokens vs `design_handoff_estoque_mmd/tokens/mmd-tokens.json` (radii, spacing, cores oklch, fontes)
+- [ ] Alinhar radii: sm 10 / md 16 / lg 24 (hoje 4/8/12)
+- [ ] Consolidar estrategia dark-first com light como acessibilidade
+- [ ] Garantir Inter Tight + JetBrains Mono carregando no layout
+- [ ] Portar `styles/glass.css` (caustics, orbs, superficies vitreas) se faltar
+- [ ] Verificar primitives (Ring, Glass, Pill, Badge, Btn) batem com handoff pixel-by-pixel
+
+### Fase W2. Item Detail + Timeline
+
+- [ ] Criar rota `/items/[id]` dedicada (hoje so tem side panel)
+- [ ] Header com foto, codigo interno, marca/modelo, ring de condicao
+- [ ] Bloco de status: estado, desgaste, depreciacao, valor atual
+- [ ] Timeline de movimentacoes (check-out, check-in, manutencao, reparo)
+- [ ] Secao de projetos (historico de eventos que levou)
+- [ ] Botoes de acao: editar, marcar manutencao, baixar, imprimir QR
+
+### Fase W3. Projetos: Split View + Resolver Conflito
+
+- [ ] Repensar `/projetos` pro layout Split View do handoff (lista esquerda, detalhe direita)
+- [ ] Detalhe de projeto com packing list inline + ring de readiness
+- [ ] Tela dedicada de resolver conflito: quando `pedido > disponivel`
+- [ ] Sugestao automatica de substituicoes (itens equivalentes disponiveis)
+- [ ] Confirmar alocacao manual serial-a-serial quando necessario
+
+### Fase W4. Dashboard Real (Supabase wired)
+
+- [ ] Trocar mocks do dashboard cinematografico por queries reais
+- [ ] KPIs: total itens, disponiveis, em campo, manutencao, desgaste medio
+- [ ] Ring central: readiness global (itens prontos vs comprometidos)
+- [ ] Alertas: itens criticos (desgaste <=2), nao devolvidos, conflitos abertos
+- [ ] Grafico de projetos proximos 21 dias com disponibilidade
+
+### Fase W5. Saida + Retorno via Web
+
+- [ ] Fluxo de check-out via desktop (escolher projeto, confirmar packing list, marcar saida)
+- [ ] Fluxo de check-in com marcacao de condicao por item (OK, sujo, reparo, faltando)
+- [ ] Registrar movimentacoes na timeline do item
+- [ ] Atualizar status do serial no Supabase (DISPONIVEL, PACKED, EM_CAMPO, etc.)
+- [ ] Validacao pedido vs retorno, destaca itens faltantes
+
+### Fase W6. Calendario de Disponibilidade
+
+- [ ] Rota dedicada: calendario 21 dias com disponibilidade por item/categoria
+- [ ] Visao compacta: barras por item mostrando janelas ocupadas
+- [ ] Click em janela abre projeto associado
+- [ ] Heatmap de pressao de estoque (dias com mais conflitos previstos)
+
+### Fase W7. QR Print Sheet
+
+- [ ] Tela de configuracao de folha de QR: seleciona items, tamanho, layout
+- [ ] Preview com paginacao
+- [ ] Export PDF pronto pra imprimir em adesivo
+- [ ] Padrao: QR + codigo interno + nome curto
+
+### Fase W8. Polish Visual + QA pixel-peep
+
+- [ ] Revisar cada tela web contra screenshots do handoff
+- [ ] Ajustar spacing, tipografia, hierarquia
+- [ ] Garantir caustics/orbs ligados nas superficies vitreas principais
+- [ ] Smoke test em Chrome via DevTools MCP (dashboard, projetos, items, calendario)
+- [ ] Lighthouse audit (performance, a11y)
+
+### Fase W9. Deploy + Handoff Web
+
+- [ ] Build de producao estavel (resolver travas do `next build` se persistirem)
+- [ ] Deploy Vercel ou GitHub Pages (conforme fluxo atual)
+- [ ] Rodar suite de smoke em producao
+- [ ] Gravar loom/video curto pro Marcelo com os fluxos principais
+
+---
+
+### Fase I1. iOS Rewrite: Shell Liquid Glass
+
+- [ ] Scrap do visual atual. Portar tokens Liquid Glass pro SwiftUI
+- [ ] Primitives iOS: Ring, Glass, Pill, Badge, Btn (equivalentes Swift)
+- [ ] Layout base: tab bar, sidebar modal, navigation stack
+- [ ] Dark-first, caustics em telas core
+
+### Fase I2. RFID Scan Herói (com particulas)
+
+- [ ] Tela de scan RFID com animacao de particulas viajando da tag pra lista
+- [ ] Ring central pulsa conforme leituras chegam
+- [ ] Feedback haptico + som por item novo reconhecido
+- [ ] Destaque visual pra item fora da packing list (erro)
+
+### Fase I3. Check-out + Check-in iOS
+
+- [ ] Fluxo completo: selecionar projeto, escanear, confirmar saida
+- [ ] Retorno com marcacao de condicao (OK, sujo, reparo, faltando) por item
+- [ ] Sync com Supabase em tempo real
+- [ ] Offline queue (fase 2 se tempo permitir)
+
+### Fase I4. Suportes iOS
+
+- [ ] Onboarding (primeira abertura, setup de leitor)
+- [ ] Vinculacao de tag (associar RFID UHF a serial existente)
+- [ ] Busca de item perdido (scan ate achar, radar)
+- [ ] Detalhe de item com timeline
+
+### Fase I5. Deploy iOS
+
+- [ ] Build e distribuir via TestFlight
+- [ ] Marcelo testa com equipe de galpao
+- [ ] Ciclo de feedback + fix
+- [ ] Handoff final

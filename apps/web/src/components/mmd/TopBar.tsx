@@ -8,7 +8,7 @@ export function TopBar({
   actions,
   notifications = 0,
 }: {
-  kicker?: string
+  kicker?: ReactNode
   title: ReactNode
   actions?: ReactNode
   notifications?: number

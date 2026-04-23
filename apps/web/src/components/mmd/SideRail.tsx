@@ -37,6 +37,13 @@ const items: RailItem[] = [
     matches: (p) => p.startsWith('/projetos'),
   },
   {
+    id: 'disponibilidade',
+    href: '/disponibilidade',
+    icon: Icons.calendar,
+    label: 'Disponibilidade',
+    matches: (p) => p.startsWith('/disponibilidade'),
+  },
+  {
     id: 'rfid',
     href: '/rfid',
     icon: Icons.rfid,
@@ -51,11 +58,18 @@ const items: RailItem[] = [
     matches: (p) => p.startsWith('/qrcodes'),
   },
   {
-    id: 'reports',
+    id: 'lotes',
     href: '/lotes',
     icon: Icons.chart,
     label: 'Lotes',
     matches: (p) => p.startsWith('/lotes'),
+  },
+  {
+    id: 'config',
+    href: '/config',
+    icon: Icons.settings,
+    label: 'Configurações',
+    matches: (p) => p.startsWith('/config'),
   },
 ]
 

@@ -232,6 +232,24 @@ Decisoes locked:
 - Particulas no RFID scan sao o herói do app iOS. Implementar.
 - Sequencia: terminar WEB completo antes de tocar iOS.
 
+### Fase W0. Esqueleto de rotas (stubs navegaveis)
+
+Decisoes locked:
+- `/rfid`: historico de scans + config de leitores pareados (C)
+- `/qrcodes`: configurador de folha QR, tela 05 do handoff (A)
+- `/lotes` + `/lotes/[id]`: lista + detalhe proprios (B)
+- Resolver conflito: modal dentro de `/projetos/[id]` (A)
+- `/items`: unifica tipos e unidades com toggle interno (B)
+- `/config`: volta pra sidebar (A)
+
+- [x] Criar rotas stub: `/rfid`, `/qrcodes`, `/lotes`, `/lotes/[id]`, `/items/[id]`, `/disponibilidade`, `/config`
+- [x] Componente `UnderConstruction` reusavel com label de fase e descricao do que vira
+- [x] Sidebar atualizada com `/disponibilidade` e `/config` (ícone settings novo)
+- [x] TopBar aceita ReactNode no kicker pra breadcrumb
+- [x] TS check limpo
+- [ ] Visual confirmation via Chrome DevTools em cada rota nova
+- [ ] Toggle "Tipos / Unidades" dentro de `/items` (fica pra W2 junto com detalhe)
+
 ### Fase W1. Design System Alignment (web)
 
 - [ ] Auditar `apps/web` tokens vs `design_handoff_estoque_mmd/tokens/mmd-tokens.json` (radii, spacing, cores oklch, fontes)

@@ -41,6 +41,7 @@ type IconKey =
   | 'kanban'
   | 'caretUp'
   | 'trash'
+  | 'settings'
 
 export const Icons: Record<IconKey, ReactElement> = {
   search: (
@@ -286,6 +287,17 @@ export const Icons: Record<IconKey, ReactElement> = {
   trash: (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
       <path d="M2 3.5h8M4.5 3V1.5h3V3M3 3.5l.5 7h5L9 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  settings: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="2.3" stroke="currentColor" strokeWidth="1.3" />
+      <path
+        d="M8 1.5v2M8 12.5v2M14.5 8h-2M3.5 8h-2M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4M12.6 12.6l-1.4-1.4M4.8 4.8L3.4 3.4"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
     </svg>
   ),
 }

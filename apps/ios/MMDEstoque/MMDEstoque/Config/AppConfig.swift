@@ -11,6 +11,7 @@ struct AppConfig {
     private enum Keys {
         static let supabaseUrl = "mmd_supabase_url"
         static let supabaseAnonKey = "mmd_supabase_anon_key"
+        static let useMockRFID = "mmd_use_mock_rfid"
     }
 
     // MARK: - Properties
@@ -26,11 +27,21 @@ struct AppConfig {
     }
 
     var useMockRFID: Bool {
-        #if DEBUG
-        return true
-        #else
-        return false
-        #endif
+        get {
+            let defaults = UserDefaults.standard
+            guard defaults.object(forKey: Keys.useMockRFID) != nil else {
+                #if DEBUG
+                return true
+                #else
+                return false
+                #endif
+            }
+
+            return defaults.bool(forKey: Keys.useMockRFID)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: Keys.useMockRFID)
+        }
     }
 
     // MARK: - Validation
@@ -45,9 +56,10 @@ struct AppConfig {
 
     // MARK: - Persistence
 
-    mutating func save(supabaseUrl url: String, anonKey key: String) {
+    mutating func save(supabaseUrl url: String, anonKey key: String, useMockRFID: Bool) {
         supabaseUrl = url
         supabaseAnonKey = key
+        self.useMockRFID = useMockRFID
     }
 
     func clearSupabaseConfig() {

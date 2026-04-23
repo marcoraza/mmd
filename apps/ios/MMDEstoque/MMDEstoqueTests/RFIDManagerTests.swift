@@ -155,7 +155,6 @@ final class RFIDManagerTests: XCTestCase {
 
     func testClearTagsEmptiesScannedTags() {
         let mock = MockRFIDManager()
-        let manager = RFIDManager(implementation: mock)
 
         // Directly verify clearTags on mock
         mock.clearTags()
@@ -211,5 +210,117 @@ final class RFIDManagerTests: XCTestCase {
         wait(for: [disconnected], timeout: 2.0)
 
         XCTAssertFalse(manager.isConnected)
+    }
+
+    func testConfigureSwapsImplementationAndResetsPublishedState() {
+        let connectedReader = RFIDReaderInfo(
+            id: "connected-reader",
+            name: "Connected Reader",
+            serialNumber: "12345",
+            batteryLevel: 90
+        )
+
+        let mockImplementation = StubRFIDReader(
+            connectionState: .connected(connectedReader),
+            discoveredReaders: [connectedReader],
+            scannedTags: ["E28011702000020A5C41B6E0"],
+            isScanning: true
+        )
+
+        let zebraImplementation = StubRFIDReader(
+            connectionState: .disconnected,
+            discoveredReaders: [],
+            scannedTags: [],
+            isScanning: false
+        )
+
+        let manager = RFIDManager(
+            useMock: true,
+            implementationFactory: { useMock in
+                useMock
+                    ? (mockImplementation, .mock)
+                    : (zebraImplementation, .zebra)
+            }
+        )
+
+        XCTAssertEqual(manager.runtimeMode, .mock)
+        XCTAssertEqual(manager.tagCount, 1)
+        XCTAssertTrue(manager.isScanning)
+
+        manager.configure(useMock: false)
+
+        XCTAssertEqual(manager.runtimeMode, .zebra)
+        XCTAssertEqual(manager.connectionState, .disconnected)
+        XCTAssertTrue(manager.discoveredReaders.isEmpty)
+        XCTAssertTrue(manager.scannedTags.isEmpty)
+        XCTAssertFalse(manager.isScanning)
+        XCTAssertTrue(mockImplementation.disconnectCalled)
+        XCTAssertTrue(mockImplementation.clearTagsCalled)
+        XCTAssertTrue(mockImplementation.stopInventoryCalled)
+    }
+}
+
+private final class StubRFIDReader: RFIDReaderProtocol {
+    private let connectionStateSubject: CurrentValueSubject<RFIDConnectionState, Never>
+    private let discoveredReadersSubject: CurrentValueSubject<[RFIDReaderInfo], Never>
+    private let scannedTagsSubject: CurrentValueSubject<[String], Never>
+    private let isScanningSubject: CurrentValueSubject<Bool, Never>
+
+    private(set) var disconnectCalled = false
+    private(set) var clearTagsCalled = false
+    private(set) var stopInventoryCalled = false
+
+    init(
+        connectionState: RFIDConnectionState,
+        discoveredReaders: [RFIDReaderInfo],
+        scannedTags: [String],
+        isScanning: Bool
+    ) {
+        self.connectionStateSubject = CurrentValueSubject(connectionState)
+        self.discoveredReadersSubject = CurrentValueSubject(discoveredReaders)
+        self.scannedTagsSubject = CurrentValueSubject(scannedTags)
+        self.isScanningSubject = CurrentValueSubject(isScanning)
+    }
+
+    var connectionState: RFIDConnectionState { connectionStateSubject.value }
+    var connectionStatePublisher: AnyPublisher<RFIDConnectionState, Never> {
+        connectionStateSubject.eraseToAnyPublisher()
+    }
+
+    var discoveredReaders: [RFIDReaderInfo] { discoveredReadersSubject.value }
+    var discoveredReadersPublisher: AnyPublisher<[RFIDReaderInfo], Never> {
+        discoveredReadersSubject.eraseToAnyPublisher()
+    }
+
+    var scannedTags: [String] { scannedTagsSubject.value }
+    var scannedTagsPublisher: AnyPublisher<[String], Never> {
+        scannedTagsSubject.eraseToAnyPublisher()
+    }
+
+    var isScanning: Bool { isScanningSubject.value }
+    var isScanningPublisher: AnyPublisher<Bool, Never> {
+        isScanningSubject.eraseToAnyPublisher()
+    }
+
+    func discoverReaders() {}
+    func connect(to reader: RFIDReaderInfo) {}
+
+    func disconnect() {
+        disconnectCalled = true
+        connectionStateSubject.send(.disconnected)
+        discoveredReadersSubject.send([])
+        isScanningSubject.send(false)
+    }
+
+    func startInventory() {}
+
+    func stopInventory() {
+        stopInventoryCalled = true
+        isScanningSubject.send(false)
+    }
+
+    func clearTags() {
+        clearTagsCalled = true
+        scannedTagsSubject.send([])
     }
 }

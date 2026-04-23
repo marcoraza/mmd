@@ -257,6 +257,26 @@ struct ConfigView: View {
                     .stroke(Color.ndBorder, lineWidth: 1)
             )
 
+            HStack {
+                Text("Modo ativo")
+                    .font(.ndBody)
+                    .foregroundStyle(Color.ndTextPrimary)
+
+                Spacer()
+
+                Text(rfidManager.runtimeModeText.uppercased())
+                    .font(.spaceMono(11))
+                    .textCase(.uppercase)
+                    .tracking(11 * 0.08)
+                    .foregroundStyle(Color.ndTextSecondary)
+            }
+            .padding(NDSpacing.medium)
+            .background(Color.ndSurfaceRaised)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.ndBorder, lineWidth: 1)
+            )
+
             // Connection status
             HStack(spacing: NDSpacing.base) {
                 Circle()
@@ -411,10 +431,16 @@ struct ConfigView: View {
     private var hasChanges: Bool {
         supabaseUrl != AppConfig.shared.supabaseUrl
             || supabaseKey != AppConfig.shared.supabaseAnonKey
+            || useMockReader != AppConfig.shared.useMockRFID
     }
 
     private func saveConfig() {
-        AppConfig.shared.save(supabaseUrl: supabaseUrl, anonKey: supabaseKey)
+        AppConfig.shared.save(
+            supabaseUrl: supabaseUrl,
+            anonKey: supabaseKey,
+            useMockRFID: useMockReader
+        )
+        rfidManager.configure(useMock: useMockReader)
 
         withAnimation(.easeInOut(duration: 0.3)) {
             showSaveConfirmation = true

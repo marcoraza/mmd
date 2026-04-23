@@ -10,10 +10,11 @@ final class APIClientTests: XCTestCase {
         // Ensure config is empty
         let savedUrl = AppConfig.shared.supabaseUrl
         let savedKey = AppConfig.shared.supabaseAnonKey
-        AppConfig.shared.save(supabaseUrl: "", anonKey: "")
+        let savedUseMockRFID = AppConfig.shared.useMockRFID
+        AppConfig.shared.save(supabaseUrl: "", anonKey: "", useMockRFID: savedUseMockRFID)
 
         defer {
-            AppConfig.shared.save(supabaseUrl: savedUrl, anonKey: savedKey)
+            AppConfig.shared.save(supabaseUrl: savedUrl, anonKey: savedKey, useMockRFID: savedUseMockRFID)
         }
 
         let client = APIClient()
@@ -36,10 +37,11 @@ final class APIClientTests: XCTestCase {
     func testFetchProjectsThrowsWhenNotConfigured() async {
         let savedUrl = AppConfig.shared.supabaseUrl
         let savedKey = AppConfig.shared.supabaseAnonKey
-        AppConfig.shared.save(supabaseUrl: "", anonKey: "")
+        let savedUseMockRFID = AppConfig.shared.useMockRFID
+        AppConfig.shared.save(supabaseUrl: "", anonKey: "", useMockRFID: savedUseMockRFID)
 
         defer {
-            AppConfig.shared.save(supabaseUrl: savedUrl, anonKey: savedKey)
+            AppConfig.shared.save(supabaseUrl: savedUrl, anonKey: savedKey, useMockRFID: savedUseMockRFID)
         }
 
         let client = APIClient()

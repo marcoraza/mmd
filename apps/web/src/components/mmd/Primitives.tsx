@@ -312,14 +312,16 @@ type BtnProps = {
   small?: boolean
   onClick?: () => void
   type?: 'button' | 'submit' | 'reset'
+  disabled?: boolean
   style?: CSSProperties
 }
 
-export function PrimaryBtn({ children, small = false, onClick, type = 'button', style }: BtnProps) {
+export function PrimaryBtn({ children, small = false, onClick, type = 'button', disabled = false, style }: BtnProps) {
   return (
     <button
       type={type}
       onClick={onClick}
+      disabled={disabled}
       style={{
         border: 'none',
         padding: small ? '7px 14px' : '10px 18px',
@@ -328,10 +330,11 @@ export function PrimaryBtn({ children, small = false, onClick, type = 'button', 
         fontWeight: 500,
         fontSize: small ? 12 : 13,
         color: '#fff',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         background: 'linear-gradient(180deg, oklch(0.78 0.14 210), oklch(0.68 0.15 220))',
         boxShadow: '0 4px 12px oklch(0.70 0.14 220 / 0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
         transition: 'transform var(--motion-fast), box-shadow var(--motion-fast)',
+        opacity: disabled ? 0.5 : 1,
         ...style,
       }}
     >
@@ -340,11 +343,12 @@ export function PrimaryBtn({ children, small = false, onClick, type = 'button', 
   )
 }
 
-export function GhostBtn({ children, small = false, onClick, type = 'button', style }: BtnProps) {
+export function GhostBtn({ children, small = false, onClick, type = 'button', disabled = false, style }: BtnProps) {
   return (
     <button
       type={type}
       onClick={onClick}
+      disabled={disabled}
       className="glass"
       style={{
         padding: small ? '7px 14px' : '10px 18px',
@@ -353,9 +357,10 @@ export function GhostBtn({ children, small = false, onClick, type = 'button', st
         fontWeight: 500,
         fontSize: small ? 12 : 13,
         color: 'var(--fg-0)',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         background: 'var(--glass-bg)',
         transition: 'background var(--motion-fast)',
+        opacity: disabled ? 0.5 : 1,
         ...style,
       }}
     >

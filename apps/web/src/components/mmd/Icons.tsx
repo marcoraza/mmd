@@ -37,6 +37,10 @@ type IconKey =
   | 'star_filled'
   | 'filter'
   | 'sort'
+  | 'list'
+  | 'kanban'
+  | 'caretUp'
+  | 'trash'
 
 export const Icons: Record<IconKey, ReactElement> = {
   search: (
@@ -260,6 +264,28 @@ export const Icons: Record<IconKey, ReactElement> = {
   sort: (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <path d="M4 2v10M4 2l-2 2M4 2l2 2M10 12V2M10 12l-2-2M10 12l2-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  list: (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  ),
+  kanban: (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <rect x="1.5" y="2" width="3" height="10" rx="0.8" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="5.5" y="2" width="3" height="6" rx="0.8" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="9.5" y="2" width="3" height="8" rx="0.8" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  ),
+  caretUp: (
+    <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+      <path d="M1 5l3-3 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  trash: (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M2 3.5h8M4.5 3V1.5h3V3M3 3.5l.5 7h5L9 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 }

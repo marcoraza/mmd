@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>09 · Snipe-IT — Maturidade em depreciação · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 09/15</span></div>
+    <nav><a href="08-leihs.html">← Anterior</a><a href="index.html">Deck</a><a href="10-zetavg-inventory.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Estudar · 13k stars · Maturidade industrial</div>
+    <h1>16 milhões de ativos rastreados <span class="accent">não erram à toa</span></h1>
+    <p class="lede">
+      Snipe-IT é o gigante do open-source de IT asset management. PHP/Laravel, 13k+ stars,
+      milhões de ativos. Pra MMD, a relevância é específica e cirúrgica: <strong>como modelar
+      depreciation schedules, maintenance history e audit trail</strong> com 8 anos de bagagem
+      em campo. Nosso modelo de Estado+Desgaste+Depreciação é simples — vamos descobrir o que
+      falta.
+    </p>
+    <div class="meta">
+      <span class="pill green">AGPL-3 · só leitura</span>
+      <span class="pill cyan">PHP · Laravel</span>
+      <span class="pill violet">13k stars · 16M ativos</span>
+      <a class="pill" href="https://github.com/grokability/snipe-it" target="_blank">github.com/grokability/snipe-it ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O que ainda é ingênuo no MMD</span>
+    <h2>Nosso modelo de depreciação é uma fórmula, deles é um histórico</h2>
+    <ul>
+      <li>MMD hoje: <code>Valor Atual = Valor Original × (Desgaste/5) × Fator Estado</code> — calculado on the fly</li>
+      <li>Não temos histórico de quando o desgaste mudou e por quê</li>
+      <li>Manutenção é texto livre em <code>movimentacoes.notas</code> — sem custo, sem técnico, sem peça</li>
+      <li>Não temos depreciação contábil (linear/saldo decrescente) pra relatório financeiro</li>
+      <li>Sem audit log que mostre "quem mexeu em quê e quando" pra qualquer campo</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que extrair</span>
+    <h2>4 ideias maduras que vão evoluir nossa precificação</h2>
+    <ul>
+      <li><strong>Depreciation schedules:</strong> tabela com curva de depreciação por categoria, não cálculo único — Marcelo pode dizer "iluminação cai 20% ao ano, áudio 10%"</li>
+      <li><strong>Maintenance log estruturado:</strong> tabela própria com técnico, peça, custo, antes/depois de desgaste</li>
+      <li><strong>Custom fields:</strong> sistema permite adicionar campo arbitrário por categoria (ex: "Lúmens" só pra iluminação) sem migration</li>
+      <li><strong>Audit log:</strong> trigger Postgres que loga toda mudança em todas as tabelas — barato e poderoso</li>
+      <li><strong>License/contract tracking:</strong> se o Marcelo tiver software/licença (Resolume Avenue?), o modelo deles serve</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Tempo de leitura</div><div class="value cyan">3h</div></div>
+    <div class="metric"><div class="label">Stars</div><div class="value violet">13k+</div></div>
+    <div class="metric"><div class="label">Match stack</div><div class="value red">0%</div></div>
+    <div class="metric"><div class="label">Match conceitual</div><div class="value green">70%</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Onde divergir</span>
+    <h2>É IT asset, não AV rental</h2>
+    <ul>
+      <li>Foco deles: notebook que fica com funcionário 3 anos. Foco nosso: equipamento que sai 6 vezes por mês</li>
+      <li>Não tem packing list / dispatch em lote — pra isso, AdamRMS é melhor</li>
+      <li>UI deles é cinza corporativo — anti-Liquid Glass</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Mina de ouro específica pra depreciação e manutenção.</h3>
+    <p>
+      Não ler o repo inteiro. Abrir 3 arquivos: schema de depreciation, schema de maintenance, e
+      o sistema de custom fields. Comparar com nossas migrations atuais. Cada gap vira issue.
+      Quando o Marcelo pedir "relatório anual de depreciação contábil pro contador", a gente
+      está pronto.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/grokability/snipe-it" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="https://snipeitapp.com/" target="_blank">Demo público ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>09 / 15 · ESTUDAR</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

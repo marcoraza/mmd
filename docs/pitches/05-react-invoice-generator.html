@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>05 · react-invoice-generator — Romaneio + Recibo PDF · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 05/15</span></div>
+    <nav><a href="04-ilamy-calendar.html">← Anterior</a><a href="index.html">Deck</a><a href="06-adam-rms.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">PDF · Romaneio · Recibo · 2 dias de integração</div>
+    <h1>O cliente sai com <span class="accent">um PDF assinado</span>, não com uma planilha mental</h1>
+    <p class="lede">
+      Já temos <code>@react-pdf/renderer</code> rodando (gera as folhas de QR). Falta o
+      <strong>documento de negócio</strong>: romaneio na saída, recibo na devolução, contrato com
+      assinatura. <code>react-invoice-generator</code> dá o template e a UX de edição com preview
+      ao vivo — copia, adapta, integra.
+    </p>
+    <div class="meta">
+      <span class="pill green">MIT</span>
+      <span class="pill cyan">React · @react-pdf</span>
+      <span class="pill violet">Live preview</span>
+      <a class="pill" href="https://github.com/tuanpham-dev/react-invoice-generator" target="_blank">github.com/tuanpham-dev/react-invoice-generator ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O problema hoje</span>
+    <h2>Operação sem papel é operação sem prova</h2>
+    <ul>
+      <li>Cliente recebe equipamento — não há documento listando o que saiu, em que estado, com qual valor de cobertura</li>
+      <li>Equipamento volta — não há ata de devolução com fotos de dano ou checklist de retorno</li>
+      <li>Em caso de quebra, conversa vira "Marcelo disse" vs "cliente disse" no WhatsApp</li>
+      <li>Funcionário do galpão não tem checklist físico pra conferir saída</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos</span>
+    <h2>3 documentos automáticos a partir dos dados que já existem</h2>
+    <ul>
+      <li><strong>Romaneio de saída:</strong> lista de seriais alocados ao projeto, com codigo interno, foto e desgaste atual — gerado no momento do check-out</li>
+      <li><strong>Recibo de devolução:</strong> mesma lista com checklist de "OK / dano / faltante" — gerado no check-in</li>
+      <li><strong>Contrato/orçamento:</strong> valor de mercado, condições, prazo — pra fechar com cliente</li>
+      <li>UX de edição lado-a-lado: Marcelo ajusta condições e vê o PDF mudando em tempo real</li>
+      <li>Logo MMD + assinatura visual Liquid Glass (cabeçalho com caustic) — branding consistente</li>
+      <li>Envio direto por email (futuro: integração com Gmail MCP)</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Esforço</div><div class="value cyan">2 dias</div></div>
+    <div class="metric"><div class="label">PDFs gerados</div><div class="value">3 tipos</div></div>
+    <div class="metric"><div class="label">Dep. nova</div><div class="value green">0</div></div>
+    <div class="metric"><div class="label">Risco</div><div class="value green">Baixo</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Tradeoffs honestos</span>
+    <h2>O que considerar</h2>
+    <ul>
+      <li>O repo é mais "inspiração" do que "lib instalável" — vamos copiar componentes e adaptar</li>
+      <li>Assinatura digital de verdade (ICP-Brasil) é outro projeto — começamos só com PDF impresso/assinado físico</li>
+      <li>Templates precisam de revisão jurídica do contrato real do Marcelo antes de virar default</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>É o que transforma o sistema em "produto operacional", não "sistema de cadastro".</h3>
+    <p>
+      Sem PDF de romaneio, o sistema é um Excel bonito. Com PDF, ele <em>substitui</em> o caderno
+      do Marcelo. É o entregável que ele leva pra cliente e diz "olha o nível do meu sistema".
+      O custo é baixo porque o stack já está lá.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/tuanpham-dev/react-invoice-generator" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="https://github.com/anvilco/html-pdf-invoice-template" target="_blank">Template anvilco ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>05 / 15 · INTEGRAR JÁ</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

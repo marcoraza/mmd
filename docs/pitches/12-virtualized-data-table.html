@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12 · shadcnui-virtualized-data-table — Tabelas escaláveis · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 12/15</span></div>
+    <nav><a href="11-zebra-rfid-sdk.html">← Anterior</a><a href="index.html">Deck</a><a href="13-supabase-swift-offline.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Infra · UX · Escalabilidade</div>
+    <h1>Catálogo de <span class="accent">5.000 seriais</span> sem travar o navegador</h1>
+    <p class="lede">
+      <code>ItemTable.tsx</code> hoje carrega tudo na DOM. Com 520 seriais, ainda voa. Quando
+      Marcelo crescer pra 2.000+, a página começa a engasgar. <code>shadcnui-virtualized-data-table</code>
+      é TanStack + react-virtuoso + shadcn — drop-in replacement que renderiza só o que está visível.
+      Investimento preventivo de alto leverage.
+    </p>
+    <div class="meta">
+      <span class="pill green">MIT</span>
+      <span class="pill cyan">TanStack · Virtuoso</span>
+      <span class="pill violet">shadcn / Tailwind</span>
+      <a class="pill" href="https://github.com/shipurjan/shadcnui-virtualized-data-table" target="_blank">github.com/shipurjan/shadcnui-virtualized-data-table ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">A dor que ainda não doeu</span>
+    <h2>Tabelas atuais escalam mal — ainda</h2>
+    <ul>
+      <li>Hoje: 520 seriais, navegador aguenta. Cresce 4x, página vai pra 1.5s de render</li>
+      <li>Filtros recalculam a lista inteira a cada keystroke — sem debounce robusto</li>
+      <li>Mobile (iPhone) já sofre na lista grande — scrolling stutters em iOS Safari</li>
+      <li>Sem virtualização, mais inventário = pior UX. Dívida inversamente proporcional ao sucesso</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos</span>
+    <h2>Tabela que renderiza só as 20 linhas visíveis, não as 5.000</h2>
+    <ul>
+      <li>Virtualização nativa via react-virtuoso — performance constante independente do volume</li>
+      <li>TanStack Table v8 — filtros, sorting, agrupamento, faceted filters, column visibility</li>
+      <li>Compatível com nosso shadcn — mantém o Liquid Glass, só troca o motor</li>
+      <li>Suporte a row selection batch — combina com pitch 10 (batch action RFID)</li>
+      <li>Pagination opcional ou infinite scroll — flexível por tela</li>
+      <li>Mobile: scroll suave mesmo com 5.000 linhas no iPhone</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Quando</div><div class="value cyan">~500 linhas</div></div>
+    <div class="metric"><div class="label">Esforço</div><div class="value">1–2 dias</div></div>
+    <div class="metric"><div class="label">Tipo</div><div class="value violet">Drop-in</div></div>
+    <div class="metric"><div class="label">Urgência</div><div class="value amber">Preventivo</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Tradeoffs</span>
+    <h2>Por que não fazer agora</h2>
+    <ul>
+      <li>520 linhas atuais não justificam refactor urgente — outras prioridades pagam mais ROI</li>
+      <li>TanStack Table tem curva de aprendizado — migração precisa de teste cuidadoso</li>
+      <li>Componentes existentes (<code>ItemSidePanel</code>, <code>EditableQty</code>) precisam de adaptação</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Investimento preventivo. Faz na sprint depois que /items chegar em 1.000.</h3>
+    <p>
+      Não é urgente, mas é inevitável. Marcar como "tech debt programada": a partir do momento
+      que algum endpoint passar de 1.000 linhas, agendar a migração. Custo escalado: 2 dias
+      agora, vs 1 semana se virar bug de performance em evento ao vivo.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/shipurjan/shadcnui-virtualized-data-table" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="https://github.com/geo-vi/the-datagrid" target="_blank">Alternativa: the-datagrid ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>12 / 15 · INFRA</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

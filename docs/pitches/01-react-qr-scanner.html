@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01 · react-qr-scanner — PWA scan no Android · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 01/15</span></div>
+    <nav><a href="index.html">← Deck</a><a href="02-supabase-tenant-rbac.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">PWA · QR Camera · 1 dia de integração</div>
+    <h1>Funcionário sem iPhone <span class="accent">faz check-in pelo Android</span></h1>
+    <p class="lede">
+      Hoje, todo o fluxo de campo depende de iPhone + Zebra RFD40. Se o time do galpão entrar
+      com Android, fica de fora do sistema. <code>yudielcurbelo/react-qr-scanner</code> resolve
+      isso em uma rota web só: o navegador vira leitor QR via câmera.
+    </p>
+    <div class="meta">
+      <span class="pill green">MIT</span>
+      <span class="pill cyan">React · TypeScript</span>
+      <span class="pill violet">zxing-wasm</span>
+      <a class="pill" href="https://github.com/yudielcurbelo/react-qr-scanner" target="_blank">github.com/yudielcurbelo/react-qr-scanner ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O problema hoje</span>
+    <h2>RFID é prioridade — mas QR é fallback essencial, e está só no iOS</h2>
+    <ul>
+      <li>Funcionário com Android não consegue operar — depende de emprestar iPhone do Marcelo</li>
+      <li>Cliente que recebe o equipamento não pode confirmar entrega lendo o QR — não temos UI web pra isso</li>
+      <li>Em evento ao vivo, se o iPhone descarrega, o sistema fica cego</li>
+      <li>QR Code é o fallback do RFID no CLAUDE.md, mas só existe no app iOS</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos</span>
+    <h2>Nova rota <code>/scan</code> que vira PWA instalável em qualquer celular</h2>
+    <ul>
+      <li>Câmera nativa do navegador faz leitura QR — sem instalar app, sem App Store</li>
+      <li>Funcionalidade idêntica ao fluxo iOS: scan → resolve serial → ação (check-in/check-out)</li>
+      <li>PWA: ícone na home screen do Android, funciona quase-offline com service worker</li>
+      <li>Cliente recebe link com QR do projeto e confirma entrega no próprio celular</li>
+      <li>iPhone do Marcelo deixa de ser ponto único de falha em evento</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Esforço</div><div class="value cyan">1 dia</div></div>
+    <div class="metric"><div class="label">Linhas novas</div><div class="value"><small>~</small>200</div></div>
+    <div class="metric"><div class="label">Dependência</div><div class="value">1 pkg</div></div>
+    <div class="metric"><div class="label">Risco</div><div class="value green">Baixo</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Tradeoffs honestos</span>
+    <h2>Onde isso pode falhar</h2>
+    <ul>
+      <li>iOS Safari exige HTTPS pra câmera — Vercel já entrega isso, mas dev local precisa de túnel</li>
+      <li>Performance de leitura em luz baixa é inferior ao SDK nativo do iPhone</li>
+      <li>Em modo PWA, o iOS é mais restritivo que Android (mas o caso de uso aqui é justamente Android)</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Faz. É a melhor relação custo/impacto do deck.</h3>
+    <p>
+      Um dia de trabalho. Inclusão imediata de qualquer funcionário/cliente no fluxo, sem
+      precisar comprar mais iPhone ou Zebra. Diferencia o MMD de um sistema "Apple-only" e
+      faz o Marcelo conseguir delegar campo pra terceiros.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/yudielcurbelo/react-qr-scanner" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="index.html">← Voltar ao deck</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>01 / 15 · INTEGRAR JÁ</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

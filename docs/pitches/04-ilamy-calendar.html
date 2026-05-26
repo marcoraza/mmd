@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>04 · ilamy-calendar — Calendário operacional MIT · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 04/15</span></div>
+    <nav><a href="03-shadcn-cmdk.html">← Anterior</a><a href="index.html">Deck</a><a href="05-react-invoice-generator.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Resource Calendar · MIT · 2 dias de integração</div>
+    <h1>O mês inteiro de eventos <span class="accent">numa tela só</span></h1>
+    <p class="lede">
+      <code>ilamy-calendar</code> é o que o FullCalendar Scheduler queria ser: resource timeline,
+      drag-and-drop, RFC 5545 — tudo MIT, sem licença paga. A view que falta no MMD pra Marcelo
+      enxergar conflitos antes de prometer equipamento pro segundo cliente.
+    </p>
+    <div class="meta">
+      <span class="pill green">MIT</span>
+      <span class="pill cyan">React</span>
+      <span class="pill violet">Resource Timeline</span>
+      <a class="pill" href="https://github.com/kcsujeet/ilamy-calendar" target="_blank">github.com/kcsujeet/ilamy-calendar ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O problema hoje</span>
+    <h2>A página <code>/projetos</code> tem list/kanban/calendar — mas sem resource view</h2>
+    <ul>
+      <li>Marcelo não vê, na mesma tela, quais equipamentos estão fora em cada data</li>
+      <li>Conflito de alocação só aparece no momento do check-out, não no planejamento</li>
+      <li>FullCalendar Scheduler (resource timeline) é pago — não dá pra usar em consultoria de R$3k/mês</li>
+      <li>Sem visão semanal/mensal de carga operacional — não dá pra prever buraco de equipe</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos</span>
+    <h2>Nova view "Calendário Operacional" em <code>/projetos?view=resource</code></h2>
+    <ul>
+      <li>Eixo Y = equipamento crítico (mesa Behringer X32, microfone wireless principal, projetor)</li>
+      <li>Eixo X = dias do mês</li>
+      <li>Bloco colorido = projeto que reservou aquele equipamento naquele intervalo</li>
+      <li>Sobreposição visual = conflito → toast vermelho instantâneo</li>
+      <li>Drag-and-drop pra reagendar evento — o packing list segue junto</li>
+      <li>Eventos recorrentes (manutenção mensal, devolução padrão D+1) via RFC 5545</li>
+      <li>Pode virar feed iCal pro Google Calendar do Marcelo (export futuro)</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Esforço</div><div class="value cyan">2 dias</div></div>
+    <div class="metric"><div class="label">Licença</div><div class="value green">MIT</div></div>
+    <div class="metric"><div class="label">vs FullCalendar</div><div class="value">~R$0</div></div>
+    <div class="metric"><div class="label">Risco</div><div class="value green">Baixo</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Tradeoffs honestos</span>
+    <h2>O que considerar</h2>
+    <ul>
+      <li>Biblioteca é nova — comunidade menor que FullCalendar, possíveis bugs em edge cases</li>
+      <li>Não tem suporte nativo a internacionalização brasileira completa — pt-BR pode precisar config</li>
+      <li>Mobile: timeline horizontal em iPhone fica apertada — precisa de view alternativa por dia</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>É a feature mais "premium" do deck sem custar dinheiro.</h3>
+    <p>
+      Resource timeline é o que separa um sistema de inventário caseiro de um "Rentman de verdade".
+      O fato de ter uma alternativa MIT decente (raro) é uma janela rara — vale aproveitar antes
+      que vire moda e fique caro.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/kcsujeet/ilamy-calendar" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="https://github.com/fullcalendar/fullcalendar-react" target="_blank">FullCalendar (fallback) ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>04 / 15 · INTEGRAR JÁ</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

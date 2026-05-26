@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>07 · Shelf.nu — Irmão de stack · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 07/15</span></div>
+    <nav><a href="06-adam-rms.html">← Anterior</a><a href="index.html">Deck</a><a href="08-leihs.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Estudar arquitetura · Mesma stack do MMD</div>
+    <h1>É o que o MMD <span class="accent">vai virar em 6 meses</span></h1>
+    <p class="lede">
+      Shelf.nu é asset/equipment management moderno em <strong>Remix + Supabase + Prisma + Tailwind</strong> —
+      quase a nossa stack. QR custody, bookings com calendar, locations hierárquicas, team roles.
+      Olhar pra ele é ver o futuro do MMD com 18 meses de adiantamento.
+    </p>
+    <div class="meta">
+      <span class="pill red">AGPL-3 · só leitura</span>
+      <span class="pill cyan">Remix · Supabase</span>
+      <span class="pill violet">Prisma · Tailwind</span>
+      <a class="pill" href="https://github.com/Shelf-nu/shelf.nu" target="_blank">github.com/Shelf-nu/shelf.nu ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">A pergunta que ele responde</span>
+    <h2>"Como é que vão ficar nossas tabelas quando tudo estiver lá?"</h2>
+    <ul>
+      <li>Nosso schema atual tem 6 tabelas — eles devem ter 25+ tabelas relacionadas</li>
+      <li>Locations hierárquicas: galpão → setor → prateleira. Hoje no MMD é um campo de texto</li>
+      <li>Custody tracking: quem está com cada equipamento agora? Hoje a gente sabe pelo packing list, não diretamente</li>
+      <li>Bookings com calendar: reserva futura sem alocação. Hoje só temos "projeto = alocado"</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que extrair (do schema, não do código)</span>
+    <h2>5 conceitos que faltam no nosso modelo de dados</h2>
+    <ul>
+      <li><strong>Custody:</strong> serial pode estar "com" alguém sem estar num projeto (transferência interna, manutenção em terceiro)</li>
+      <li><strong>Location hierárquica:</strong> tabela <code>locations</code> com <code>parent_id</code> — galpão tem setores, setor tem prateleiras</li>
+      <li><strong>Bookings vs Allocations:</strong> separa reserva futura (sem alocar serial específico) de alocação real</li>
+      <li><strong>Team roles:</strong> Owner, Admin, Base, Self-Service — perfis com permissão granular (combina com pitch 02)</li>
+      <li><strong>Tags arbitrárias:</strong> Marcelo poder marcar "premium", "delicado", "alto valor" sem mudar schema</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Tempo de leitura</div><div class="value cyan">3–4h</div></div>
+    <div class="metric"><div class="label">Match stack</div><div class="value green">80%</div></div>
+    <div class="metric"><div class="label">Stars</div><div class="value violet">7k+</div></div>
+    <div class="metric"><div class="label">Forkável?</div><div class="value red">Não</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Diferenças importantes</span>
+    <h2>Onde não copiar cegamente</h2>
+    <ul>
+      <li>Shelf é IT asset management (notebooks, monitores) — AV/eventos tem locação e devolução cíclica; modelos de uso são diferentes</li>
+      <li>Eles usam Prisma — nós usamos SQL puro nas migrations. Padrão funcional diferente</li>
+      <li>Stripe integrado (eles cobram SaaS) — nós não precisamos disso por enquanto</li>
+      <li>Fly.io deploy — o MMD vai pra Vercel</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Leitura número 1 antes de qualquer refactor de schema.</h3>
+    <p>
+      Antes do próximo redesign de tabelas, abrir o repo deles e ler 3-5 arquivos da pasta
+      <code>database/</code>. Cada vez que penso "como isso ficaria escalável?", a resposta tem
+      uma chance grande de estar lá. Estudo de fim de semana, vira documento de design no nosso
+      lado.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/Shelf-nu/shelf.nu" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="https://www.shelf.nu/" target="_blank">Site/demo ↗</a>
+      <a class="cta" href="https://docs.shelf.nu/local-development" target="_blank">Docs ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>07 / 15 · ESTUDAR</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10 · zetavg/Inventory — UX de RFID real · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 10/15</span></div>
+    <nav><a href="09-snipe-it.html">← Anterior</a><a href="index.html">Deck</a><a href="11-zebra-rfid-sdk.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Estudar · UX RFID em produção</div>
+    <h1>A <span class="accent">cara que um RFID app</span> deveria ter no dia-a-dia</h1>
+    <p class="lede">
+      <code>zetavg/Inventory</code> é um app open-source pessoal de inventário RFID — mas o cara
+      modelou os fluxos certos: tag órfã, batch action, heat-map de localização, persistência
+      de "última vez que vi este serial". É exatamente o que precisamos olhar antes de polir o
+      app iOS.
+    </p>
+    <div class="meta">
+      <span class="pill green">MIT</span>
+      <span class="pill cyan">React Native · TS</span>
+      <span class="pill violet">RFID UX patterns</span>
+      <a class="pill" href="https://github.com/zetavg/Inventory" target="_blank">github.com/zetavg/Inventory ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O que ainda falta no app iOS</span>
+    <h2>O fluxo "lê 200 tags de uma vez" é mais complicado do que parece</h2>
+    <ul>
+      <li>O que fazer quando uma tag lida não está no banco? Hoje o app só ignora</li>
+      <li>Como dizer "este serial foi visto hoje" sem registrar movimento? Não existe</li>
+      <li>Batch action — selecionar 50 seriais escaneados e fazer ação única (ex: marcar todos como retornados) não existe limpo</li>
+      <li>Sinal de RSSI dá distância — não usamos pra dizer "tá perto" vs "tá longe" na busca de equipamento perdido</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que extrair</span>
+    <h2>5 patterns de UX que valem replicar</h2>
+    <ul>
+      <li><strong>Tag órfã com ação rápida:</strong> tag lida + não cadastrada → botão "Cadastrar agora" inline, sem sair da sessão</li>
+      <li><strong>"Last seen":</strong> registra timestamp da última leitura RFID em todo serial — vira "perdi este equipamento, onde foi visto pela última vez?"</li>
+      <li><strong>Heat-map de proximidade:</strong> usa RSSI pra dizer "frio/quente/fervendo" → encontra equipamento sumido no galpão</li>
+      <li><strong>Saved locations:</strong> "área de check-out", "área de retorno", "manutenção" — funcionário escolhe o contexto antes de scanear</li>
+      <li><strong>Batch action multi-select:</strong> inverso do nosso fluxo atual — escaneia primeiro, decide depois</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Tempo de leitura</div><div class="value cyan">2h</div></div>
+    <div class="metric"><div class="label">Match stack</div><div class="value red">0%</div></div>
+    <div class="metric"><div class="label">Match UX</div><div class="value green">90%</div></div>
+    <div class="metric"><div class="label">Maintained</div><div class="value amber">Solo dev</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Limitações</span>
+    <h2>É projeto pessoal, não corporativo</h2>
+    <ul>
+      <li>Manutenção é de uma pessoa só — pode parar a qualquer momento</li>
+      <li>Stack React Native — não dá pra copiar código Swift; só padrões mentais</li>
+      <li>Reader específico (UART/Bluetooth genérico) — não cobre Zebra SDK</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Inspiração de UX, não fonte de código.</h3>
+    <p>
+      Abrir o app deles (tem screenshots no README), rodar uma demo, anotar o que faz sentido pro
+      galpão do Marcelo. Custo: 1 tarde. Resultado: 4 issues novas pro app iOS que vão fazer
+      diferença pra funcionário que carrega o leitor o dia inteiro.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/zetavg/Inventory" target="_blank">Ver repo no GitHub ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>10 / 15 · ESTUDAR</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

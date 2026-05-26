@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11 · ZebraDevs alt-rfid-ios-sdk — SDK oficial · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 11/15</span></div>
+    <nav><a href="10-zetavg-inventory.html">← Anterior</a><a href="index.html">Deck</a><a href="12-virtualized-data-table.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Infra · Já em uso · Garantir versão</div>
+    <h1>O SDK oficial Zebra agora <span class="accent">no GitHub em XCFramework</span></h1>
+    <p class="lede">
+      Já usamos o Zebra SDK no <code>ZebraRFIDManager.swift</code>. A novidade: a Zebra publicou
+      no GitHub a versão XCFramework — mais nova que a CocoaPods antiga, com suporte oficial pro
+      RFD40, RFD8500 e RF90. Mudança barata que evita surpresa quando o Marcelo comprar um
+      reader novo.
+    </p>
+    <div class="meta">
+      <span class="pill green">SDK oficial</span>
+      <span class="pill cyan">Swift · ObjC</span>
+      <span class="pill violet">XCFramework</span>
+      <a class="pill" href="https://github.com/ZebraDevs/alt-rfid-ios-sdk" target="_blank">github.com/ZebraDevs/alt-rfid-ios-sdk ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">Risco que ninguém vê</span>
+    <h2>Estamos numa versão que pode estar desatualizada</h2>
+    <ul>
+      <li>O <code>ZebraRFIDManager.swift</code> importa <code>ZebraRfidSdkFramework</code> — não sabemos qual versão</li>
+      <li>Zebra historicamente entrega o SDK via portal corporativo + CocoaPods — versão pode ter ficado pra trás</li>
+      <li>Modelos novos de reader (RF90) podem não funcionar com a versão atual</li>
+      <li>Se a Apple atualizar o External Accessory framework, pode quebrar e a gente nem vê chegando</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos</span>
+    <h2>Atualização incremental do SDK + roadmap de hardware aberto</h2>
+    <ul>
+      <li>Versão XCFramework atual no GitHub — fácil rastrear releases, ver changelog</li>
+      <li>Compatibilidade oficial com RFD40 (que o Marcelo já tem), RFD8500 (alternativa) e RF90 (modelo novo, mais leve)</li>
+      <li>Issues e discussões públicas — quando der bug, não dependemos só do suporte Zebra</li>
+      <li>Documentação centralizada — atualizar README/onboarding do dev fica mais simples</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Esforço</div><div class="value cyan">2h</div></div>
+    <div class="metric"><div class="label">Tipo</div><div class="value green">Atualização</div></div>
+    <div class="metric"><div class="label">Hardware</div><div class="value">RFD40 · RFD8500 · RF90</div></div>
+    <div class="metric"><div class="label">Risco</div><div class="value green">Baixo</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Cuidados</span>
+    <h2>O que olhar antes de subir versão</h2>
+    <ul>
+      <li>Confirmar que API delegate (<code>srfidISdkApiDelegate</code>) não mudou — nosso código depende disso</li>
+      <li>Testar com leitor real do Marcelo antes de deploy — não dá pra testar tudo no simulador</li>
+      <li>Licença do SDK ainda é proprietária Zebra — só o XCFramework é distribuído no GitHub</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Migra ainda esta sprint. 2h de manutenção, evita surpresa.</h3>
+    <p>
+      Não é feature, é higiene. Atualizar a referência do SDK no Xcode é simples, deixa o app
+      preparado pra modelos novos de leitor, e desbloqueia features futuras (RFD40 tem modo
+      "geiger" pra encontrar equipamento — quando a gente quiser implementar, vai precisar
+      do SDK atual).
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/ZebraDevs/alt-rfid-ios-sdk" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="https://developer.zebra.com/products/rfid/ios-rfid-reader-sdk" target="_blank">Docs Zebra ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>11 / 15 · INFRA</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

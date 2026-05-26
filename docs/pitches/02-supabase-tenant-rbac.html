@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 · supabase-tenant-rbac — Auth real, fim do "Marco" hard-coded · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 02/15</span></div>
+    <nav><a href="01-react-qr-scanner.html">← Anterior</a><a href="index.html">Deck</a><a href="03-shadcn-cmdk.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Auth · RLS · RBAC · 2–3 dias de integração</div>
+    <h1>O fim do <span class="accent">"Marco" hard-coded</span> em todo movimento</h1>
+    <p class="lede">
+      Hoje a função SQL <code>checkout_projeto</code> aceita um parâmetro <code>p_registrado_por</code>
+      que é sempre <code>'Marco'</code> hard-coded. O sistema não sabe quem fez o quê. Esse repo
+      entrega o pacote completo: perfis, papéis, policies RLS e isolamento por tenant —
+      tudo que falta pra virar produto.
+    </p>
+    <div class="meta">
+      <span class="pill green">MIT</span>
+      <span class="pill cyan">Supabase · Postgres</span>
+      <span class="pill violet">RLS + RBAC</span>
+      <a class="pill" href="https://github.com/point-source/supabase-tenant-rbac" target="_blank">github.com/point-source/supabase-tenant-rbac ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O problema hoje</span>
+    <h2>Sistema sem identidade = sistema sem auditoria</h2>
+    <ul>
+      <li><code>movimentacoes.registrado_por</code> é literalmente o texto "Marco" em toda linha</li>
+      <li>Migration <code>00003_auth_profiles.sql</code> existe mas a UI nunca foi plugada</li>
+      <li>Sem isolamento por tenant — se um segundo cliente entrar, dados misturam</li>
+      <li>Não dá pra abrir o sistema pro cliente do Marcelo ver o projeto dele (não há "self-service")</li>
+      <li>Risco LGPD: dado pessoal sem dono identificado em audit trail</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos</span>
+    <h2>Padrões prontos pra copiar e colar nas nossas 7 migrations</h2>
+    <ul>
+      <li>Tabela <code>profiles</code> + roles (Owner, Admin, Operador, Cliente) com FK pra <code>auth.users</code></li>
+      <li>RLS policies modelo pra cada tabela — <code>items</code>, <code>serial_numbers</code>, <code>projetos</code>, <code>movimentacoes</code>, <code>lotes</code></li>
+      <li><code>tenant_id</code> em <code>app_metadata</code> — sem JOIN nas policies → query rápida</li>
+      <li>Storage bucket policies (críticas pro upload de fotos de manutenção)</li>
+      <li>Login via magic link Supabase (sem senha → sem reset)</li>
+      <li>Auditoria real: cada movimento sabe quem operou, com email</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Esforço</div><div class="value cyan">2–3 dias</div></div>
+    <div class="metric"><div class="label">Migrations</div><div class="value">+3</div></div>
+    <div class="metric"><div class="label">UI nova</div><div class="value"><small>/</small>login</div></div>
+    <div class="metric"><div class="label">Risco</div><div class="value amber">Médio</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Tradeoffs honestos</span>
+    <h2>Onde dá trabalho</h2>
+    <ul>
+      <li>Toda página do web precisa de wrapper de auth — refactor distribuído</li>
+      <li>RPC <code>checkout_projeto</code> precisa migrar de parâmetro hard-coded pra <code>auth.jwt()</code></li>
+      <li>iOS também precisa entrar no fluxo de auth (SDK supabase-swift)</li>
+      <li>Onboarding: Marcelo e funcionários precisam de cadastro inicial — alguém faz o seed</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>É o prerequisito pra qualquer feature B2B daqui pra frente.</h3>
+    <p>
+      Enquanto <code>registrado_por = 'Marco'</code>, o sistema é demo. Resolver isso destrava:
+      cliente self-service, multi-funcionário, audit trail real, segurança LGPD. Faz mais sentido
+      pagar essa dívida agora do que depois de 6 meses de dados sujos.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/point-source/supabase-tenant-rbac" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="https://github.com/dikshantrajput/supabase-multi-tenancy" target="_blank">Alternativa multi-tenancy ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>02 / 15 · INTEGRAR JÁ</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

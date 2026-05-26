@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>08 · leihs — Reservation lifecycle · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 08/15</span></div>
+    <nav><a href="07-shelf-nu.html">← Anterior</a><a href="index.html">Deck</a><a href="09-snipe-it.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Estudar · Workflow de aprovação</div>
+    <h1>O fluxo de <span class="accent">"cliente pede, gestor aprova"</span> em produção</h1>
+    <p class="lede">
+      leihs é sistema de lending pra universidades suíças e alemãs — operação real, anos no ar.
+      O ouro pra MMD não é a stack (Ruby/Clojure), é o <strong>workflow de reservation</strong>:
+      reserva → aprovação → entrega → retorno → conferência. Cada passo tem estado, prazo e ator.
+    </p>
+    <div class="meta">
+      <span class="pill amber">GPL · só leitura</span>
+      <span class="pill cyan">Ruby · Clojure · React</span>
+      <span class="pill violet">Reservation workflow</span>
+      <a class="pill" href="https://github.com/leihs/leihs" target="_blank">github.com/leihs/leihs ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O que ainda não fizemos</span>
+    <h2>Hoje o MMD assume que projeto criado = aprovado</h2>
+    <ul>
+      <li>Não há etapa de "cliente solicita, Marcelo aprova" — todo projeto entra direto em PLANEJAMENTO</li>
+      <li>Se Marcelo quiser deixar funcionário criar projeto sob aprovação, falta o workflow</li>
+      <li>Cliente externo via self-service não consegue solicitar nada — só Marcelo cria</li>
+      <li>Sem estado "REJEITADO" com motivo — toda recusa some no WhatsApp</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que extrair</span>
+    <h2>O state machine de reservation que falta na nossa <code>status_projeto_enum</code></h2>
+    <ul>
+      <li><strong>SOLICITADO</strong> → cliente/funcionário pediu, aguarda gestor</li>
+      <li><strong>APROVADO</strong> → Marcelo deu OK, vai pra fila</li>
+      <li><strong>REJEITADO</strong> → recusa com motivo registrado</li>
+      <li><strong>ASSINADO</strong> → cliente confirmou contrato/orçamento</li>
+      <li><strong>EM_CAMPO</strong> (já temos)</li>
+      <li><strong>DEVOLVIDO_PARCIAL</strong> → algum equipamento voltou, falta outro — não temos isso</li>
+      <li><strong>FINALIZADO</strong> (já temos)</li>
+      <li>Notification em cada transição: WhatsApp/email pro ator responsável</li>
+      <li>Audit log do workflow: quem aprovou, quando, com qual comentário</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Tempo de leitura</div><div class="value cyan">2h</div></div>
+    <div class="metric"><div class="label">Idade do projeto</div><div class="value violet">15+ anos</div></div>
+    <div class="metric"><div class="label">Match stack</div><div class="value red">0%</div></div>
+    <div class="metric"><div class="label">Match domínio</div><div class="value amber">60%</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Onde divergir</span>
+    <h2>O que não cabe na nossa operação</h2>
+    <ul>
+      <li>leihs é pra empréstimo gratuito de universidade — não tem orçamento/cobrança</li>
+      <li>Tempo de empréstimo lá é curto (1–3 dias) — MMD pode ter projeto de 2 semanas</li>
+      <li>Stack 100% diferente — não copiar arquitetura, só conceito</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Estudo focado: só na máquina de estados.</h3>
+    <p>
+      Não vale ler o repo inteiro — vale abrir o diagrama do workflow deles e mapear contra o
+      nosso <code>status_projeto_enum</code>. 2h de leitura cirúrgica, vira uma migration nossa
+      (<code>00008_reservation_workflow.sql</code>) quando o Marcelo pedir self-service de cliente.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/leihs/leihs" target="_blank">Ver repo no GitHub ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>08 / 15 · ESTUDAR</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

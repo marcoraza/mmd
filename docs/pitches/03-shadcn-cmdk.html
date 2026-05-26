@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03 · shadcn-cmdk-search — Command Palette ⌘K · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 03/15</span></div>
+    <nav><a href="02-supabase-tenant-rbac.html">← Anterior</a><a href="index.html">Deck</a><a href="04-ilamy-calendar.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Command Palette · ⌘K · 1 dia de integração</div>
+    <h1>Acha qualquer serial, projeto ou cliente <span class="accent">em 2 segundos</span></h1>
+    <p class="lede">
+      <code>cmdk</code> é a biblioteca que dá vida ao ⌘K do Linear, Raycast e Vercel. O wrapper
+      <code>shadcn-cmdk-search</code> é um drop-in pro nosso stack. Marcelo aperta ⌘K, digita
+      "MMD-ILU-0042" ou "Casamento Joana", chega no destino sem navegar.
+    </p>
+    <div class="meta">
+      <span class="pill green">MIT</span>
+      <span class="pill cyan">React · cmdk</span>
+      <span class="pill violet">shadcn / Tailwind</span>
+      <a class="pill" href="https://github.com/shadcnstudio/shadcn-cmdk-search" target="_blank">github.com/shadcnstudio/shadcn-cmdk-search ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O problema hoje</span>
+    <h2>Navegação por clique vira fricção quando o catálogo cresce</h2>
+    <ul>
+      <li>Pra achar um serial específico: <code>/items</code> → filtrar → scroll → clicar — 4 passos</li>
+      <li>Pra achar um projeto: lembrar nome, abrir <code>/projetos</code>, scrollar a lista</li>
+      <li>Marcelo opera em iPhone E MacBook — fluxo dele em desktop é 100% teclado</li>
+      <li>Sem busca global, cada tela tem sua própria SearchBar — UX inconsistente</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos</span>
+    <h2>Atalho ⌘K global com busca em todas as entidades de uma vez</h2>
+    <ul>
+      <li>Digita <code>MMD-AUD</code> → lista todos os áudios em ordem alfabética</li>
+      <li>Digita <code>casamento</code> → lista projetos com esse nome</li>
+      <li>Digita <code>shure sm58</code> → lista items por nome com contagem disponível</li>
+      <li>Ações inline: "novo projeto", "registrar manutenção", "ir pro dashboard" — sem mouse</li>
+      <li>Histórico de navegação recente — pra voltar ao último projeto editado em 1 tecla</li>
+      <li>Match perfeito com o design Liquid Glass — backdrop blur já presente nos tokens</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Esforço</div><div class="value cyan">1 dia</div></div>
+    <div class="metric"><div class="label">Linhas novas</div><div class="value"><small>~</small>250</div></div>
+    <div class="metric"><div class="label">Atalho</div><div class="value mono" style="font-family:var(--font-mono);font-size:18px;">⌘K</div></div>
+    <div class="metric"><div class="label">Risco</div><div class="value green">Mínimo</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Tradeoffs honestos</span>
+    <h2>O que pensar antes</h2>
+    <ul>
+      <li>Mobile: ⌘K não existe em iPhone — vira "ícone de busca" no app bar, UX paralela</li>
+      <li>Query Supabase em cada keystroke pode ser caro — precisa de <code>debounce</code> + LIMIT</li>
+      <li>Decisões de UX: o que entra na busca? Só serial+projeto, ou também ações?</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>É o detalhe que faz um sistema parecer profissional.</h3>
+    <p>
+      Não muda o que o sistema faz, mas muda <em>como sente</em>. Marcelo vai usar 50 vezes por
+      dia e contar pros amigos. Um dia de trabalho pra um daqueles features que vendem o produto
+      sozinhas em demo.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/shadcnstudio/shadcn-cmdk-search" target="_blank">Ver repo no GitHub ↗</a>
+      <a class="cta" href="https://github.com/pacocoursey/cmdk" target="_blank">Biblioteca base cmdk ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>03 / 15 · INTEGRAR JÁ</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

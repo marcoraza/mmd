@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15 · OpenLabelMaker + qZ Tray — Impressão térmica · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 15/15</span></div>
+    <nav><a href="14-liquid-glass-react.html">← Anterior</a><a href="index.html">Deck</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Infra · Hardware · Quando comprar a térmica</div>
+    <h1>Etiqueta sai <span class="accent">direto do browser pra impressora</span></h1>
+    <p class="lede">
+      Hoje o <code>/qrcodes</code> gera PDF com folha A4 cheia de QR codes — Marcelo imprime e
+      corta. Funcionará por 1 ano. Quando ele comprar uma Brother QL-820 (térmica de etiqueta
+      adesiva), o fluxo certo é: clica no serial → etiqueta sai. Sem driver, sem PDF intermediário.
+      qZ Tray + OpenLabelMaker entregam essa ponte.
+    </p>
+    <div class="meta">
+      <span class="pill green">LGPL · qZ Tray free</span>
+      <span class="pill cyan">Browser → ZPL/ESC-POS</span>
+      <span class="pill violet">Brother · Zebra · DYMO</span>
+      <a class="pill" href="https://qz.io/" target="_blank">qz.io ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O fluxo atual de etiquetagem</span>
+    <h2>PDF → impressora comum → tesoura → fita adesiva</h2>
+    <ul>
+      <li>Marcelo gera folha A4 de 24 QR codes — bom pra lote inicial, ruim pra dia-a-dia</li>
+      <li>Equipamento novo chega → precisa imprimir folha inteira pra usar 1 etiqueta</li>
+      <li>Etiqueta colada com fita adesiva descola — etiqueta térmica autoadesiva resolve</li>
+      <li>Sem indicação visual de "este serial precisa de re-etiquetagem"</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos quando a Brother QL chegar</span>
+    <h2>Impressão "1 clique" pra etiqueta adesiva resistente</h2>
+    <ul>
+      <li>Painel do serial → botão "Imprimir etiqueta" → sai da Brother QL na hora</li>
+      <li>qZ Tray instala uma vez no Mac do Marcelo, browser conversa direto via WebSocket local</li>
+      <li>Driver-less: zero configuração além de ligar a impressora</li>
+      <li>Suporte a Brother QL, Zebra (ZPL), DYMO, ESC/POS — escolhe a impressora que comprar</li>
+      <li>OpenLabelMaker como referência de layout: QR + código + nome + categoria em etiqueta de 62×29mm</li>
+      <li>Em lote: seleciona N seriais no <code>/items</code> → imprime sequência inteira</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Esforço</div><div class="value cyan">3 dias</div></div>
+    <div class="metric"><div class="label">Hardware</div><div class="value">~R$ 800–1.500</div></div>
+    <div class="metric"><div class="label">Setup Marcelo</div><div class="value green">1x app</div></div>
+    <div class="metric"><div class="label">Urgência</div><div class="value amber">Quando comprar</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Cuidados</span>
+    <h2>O que não esquecer</h2>
+    <ul>
+      <li>qZ Tray é gratuito sem certificado digital, mas mostra aviso de "untrusted" — pra produção, paga ~$60/ano de certificado ou self-sign</li>
+      <li>Cada impressora tem linguagem própria (ZPL, ESC/POS, Brother RAW) — primeira integração é específica do modelo escolhido</li>
+      <li>iPhone não imprime via qZ Tray (é solução desktop) — fluxo mobile fica via Bluetooth direto, projeto separado</li>
+      <li>Comprar Brother QL é decisão do Marcelo — não acelerar sem ele querer</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Não fazer agora. Listar como "quando comprar impressora térmica".</h3>
+    <p>
+      Implementar antes do hardware chegar é desperdício. Mas vale ter no roadmap pronto:
+      momento que Marcelo decidir comprar a Brother QL (provavelmente quando o cadastro inicial
+      ficar completo), a integração vira sprint de 3 dias em vez de pesquisa do zero.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://qz.io/" target="_blank">qZ Tray ↗</a>
+      <a class="cta" href="https://openlabelmaker.com/" target="_blank">OpenLabelMaker ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>15 / 15 · INFRA</span>
+    <span>MMD · PITCH DECK 0.1 · FIM</span>
+  </footer>
+</div>
+</body>
+</html>

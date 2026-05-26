@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>13 · supabase-swift + PowerSync — Offline-first iOS · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 13/15</span></div>
+    <nav><a href="12-virtualized-data-table.html">← Anterior</a><a href="index.html">Deck</a><a href="14-liquid-glass-react.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Infra · iOS · Offline-first real</div>
+    <h1>Galpão sem sinal vira <span class="accent">não-problema</span></h1>
+    <p class="lede">
+      Hoje o app iOS é online-only: <code>APIClient.swift</code> faz request direto, sem fila.
+      Se o galpão tem zona morta de Wi-Fi (e quase todo galpão tem), o scan trava. PowerSync +
+      supabase-swift entrega sync local-first: o app escreve no SQLite, sobe quando voltar a rede.
+      Conflict resolution incluso.
+    </p>
+    <div class="meta">
+      <span class="pill green">Apache 2.0 · MIT</span>
+      <span class="pill cyan">Swift · SQLite</span>
+      <span class="pill violet">PowerSync sync engine</span>
+      <a class="pill" href="https://github.com/powersync-ja" target="_blank">github.com/powersync-ja ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O cenário real</span>
+    <h2>Galpão tem ferro, concreto e zona morta — Wi-Fi cai</h2>
+    <ul>
+      <li>Marcelo escaneia 50 seriais com RFD40 em pilha de equipamento, perde sinal — operação para</li>
+      <li>Funcionário no evento (no porão de um casamento) tenta fazer check-in, request falha, ninguém sabe</li>
+      <li>App não tem cache local de catálogo — sem internet, não dá nem pra ver o que tem no estoque</li>
+      <li>Cada movimento perdido = inventário fora de sincronia = erro operacional no dia seguinte</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que ganhamos</span>
+    <h2>App que funciona melhor offline do que online</h2>
+    <ul>
+      <li><strong>SQLite local:</strong> catálogo inteiro espelhado no iPhone — abre instantâneo, busca instantânea</li>
+      <li><strong>Fila de sync:</strong> toda movimentação fica em fila local até subir — zero perda de dados</li>
+      <li><strong>Conflict resolution:</strong> dois funcionários movimentam o mesmo serial offline → PowerSync resolve por timestamp+regra</li>
+      <li><strong>Realtime ao voltar online:</strong> mudanças do servidor aparecem no app sem F5</li>
+      <li><strong>Caso de uso premium:</strong> Marcelo termina evento no domingo de noite, sync acontece no carro voltando pra casa, segunda já tem dashboard atualizado</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Esforço</div><div class="value cyan">1 semana</div></div>
+    <div class="metric"><div class="label">Refactor iOS</div><div class="value violet">Médio</div></div>
+    <div class="metric"><div class="label">Custo PowerSync</div><div class="value green">Free tier OK</div></div>
+    <div class="metric"><div class="label">Urgência</div><div class="value amber">Pós-MVP</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Considerações</span>
+    <h2>O que pesa nessa decisão</h2>
+    <ul>
+      <li>PowerSync free tier é generoso, mas escala vira pago em produção séria — modelar custo antes</li>
+      <li>Alternativa: SwiftData puro + sync manual — controle total, mais código nosso</li>
+      <li>Refactor do <code>APIClient.swift</code> é grande — toda chamada vira repository pattern com fonte local</li>
+      <li>RLS Supabase precisa permitir leituras paginadas em massa pro espelho local — modelar policies</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Não é prioridade 1, mas é diferencial competitivo de longo prazo.</h3>
+    <p>
+      Marcelo vai descobrir essa dor na primeira vez que perder dado em campo. Quando isso
+      acontecer, ter a resposta pronta ("nossa próxima versão já tem offline") é diferença
+      entre frustração e confiança. Bom pra começar a estudar agora, mesmo sem implementar.
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://powersync.com/blog/bringing-offline-first-to-supabase" target="_blank">Como o PowerSync funciona ↗</a>
+      <a class="cta" href="https://github.com/supabase/supabase-swift" target="_blank">supabase-swift ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>13 / 15 · INFRA</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

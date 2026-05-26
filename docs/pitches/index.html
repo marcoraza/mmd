@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MMD · Pitch Deck — 15 alavancas open-source</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"><div class="orb3"></div></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="mono-label">MMD EVENTOS · DECK INTERNO</span>
+    </div>
+    <nav>
+      <a href="#prioridade">Prioridade</a>
+      <a href="#estudo">Estudo</a>
+      <a href="#infra">Infra</a>
+    </nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent-cyan);box-shadow:0 0 8px var(--accent-cyan);"></span> Pitch deck · v0.1 · 2026-05-26</div>
+    <h1>15 alavancas open-source<br>pra <span class="accent">encurtar 6 meses</span> de roadmap</h1>
+    <p class="lede">
+      Cada pitch a seguir é um repo open-source que ataca uma lacuna real do nosso sistema —
+      auth, fotos, romaneio, calendário, RFID, offline. Não é vitrine de tecnologia: é cálculo
+      de quanto código a gente <em>não precisa escrever</em> pra entregar mais valor pro Marcelo
+      no prazo do contrato.
+    </p>
+    <div class="meta">
+      <span class="pill cyan">5 pra integrar já</span>
+      <span class="pill violet">5 pra estudar arquitetura</span>
+      <span class="pill green">5 pra infra/futuro</span>
+    </div>
+  </section>
+
+  <section class="block glass" id="prioridade">
+    <span class="section-kicker">Bloco 1 · Integrar nos próximos sprints</span>
+    <h2>Caminho mais curto pro próximo entregável</h2>
+    <p>Cinco repos que tiram peso do roadmap imediatamente. Cada um substitui semanas de código nosso por uma integração de 1–3 dias.</p>
+
+    <div class="pitch-grid">
+      <a class="pitch-card glass" href="01-react-qr-scanner.html">
+        <div class="order">01 · INTEGRAR · 1 DIA</div>
+        <div class="title">react-qr-scanner</div>
+        <div class="sub">Funcionário sem iPhone faz check-in pelo navegador Android. Fecha o gap "Zebra + RFD40 obrigatório".</div>
+        <div class="row"><span>PWA · QR Camera</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="02-supabase-tenant-rbac.html">
+        <div class="order">02 · INTEGRAR · 2–3 DIAS</div>
+        <div class="title">supabase-tenant-rbac</div>
+        <div class="sub">Acaba com o "Marco" hard-coded no <code>registrado_por</code>. RLS, perfis e RBAC prontos.</div>
+        <div class="row"><span>Auth · RLS</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="03-shadcn-cmdk.html">
+        <div class="order">03 · INTEGRAR · 1 DIA</div>
+        <div class="title">shadcn-cmdk-search</div>
+        <div class="sub">⌘K busca cross-entity (serial, projeto, cliente). UX de Linear/Raycast em meio dia.</div>
+        <div class="row"><span>Command Palette</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="04-ilamy-calendar.html">
+        <div class="order">04 · INTEGRAR · 2 DIAS</div>
+        <div class="title">ilamy-calendar</div>
+        <div class="sub">Calendário operacional com check-outs do mês. Resource timeline MIT — sem licença paga.</div>
+        <div class="row"><span>Calendar · MIT</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="05-react-invoice-generator.html">
+        <div class="order">05 · INTEGRAR · 2 DIAS</div>
+        <div class="title">react-invoice-generator</div>
+        <div class="sub">Romaneio + recibo + contrato em PDF. Reusa <code>@react-pdf/renderer</code> que já está no projeto.</div>
+        <div class="row"><span>PDF · Romaneio</span><span class="arrow">→</span></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="block glass" id="estudo">
+    <span class="section-kicker">Bloco 2 · Estudar arquitetura</span>
+    <h2>Concorrentes pra roubar ideias (não código)</h2>
+    <p>Cinco sistemas maduros do mesmo domínio. Licenças AGPL/proprietárias impedem fork, mas o schema, fluxos e UX são <strong>referência inestimável</strong> pra acertar de primeira.</p>
+
+    <div class="pitch-grid">
+      <a class="pitch-card glass" href="06-adam-rms.html">
+        <div class="order">06 · ESTUDAR</div>
+        <div class="title">AdamRMS</div>
+        <div class="sub">Irmão direto: rental management de Theatre/AV/Broadcast. Multi-tenant, packing list, app Expo.</div>
+        <div class="row"><span>Domain twin</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="07-shelf-nu.html">
+        <div class="order">07 · ESTUDAR</div>
+        <div class="title">Shelf.nu</div>
+        <div class="sub">Mesma stack (Supabase + Tailwind). QR custody + bookings + locations hierárquicas. O que o MMD vai virar.</div>
+        <div class="row"><span>Stack twin</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="08-leihs.html">
+        <div class="order">08 · ESTUDAR</div>
+        <div class="title">leihs</div>
+        <div class="sub">Reservation lifecycle maduro: reserva→aprovação→entrega→retorno. Modelo pra cliente self-service.</div>
+        <div class="row"><span>Reservation flow</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="09-snipe-it.html">
+        <div class="order">09 · ESTUDAR</div>
+        <div class="title">Snipe-IT</div>
+        <div class="sub">13k stars de maturidade em depreciação, audit, manutenção. Referência pro nosso Estado+Desgaste.</div>
+        <div class="row"><span>Depreciation</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="10-zetavg-inventory.html">
+        <div class="order">10 · ESTUDAR</div>
+        <div class="title">zetavg/Inventory</div>
+        <div class="sub">UX de RFID real: tag órfã, batch action, heat-map. Lições pro nosso fluxo iOS+Zebra.</div>
+        <div class="row"><span>RFID UX</span><span class="arrow">→</span></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="block glass" id="infra">
+    <span class="section-kicker">Bloco 3 · Infraestrutura e futuro</span>
+    <h2>Reforços de stack pra fases 2 e 3</h2>
+    <p>Componentes que não são urgentes, mas estão prontos pro dia em que a operação escalar (mais inventário, offline real, impressora térmica no escritório).</p>
+
+    <div class="pitch-grid">
+      <a class="pitch-card glass" href="11-zebra-rfid-sdk.html">
+        <div class="order">11 · INFRA</div>
+        <div class="title">ZebraDevs alt-rfid-ios-sdk</div>
+        <div class="sub">SDK oficial Zebra em XCFramework. Garantia de versão atual + compatibilidade RFD40/RF90.</div>
+        <div class="row"><span>iOS · Zebra</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="12-virtualized-data-table.html">
+        <div class="order">12 · INFRA</div>
+        <div class="title">shadcnui-virtualized-data-table</div>
+        <div class="sub">TanStack + Virtuoso + shadcn. Quando <code>/items</code> passar de 500 linhas, drop-in replacement.</div>
+        <div class="row"><span>TanStack · UX</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="13-supabase-swift-offline.html">
+        <div class="order">13 · INFRA</div>
+        <div class="title">supabase-swift + PowerSync</div>
+        <div class="sub">Offline-first real no iOS. Galpão sem sinal vira não-problema. Sync diferido com conflict resolution.</div>
+        <div class="row"><span>Offline · iOS</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="14-liquid-glass-react.html">
+        <div class="order">14 · INFRA</div>
+        <div class="title">liquid-glass-react (rdev)</div>
+        <div class="sub">Efeito Apple Liquid Glass com SVG displacement. Eleva o nosso ReadinessRing pra "uau" Apple-grade.</div>
+        <div class="row"><span>Design polish</span><span class="arrow">→</span></div>
+      </a>
+      <a class="pitch-card glass" href="15-label-printing.html">
+        <div class="order">15 · INFRA</div>
+        <div class="title">OpenLabelMaker + qZ Tray</div>
+        <div class="sub">Quando Marcelo comprar a Brother QL térmica. Impressão direta browser→impressora sem driver.</div>
+        <div class="row"><span>Label printing</span><span class="arrow">→</span></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Recomendação executiva</div>
+    <h3>Comecemos pelo bloco 1 nesta ordem: 01 → 02 → 03 → 04 → 05.</h3>
+    <p>
+      São <strong>~9 dias de trabalho</strong> que entregam: PWA scan, auth real, command palette,
+      calendário operacional e romaneio PDF. O bloco 2 vira leitura paralela de fim de semana
+      (vale 1h por repo pra mapear no nosso schema). O bloco 3 fica pra quando o contrato dos
+      3 meses estiver caminhando bem e o Marcelo pedir mais.
+    </p>
+  </section>
+
+  <footer class="deck-footer">
+    <span>MMD · ESTOQUE INTELIGENTE · PITCH DECK 0.1</span>
+    <span>MARCO AQUILINO · 2026-05-26</span>
+  </footer>
+</div>
+</body>
+</html>

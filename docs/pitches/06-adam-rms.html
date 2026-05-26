@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>06 · AdamRMS — Irmão de domínio · MMD Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="caustic-bg"></div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot"></span><span class="mono-label">MMD · PITCH 06/15</span></div>
+    <nav><a href="05-react-invoice-generator.html">← Anterior</a><a href="index.html">Deck</a><a href="07-shelf-nu.html">Próximo →</a></nav>
+  </div>
+
+  <section class="hero glass glass-strong">
+    <div class="kicker">Estudar arquitetura · Não fork (AGPL)</div>
+    <h1>O <span class="accent">único sistema open-source</span> exatamente do nosso nicho</h1>
+    <p class="lede">
+      AdamRMS é Rental Management System pra Theatre, AV & Broadcast — o domínio exato do
+      Marcelo. Não dá pra forkar (AGPL-3 contamina o nosso código), mas dá pra ler o schema,
+      copiar fluxos e <strong>não inventar a roda</strong> em packing list, dispatch, multi-tenant
+      e maintenance scheduling.
+    </p>
+    <div class="meta">
+      <span class="pill red">AGPL-3 · só leitura</span>
+      <span class="pill cyan">PHP · MySQL</span>
+      <span class="pill violet">Expo companion app</span>
+      <a class="pill" href="https://github.com/adam-rms/adam-rms" target="_blank">github.com/adam-rms/adam-rms ↗</a>
+    </div>
+  </section>
+
+  <section class="block glass bad">
+    <span class="section-kicker">O que aprendemos errando sozinhos</span>
+    <h2>Reinventar packing list cara — eles já testaram em milhares de eventos</h2>
+    <ul>
+      <li>Nosso modelo de packing list ainda é "tipo + quantidade + serial alocado" — AdamRMS tem nuances que vamos descobrir só na operação</li>
+      <li>Dispatch status, maintenance scheduling, crew & training — não temos, mas vamos precisar</li>
+      <li>Multi-tenancy "uma instância, múltiplas empresas" — sem isso a MMD não escala pra cliente B2B</li>
+    </ul>
+  </section>
+
+  <section class="block glass good">
+    <span class="section-kicker">O que extrair (sem copiar código)</span>
+    <h2>4 referências de ouro pro nosso roadmap</h2>
+    <ul>
+      <li><strong>Schema de packing list maduro:</strong> separa "tipo planejado" de "ativo alocado" de "ativo entregue" — modelos que vamos precisar evoluir</li>
+      <li><strong>Status de dispatch:</strong> planejado → preparado → entregue → em campo → devolvido → conferido. Hoje temos só 5 estados, eles têm 7+</li>
+      <li><strong>Maintenance scheduling:</strong> agendamento preventivo por horas/uso, não só por data</li>
+      <li><strong>App companion (Expo):</strong> referência de UX mobile pra comparar com nosso SwiftUI</li>
+      <li><strong>Public-facing catalog:</strong> site público mostrando estoque disponível com preço — pra Marcelo virar landing page de captação</li>
+    </ul>
+  </section>
+
+  <div class="metrics">
+    <div class="metric"><div class="label">Tempo de leitura</div><div class="value cyan">2–3h</div></div>
+    <div class="metric"><div class="label">Forkável?</div><div class="value red">Não</div></div>
+    <div class="metric"><div class="label">Match domínio</div><div class="value green">100%</div></div>
+    <div class="metric"><div class="label">Match stack</div><div class="value amber">20%</div></div>
+  </div>
+
+  <section class="block glass warn">
+    <span class="section-kicker">Cuidados</span>
+    <h2>Por que não dá pra forkar</h2>
+    <ul>
+      <li>AGPL-3 obriga abrir todo o código derivado — incompatível com o contrato com Marcelo (sistema dele = ativo dele)</li>
+      <li>Stack PHP/MySQL não bate com Next.js/Supabase — tradução custaria mais que reescrever</li>
+      <li>UI é "Bootstrap genérico" — bem distante do Liquid Glass do MMD</li>
+    </ul>
+  </section>
+
+  <section class="verdict glass">
+    <div class="stamp">Veredito</div>
+    <h3>Leitura obrigatória de fim de semana antes do Sprint 5.</h3>
+    <p>
+      Não vai pro código. Vai pro caderno: passar uma tarde no repo deles e listar os 10 conceitos
+      que ainda não estão no nosso schema. Cada um vira issue. Custa 3h e nos poupa de
+      reuniões com Marcelo do tipo "ah, esqueci de te falar que...".
+    </p>
+    <div class="cta-row">
+      <a class="cta primary" href="https://github.com/adam-rms/adam-rms" target="_blank">Ver repo principal ↗</a>
+      <a class="cta" href="https://github.com/adam-rms/app-v2" target="_blank">App companion (Expo) ↗</a>
+      <a class="cta" href="https://adam-rms.com/" target="_blank">Demo público ↗</a>
+    </div>
+  </section>
+
+  <footer class="deck-footer">
+    <span>06 / 15 · ESTUDAR</span>
+    <span>MMD · PITCH DECK 0.1</span>
+  </footer>
+</div>
+</body>
+</html>

@@ -7,11 +7,14 @@ struct MMDEstoqueApp: App {
 
     @StateObject private var apiClient = APIClient()
 
+    @StateObject private var router = LiquidRouter()
+
     var body: some Scene {
         WindowGroup {
             LiquidRoot()
                 .environmentObject(rfidManager)
                 .environmentObject(apiClient)
+                .environmentObject(router)
         }
     }
 }

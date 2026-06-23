@@ -13,6 +13,7 @@ struct LiquidScanResultView: View {
     let resolved: [ResolvedItem]
     let unresolved: [String]
 
+    @EnvironmentObject private var router: LiquidRouter
     @State private var expandedItemId: UUID?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -194,6 +195,25 @@ struct LiquidScanResultView: View {
                         .truncationMode(.middle)
                 }
             }
+
+            Button {
+                var full = serial
+                full.item = item.equipment
+                router.push(.itemDetail(full))
+            } label: {
+                HStack {
+                    Text("Ver condição completa")
+                        .font(.liquidMono(12, weight: .medium))
+                        .textCase(.uppercase)
+                        .tracking(1.0)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundStyle(Liquid.accentCyan)
+                .padding(.top, Liquid.Space.sm)
+            }
+            .buttonStyle(.plain)
         }
         .transition(.opacity)
     }
@@ -253,7 +273,24 @@ struct LiquidScanResultView: View {
                     .liquidLabel(Liquid.fg3)
             }
 
-            Spacer(minLength: 0)
+            Spacer(minLength: Liquid.Space.sm)
+
+            Button {
+                router.push(.etiquetar(tag: tag))
+            } label: {
+                Text("Vincular")
+                    .font(.liquidMono(11, weight: .medium))
+                    .textCase(.uppercase)
+                    .tracking(1.0)
+                    .foregroundStyle(Liquid.accentViolet)
+                    .padding(.horizontal, Liquid.Space.md)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule().fill(Liquid.accentViolet.opacity(0.15))
+                            .overlay(Capsule().strokeBorder(Liquid.accentViolet.opacity(0.45), lineWidth: 1))
+                    )
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, Liquid.Space.lg)
         .padding(.vertical, Liquid.Space.md)

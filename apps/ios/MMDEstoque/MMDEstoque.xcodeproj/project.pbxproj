@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		08E5EB305BC462D804E54B32 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0759B327D10FBA0611616190 /* Equipment.swift */; };
-		0D09AA220C2195CA5EF730F2 /* ReceberFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41A7180B48346C6C98BB9EB /* ReceberFlow.swift */; };
 		0D8B3E9FFB9C9D3D1AD61EEE /* SpaceGrotesk-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */; };
 		0F3241F55B9796C6A82DC0A7 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697343529A7D932791D008B3 /* APIClient.swift */; };
 		103A0084E558094C7264338C /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */; };
@@ -48,7 +47,7 @@
 		8095731D9E3391AF2659C8ED /* InterTight-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2064F95FE826DBEFC1C79CBD /* InterTight-VF.ttf */; };
 		82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E2603B965BC0BCF3345FE4 /* WearBar.swift */; };
 		8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D783BB916661590B5F095A88 /* Theme.swift */; };
-		8E56E5F6BBA2C5718154C8E0 /* DespacharFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144B969C6CE2EEA7D1149ABE /* DespacharFlow.swift */; };
+		8F9898AB605E8F464206AEF4 /* LiquidRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B517935CBFA8F9727632FE3 /* LiquidRouter.swift */; };
 		973BF48053AF163FAC988E40 /* QRScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5106F306DE231604F7C7654F /* QRScanView.swift */; };
 		9857C64EFE0961251A12F8E7 /* LiquidHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0256BEA6E7FDE5B35BCA99DC /* LiquidHome.swift */; };
 		98C0CC07F3637CF069ADA970 /* LiquidRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90FA78E14C96A04D71C1A90 /* LiquidRoot.swift */; };
@@ -63,7 +62,6 @@
 		BDEE57E847D2F9C0FD19BFA8 /* ProgressSegmentBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7B747B07C0DCAAB961D438 /* ProgressSegmentBar.swift */; };
 		CBA758122F52D8B985210F40 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB277F62D429AADEB3F854A /* StatusBadge.swift */; };
 		D2864B58426DB3E37C05FBBC /* ReadinessRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA25CE570D3FA227EFC31C00 /* ReadinessRing.swift */; };
-		D29B7A30562E541C871CE0DE /* EtiquetarFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58277ACE0ABD7F1139419A06 /* EtiquetarFlow.swift */; };
 		D4240CDFEF996F16BAC289F5 /* LiquidTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5117594BA29CAEEFB800B0E /* LiquidTokens.swift */; };
 		D432285F9D7BBFC391CD7DF1 /* ConnectReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */; };
 		D4B4C2225BBC61DB65998546 /* MockRFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */; };
@@ -84,7 +82,6 @@
 		0759B327D10FBA0611616190 /* Equipment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
 		0A291F2455227FD8841936B9 /* ZebraRFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZebraRFIDManager.swift; sourceTree = "<group>"; };
 		0A3190CB2AF35C21208B73BD /* LiquidComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidComponents.swift; sourceTree = "<group>"; };
-		144B969C6CE2EEA7D1149ABE /* DespacharFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DespacharFlow.swift; sourceTree = "<group>"; };
 		20325B3F78AF199143EC0DD9 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		2064F95FE826DBEFC1C79CBD /* InterTight-VF.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InterTight-VF.ttf"; sourceTree = "<group>"; };
 		323EEDFB17A87E8066DC3BE4 /* PackingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListView.swift; sourceTree = "<group>"; };
@@ -93,6 +90,7 @@
 		339727BF88399EFB1848416D /* SpaceGrotesk-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Bold.ttf"; sourceTree = "<group>"; };
 		33AAC2836ED72FC7A3BDEF53 /* GlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSurface.swift; sourceTree = "<group>"; };
 		3868E82216FF16E0450A4003 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		3B517935CBFA8F9727632FE3 /* LiquidRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidRouter.swift; sourceTree = "<group>"; };
 		3E98702B08CD63F5D51C5464 /* CheckoutFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutFlowView.swift; sourceTree = "<group>"; };
 		40C2DAC838AD374C6FACBDBF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4122E7C0CEDDD090C54D5204 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
@@ -101,7 +99,6 @@
 		4C04051CAF01598328A91F1E /* LiquidProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidProjectsListView.swift; sourceTree = "<group>"; };
 		5106F306DE231604F7C7654F /* QRScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanView.swift; sourceTree = "<group>"; };
 		5313E40987DD26AA2F896208 /* ParticleScanField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticleScanField.swift; sourceTree = "<group>"; };
-		58277ACE0ABD7F1139419A06 /* EtiquetarFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EtiquetarFlow.swift; sourceTree = "<group>"; };
 		5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Medium.ttf"; sourceTree = "<group>"; };
 		5D7B747B07C0DCAAB961D438 /* ProgressSegmentBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressSegmentBar.swift; sourceTree = "<group>"; };
 		5F031040DF7F5CBFC1BE8ECB /* LiquidReturnValidationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidReturnValidationView.swift; sourceTree = "<group>"; };
@@ -144,7 +141,6 @@
 		E29E94F5BA704C200216CD50 /* LiquidScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidScanResultView.swift; sourceTree = "<group>"; };
 		E333E0ED277DC56507062423 /* DotGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotGrid.swift; sourceTree = "<group>"; };
 		E3693B929629F89DF34776D4 /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
-		E41A7180B48346C6C98BB9EB /* ReceberFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceberFlow.swift; sourceTree = "<group>"; };
 		E4A8884A51467AEC388EAB58 /* ScanEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanEngine.swift; sourceTree = "<group>"; };
 		EF519E27D1D1281C508B8299 /* LiquidItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidItemDetailView.swift; sourceTree = "<group>"; };
 		F0AB7BD33ACC289E8E383823 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
@@ -181,8 +177,6 @@
 		66B175FA9E26CE1395C4F904 /* Liquid */ = {
 			isa = PBXGroup;
 			children = (
-				144B969C6CE2EEA7D1149ABE /* DespacharFlow.swift */,
-				58277ACE0ABD7F1139419A06 /* EtiquetarFlow.swift */,
 				43C0607155D6DC883DE6CFD6 /* IdentificarFlow.swift */,
 				87370481D0344955AD756252 /* LiquidCheckoutGridView.swift */,
 				CF66AFB7AFB6B238AAE27E61 /* LiquidCheckoutValidationView.swift */,
@@ -197,9 +191,9 @@
 				B4522CE0EE36A98C81663B0A /* LiquidQRScannerSheet.swift */,
 				5F031040DF7F5CBFC1BE8ECB /* LiquidReturnValidationView.swift */,
 				F90FA78E14C96A04D71C1A90 /* LiquidRoot.swift */,
+				3B517935CBFA8F9727632FE3 /* LiquidRouter.swift */,
 				E29E94F5BA704C200216CD50 /* LiquidScanResultView.swift */,
 				C9D9D504B5C588341FA4F5AD /* LiquidVincularTagView.swift */,
-				E41A7180B48346C6C98BB9EB /* ReceberFlow.swift */,
 			);
 			path = Liquid;
 			sourceTree = "<group>";
@@ -448,10 +442,8 @@
 				3AC9F0992DD583F6CDE60C76 /* CheckoutViewModel.swift in Sources */,
 				D432285F9D7BBFC391CD7DF1 /* ConnectReaderView.swift in Sources */,
 				5D6BDB2C092015855ED8A32C /* ContentView.swift in Sources */,
-				8E56E5F6BBA2C5718154C8E0 /* DespacharFlow.swift in Sources */,
 				F38FC1A4AE155AD056E9B332 /* DotGrid.swift in Sources */,
 				08E5EB305BC462D804E54B32 /* Equipment.swift in Sources */,
-				D29B7A30562E541C871CE0DE /* EtiquetarFlow.swift in Sources */,
 				EC4AA9821282C23AE01B835D /* GlassSurface.swift in Sources */,
 				167854D8B69A9174711490F8 /* IdentificarFlow.swift in Sources */,
 				3A0A7C0D241C76C868613392 /* LiquidCheckoutGridView.swift in Sources */,
@@ -469,6 +461,7 @@
 				B5CB60B005D0EF80343B60DE /* LiquidQRScannerSheet.swift in Sources */,
 				6FD2ED1DB7F43622B0567CE7 /* LiquidReturnValidationView.swift in Sources */,
 				98C0CC07F3637CF069ADA970 /* LiquidRoot.swift in Sources */,
+				8F9898AB605E8F464206AEF4 /* LiquidRouter.swift in Sources */,
 				434CF652B4768AFF45D04C03 /* LiquidScanResultView.swift in Sources */,
 				D4240CDFEF996F16BAC289F5 /* LiquidTokens.swift in Sources */,
 				537B65D21BD39AB76AFABD4E /* LiquidType.swift in Sources */,
@@ -486,7 +479,6 @@
 				3BCED949C8CF5437D3100DA4 /* RFIDManager.swift in Sources */,
 				2A05F29086ED00B7BD8BBE5B /* RFIDReaderProtocol.swift in Sources */,
 				D2864B58426DB3E37C05FBBC /* ReadinessRing.swift in Sources */,
-				0D09AA220C2195CA5EF730F2 /* ReceberFlow.swift in Sources */,
 				5E8AA3066B9D8AAE3E7BA064 /* ResolvedItem.swift in Sources */,
 				F9150520B70CE583CEB624D1 /* ReturnFlowView.swift in Sources */,
 				4F4659D373898C5E52AA69B0 /* ReturnViewModel.swift in Sources */,

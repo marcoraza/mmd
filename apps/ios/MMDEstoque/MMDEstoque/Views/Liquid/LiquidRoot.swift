@@ -2,38 +2,62 @@ import SwiftUI
 
 // MARK: - AppRoute
 //
-// Contrato de navegacao da Wave 1. A Moldura e dona das rotas; cada dominio
-// pendura sua tela na rota correspondente. Hashable para o NavigationStack.
+// Contrato de navegacao: um enum so, com payload onde a tela precisa de
+// contexto. Todos os destinos sao resolvidos na raiz (stack unico), entao nao
+// ha NavigationStack aninhado. Hashable pro NavigationPath.
 
 enum AppRoute: Hashable {
-    case identificar
-    case despachar
-    case receber
-    case etiquetar
-    case config
     case conectar
+    case config
+    case projetos(ProjectFilter)        // Despachar -> .aSair, Receber -> .emCampo
+    case packing(Project)
+    case checkout(Project)
+    case retorno(Project)
+    case identificarScan
+    case scanResult(ScanResultPayload)
+    case etiquetar(tag: String?)        // tag != nil = atalho oportunista
+    case itemDetail(SerialNumber)
+    case itemLost(SerialNumber)
+}
+
+// MARK: - ScanResultPayload
+//
+// Empacota o retorno do scan pra empurrar como rota. Hashable por id (evita
+// exigir Hashable do ResolvedItem inteiro).
+
+struct ScanResultPayload: Hashable {
+    let resolved: [ResolvedItem]
+    let unresolved: [String]
+
+    static func == (lhs: ScanResultPayload, rhs: ScanResultPayload) -> Bool {
+        lhs.unresolved == rhs.unresolved && lhs.resolved.map(\.id) == rhs.resolved.map(\.id)
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(unresolved)
+        hasher.combine(resolved.map(\.id))
+    }
 }
 
 // MARK: - LiquidRoot
 //
-// Raiz do app Liquid. Banner de status do leitor sempre no topo (gate de tudo:
-// o scan so vive com leitor conectado) e um NavigationStack com a Home e as
-// rotas dos quatro jobs.
+// Raiz do app Liquid. Banner de status do leitor sempre no topo (gate de tudo)
+// e UM unico NavigationStack dirigido pelo LiquidRouter. Todos os destinos
+// vivem aqui; as telas so empurram rotas.
 
 struct LiquidRoot: View {
 
-    @EnvironmentObject private var rfid: RFIDManager
-    @State private var path = NavigationPath()
+    @EnvironmentObject private var router: LiquidRouter
 
     var body: some View {
         ZStack {
             Liquid.bg0.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                ReaderStatusBar { path.append(AppRoute.conectar) }
+                ReaderStatusBar { router.push(.conectar) }
 
-                NavigationStack(path: $path) {
-                    LiquidHome(path: $path)
+                NavigationStack(path: $router.path) {
+                    LiquidHome()
                         .navigationDestination(for: AppRoute.self) { route in
                             destination(for: route)
                         }
@@ -46,12 +70,32 @@ struct LiquidRoot: View {
     @ViewBuilder
     private func destination(for route: AppRoute) -> some View {
         switch route {
-        case .identificar: IdentificarFlow()
-        case .despachar:   DespacharFlow()
-        case .receber:     ReceberFlow()
-        case .etiquetar:   EtiquetarFlow()
-        case .config:      LiquidConfigView()
-        case .conectar:    LiquidConnectReader()
+        case .conectar:
+            LiquidConnectReader()
+        case .config:
+            LiquidConfigView()
+        case .projetos(let filter):
+            LiquidProjectsListView(filter: filter) { project in
+                router.push(filter == .emCampo ? .retorno(project) : .packing(project))
+            }
+        case .packing(let project):
+            LiquidPackingListView(project: project) {
+                router.push(.checkout(project))
+            }
+        case .checkout(let project):
+            LiquidCheckoutValidationView(project: project)
+        case .retorno(let project):
+            LiquidReturnValidationView(project: project)
+        case .identificarScan:
+            IdentificarFlow()
+        case .scanResult(let payload):
+            LiquidScanResultView(resolved: payload.resolved, unresolved: payload.unresolved)
+        case .etiquetar(let tag):
+            LiquidVincularTagView(seedTag: tag)
+        case .itemDetail(let serial):
+            LiquidItemDetailView(serial: serial)
+        case .itemLost(let serial):
+            LiquidItemLostView(serial: serial)
         }
     }
 }
@@ -104,50 +148,5 @@ struct ReaderStatusBar: View {
         case .discovering, .connecting: return Liquid.accentAmber
         case .disconnected, .error:     return Liquid.accentRed
         }
-    }
-}
-
-// MARK: - FlowStub
-//
-// Placeholder de trilha enquanto o agente de dominio nao entrega a tela real.
-// Navegavel e honesto: nomeia a trilha e marca como Wave 1. Os agentes
-// substituem o corpo do flow correspondente.
-
-struct FlowStub: View {
-
-    let title: String
-    let subtitle: String
-    let icon: String
-    let accent: Color
-
-    var body: some View {
-        ZStack {
-            CausticBackground(intensity: .work)
-
-            GlassCard {
-                VStack(spacing: Liquid.Space.lg) {
-                    Image(systemName: icon)
-                        .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(accent)
-                        .frame(width: 72, height: 72)
-                        .background(Circle().fill(accent.opacity(0.14)))
-                        .liquidGlow(accent, radius: 16, opacity: 0.3)
-
-                    Text(title)
-                        .liquidH2()
-
-                    Text(subtitle)
-                        .liquidBody()
-                        .multilineTextAlignment(.center)
-
-                    Text("Wave 1, em construção")
-                        .liquidLabel(accent)
-                }
-            }
-            .padding(Liquid.Space.xxl)
-        }
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 }

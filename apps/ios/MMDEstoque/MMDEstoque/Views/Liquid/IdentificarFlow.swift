@@ -11,10 +11,9 @@ struct IdentificarFlow: View {
 
     @EnvironmentObject private var rfid: RFIDManager
     @EnvironmentObject private var apiClient: APIClient
+    @EnvironmentObject private var router: LiquidRouter
 
     @State private var isResolving = false
-    @State private var resolvedResult: ScanResult?
-    @State private var showResult = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -39,14 +38,6 @@ struct IdentificarFlow: View {
         .navigationTitle("Identificar")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .navigationDestination(isPresented: $showResult) {
-            if let result = resolvedResult {
-                LiquidScanResultView(
-                    resolved: result.resolved,
-                    unresolved: result.unresolved
-                )
-            }
-        }
     }
 
     private func resolve() {
@@ -60,24 +51,17 @@ struct IdentificarFlow: View {
         Task {
             do {
                 let result = try await apiClient.resolveRfidTags(tags)
-                resolvedResult = ScanResult(resolved: result.resolved, unresolved: result.unresolved)
                 isResolving = false
-                showResult = true
+                router.push(.scanResult(ScanResultPayload(
+                    resolved: result.resolved,
+                    unresolved: result.unresolved
+                )))
             } catch {
                 errorMessage = error.localizedDescription
                 isResolving = false
             }
         }
     }
-}
-
-// MARK: - ScanResult
-//
-// Empacota o retorno do resolve pra empurrar de uma vez no destino.
-
-private struct ScanResult {
-    let resolved: [ResolvedItem]
-    let unresolved: [String]
 }
 
 // MARK: - NeedsReaderPrompt

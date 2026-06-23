@@ -5,7 +5,7 @@ import SwiftUI
 // Filtro da lista de projetos por trilha. Despachar olha os confirmados que
 // ainda vao a campo; Receber olha os que estao em campo voltando.
 
-enum ProjectFilter {
+enum ProjectFilter: Hashable {
     case aSair      // CONFIRMADO: prontos pra despacho
     case emCampo    // EM_CAMPO: em operacao, voltando
     case todos

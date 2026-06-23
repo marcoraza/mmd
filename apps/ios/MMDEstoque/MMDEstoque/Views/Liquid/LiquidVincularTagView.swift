@@ -13,6 +13,10 @@ import SwiftUI
 
 struct LiquidVincularTagView: View {
 
+    /// Atalho oportunista: tag desconhecida ja capturada no scan. Quando vem
+    /// preenchida, o passo 2 ja mostra a tag detectada apos achar o item.
+    var seedTag: String? = nil
+
     @EnvironmentObject private var rfid: RFIDManager
     @StateObject private var apiClient = APIClient()
 
@@ -42,7 +46,8 @@ struct LiquidVincularTagView: View {
                         onBack: {
                             rfid.clearTags()
                             withAnimation(Liquid.Motion.default) { step = .findItem }
-                        }
+                        },
+                        seedTag: seedTag
                     )
                 }
             }
@@ -330,7 +335,7 @@ struct ScanTagStep: View {
     let serial: SerialNumber
     var equipment: Equipment?
     let onBack: () -> Void
-    var debugCapturedTag: String? = nil
+    var seedTag: String? = nil
 
     @State private var capturedTag: String?
     @State private var isLinking = false
@@ -342,7 +347,7 @@ struct ScanTagStep: View {
         Group {
             if didLink {
                 successState
-            } else if rfid.isConnected || debugCapturedTag != nil {
+            } else if rfid.isConnected || seedTag != nil {
                 scanState
             } else {
                 VStack(spacing: 0) {
@@ -468,8 +473,8 @@ struct ScanTagStep: View {
     }
 
     private func startCapture() {
-        if let debugCapturedTag, capturedTag == nil {
-            capturedTag = debugCapturedTag
+        if let seedTag, capturedTag == nil {
+            capturedTag = seedTag
             return
         }
         if rfid.isConnected, !rfid.isScanning {

@@ -35,6 +35,7 @@ private struct LiquidReturnValidationContent: View {
 
     @StateObject private var viewModel: ReturnViewModel
 
+    @EnvironmentObject private var router: LiquidRouter
     @State private var showQRScanner = false
 
     init(project: Project, apiClient: APIClient, rfidManager: RFIDManager) {
@@ -180,7 +181,7 @@ private struct LiquidReturnValidationContent: View {
             Text(statusText)
                 .liquidLabel(color)
 
-            // Reavaliar manualmente um item ja lido.
+            // Reavaliar manualmente um item ja lido; buscar um que nao voltou.
             if item.isScanned {
                 Button {
                     viewModel.pendingAssessmentId = item.id
@@ -191,6 +192,18 @@ private struct LiquidReturnValidationContent: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Reavaliar condição")
+            } else {
+                Button {
+                    var serial = item.resolved.serialNumber
+                    serial.item = item.resolved.equipment
+                    router.push(.itemLost(serial))
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Liquid.accentAmber)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Buscar item que não voltou")
             }
         }
         .padding(.horizontal, Liquid.Space.lg)

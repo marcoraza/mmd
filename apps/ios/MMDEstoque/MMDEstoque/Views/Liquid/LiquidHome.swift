@@ -7,16 +7,16 @@ import SwiftUI
 
 struct LiquidHome: View {
 
-    @Binding var path: NavigationPath
+    @EnvironmentObject private var router: LiquidRouter
 
     private let jobs: [HomeJob] = [
-        HomeJob(route: .identificar, icon: "dot.radiowaves.right",
+        HomeJob(route: .identificarScan, icon: "dot.radiowaves.right",
                 title: "Identificar", subtitle: "Ler tag, ver item", accent: Liquid.accentCyan),
-        HomeJob(route: .despachar, icon: "shippingbox",
+        HomeJob(route: .projetos(.aSair), icon: "shippingbox",
                 title: "Despachar", subtitle: "Saída pra campo", accent: Liquid.accentAmber),
-        HomeJob(route: .receber, icon: "tray.and.arrow.down",
+        HomeJob(route: .projetos(.emCampo), icon: "tray.and.arrow.down",
                 title: "Receber", subtitle: "Volta do campo", accent: Liquid.accentGreen),
-        HomeJob(route: .etiquetar, icon: "tag",
+        HomeJob(route: .etiquetar(tag: nil), icon: "tag",
                 title: "Etiquetar", subtitle: "Vincular tag nova", accent: Liquid.accentViolet),
     ]
 
@@ -32,7 +32,7 @@ struct LiquidHome: View {
 
                 LazyVGrid(columns: columns, spacing: Liquid.Space.lg) {
                     ForEach(jobs) { job in
-                        HomeActionTile(job: job) { path.append(job.route) }
+                        HomeActionTile(job: job) { router.push(job.route) }
                     }
                 }
             }
@@ -57,7 +57,7 @@ struct LiquidHome: View {
 
             Spacer()
 
-            Button { path.append(AppRoute.config) } label: {
+            Button { router.push(.config) } label: {
                 Image(systemName: "gearshape")
                     .font(.system(size: 20, weight: .medium))
                     .foregroundStyle(Liquid.fg1)

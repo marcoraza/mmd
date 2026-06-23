@@ -1,5 +1,9 @@
 import SwiftUI
 
+// MARK: - PackingMode
+
+enum PackingMode { case lista, mapa }
+
 // MARK: - LiquidPackingListView
 //
 // Packing/detalhe do projeto, reskin Liquid de PackingListView. Header com
@@ -20,16 +24,27 @@ struct LiquidPackingListView: View {
     @State private var serials: [SerialNumber] = []
     @State private var isLoading = false
     @State private var error: String?
+    @State private var mode: PackingMode = .lista
 
     var body: some View {
-        ZStack {
-            CausticBackground(intensity: .work)
-
-            content
+        Group {
+            if mode == .lista {
+                ZStack {
+                    CausticBackground(intensity: .work)
+                    content
+                }
+            } else {
+                LiquidPackingMapView(project: project)
+            }
         }
-        .navigationTitle("Packing list")
+        .navigationTitle("Packing")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                LiquidPillToggle(selection: $mode, options: [(.lista, "Lista"), (.mapa, "Mapa")])
+            }
+        }
         .task { await load() }
     }
 

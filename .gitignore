@@ -33,3 +33,6 @@ node_modules/
 supabase/.temp/
 
 claude-scripts/
+
+# QA/preview temporario (local, nao commitar)
+**/__*.swift

@@ -11,20 +11,37 @@ import SwiftUI
 // EnvironmentObjects nao chegam no init, entao este wrapper le rfid/api e
 // repassa pro conteudo, que e dono do @StateObject do view model.
 
+enum CheckoutMode { case scan, conferencia }
+
 struct LiquidCheckoutValidationView: View {
 
     let project: Project
 
     @EnvironmentObject private var rfid: RFIDManager
     @EnvironmentObject private var apiClient: APIClient
+    @State private var mode: CheckoutMode = .scan
 
     var body: some View {
-        LiquidCheckoutValidationContent(
-            project: project,
-            apiClient: apiClient,
-            rfidManager: rfid
-        )
-        .environmentObject(rfid)
+        Group {
+            if mode == .scan {
+                LiquidCheckoutValidationContent(
+                    project: project,
+                    apiClient: apiClient,
+                    rfidManager: rfid
+                )
+                .environmentObject(rfid)
+            } else {
+                LiquidCheckoutGridView(project: project)
+            }
+        }
+        .navigationTitle("Check-out")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                LiquidPillToggle(selection: $mode, options: [(.scan, "Scan"), (.conferencia, "Conferência")])
+            }
+        }
     }
 }
 
@@ -66,9 +83,6 @@ private struct LiquidCheckoutValidationContent: View {
                 confirmationOverlay
             }
         }
-        .navigationTitle("Confirmar saída")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .task { await viewModel.loadPackingList() }
         .onChange(of: viewModel.checkoutComplete) { complete in
             if complete { showConfirmation = false }

@@ -75,6 +75,7 @@
 		F841F2C330A8373F326A1D71 /* CausticBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA6C2E3944AC480102EACFE1 /* CausticBackground.swift */; };
 		F8572A9458E15A7C20C7E9E7 /* LiquidItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF519E27D1D1281C508B8299 /* LiquidItemDetailView.swift */; };
 		F9150520B70CE583CEB624D1 /* ReturnFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26191A71F1771BE34A1E94E /* ReturnFlowView.swift */; };
+		FACDEB9E92DEBEBB4ED4D49E /* LiquidItemLostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95853E0984BED96A8AD15E91 /* LiquidItemLostView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -112,6 +113,7 @@
 		87370481D0344955AD756252 /* LiquidCheckoutGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidCheckoutGridView.swift; sourceTree = "<group>"; };
 		91C280E45EF7DE19F6A70637 /* LiquidPackingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidPackingListView.swift; sourceTree = "<group>"; };
 		94F6B766C87B3CAD8FC1BDA7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		95853E0984BED96A8AD15E91 /* LiquidItemLostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidItemLostView.swift; sourceTree = "<group>"; };
 		9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectReaderView.swift; sourceTree = "<group>"; };
 		9E012404B07763AD5EDFB000 /* SerialNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialNumber.swift; sourceTree = "<group>"; };
 		A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
@@ -188,6 +190,7 @@
 				3364F435E0AD7CAE925AFDF4 /* LiquidConnectReader.swift */,
 				0256BEA6E7FDE5B35BCA99DC /* LiquidHome.swift */,
 				EF519E27D1D1281C508B8299 /* LiquidItemDetailView.swift */,
+				95853E0984BED96A8AD15E91 /* LiquidItemLostView.swift */,
 				91C280E45EF7DE19F6A70637 /* LiquidPackingListView.swift */,
 				D1C23407FE45571DFB9F2F4A /* LiquidPackingMapView.swift */,
 				4C04051CAF01598328A91F1E /* LiquidProjectsListView.swift */,
@@ -458,6 +461,7 @@
 				497A60E3B584853374BD94EE /* LiquidConnectReader.swift in Sources */,
 				9857C64EFE0961251A12F8E7 /* LiquidHome.swift in Sources */,
 				F8572A9458E15A7C20C7E9E7 /* LiquidItemDetailView.swift in Sources */,
+				FACDEB9E92DEBEBB4ED4D49E /* LiquidItemLostView.swift in Sources */,
 				7C9B9D842E75998D23946F64 /* LiquidPackingListView.swift in Sources */,
 				2DC085420FD63A7AB37626F7 /* LiquidPackingMapView.swift in Sources */,
 				9B14EC641849C9DBEC1A22DA /* LiquidPillToggle.swift in Sources */,

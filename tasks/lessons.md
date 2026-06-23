@@ -33,3 +33,13 @@
   - Acessibilidade: aria-label, contraste, hit area >=40px
   - Copy pt-BR, REGRA ZERO (zero em-dash)
 - Ao final de cada tela, dar nota 0-10 e listar o que falta pra 10 antes de seguir.
+
+## 2026-06-23
+
+- Para o PRD MAR-171, `docs/mar-171-agent-brief.md` é a fonte curta atual. Referências antigas a `design_handoff_estoque_mmd/` são históricas. O design atual vive em `apps/web/public/handoff/`, `apps/web/src/components/mmd/Primitives.tsx`, `apps/web/src/app/globals.css` e nas evidências por issue.
+- Não ressuscitar cabos por lote como operação futura. Cabos são unit-only e lotes são legado.
+- Não tratar auth como etapa posterior ao MVP. Dados reais exigem Supabase Auth, perfis, RLS e auditoria antes de produção real.
+- Frente de UI deve adaptar `apps/web` e `apps/ios` existentes. Prints, imagegen e screenshots são evidência e referência, não produto paralelo.
+- Planilha real de evento não é packing puro. Importação precisa separar evento, financeiro, serviço, equipamento, candidato de catálogo e pendência de revisão antes de escrever no Supabase.
+- Evento cancelado deve entrar como histórico administrativo, sem packing e sem alimentar sugestão de equipamento.
+- Quando uma planilha usa dia/mês sem ano, o importador deve buscar o ano da aba ou do arquivo antes de cair no ano atual.

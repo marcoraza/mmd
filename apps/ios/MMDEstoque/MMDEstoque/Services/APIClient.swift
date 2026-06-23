@@ -17,7 +17,7 @@ enum APIError: LocalizedError {
         case .notConfigured:
             return "Supabase nao configurado. Acesse Ajustes para inserir URL e chave."
         case .httpError(let code, let body):
-            let detail = body.map { " — \($0)" } ?? ""
+            let detail = body.map { ": \($0)" } ?? ""
             return "Erro HTTP \(code)\(detail)"
         case .decodingError(let error):
             return "Falha ao decodificar resposta: \(error.localizedDescription)"
@@ -236,6 +236,56 @@ final class APIClient: ObservableObject {
         ]
         let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
         return try await perform(request)
+    }
+
+    // MARK: - Inventory Snapshot (Home)
+
+    /// Linha enxuta de um serial pra agregacao na Home: status, desgaste e se
+    /// tem tag. Decode tolerante de proposito: status fora do enum vira nil (a
+    /// linha e ignorada na agregacao) e desgaste ausente cai pro default 3.
+    /// Assim uma unica linha suja nao derruba os contadores da tela principal.
+    struct SerialSnapshotRow: Decodable {
+        let status: StatusSerial?
+        let desgaste: Int
+        let tagRfid: String?
+
+        enum CodingKeys: String, CodingKey {
+            case status
+            case desgaste
+            case tagRfid = "tag_rfid"
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            let rawStatus = try c.decodeIfPresent(String.self, forKey: .status)
+            self.status = rawStatus.flatMap(StatusSerial.init(rawValue:))
+            self.desgaste = (try? c.decode(Int.self, forKey: .desgaste)) ?? 3
+            self.tagRfid = try c.decodeIfPresent(String.self, forKey: .tagRfid)
+        }
+    }
+
+    /// Snapshot enxuto de todos os seriais (so status, desgaste e tag) pros
+    /// contadores e alertas da Home. Pagina via Range pra furar o teto de
+    /// linhas do PostgREST (Supabase corta em 1000 por resposta): sem isso, um
+    /// estoque acima do teto faria os contadores mentirem pra menos.
+    func fetchSerialSnapshot() async throws -> [SerialSnapshotRow] {
+        let pageSize = 1000
+        var all: [SerialSnapshotRow] = []
+        var offset = 0
+
+        while true {
+            var request = try makeRequest(
+                path: "/rest/v1/serial_numbers",
+                queryItems: [URLQueryItem(name: "select", value: "status,desgaste,tag_rfid")]
+            )
+            request.setValue("\(offset)-\(offset + pageSize - 1)", forHTTPHeaderField: "Range")
+            let page: [SerialSnapshotRow] = try await perform(request)
+            all.append(contentsOf: page)
+            if page.count < pageSize { break }
+            offset += pageSize
+        }
+
+        return all
     }
 
     // MARK: - Checkout Operations

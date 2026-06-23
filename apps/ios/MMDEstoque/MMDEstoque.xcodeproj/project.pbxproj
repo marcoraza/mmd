@@ -42,6 +42,7 @@
 		6FD2ED1DB7F43622B0567CE7 /* LiquidReturnValidationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F031040DF7F5CBFC1BE8ECB /* LiquidReturnValidationView.swift */; };
 		71836D6C1DC40B8FF2728E20 /* LiquidProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C04051CAF01598328A91F1E /* LiquidProjectsListView.swift */; };
 		73132BD5A735EE0E8F9A9FAC /* MMDEstoqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA8B1AC5E5ADEBDC3055D61D /* MMDEstoqueApp.swift */; };
+		743C6C4DCB98B3DCA310A10E /* LiquidHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 719EDC67268900320B934F5A /* LiquidHomeViewModel.swift */; };
 		76A043ADBA7B6DBA3A248220 /* SpaceGrotesk-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */; };
 		7C9B9D842E75998D23946F64 /* LiquidPackingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C280E45EF7DE19F6A70637 /* LiquidPackingListView.swift */; };
 		8095731D9E3391AF2659C8ED /* InterTight-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2064F95FE826DBEFC1C79CBD /* InterTight-VF.ttf */; };
@@ -106,6 +107,7 @@
 		69E2603B965BC0BCF3345FE4 /* WearBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearBar.swift; sourceTree = "<group>"; };
 		6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Doto[ROND,wght].ttf"; sourceTree = "<group>"; };
 		6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		719EDC67268900320B934F5A /* LiquidHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidHomeViewModel.swift; sourceTree = "<group>"; };
 		7D69133C4625DC54D3FECAB7 /* LiquidType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidType.swift; sourceTree = "<group>"; };
 		87370481D0344955AD756252 /* LiquidCheckoutGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidCheckoutGridView.swift; sourceTree = "<group>"; };
 		91C280E45EF7DE19F6A70637 /* LiquidPackingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidPackingListView.swift; sourceTree = "<group>"; };
@@ -211,6 +213,7 @@
 			isa = PBXGroup;
 			children = (
 				C261ACAAFA0E12EA5E39371C /* CheckoutViewModel.swift */,
+				719EDC67268900320B934F5A /* LiquidHomeViewModel.swift */,
 				AA85700566F16313CA24DE15 /* ReturnViewModel.swift */,
 			);
 			path = ViewModels;
@@ -452,6 +455,7 @@
 				614427D3028A7DDBF78D1716 /* LiquidConfigView.swift in Sources */,
 				497A60E3B584853374BD94EE /* LiquidConnectReader.swift in Sources */,
 				9857C64EFE0961251A12F8E7 /* LiquidHome.swift in Sources */,
+				743C6C4DCB98B3DCA310A10E /* LiquidHomeViewModel.swift in Sources */,
 				F8572A9458E15A7C20C7E9E7 /* LiquidItemDetailView.swift in Sources */,
 				FACDEB9E92DEBEBB4ED4D49E /* LiquidItemLostView.swift in Sources */,
 				7C9B9D842E75998D23946F64 /* LiquidPackingListView.swift in Sources */,

@@ -322,7 +322,7 @@ private struct FindSerialStep: View {
 // ScanEngine (hero, gated por leitor) e vincula. Quando o leitor esta off,
 // cai pro NeedsReaderPrompt compartilhado.
 
-private struct ScanTagStep: View {
+struct ScanTagStep: View {
 
     @EnvironmentObject private var rfid: RFIDManager
     @ObservedObject var apiClient: APIClient
@@ -330,17 +330,19 @@ private struct ScanTagStep: View {
     let serial: SerialNumber
     var equipment: Equipment?
     let onBack: () -> Void
+    var debugCapturedTag: String? = nil
 
     @State private var capturedTag: String?
     @State private var isLinking = false
     @State private var linkError: String?
     @State private var didLink = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
             if didLink {
                 successState
-            } else if rfid.isConnected {
+            } else if rfid.isConnected || debugCapturedTag != nil {
                 scanState
             } else {
                 VStack(spacing: 0) {
@@ -354,48 +356,124 @@ private struct ScanTagStep: View {
     // MARK: Scan state
 
     private var scanState: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: Liquid.Space.lg) {
             selectedSerialCard
+            connector
+            Spacer(minLength: Liquid.Space.lg)
 
-            ScanEngine(
-                heroUnit: "TAG NOVA",
-                emptyHint: "Aproxime a tag virgem e pressione escanear",
-                primaryAction: ScanAction(
-                    label: capturedTag == nil ? "Capturar" : "Confirmar vínculo",
-                    isBusy: isLinking,
-                    isEnabled: scanActionEnabled,
-                    handler: handlePrimaryAction
-                ),
-                errorMessage: linkError
-            )
-            .overlay(alignment: .top) {
-                if let capturedTag {
-                    capturedTagBanner(capturedTag)
-                        .padding(.horizontal, Liquid.Space.lg)
-                        .padding(.top, Liquid.Space.sm)
-                }
+            if let capturedTag {
+                tagDetectedCard(capturedTag)
+            } else {
+                TagScanRing(reduceMotion: reduceMotion)
             }
+
+            if let linkError {
+                Text(linkError)
+                    .font(.liquidMono(11))
+                    .foregroundStyle(Liquid.accentRed)
+                    .multilineTextAlignment(.center)
+            }
+
+            Spacer(minLength: Liquid.Space.lg)
+            ctaRow
         }
+        .padding(.horizontal, Liquid.Space.lg)
+        .padding(.bottom, Liquid.Space.lg)
+        .onAppear(perform: startCapture)
         .onChange(of: rfid.scannedTags) { _ in
-            // Captura automatica da primeira tag lida enquanto nenhuma foi fixada.
             if capturedTag == nil, let latest = rfid.scannedTags.last {
                 withAnimation(Liquid.Motion.fast) { capturedTag = latest }
             }
         }
     }
 
-    private var scanActionEnabled: Bool {
-        if capturedTag == nil {
-            return !rfid.scannedTags.isEmpty
+    // Conector visual serial <-> tag.
+    private var connector: some View {
+        VStack(spacing: 4) {
+            Rectangle()
+                .fill(LinearGradient(colors: [Liquid.accentCyan, .clear], startPoint: .top, endPoint: .bottom))
+                .frame(width: 2, height: 16)
+            Text("vincular").liquidLabel(Liquid.fg3)
+            Rectangle()
+                .fill(LinearGradient(colors: [.clear, Liquid.accentViolet], startPoint: .top, endPoint: .bottom))
+                .frame(width: 2, height: 16)
         }
-        return !isLinking
     }
 
-    private func handlePrimaryAction() {
-        if capturedTag == nil {
-            capturedTag = rfid.scannedTags.last
-        } else {
-            Task { await linkTag() }
+    private func tagDetectedCard(_ tag: String) -> some View {
+        VStack(alignment: .leading, spacing: Liquid.Space.sm) {
+            HStack(spacing: Liquid.Space.md) {
+                Image(systemName: "wave.3.right")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Liquid.accentCyan)
+                    .frame(width: 32, height: 32)
+                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Liquid.accentCyan.opacity(0.2)))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Tag detectada").liquidLabel()
+                    Text(tag).liquidMonoData(12, color: Liquid.fg0).lineLimit(1).truncationMode(.middle)
+                }
+                Spacer()
+                Circle().fill(Liquid.accentGreen).frame(width: 8, height: 8)
+                    .liquidGlow(Liquid.accentGreen, radius: 6, opacity: 0.8)
+            }
+            Text("EPC Gen 2, sinal -42 dBm, livre pra vincular")
+                .liquidSmall().foregroundStyle(Liquid.fg2)
+        }
+        .padding(Liquid.Space.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                .fill(Liquid.accentCyan.opacity(0.10))
+                .overlay(RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                    .strokeBorder(Liquid.accentCyan.opacity(0.4), lineWidth: 1))
+        )
+    }
+
+    private var ctaRow: some View {
+        HStack(spacing: Liquid.Space.md) {
+            Button {
+                withAnimation(Liquid.Motion.fast) { capturedTag = nil; linkError = nil }
+                rfid.clearTags()
+                if rfid.isConnected { rfid.startInventory() }
+            } label: {
+                Text("Ler outra")
+                    .font(.liquidMono(13, weight: .medium)).textCase(.uppercase).tracking(1.0)
+                    .foregroundStyle(Liquid.fg1)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Liquid.Space.lg)
+                    .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                Task { await linkTag() }
+            } label: {
+                HStack(spacing: Liquid.Space.sm) {
+                    if isLinking { ProgressView().controlSize(.small).tint(Liquid.bg0) }
+                    Text("Confirmar vínculo")
+                        .font(.liquidMono(13, weight: .medium)).textCase(.uppercase).tracking(1.0)
+                }
+                .foregroundStyle(capturedTag != nil ? Liquid.bg0 : Liquid.fg3)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Liquid.Space.lg)
+                .background(
+                    RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                        .fill(capturedTag != nil ? Liquid.accentCyan : Liquid.glassBg)
+                        .liquidGlow(capturedTag != nil ? Liquid.accentCyan : .clear, radius: 14, opacity: 0.4)
+                )
+            }
+            .buttonStyle(.plain)
+            .disabled(capturedTag == nil || isLinking)
+        }
+    }
+
+    private func startCapture() {
+        if let debugCapturedTag, capturedTag == nil {
+            capturedTag = debugCapturedTag
+            return
+        }
+        if rfid.isConnected, !rfid.isScanning {
+            rfid.startInventory()
         }
     }
 
@@ -426,43 +504,6 @@ private struct ScanTagStep: View {
         }
         .padding(.horizontal, Liquid.Space.lg)
         .padding(.top, Liquid.Space.lg)
-    }
-
-    // MARK: Captured tag banner
-
-    private func capturedTagBanner(_ tag: String) -> some View {
-        HStack(spacing: Liquid.Space.md) {
-            Circle()
-                .fill(Liquid.accentGreen)
-                .frame(width: 7, height: 7)
-                .liquidGlow(Liquid.accentGreen, radius: 6, opacity: 0.7)
-
-            VStack(alignment: .leading, spacing: Liquid.Space.xxs) {
-                Text("TAG DETECTADA")
-                    .liquidLabel(Liquid.accentGreen)
-                Text(tag)
-                    .liquidMonoData(12, color: Liquid.fg1)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-
-            Spacer()
-
-            Button {
-                withAnimation(Liquid.Motion.fast) {
-                    capturedTag = nil
-                    linkError = nil
-                }
-                rfid.clearTags()
-            } label: {
-                Text("Ler outra")
-                    .liquidLabel(Liquid.fg2)
-            }
-            .accessibilityLabel("Ler outra tag")
-        }
-        .padding(.horizontal, Liquid.Space.lg)
-        .padding(.vertical, Liquid.Space.md)
-        .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
     }
 
     // MARK: Success state
@@ -543,6 +584,50 @@ private struct ScanTagStep: View {
         didLink = false
         rfid.clearTags()
         onBack()
+    }
+}
+
+// MARK: - TagScanRing
+//
+// Ring de captura da tag com o pulse do mockup (3 aneis crescendo e sumindo,
+// stagger 0.3s). Respeita Reduzir Movimento.
+
+private struct TagScanRing: View {
+    let reduceMotion: Bool
+    @State private var pulse = false
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<3, id: \.self) { i in
+                Circle()
+                    .strokeBorder(Liquid.accentCyan.opacity(0.4 - Double(i) * 0.1), lineWidth: 1)
+                    .frame(width: 220, height: 220)
+                    .scaleEffect(pulse ? 1.15 : 0.7)
+                    .opacity(pulse ? 0 : 0.8)
+                    .animation(
+                        reduceMotion ? nil :
+                            .easeOut(duration: 2).repeatForever(autoreverses: false).delay(Double(i) * 0.3),
+                        value: pulse
+                    )
+            }
+
+            Circle()
+                .fill(RadialGradient(
+                    colors: [Liquid.accentCyan.opacity(0.3), Liquid.accentCyan.opacity(0.08)],
+                    center: .center, startRadius: 0, endRadius: 58))
+                .overlay(Circle().strokeBorder(Liquid.accentCyan.opacity(0.6), lineWidth: 1.5))
+                .frame(width: 116, height: 116)
+                .overlay(
+                    VStack(spacing: Liquid.Space.sm) {
+                        Image(systemName: "wave.3.right")
+                            .font(.system(size: 30, weight: .medium))
+                            .foregroundStyle(Liquid.accentCyan)
+                        Text("aproxime a tag").liquidLabel(Liquid.fg2)
+                    }
+                )
+        }
+        .frame(width: 220, height: 220)
+        .onAppear { if !reduceMotion { pulse = true } }
     }
 }
 

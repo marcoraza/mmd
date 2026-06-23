@@ -360,6 +360,22 @@ final class APIClient: ObservableObject {
         logger.info("Project \(projectId) status updated to \(status.rawValue)")
     }
 
+    /// Vincula uma tag RFID a um serial: PATCH em `serial_numbers` gravando
+    /// `tag_rfid`. Espelha `updateProjectStatus`. Backend da trilha Etiquetar.
+    func linkTag(serialId: UUID, tagRfid: String) async throws {
+        let body = try encoder.encode(["tag_rfid": tagRfid])
+        let request = try makeRequest(
+            path: "/rest/v1/serial_numbers",
+            method: "PATCH",
+            queryItems: [URLQueryItem(name: "id", value: "eq.\(serialId.uuidString)")],
+            body: body,
+            additionalHeaders: ["Prefer": "return=minimal"]
+        )
+        try await performVoid(request)
+
+        logger.info("Serial \(serialId) linked to tag \(tagRfid)")
+    }
+
     // MARK: - Private Helpers
 
     /// Build an authenticated URLRequest for the Supabase REST API.

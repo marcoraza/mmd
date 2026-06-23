@@ -31,3 +31,5 @@ node_modules/
 
 # Supabase CLI temp
 supabase/.temp/
+
+claude-scripts/

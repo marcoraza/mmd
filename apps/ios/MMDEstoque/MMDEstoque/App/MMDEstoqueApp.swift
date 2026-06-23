@@ -9,7 +9,7 @@ struct MMDEstoqueApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LiquidRoot()
                 .environmentObject(rfidManager)
                 .environmentObject(apiClient)
         }

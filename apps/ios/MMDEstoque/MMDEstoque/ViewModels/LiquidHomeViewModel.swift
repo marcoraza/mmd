@@ -27,32 +27,16 @@ struct StatusCounts {
     }
 }
 
-// MARK: - HomeAlert
-//
-// Item acionavel da fila "precisa da sua atencao". Cada alerta empurra a tela
-// que resolve o problema. So entra aqui o que tem destino claro e nao e mero
-// contador (esses ficam na linha de status).
-
-struct HomeAlert: Identifiable {
-    let id = UUID()
-    let icon: String
-    let color: Color
-    let title: String
-    let detail: String
-    let route: AppRoute
-}
-
 // MARK: - LiquidHomeViewModel
 //
-// Alimenta o cockpit da Home com dado real do Supabase: proximo evento a
-// despachar, contadores de status do estoque e a fila de atencao derivada.
+// Alimenta a Home com dado real do Supabase: proximo evento a despachar e a
+// prontidao do estoque (fracao disponivel) que abastece o ring do hero.
 
 @MainActor
 final class LiquidHomeViewModel: ObservableObject {
 
     @Published private(set) var proximoEvento: Project?
     @Published private(set) var counts = StatusCounts.zero
-    @Published private(set) var alertas: [HomeAlert] = []
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var carregou = false
@@ -68,14 +52,12 @@ final class LiquidHomeViewModel: ObservableObject {
         errorMessage = nil
         do {
             async let confirmados = apiClient.fetchProjects(status: [.confirmado])
-            async let emCampo = apiClient.fetchProjects(status: [.emCampo])
             async let snapshot = apiClient.fetchSerialSnapshot()
 
-            let (conf, campo, snap) = try await (confirmados, emCampo, snapshot)
+            let (conf, snap) = try await (confirmados, snapshot)
 
             proximoEvento = pickProximo(conf)
             counts = aggregate(snap)
-            alertas = buildAlertas(snapshot: snap, emCampo: campo)
             carregou = true
         } catch {
             errorMessage = (error as? APIError)?.errorDescription ?? error.localizedDescription
@@ -116,37 +98,5 @@ final class LiquidHomeViewModel: ObservableObject {
             if r.tagRfid?.isEmpty ?? true { c.semTag += 1 }
         }
         return c
-    }
-
-    private func buildAlertas(snapshot rows: [APIClient.SerialSnapshotRow], emCampo projetos: [Project]) -> [HomeAlert] {
-        var out: [HomeAlert] = []
-
-        let semTag = rows.filter {
-            guard let s = $0.status, operacional(s) else { return false }
-            return $0.tagRfid?.isEmpty ?? true
-        }.count
-        if semTag > 0 {
-            out.append(HomeAlert(
-                icon: "tag.slash",
-                color: Liquid.accentViolet,
-                title: "\(semTag) \(semTag == 1 ? "item sem tag" : "itens sem tag") RFID",
-                detail: "Vincular pra rastrear",
-                route: .etiquetar(tag: nil)
-            ))
-        }
-
-        let hoje = Calendar.current.startOfDay(for: Date())
-        let vencidos = projetos.filter { ($0.dataFimDate ?? .distantFuture) < hoje }.count
-        if vencidos > 0 {
-            out.append(HomeAlert(
-                icon: "clock.badge.exclamationmark",
-                color: Liquid.accentAmber,
-                title: "\(vencidos) \(vencidos == 1 ? "projeto vencido" : "projetos vencidos") em campo",
-                detail: "Confirmar a volta do campo",
-                route: .projetos(.emCampo)
-            ))
-        }
-
-        return out
     }
 }

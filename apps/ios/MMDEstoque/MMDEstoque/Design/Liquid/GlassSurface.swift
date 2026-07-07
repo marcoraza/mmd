@@ -109,6 +109,29 @@ struct PanelBackground: View {
     }
 }
 
+// MARK: - PressableCardStyle
+//
+// Feedback tatil de card tocavel: encolhe levemente e clareia a superficie
+// enquanto pressionado. Substitui o .plain nos cards de navegacao, que hoje
+// nao dao resposta nenhuma ao toque.
+
+struct PressableCardStyle: ButtonStyle {
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .overlay(
+                RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+                    .fill(Color.white.opacity(configuration.isPressed ? 0.05 : 0))
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(Liquid.Motion.fast, value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == PressableCardStyle {
+    static var pressableCard: PressableCardStyle { PressableCardStyle() }
+}
+
 // MARK: - View Extension
 
 extension View {

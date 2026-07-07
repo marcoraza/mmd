@@ -24,22 +24,45 @@ struct LiquidHome: View {
 private struct LiquidHomeContent: View {
 
     @EnvironmentObject private var router: LiquidRouter
+    @EnvironmentObject private var rfid: RFIDManager
     @StateObject private var vm: LiquidHomeViewModel
 
     init(apiClient: APIClient) {
         _vm = StateObject(wrappedValue: LiquidHomeViewModel(apiClient: apiClient))
     }
 
-    private let jobs: [HomeJob] = [
-        HomeJob(route: .identificarScan, icon: "dot.radiowaves.right",
-                title: "Identificar", subtitle: "Ler tag, ver item", accent: Liquid.accentCyan),
-        HomeJob(route: .projetos(.aSair), icon: "shippingbox",
-                title: "Despachar", subtitle: "Saída pra campo", accent: Liquid.accentAmber),
-        HomeJob(route: .projetos(.emCampo), icon: "tray.and.arrow.down",
-                title: "Receber", subtitle: "Volta do campo", accent: Liquid.accentGreen),
-        HomeJob(route: .etiquetar(tag: nil), icon: "tag",
-                title: "Etiquetar", subtitle: "Vincular tag nova", accent: Liquid.accentViolet),
-    ]
+    // Os tiles carregam dado vivo: Receber mostra quantos itens estao em
+    // campo, Etiquetar quantos ainda nao tem tag, Identificar o estado do
+    // leitor. Despachar fica limpo (o hero ja carrega o proximo evento).
+    private var jobs: [HomeJob] {
+        [
+            HomeJob(route: .identificarScan, icon: "dot.radiowaves.right",
+                    title: "Identificar", subtitle: "Ler tag, ver item",
+                    accent: Liquid.accentCyan, meta: readerMeta),
+            HomeJob(route: .projetos(.aSair), icon: "shippingbox",
+                    title: "Despachar", subtitle: "Saída pra campo",
+                    accent: Liquid.accentAmber, meta: nil),
+            HomeJob(route: .projetos(.emCampo), icon: "tray.and.arrow.down",
+                    title: "Receber", subtitle: "Volta do campo",
+                    accent: Liquid.accentGreen,
+                    meta: countMeta(vm.counts.emCampo, dot: Liquid.accentAmber)),
+            HomeJob(route: .etiquetar(tag: nil), icon: "tag",
+                    title: "Etiquetar", subtitle: "Vincular tag nova",
+                    accent: Liquid.accentViolet,
+                    meta: countMeta(vm.counts.semTag, dot: Liquid.fg2)),
+        ]
+    }
+
+    private var readerMeta: HomeJobMeta? {
+        guard let reader = rfid.connectionState.readerInfo else { return nil }
+        let battery = reader.batteryLevel.map { " \($0)%" } ?? ""
+        return HomeJobMeta(text: "Leitor\(battery)", dot: Liquid.accentGreen)
+    }
+
+    private func countMeta(_ count: Int, dot: Color) -> HomeJobMeta? {
+        guard vm.carregou, count > 0 else { return nil }
+        return HomeJobMeta(text: "\(count)", dot: dot)
+    }
 
     private let columns = [
         GridItem(.flexible(), spacing: Liquid.Space.md),
@@ -57,6 +80,10 @@ private struct LiquidHomeContent: View {
                     isLoading: vm.isLoading && !vm.carregou
                 ) {
                     if let evento = vm.proximoEvento { router.push(.packing(evento)) }
+                }
+
+                if vm.carregou, vm.counts.total > 0 {
+                    inventoryStrip
                 }
 
                 if let erro = vm.errorMessage {
@@ -126,18 +153,72 @@ private struct LiquidHomeContent: View {
         .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 
+    // MARK: Inventory Strip
+    //
+    // Regua compacta do estoque: numeros mono grandes, labels sans pequenos,
+    // dot de status. Expoe os contadores que o load ja traz do Supabase.
+
+    private var inventoryStrip: some View {
+        HStack(spacing: 0) {
+            inventoryStat(vm.counts.disponivel, "disponível",
+                          vm.counts.disponivel > 0 ? Liquid.accentGreen : Liquid.fg3)
+            stripDivider
+            inventoryStat(vm.counts.emCampo, "em campo",
+                          vm.counts.emCampo > 0 ? Liquid.accentAmber : Liquid.fg3)
+            stripDivider
+            inventoryStat(vm.counts.manutencao, "manutenção",
+                          vm.counts.manutencao > 0 ? Liquid.accentRed : Liquid.fg3)
+        }
+        .padding(.vertical, Liquid.Space.lg)
+        .frame(maxWidth: .infinity)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
+    }
+
+    private var stripDivider: some View {
+        Rectangle()
+            .fill(Liquid.hairline)
+            .frame(width: 1, height: 32)
+    }
+
+    private func inventoryStat(_ value: Int, _ label: String, _ dot: Color) -> some View {
+        VStack(spacing: 2) {
+            Text("\(value)")
+                .font(.liquidMono(19, weight: .medium))
+                .foregroundStyle(Liquid.fg0)
+                .contentTransition(.numericText())
+
+            HStack(spacing: Liquid.Space.xs) {
+                Circle().fill(dot).frame(width: 5, height: 5)
+                Text(label)
+                    .font(.liquidSans(11, weight: .medium))
+                    .foregroundStyle(Liquid.fg2)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+    }
+
     // MARK: Jobs
 
     private var jobsSection: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.lg) {
-            Text("Ações")
-                .liquidSection()
+            sectionHeader("Ações")
 
             LazyVGrid(columns: columns, spacing: Liquid.Space.md) {
                 ForEach(jobs) { job in
                     HomeActionTile(job: job) { router.push(job.route) }
                 }
             }
+        }
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        HStack(spacing: Liquid.Space.sm) {
+            RoundedRectangle(cornerRadius: 1.5)
+                .fill(Liquid.accentRed)
+                .frame(width: 3, height: 12)
+            Text(title)
+                .liquidSection(Liquid.fg1)
         }
     }
 }
@@ -168,16 +249,18 @@ struct HomeHeroCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .panelSurface(cornerRadius: Liquid.Radius.lg)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressableCard)
         .disabled(evento == nil)
         .accessibilityLabel(evento.map { "Próximo evento: \($0.nome), abrir packing" } ?? "Nenhum evento confirmado")
     }
 
     private func eventoContent(_ evento: Project) -> some View {
         VStack(alignment: .leading, spacing: Liquid.Space.lg) {
-            HStack {
-                Text("Próximo evento")
-                    .liquidSection()
+            HStack(spacing: Liquid.Space.sm) {
+                Text("PRÓXIMO EVENTO")
+                    .font(.liquidMono(10, weight: .medium))
+                    .tracking(1.2)
+                    .foregroundStyle(Liquid.fg2)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))
@@ -187,16 +270,17 @@ struct HomeHeroCard: View {
             HStack(alignment: .center, spacing: Liquid.Space.xl) {
                 VStack(alignment: .leading, spacing: Liquid.Space.xs) {
                     Text(evento.nome)
-                        .liquidCardTitle()
+                        .font(.liquidSans(24, weight: .semibold))
+                        .tracking(-0.5)
+                        .foregroundStyle(Liquid.fg0)
                         .lineLimit(2)
+                        .minimumScaleFactor(0.8)
 
                     if let cliente = evento.cliente {
                         Text(cliente)
-                            .font(.liquidSans(13, weight: .regular))
+                            .font(.liquidSans(14, weight: .regular))
                             .foregroundStyle(Liquid.fg2)
                     }
-
-                    metaLine(evento)
                 }
 
                 Spacer(minLength: Liquid.Space.md)
@@ -204,10 +288,37 @@ struct HomeHeroCard: View {
                 ReadinessGauge(
                     progress: isLoading ? 0 : prontidao,
                     state: isLoading ? .partial : nil,
-                    diameter: 72,
+                    diameter: 76,
                     stroke: 6,
                     glow: false
                 )
+            }
+
+            heroFooter(evento)
+        }
+    }
+
+    /// Rodape de dados do hero: hairline + metadados mono lado a lado.
+    private func heroFooter(_ evento: Project) -> some View {
+        VStack(alignment: .leading, spacing: Liquid.Space.md) {
+            Rectangle()
+                .fill(Liquid.hairline)
+                .frame(height: 1)
+
+            HStack(spacing: Liquid.Space.lg) {
+                if let data = evento.dataInicioFormatado {
+                    Label(data, systemImage: "calendar")
+                        .liquidMonoData(11, color: Liquid.fg1)
+                        .lineLimit(1)
+                        .layoutPriority(1)
+                }
+                if let local = evento.local {
+                    Label(local, systemImage: "mappin.and.ellipse")
+                        .liquidMonoData(11, color: Liquid.fg2)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                Spacer(minLength: 0)
             }
         }
     }
@@ -234,25 +345,15 @@ struct HomeHeroCard: View {
         }
     }
 
-    private func metaLine(_ evento: Project) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            if let data = evento.dataInicioFormatado {
-                Label(data, systemImage: "calendar")
-                    .liquidMonoData(11, color: Liquid.fg2)
-                    .lineLimit(1)
-            }
-            if let local = evento.local {
-                Label(local, systemImage: "mappin.and.ellipse")
-                    .liquidMonoData(11, color: Liquid.fg2)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-            }
-        }
-        .padding(.top, Liquid.Space.xs)
-    }
 }
 
 // MARK: - HomeJob
+
+/// Dado vivo no canto do tile: contagem ou estado, com dot de cor funcional.
+struct HomeJobMeta: Equatable {
+    let text: String
+    let dot: Color
+}
 
 struct HomeJob: Identifiable {
     let route: AppRoute
@@ -260,6 +361,7 @@ struct HomeJob: Identifiable {
     let title: String
     let subtitle: String
     let accent: Color
+    var meta: HomeJobMeta? = nil
 
     var id: AppRoute { route }
 }
@@ -277,14 +379,30 @@ struct HomeActionTile: View {
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: Liquid.Space.md) {
-                Image(systemName: job.icon)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundStyle(Liquid.fg0)
-                    .frame(width: 44, height: 44)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Liquid.bg2)
-                    )
+                HStack(alignment: .top) {
+                    Image(systemName: job.icon)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Liquid.fg0)
+                        .frame(width: 44, height: 44)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Liquid.bg2)
+                        )
+
+                    Spacer(minLength: 0)
+
+                    if let meta = job.meta {
+                        HStack(spacing: Liquid.Space.xs) {
+                            Circle().fill(meta.dot).frame(width: 5, height: 5)
+                            Text(meta.text)
+                                .font(.liquidMono(11, weight: .medium))
+                                .foregroundStyle(Liquid.fg1)
+                        }
+                        .padding(.horizontal, Liquid.Space.sm)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(Liquid.bg2))
+                    }
+                }
 
                 Spacer(minLength: Liquid.Space.md)
 
@@ -303,7 +421,7 @@ struct HomeActionTile: View {
             .padding(Liquid.Space.lg)
             .panelSurface(cornerRadius: Liquid.Radius.lg)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressableCard)
         .accessibilityLabel("\(job.title): \(job.subtitle)")
     }
 }

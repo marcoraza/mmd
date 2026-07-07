@@ -136,9 +136,12 @@ struct ReadinessGauge: View {
         )
         .overlay {
             VStack(spacing: 2) {
-                Text("\(Int(clamped * 100))")
+                (Text("\(Int(clamped * 100))")
                     .font(.liquidMono(diameter * 0.26, weight: .medium))
-                    .foregroundStyle(Liquid.fg0)
+                    .foregroundColor(Liquid.fg0)
+                    + Text("%")
+                    .font(.liquidMono(diameter * 0.15, weight: .medium))
+                    .foregroundColor(Liquid.fg2))
                     .contentTransition(.numericText())
 
                 if let caption {

@@ -109,6 +109,39 @@ struct PanelBackground: View {
     }
 }
 
+// MARK: - TechnicalGridCanvas
+//
+// Canvas do app nas telas sem caustic: bg0 + grade de pontos quase
+// imperceptivel, textura de blueprint tecnico. Substitui a atmosfera que os
+// degrades davam sem reintroduzir cor: materialidade vem da textura, a
+// profundidade vem da luz de aresta dos paineis. Desenho estatico, barato.
+
+struct TechnicalGridCanvas: View {
+
+    var body: some View {
+        ZStack {
+            Liquid.bg0
+
+            Canvas { context, size in
+                let step: CGFloat = 22
+                let dot: CGFloat = 1.0
+                var y: CGFloat = step / 2
+                while y < size.height {
+                    var x: CGFloat = step / 2
+                    while x < size.width {
+                        let rect = CGRect(x: x, y: y, width: dot, height: dot)
+                        context.fill(Path(ellipseIn: rect), with: .color(.white.opacity(0.045)))
+                        x += step
+                    }
+                    y += step
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .accessibilityHidden(true)
+    }
+}
+
 // MARK: - PressableCardStyle
 //
 // Feedback tatil de card tocavel: encolhe levemente e clareia a superficie

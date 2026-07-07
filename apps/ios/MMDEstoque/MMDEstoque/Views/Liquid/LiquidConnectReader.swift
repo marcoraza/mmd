@@ -11,7 +11,7 @@ struct LiquidConnectReader: View {
 
     var body: some View {
         ZStack {
-            Liquid.bg0.ignoresSafeArea()
+            TechnicalGridCanvas()
 
             ScrollView {
                 VStack(spacing: Liquid.Space.section) {

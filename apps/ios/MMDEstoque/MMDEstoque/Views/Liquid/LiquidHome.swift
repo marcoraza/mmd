@@ -69,66 +69,111 @@ private struct LiquidHomeContent: View {
         GridItem(.flexible(), spacing: Liquid.Space.md),
     ]
 
+    // Home sem scroll: tudo cabe na tela. O titulo saiu; os KPIs do estoque
+    // ocupam a zona de header como instrumento (numeros borderless, sem card).
+    // Pull-to-refresh saiu junto com o ScrollView; o load roda no .task.
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Liquid.Space.section) {
-                header
+        VStack(alignment: .leading, spacing: Liquid.Space.xl) {
+            header
 
-                HomeHeroCard(
-                    evento: vm.proximoEvento,
-                    prontidao: vm.counts.prontidao,
-                    isLoading: vm.isLoading && !vm.carregou
-                ) {
-                    if let evento = vm.proximoEvento { router.push(.packing(evento)) }
-                }
+            kpiRow
 
-                if vm.carregou, vm.counts.total > 0 {
-                    inventoryStrip
-                }
-
-                if let erro = vm.errorMessage {
-                    errorNote(erro)
-                }
-
-                jobsSection
+            HomeHeroCard(
+                evento: vm.proximoEvento,
+                prontidao: vm.counts.prontidao,
+                isLoading: vm.isLoading && !vm.carregou
+            ) {
+                if let evento = vm.proximoEvento { router.push(.packing(evento)) }
             }
-            .padding(Liquid.Space.xxl)
-            .padding(.bottom, Liquid.Space.vast)
+
+            if let erro = vm.errorMessage {
+                errorNote(erro)
+            }
+
+            Spacer(minLength: 0)
+
+            jobsSection
         }
-        .background(Liquid.bg0.ignoresSafeArea())
+        .padding(.horizontal, Liquid.Space.xxl)
+        .padding(.top, Liquid.Space.md)
+        .padding(.bottom, Liquid.Space.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(TechnicalGridCanvas())
         .toolbar(.hidden, for: .navigationBar)
         .task { if !vm.carregou { await vm.load() } }
-        .refreshable { await vm.load() }
     }
 
     // MARK: Header
 
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: Liquid.Space.sm) {
-                (Text("MMD ").foregroundColor(Liquid.accentRed)
-                    + Text("Estoque").foregroundColor(Liquid.fg2))
-                    .font(.liquidSans(13, weight: .semibold))
-                    .tracking(0.2)
-
-                Text("Operação de campo")
-                    .liquidLargeTitle()
-            }
+        HStack {
+            (Text("MMD ").foregroundColor(Liquid.accentRed)
+                + Text("Estoque").foregroundColor(Liquid.fg0))
+                .font(.liquidSans(17, weight: .semibold))
+                .tracking(-0.2)
 
             Spacer()
 
             Button { router.push(.config) } label: {
                 Image(systemName: "gearshape")
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(Liquid.fg1)
                     .frame(width: 40, height: 40)
                     .background(Circle().fill(Liquid.bg1))
                     .overlay(Circle().strokeBorder(Liquid.hairline, lineWidth: 1))
-                    .frame(width: 44, height: 44)
             }
             .accessibilityLabel("Configurações")
         }
-        .padding(.top, Liquid.Space.sm)
+    }
+
+    // MARK: KPI Row
+    //
+    // Os contadores do estoque na zona nobre, direto no canvas, sem card.
+    // Placeholder em traco enquanto o dado nao chegou.
+
+    private var kpiRow: some View {
+        HStack(spacing: 0) {
+            kpiStat(vm.carregou ? vm.counts.disponivel : nil, "disponível",
+                    vm.counts.disponivel > 0 ? Liquid.accentGreen : Liquid.fg3)
+            kpiDivider
+            kpiStat(vm.carregou ? vm.counts.emCampo : nil, "em campo",
+                    vm.counts.emCampo > 0 ? Liquid.accentAmber : Liquid.fg3)
+            kpiDivider
+            kpiStat(vm.carregou ? vm.counts.manutencao : nil, "manutenção",
+                    vm.counts.manutencao > 0 ? Liquid.accentRed : Liquid.fg3)
+        }
+        .padding(.vertical, Liquid.Space.sm)
+    }
+
+    private var kpiDivider: some View {
+        Rectangle()
+            .fill(Liquid.hairline)
+            .frame(width: 1, height: 34)
+            .padding(.trailing, Liquid.Space.lg)
+    }
+
+    private func kpiStat(_ value: Int?, _ label: String, _ dot: Color) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Group {
+                if let value {
+                    Text("\(value)")
+                } else {
+                    Text("–")
+                }
+            }
+            .font(.liquidMono(24, weight: .medium))
+            .foregroundStyle(value == nil ? Liquid.fg3 : Liquid.fg0)
+            .contentTransition(.numericText())
+
+            HStack(spacing: Liquid.Space.xs) {
+                Circle().fill(dot).frame(width: 5, height: 5)
+                Text(label)
+                    .font(.liquidSans(12, weight: .medium))
+                    .foregroundStyle(Liquid.fg2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 
     private func errorNote(_ message: String) -> some View {
@@ -151,51 +196,6 @@ private struct LiquidHomeContent: View {
         .padding(Liquid.Space.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .panelSurface(cornerRadius: Liquid.Radius.md)
-    }
-
-    // MARK: Inventory Strip
-    //
-    // Regua compacta do estoque: numeros mono grandes, labels sans pequenos,
-    // dot de status. Expoe os contadores que o load ja traz do Supabase.
-
-    private var inventoryStrip: some View {
-        HStack(spacing: 0) {
-            inventoryStat(vm.counts.disponivel, "disponível",
-                          vm.counts.disponivel > 0 ? Liquid.accentGreen : Liquid.fg3)
-            stripDivider
-            inventoryStat(vm.counts.emCampo, "em campo",
-                          vm.counts.emCampo > 0 ? Liquid.accentAmber : Liquid.fg3)
-            stripDivider
-            inventoryStat(vm.counts.manutencao, "manutenção",
-                          vm.counts.manutencao > 0 ? Liquid.accentRed : Liquid.fg3)
-        }
-        .padding(.vertical, Liquid.Space.lg)
-        .frame(maxWidth: .infinity)
-        .panelSurface(cornerRadius: Liquid.Radius.md)
-    }
-
-    private var stripDivider: some View {
-        Rectangle()
-            .fill(Liquid.hairline)
-            .frame(width: 1, height: 32)
-    }
-
-    private func inventoryStat(_ value: Int, _ label: String, _ dot: Color) -> some View {
-        VStack(spacing: 2) {
-            Text("\(value)")
-                .font(.liquidMono(19, weight: .medium))
-                .foregroundStyle(Liquid.fg0)
-                .contentTransition(.numericText())
-
-            HStack(spacing: Liquid.Space.xs) {
-                Circle().fill(dot).frame(width: 5, height: 5)
-                Text(label)
-                    .font(.liquidSans(11, weight: .medium))
-                    .foregroundStyle(Liquid.fg2)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .combine)
     }
 
     // MARK: Jobs
@@ -417,7 +417,7 @@ struct HomeActionTile: View {
                         .foregroundStyle(Liquid.fg2)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 118, alignment: .leading)
             .padding(Liquid.Space.lg)
             .panelSurface(cornerRadius: Liquid.Radius.lg)
         }

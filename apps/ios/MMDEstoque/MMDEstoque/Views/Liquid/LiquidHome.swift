@@ -42,8 +42,8 @@ private struct LiquidHomeContent: View {
     ]
 
     private let columns = [
-        GridItem(.flexible(), spacing: Liquid.Space.lg),
-        GridItem(.flexible(), spacing: Liquid.Space.lg),
+        GridItem(.flexible(), spacing: Liquid.Space.md),
+        GridItem(.flexible(), spacing: Liquid.Space.md),
     ]
 
     var body: some View {
@@ -78,21 +78,26 @@ private struct LiquidHomeContent: View {
 
     private var header: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: Liquid.Space.xs) {
-                Text("MMD ESTOQUE")
-                    .liquidLabel()
+            VStack(alignment: .leading, spacing: Liquid.Space.sm) {
+                (Text("MMD ").foregroundColor(Liquid.accentRed)
+                    + Text("Estoque").foregroundColor(Liquid.fg2))
+                    .font(.liquidSans(13, weight: .semibold))
+                    .tracking(0.2)
+
                 Text("Operação de campo")
-                    .liquidTitle()
+                    .liquidLargeTitle()
             }
 
             Spacer()
 
             Button { router.push(.config) } label: {
                 Image(systemName: "gearshape")
-                    .font(.system(size: 20, weight: .medium))
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(Liquid.fg1)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Liquid.bg1))
+                    .overlay(Circle().strokeBorder(Liquid.hairline, lineWidth: 1))
                     .frame(width: 44, height: 44)
-                    .glassSurface(cornerRadius: Liquid.Radius.md)
             }
             .accessibilityLabel("Configurações")
         }
@@ -100,23 +105,25 @@ private struct LiquidHomeContent: View {
     }
 
     private func errorNote(_ message: String) -> some View {
-        HStack(spacing: Liquid.Space.sm) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 13, weight: .medium))
+        HStack(alignment: .top, spacing: Liquid.Space.md) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(Liquid.accentAmber)
-            Text(message)
-                .liquidSmall()
-                .foregroundStyle(Liquid.fg1)
-                .lineLimit(2)
+                .padding(.top, 1)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Sem conexão com o servidor")
+                    .font(.liquidSans(14, weight: .medium))
+                    .foregroundStyle(Liquid.fg1)
+                Text(message)
+                    .font(.liquidSans(12, weight: .regular))
+                    .foregroundStyle(Liquid.fg3)
+                    .lineLimit(1)
+            }
         }
-        .padding(Liquid.Space.md)
+        .padding(Liquid.Space.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
-                .fill(Liquid.accentAmber.opacity(0.10))
-                .overlay(RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
-                    .strokeBorder(Liquid.accentAmber.opacity(0.3), lineWidth: 1))
-        )
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 
     // MARK: Jobs
@@ -126,7 +133,7 @@ private struct LiquidHomeContent: View {
             Text("Ações")
                 .liquidSection()
 
-            LazyVGrid(columns: columns, spacing: Liquid.Space.lg) {
+            LazyVGrid(columns: columns, spacing: Liquid.Space.md) {
                 ForEach(jobs) { job in
                     HomeActionTile(job: job) { router.push(job.route) }
                 }
@@ -137,8 +144,9 @@ private struct LiquidHomeContent: View {
 
 // MARK: - HomeHeroCard
 //
-// Hero do proximo evento a despachar. Ring de prontidao (glow) a esquerda,
-// identidade do evento a direita. O card inteiro abre o packing do evento.
+// Hero do proximo evento a despachar. Identidade do evento a esquerda, ring
+// de prontidao a direita. O card inteiro abre o packing do evento. Sem
+// evento, vira estado vazio desenhado (sem ring, sem vermelho).
 
 struct HomeHeroCard: View {
 
@@ -149,56 +157,81 @@ struct HomeHeroCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: Liquid.Space.xl) {
-                ReadinessGauge(
-                    progress: isLoading ? 0 : prontidao,
-                    state: isLoading ? .partial : nil,
-                    diameter: 96,
-                    stroke: 8,
-                    glow: false,
-                    caption: isLoading ? nil : "DISPONÍVEL"
-                )
-
-                VStack(alignment: .leading, spacing: Liquid.Space.xs) {
-                    Text(isLoading ? "CARREGANDO" : "PRÓXIMO A DESPACHAR")
-                        .liquidLabel()
-
-                    if let evento {
-                        Text(evento.nome)
-                            .liquidH3()
-                            .foregroundStyle(Liquid.fg0)
-                            .lineLimit(2)
-
-                        if let cliente = evento.cliente {
-                            Text(cliente)
-                                .liquidSmall()
-                        }
-
-                        metaLine(evento)
-                    } else {
-                        Text(isLoading ? "Buscando eventos" : "Nenhum evento confirmado")
-                            .liquidBody()
-                            .foregroundStyle(Liquid.fg1)
-                        Text(isLoading ? "Um instante" : "Confirme um projeto pra despachar")
-                            .liquidSmall()
-                    }
-                }
-
-                Spacer(minLength: 0)
-
-                if evento != nil {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Liquid.fg3)
+            Group {
+                if let evento {
+                    eventoContent(evento)
+                } else {
+                    emptyContent
                 }
             }
             .padding(Liquid.Space.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassSurface(cornerRadius: Liquid.Radius.lg, strong: true)
+            .panelSurface(cornerRadius: Liquid.Radius.lg)
         }
         .buttonStyle(.plain)
         .disabled(evento == nil)
         .accessibilityLabel(evento.map { "Próximo evento: \($0.nome), abrir packing" } ?? "Nenhum evento confirmado")
+    }
+
+    private func eventoContent(_ evento: Project) -> some View {
+        VStack(alignment: .leading, spacing: Liquid.Space.lg) {
+            HStack {
+                Text("Próximo evento")
+                    .liquidSection()
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Liquid.fg3)
+            }
+
+            HStack(alignment: .center, spacing: Liquid.Space.xl) {
+                VStack(alignment: .leading, spacing: Liquid.Space.xs) {
+                    Text(evento.nome)
+                        .liquidCardTitle()
+                        .lineLimit(2)
+
+                    if let cliente = evento.cliente {
+                        Text(cliente)
+                            .font(.liquidSans(13, weight: .regular))
+                            .foregroundStyle(Liquid.fg2)
+                    }
+
+                    metaLine(evento)
+                }
+
+                Spacer(minLength: Liquid.Space.md)
+
+                ReadinessGauge(
+                    progress: isLoading ? 0 : prontidao,
+                    state: isLoading ? .partial : nil,
+                    diameter: 72,
+                    stroke: 6,
+                    glow: false
+                )
+            }
+        }
+    }
+
+    private var emptyContent: some View {
+        HStack(spacing: Liquid.Space.lg) {
+            Image(systemName: "calendar")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(Liquid.fg2)
+                .frame(width: 44, height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Liquid.bg2)
+                )
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(isLoading ? "Buscando eventos" : "Nenhum evento na fila")
+                    .font(.liquidSans(16, weight: .semibold))
+                    .foregroundStyle(Liquid.fg0)
+                Text(isLoading ? "Um instante" : "Eventos confirmados aparecem aqui pra despacho")
+                    .font(.liquidSans(13, weight: .regular))
+                    .foregroundStyle(Liquid.fg2)
+            }
+        }
     }
 
     private func metaLine(_ evento: Project) -> some View {
@@ -233,8 +266,8 @@ struct HomeJob: Identifiable {
 
 // MARK: - HomeActionTile
 //
-// Tile de vidro alto, alvo de toque generoso. Icone na cor do job, titulo e
-// uma linha de descricao.
+// Tile de painel solido, alvo de toque generoso. Icone monocromatico em chip
+// neutro (a cor do job vive nos fluxos, nao na home), titulo e descricao.
 
 struct HomeActionTile: View {
 
@@ -245,23 +278,30 @@ struct HomeActionTile: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: Liquid.Space.md) {
                 Image(systemName: job.icon)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(job.accent)
-                    .frame(width: 48, height: 48)
-                    .background(Circle().fill(job.accent.opacity(0.12)))
-
-                Spacer(minLength: Liquid.Space.lg)
-
-                Text(job.title)
-                    .liquidH3()
+                    .font(.system(size: 20, weight: .medium))
                     .foregroundStyle(Liquid.fg0)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Liquid.bg2)
+                    )
 
-                Text(job.subtitle)
-                    .liquidSmall()
+                Spacer(minLength: Liquid.Space.md)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(job.title)
+                        .font(.liquidSans(17, weight: .semibold))
+                        .tracking(-0.2)
+                        .foregroundStyle(Liquid.fg0)
+
+                    Text(job.subtitle)
+                        .font(.liquidSans(13, weight: .regular))
+                        .foregroundStyle(Liquid.fg2)
+                }
             }
-            .frame(maxWidth: .infinity, minHeight: 158, alignment: .leading)
-            .padding(Liquid.Space.xl)
-            .glassSurface(cornerRadius: Liquid.Radius.lg)
+            .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+            .padding(Liquid.Space.lg)
+            .panelSurface(cornerRadius: Liquid.Radius.lg)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(job.title): \(job.subtitle)")

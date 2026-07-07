@@ -71,7 +71,7 @@ struct ReadinessRing: View {
         ZStack {
             // Trilha
             Circle()
-                .stroke(Liquid.glassBorderStrong, lineWidth: stroke)
+                .stroke(Color.white.opacity(0.08), lineWidth: stroke)
 
             // Arco de progresso
             Circle()

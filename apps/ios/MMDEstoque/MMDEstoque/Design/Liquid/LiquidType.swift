@@ -70,6 +70,16 @@ extension View {
         self.font(.liquidSans(28, weight: .semibold)).tracking(-0.4).foregroundStyle(Liquid.fg0)
     }
 
+    /// Titulo grande de tela raiz, escala do large title do iOS.
+    func liquidLargeTitle() -> some View {
+        self.font(.liquidSans(31, weight: .bold)).tracking(-0.7).foregroundStyle(Liquid.fg0)
+    }
+
+    /// Titulo de card destacado (hero, item principal de lista).
+    func liquidCardTitle() -> some View {
+        self.font(.liquidSans(20, weight: .semibold)).tracking(-0.3).foregroundStyle(Liquid.fg0)
+    }
+
     func liquidH2() -> some View {
         self.font(.liquidH2).tracking(-0.3).foregroundStyle(Liquid.fg0)
     }

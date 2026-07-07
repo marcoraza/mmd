@@ -115,14 +115,11 @@ struct ReaderStatusBar: View {
             HStack(spacing: Liquid.Space.sm) {
                 Circle()
                     .fill(dotColor)
-                    .frame(width: 7, height: 7)
-
-                Image(systemName: rfid.statusIcon)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(dotColor)
+                    .frame(width: 6, height: 6)
 
                 Text(rfid.statusText)
-                    .liquidLabel(Liquid.fg1)
+                    .font(.liquidSans(13, weight: .medium))
+                    .foregroundStyle(Liquid.fg1)
                     .lineLimit(1)
 
                 Spacer()
@@ -132,11 +129,13 @@ struct ReaderStatusBar: View {
                     .foregroundStyle(Liquid.fg3)
             }
             .padding(.horizontal, Liquid.Space.lg)
-            .padding(.vertical, Liquid.Space.md)
-            .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+            .padding(.vertical, 10)
+            .background(Capsule().fill(Liquid.bg1))
+            .overlay(Capsule().strokeBorder(Liquid.hairline, lineWidth: 1))
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, Liquid.Space.lg)
+        .accessibilityLabel("Leitor: \(rfid.statusText)")
+        .padding(.horizontal, Liquid.Space.xxl)
         .padding(.top, Liquid.Space.sm)
         .padding(.bottom, Liquid.Space.xs)
     }

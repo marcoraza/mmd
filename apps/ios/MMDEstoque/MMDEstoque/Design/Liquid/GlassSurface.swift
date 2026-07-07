@@ -76,6 +76,39 @@ struct GlassCard<Content: View>: View {
     }
 }
 
+// MARK: - PanelBackground
+//
+// Superficie solida em camadas, para telas com fundo neutro (sem caustic).
+// O vidro translucido sobre fundo chapado vira cinza lamacento; o painel
+// solido devolve profundidade por contraste de valor: bg1 sobre bg0, bg2 nos
+// chips. Hairline com gradiente vertical finge aresta iluminada sem glow.
+
+struct PanelBackground: View {
+
+    var cornerRadius: CGFloat = Liquid.Radius.lg
+    var elevated: Bool = false
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+    }
+
+    var body: some View {
+        shape
+            .fill(elevated ? Liquid.bg2 : Liquid.bg1)
+            .overlay(
+                shape.strokeBorder(
+                    LinearGradient(
+                        colors: [Liquid.hairlineStrong, Liquid.hairline],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
+            )
+            .shadow(color: .black.opacity(0.20), radius: 16, x: 0, y: 8)
+    }
+}
+
 // MARK: - View Extension
 
 extension View {
@@ -87,6 +120,16 @@ extension View {
     ) -> some View {
         self.background(
             GlassBackground(cornerRadius: cornerRadius, strong: strong)
+        )
+    }
+
+    /// Aplica painel solido como fundo. Para telas de fundo neutro.
+    func panelSurface(
+        cornerRadius: CGFloat = Liquid.Radius.lg,
+        elevated: Bool = false
+    ) -> some View {
+        self.background(
+            PanelBackground(cornerRadius: cornerRadius, elevated: elevated)
         )
     }
 }

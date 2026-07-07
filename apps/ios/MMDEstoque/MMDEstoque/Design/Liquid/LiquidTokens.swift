@@ -116,6 +116,10 @@ extension Liquid {
     static let glassBorder       = Color.white.opacity(0.10)
     static let glassBorderStrong = Color.white.opacity(0.18)
     static let glassHighlight    = Color.white.opacity(0.18)   // inset top/left fake thickness
+
+    // Hairlines: bordas de painel solido (telas sem caustic atras).
+    static let hairline       = Color.white.opacity(0.07)
+    static let hairlineStrong = Color.white.opacity(0.12)
 }
 
 // MARK: - Radii

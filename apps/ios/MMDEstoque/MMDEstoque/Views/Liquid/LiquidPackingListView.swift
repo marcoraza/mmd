@@ -158,14 +158,7 @@ struct LiquidPackingListView: View {
         .padding(.top, headerOverlap + Liquid.Space.md)
         .padding(.bottom, Liquid.Space.md)
         .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
-                .fill(Liquid.bgInset)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
-                        .strokeBorder(Liquid.hairline, lineWidth: 1)
-                )
-        )
+        .panelSurface(cornerRadius: Liquid.Radius.lg, tone: .inset)
     }
 
     // MARK: Items

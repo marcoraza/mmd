@@ -78,15 +78,39 @@ struct GlassCard<Content: View>: View {
 
 // MARK: - PanelBackground
 //
-// Superficie solida em camadas, para telas com fundo neutro (sem caustic).
-// O vidro translucido sobre fundo chapado vira cinza lamacento; o painel
-// solido devolve profundidade por contraste de valor: bg1 sobre bg0, bg2 nos
-// chips. Hairline com gradiente vertical finge aresta iluminada sem glow.
+// Superficie de painel: vidro com tint. O material amostra a luz de palco
+// do canvas (por isso o vidro volta a ler como vidro), o tint em camadas
+// da o contraste de valor (bg1 sobre bg0, bg2 nos chips, bgInset nos cards
+// acoplados) e a hairline com gradiente vertical finge aresta iluminada.
+
+enum LiquidPanelTone {
+    case base       // card padrao (bg1)
+    case elevated   // painel destacado (bg2)
+    case inset      // card acoplado que desliza por baixo (bgInset)
+
+    var tint: Color {
+        switch self {
+        case .base:     return Liquid.bg1.opacity(0.72)
+        case .elevated: return Liquid.bg2.opacity(0.72)
+        case .inset:    return Liquid.bgInset.opacity(0.78)
+        }
+    }
+}
 
 struct PanelBackground: View {
 
     var cornerRadius: CGFloat = Liquid.Radius.lg
-    var elevated: Bool = false
+    var tone: LiquidPanelTone = .base
+
+    init(cornerRadius: CGFloat = Liquid.Radius.lg, tone: LiquidPanelTone = .base) {
+        self.cornerRadius = cornerRadius
+        self.tone = tone
+    }
+
+    init(cornerRadius: CGFloat = Liquid.Radius.lg, elevated: Bool) {
+        self.cornerRadius = cornerRadius
+        self.tone = elevated ? .elevated : .base
+    }
 
     private var shape: RoundedRectangle {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -94,7 +118,8 @@ struct PanelBackground: View {
 
     var body: some View {
         shape
-            .fill(elevated ? Liquid.bg2 : Liquid.bg1)
+            .fill(.ultraThinMaterial)
+            .overlay(shape.fill(tone.tint))
             .overlay(
                 shape.strokeBorder(
                     LinearGradient(
@@ -111,16 +136,34 @@ struct PanelBackground: View {
 
 // MARK: - TechnicalGridCanvas
 //
-// Canvas do app nas telas sem caustic: bg0 + grade de pontos quase
-// imperceptivel, textura de blueprint tecnico. Substitui a atmosfera que os
-// degrades davam sem reintroduzir cor: materialidade vem da textura, a
-// profundidade vem da luz de aresta dos paineis. Desenho estatico, barato.
+// Canvas do app: o palco. Duas fontes de luz fixas e direcionais no lugar
+// dos orbs decorativos: uma luz-chave fria e alta (fresnel apagado lavando
+// o topo da cena) e um contraluz vermelho de marca quase subliminar no pe.
+// E a grade de pontos de blueprint por cima. A luz da ao vidro dos paineis
+// o que refratar; a disciplina (fontes fixas, sem cor flutuando) mantem a
+// sobriedade que o caustic nao tinha. Desenho estatico, barato.
 
 struct TechnicalGridCanvas: View {
 
     var body: some View {
         ZStack {
             Liquid.bg0
+
+            // Luz-chave: fria, alta, entrando pela esquerda.
+            RadialGradient(
+                colors: [Color(oklch: 0.78, 0.06, 230, opacity: 0.16), .clear],
+                center: UnitPoint(x: 0.22, y: -0.12),
+                startRadius: 0,
+                endRadius: 560
+            )
+
+            // Contraluz de marca: MMD red no pe da cena, quase subliminar.
+            RadialGradient(
+                colors: [Color(oklch: 0.55, 0.16, 25, opacity: 0.08), .clear],
+                center: UnitPoint(x: 1.05, y: 1.10),
+                startRadius: 0,
+                endRadius: 480
+            )
 
             Canvas { context, size in
                 let step: CGFloat = 22
@@ -130,7 +173,7 @@ struct TechnicalGridCanvas: View {
                     var x: CGFloat = step / 2
                     while x < size.width {
                         let rect = CGRect(x: x, y: y, width: dot, height: dot)
-                        context.fill(Path(ellipseIn: rect), with: .color(.white.opacity(0.045)))
+                        context.fill(Path(ellipseIn: rect), with: .color(.white.opacity(0.04)))
                         x += step
                     }
                     y += step
@@ -179,13 +222,23 @@ extension View {
         )
     }
 
-    /// Aplica painel solido como fundo. Para telas de fundo neutro.
+    /// Aplica painel de vidro com tint como fundo.
     func panelSurface(
         cornerRadius: CGFloat = Liquid.Radius.lg,
         elevated: Bool = false
     ) -> some View {
         self.background(
             PanelBackground(cornerRadius: cornerRadius, elevated: elevated)
+        )
+    }
+
+    /// Variante por tom explicito (base, elevated, inset).
+    func panelSurface(
+        cornerRadius: CGFloat = Liquid.Radius.lg,
+        tone: LiquidPanelTone
+    ) -> some View {
+        self.background(
+            PanelBackground(cornerRadius: cornerRadius, tone: tone)
         )
     }
 }

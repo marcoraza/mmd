@@ -117,27 +117,7 @@ private struct LiquidHomeContent: View {
     }
 
     private func kpiStat(_ value: Int?, _ label: String, _ dot: Color) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Group {
-                if let value {
-                    Text("\(value)")
-                } else {
-                    Text("–")
-                }
-            }
-            .font(.liquidMono(18, weight: .medium))
-            .foregroundStyle(value == nil ? Liquid.fg3 : Liquid.fg0)
-            .contentTransition(.numericText())
-
-            HStack(spacing: Liquid.Space.xs) {
-                Circle().fill(dot).frame(width: 5, height: 5)
-                Text(label)
-                    .font(.liquidSans(11, weight: .medium))
-                    .foregroundStyle(Liquid.fg2)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
+        HomeKPIStat(value: value, label: label, dot: dot)
     }
 
     private func errorNote(_ message: String) -> some View {
@@ -443,6 +423,71 @@ struct HomeHeroCard: View {
         }
     }
 
+}
+
+// MARK: - HomeKPIStat
+//
+// KPI com animacao de dado: quando o valor chega (ou muda), o numero rola
+// ate o alvo e o dot acende com um pop unico. Nada de interacao fake: KPI
+// vira botao quando existir tela de destino, nao antes.
+
+private struct HomeKPIStat: View {
+
+    let value: Int?
+    let label: String
+    let dot: Color
+
+    @State private var shown: Int = 0
+    @State private var appeared = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Group {
+                if value != nil {
+                    Text("\(shown)")
+                } else {
+                    Text("–")
+                }
+            }
+            .font(.liquidMono(18, weight: .medium))
+            .foregroundStyle(value == nil ? Liquid.fg3 : Liquid.fg0)
+            .contentTransition(.numericText())
+
+            HStack(spacing: Liquid.Space.xs) {
+                Circle()
+                    .fill(dot)
+                    .frame(width: 5, height: 5)
+                    .scaleEffect(appeared || reduceMotion ? 1 : 0.2)
+
+                Text(label)
+                    .font(.liquidSans(11, weight: .medium))
+                    .foregroundStyle(Liquid.fg2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(value.map(String.init) ?? "sem dado") \(label)")
+        .onAppear { sync(to: value) }
+        .onChange(of: value) { sync(to: $0) }
+    }
+
+    private func sync(to newValue: Int?) {
+        guard let target = newValue else { return }
+        if reduceMotion {
+            shown = target
+            appeared = true
+            return
+        }
+        if target != shown {
+            withAnimation(.easeOut(duration: 0.7)) { shown = target }
+        }
+        if !appeared {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.55).delay(0.15)) {
+                appeared = true
+            }
+        }
+    }
 }
 
 // MARK: - HomeJob

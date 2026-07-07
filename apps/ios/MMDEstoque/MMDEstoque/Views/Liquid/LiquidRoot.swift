@@ -49,6 +49,9 @@ struct LiquidRoot: View {
 
     @EnvironmentObject private var router: LiquidRouter
 
+    @State private var showQuickActions = false
+    @State private var tabDirection: CGFloat = 1
+
     var body: some View {
         ZStack {
             Liquid.bg0.ignoresSafeArea()
@@ -57,14 +60,67 @@ struct LiquidRoot: View {
                 ReaderStatusBar { router.push(.conectar) }
 
                 NavigationStack(path: $router.path) {
-                    LiquidHome()
+                    tabRoot
                         .navigationDestination(for: AppRoute.self) { route in
                             destination(for: route)
                         }
                 }
             }
         }
+        .overlay(alignment: .bottom) {
+            if router.path.isEmpty {
+                LiquidTabBar(selection: tabSelection) { showQuickActions = true }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Liquid.Motion.default, value: router.path.isEmpty)
+        .sheet(isPresented: $showQuickActions) {
+            QuickActionsSheet { route in
+                showQuickActions = false
+                router.push(route)
+            }
+            .presentationDetents([.height(400)])
+            .presentationDragIndicator(.visible)
+        }
         .preferredColorScheme(.dark)
+    }
+
+    // MARK: Tabs
+
+    /// Raiz da tab ativa, com transicao direcional curta na troca.
+    @ViewBuilder
+    private var tabRoot: some View {
+        Group {
+            switch router.tab {
+            case .inicio:
+                LiquidHome()
+            case .eventos:
+                LiquidProjectsListView(filter: .todos) { project in
+                    router.push(project.status == .emCampo ? .retorno(project) : .packing(project))
+                }
+            case .ajustes:
+                LiquidConfigView()
+            }
+        }
+        .id(router.tab)
+        .transition(.asymmetric(
+            insertion: .offset(x: tabDirection * 28).combined(with: .opacity),
+            removal: .offset(x: -tabDirection * 28).combined(with: .opacity)
+        ))
+    }
+
+    /// Binding que registra a direcao da troca e anima indicador + conteudo.
+    private var tabSelection: Binding<LiquidTab> {
+        Binding(
+            get: { router.tab },
+            set: { newTab in
+                guard newTab != router.tab else { return }
+                tabDirection = newTab.rawValue > router.tab.rawValue ? 1 : -1
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    router.tab = newTab
+                }
+            }
+        )
     }
 
     @ViewBuilder

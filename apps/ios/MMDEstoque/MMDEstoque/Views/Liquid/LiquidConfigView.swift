@@ -15,7 +15,7 @@ struct LiquidConfigView: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Liquid.Space.section) {
@@ -25,10 +25,10 @@ struct LiquidConfigView: View {
                     aboutSection
                 }
                 .padding(Liquid.Space.xxl)
-                .padding(.bottom, Liquid.Space.vast)
+                .padding(.bottom, 120)   // folga pra tab bar quando raiz de tab
             }
         }
-        .navigationTitle("Config")
+        .navigationTitle("Ajustes")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .overlay(alignment: .bottom) {

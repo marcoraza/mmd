@@ -64,11 +64,6 @@ private struct LiquidHomeContent: View {
         return HomeJobMeta(text: "\(count)", dot: dot)
     }
 
-    private let columns = [
-        GridItem(.flexible(), spacing: Liquid.Space.md),
-        GridItem(.flexible(), spacing: Liquid.Space.md),
-    ]
-
     // Home sem scroll: tudo cabe na tela. O titulo saiu; os KPIs do estoque
     // ocupam a zona de header como instrumento (numeros borderless, sem card).
     // Pull-to-refresh saiu junto com o ScrollView; o load roda no .task.
@@ -88,7 +83,7 @@ private struct LiquidHomeContent: View {
         }
         .padding(.horizontal, Liquid.Space.xxl)
         .padding(.top, Liquid.Space.md)
-        .padding(.bottom, Liquid.Space.lg)
+        .padding(.bottom, 84)   // folga pra tab bar flutuante
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(TechnicalGridCanvas())
         .toolbar(.hidden, for: .navigationBar)
@@ -222,12 +217,12 @@ private struct LiquidHomeContent: View {
     // MARK: Jobs
 
     private var jobsSection: some View {
-        VStack(alignment: .leading, spacing: Liquid.Space.lg) {
+        VStack(alignment: .leading, spacing: Liquid.Space.md) {
             LiquidSectionHeader(title: "Ações")
 
-            LazyVGrid(columns: columns, spacing: Liquid.Space.md) {
+            VStack(spacing: Liquid.Space.sm) {
                 ForEach(jobs) { job in
-                    HomeActionTile(job: job) { router.push(job.route) }
+                    HomeActionRow(job: job) { router.push(job.route) }
                 }
             }
         }
@@ -375,6 +370,66 @@ struct HomeJob: Identifiable {
     var meta: HomeJobMeta? = nil
 
     var id: AppRoute { route }
+}
+
+// MARK: - HomeActionRow
+//
+// Versao compacta do job pra home sem scroll com a tab bar: chip de icone,
+// titulo, meta viva e chevron numa row fina. O tile 2x2 vive no sheet de
+// acoes rapidas.
+
+struct HomeActionRow: View {
+
+    let job: HomeJob
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: Liquid.Space.md) {
+                Image(systemName: job.icon)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(Liquid.fg0)
+                    .frame(width: 36, height: 36)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Liquid.bg2)
+                    )
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(job.title)
+                        .font(.liquidSans(15, weight: .semibold))
+                        .foregroundStyle(Liquid.fg0)
+                    Text(job.subtitle)
+                        .font(.liquidSans(12, weight: .regular))
+                        .foregroundStyle(Liquid.fg2)
+                }
+
+                Spacer(minLength: Liquid.Space.sm)
+
+                if let meta = job.meta {
+                    HStack(spacing: Liquid.Space.xs) {
+                        Circle().fill(meta.dot).frame(width: 5, height: 5)
+                        Text(meta.text)
+                            .font(.liquidMono(11, weight: .medium))
+                            .foregroundStyle(Liquid.fg1)
+                    }
+                    .padding(.horizontal, Liquid.Space.sm)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Liquid.bg2))
+                }
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Liquid.fg3)
+            }
+            .padding(.horizontal, Liquid.Space.md)
+            .padding(.vertical, Liquid.Space.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .panelSurface(cornerRadius: Liquid.Radius.md)
+        }
+        .buttonStyle(.pressableCard)
+        .accessibilityLabel("\(job.title): \(job.subtitle)")
+    }
 }
 
 // MARK: - HomeActionTile

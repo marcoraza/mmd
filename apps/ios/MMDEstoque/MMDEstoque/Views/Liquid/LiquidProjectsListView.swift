@@ -105,7 +105,7 @@ struct LiquidProjectsListView: View {
                 }
             }
             .padding(Liquid.Space.xxl)
-            .padding(.bottom, Liquid.Space.vast)
+            .padding(.bottom, 120)   // folga pra tab bar quando raiz de tab
         }
     }
 

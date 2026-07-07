@@ -251,7 +251,8 @@ private struct LiquidCheckoutValidationContent: View {
             emptyHint: "Aponte o leitor pra conferir a saída do projeto",
             primaryAction: ScanAction(
                 label: "Confirmar saída",
-                isEnabled: viewModel.canFinalize
+                isEnabled: viewModel.canFinalize,
+                disabledHint: finalizeHint
             ) {
                 showConfirmation = true
             },
@@ -260,6 +261,25 @@ private struct LiquidCheckoutValidationContent: View {
             errorMessage: viewModel.error
         )
         .frame(maxHeight: .infinity)
+    }
+
+    /// Motivo do "Confirmar saída" travado, na ordem em que o operador
+    /// consegue agir: extras primeiro, depois o que falta ler.
+    private var finalizeHint: String? {
+        guard !viewModel.canFinalize else { return nil }
+        guard !viewModel.packingListItems.isEmpty else { return nil }
+
+        if !viewModel.extraItems.isEmpty {
+            return "Remova os itens fora da lista pra liberar a saída"
+        }
+
+        let faltam = viewModel.packingListItems.reduce(0) {
+            $0 + max(0, $1.quantidade - (viewModel.matchedCounts[$1.id] ?? 0))
+        }
+        guard faltam > 0 else { return nil }
+        return faltam == 1
+            ? "Falta 1 item pra liberar a saída"
+            : "Faltam \(faltam) itens pra liberar a saída"
     }
 
     // MARK: - Confirmation Overlay

@@ -196,13 +196,12 @@ struct LiquidProjectsListView: View {
     // MARK: States
 
     private var loadingState: some View {
-        VStack(spacing: Liquid.Space.lg) {
-            ProgressView().tint(Liquid.fg2)
-            Text("Carregando")
-                .font(.liquidSans(14, weight: .medium))
-                .foregroundStyle(Liquid.fg2)
+        VStack(spacing: Liquid.Space.sm) {
+            LiquidSkeletonList(rows: 4, rowMinHeight: 110)
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(Liquid.Space.xxl)
+        .accessibilityLabel("Carregando eventos")
     }
 
     private var emptyState: some View {

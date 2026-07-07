@@ -105,6 +105,62 @@ struct LiquidSectionHeader: View {
     }
 }
 
+// MARK: - LiquidSkeleton
+//
+// Placeholder de carregamento com a anatomia dos cards reais: barras no
+// lugar de titulo e metadados, pulso lento de opacidade. Mantem a estrutura
+// percebida da tela enquanto o dado chega (spinner central some com o
+// layout). Respeita reduce motion.
+
+struct LiquidSkeletonCard: View {
+
+    var minHeight: CGFloat = 0
+
+    @State private var dimmed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Liquid.Space.sm) {
+            bar(width: 180, height: 14)
+            bar(width: 110, height: 10)
+            bar(width: 150, height: 10)
+        }
+        .padding(Liquid.Space.lg)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
+        .opacity(dimmed ? 0.55 : 1)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                dimmed = true
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func bar(width: CGFloat, height: CGFloat) -> some View {
+        Capsule()
+            .fill(Liquid.bg2)
+            .frame(width: width, height: height)
+    }
+}
+
+/// Lista de skeletons pronta pra estados de loading de tela.
+struct LiquidSkeletonList: View {
+
+    var rows: Int = 4
+    var rowMinHeight: CGFloat = 0
+
+    var body: some View {
+        VStack(spacing: Liquid.Space.sm) {
+            ForEach(0..<rows, id: \.self) { _ in
+                LiquidSkeletonCard(minHeight: rowMinHeight)
+            }
+        }
+        .accessibilityLabel("Carregando")
+    }
+}
+
 // MARK: - LiquidStatusBadge
 //
 // Pill de vidro: texto na cor do estado, fundo tint suave, borda na mesma cor.

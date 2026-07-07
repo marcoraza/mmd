@@ -263,12 +263,12 @@ struct LiquidPackingListView: View {
 
     private var loadingState: some View {
         VStack(spacing: Liquid.Space.lg) {
-            ProgressView().tint(Liquid.fg2)
-            Text("Carregando packing list")
-                .font(.liquidSans(14, weight: .medium))
-                .foregroundStyle(Liquid.fg2)
+            LiquidSkeletonCard(minHeight: 140)
+            LiquidSkeletonList(rows: 3, rowMinHeight: 56)
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(Liquid.Space.xxl)
+        .accessibilityLabel("Carregando packing list")
     }
 
     private var emptyItemsCard: some View {

@@ -9,6 +9,12 @@ struct ScanAction {
     let label: String
     var isBusy: Bool = false
     var isEnabled: Bool = true
+
+    /// Por que a acao esta travada, em uma frase ("Faltam 12 itens...").
+    /// Mostrada so quando isEnabled e false. Botao desabilitado sem motivo
+    /// visivel e beco sem saida.
+    var disabledHint: String? = nil
+
     let handler: () -> Void
 }
 
@@ -159,6 +165,15 @@ struct ScanEngine: View {
                 Text(errorMessage)
                     .font(.liquidSans(12, weight: .medium))
                     .foregroundStyle(Liquid.accentRed)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
+
+            if let primaryAction, !primaryAction.isEnabled,
+               let hint = primaryAction.disabledHint {
+                Text(hint)
+                    .font(.liquidSans(12, weight: .medium))
+                    .foregroundStyle(Liquid.fg3)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }

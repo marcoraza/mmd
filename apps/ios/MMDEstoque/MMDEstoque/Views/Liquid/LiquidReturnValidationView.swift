@@ -84,6 +84,15 @@ private struct LiquidReturnValidationContent: View {
         }
     }
 
+    /// Motivo do "Confirmar volta" travado.
+    private var finalizeHint: String? {
+        guard !viewModel.canFinalize else { return nil }
+        if viewModel.outboundItems.isEmpty {
+            return "Nenhum item em campo neste evento"
+        }
+        return "Escaneie o lote que voltou pra liberar a confirmação"
+    }
+
     // MARK: - Return Panel
 
     private var returnPanel: some View {
@@ -228,7 +237,8 @@ private struct LiquidReturnValidationContent: View {
             primaryAction: ScanAction(
                 label: "Confirmar volta",
                 isBusy: viewModel.isProcessingReturn,
-                isEnabled: viewModel.canFinalize
+                isEnabled: viewModel.canFinalize,
+                disabledHint: finalizeHint
             ) {
                 Task { await viewModel.finalizeReturn() }
             },

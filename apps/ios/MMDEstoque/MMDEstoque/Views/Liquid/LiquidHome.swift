@@ -76,15 +76,7 @@ private struct LiquidHomeContent: View {
         VStack(alignment: .leading, spacing: Liquid.Space.xl) {
             header
 
-            kpiRow
-
-            HomeHeroCard(
-                evento: vm.proximoEvento,
-                prontidao: vm.counts.prontidao,
-                isLoading: vm.isLoading && !vm.carregou
-            ) {
-                if let evento = vm.proximoEvento { router.push(.packing(evento)) }
-            }
+            heroStack
 
             if let erro = vm.errorMessage {
                 errorNote(erro)
@@ -126,12 +118,30 @@ private struct LiquidHomeContent: View {
         }
     }
 
-    // MARK: KPI Row
+    // MARK: Hero Stack
     //
-    // Os contadores do estoque na zona nobre, direto no canvas, sem card.
-    // Placeholder em traco enquanto o dado nao chegou.
+    // Card conectado: o hero do evento por cima e a regua de KPIs num
+    // segundo card que desliza por baixo, em meio-tom (bgInset). As duas
+    // pecas leem como um instrumento so: evento na frente, estoque atras.
 
-    private var kpiRow: some View {
+    private let heroOverlap: CGFloat = 18
+
+    private var heroStack: some View {
+        VStack(spacing: -heroOverlap) {
+            HomeHeroCard(
+                evento: vm.proximoEvento,
+                prontidao: vm.counts.prontidao,
+                isLoading: vm.isLoading && !vm.carregou
+            ) {
+                if let evento = vm.proximoEvento { router.push(.packing(evento)) }
+            }
+            .zIndex(1)
+
+            kpiAttachedCard
+        }
+    }
+
+    private var kpiAttachedCard: some View {
         HStack(spacing: 0) {
             kpiStat(vm.carregou ? vm.counts.disponivel : nil, "disponível",
                     vm.counts.disponivel > 0 ? Liquid.accentGreen : Liquid.fg3)
@@ -142,13 +152,24 @@ private struct LiquidHomeContent: View {
             kpiStat(vm.carregou ? vm.counts.manutencao : nil, "manutenção",
                     vm.counts.manutencao > 0 ? Liquid.accentRed : Liquid.fg3)
         }
-        .padding(.vertical, Liquid.Space.sm)
+        .padding(.horizontal, Liquid.Space.xl)
+        .padding(.top, heroOverlap + Liquid.Space.md)
+        .padding(.bottom, Liquid.Space.md)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+                .fill(Liquid.bgInset)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+                        .strokeBorder(Liquid.hairline, lineWidth: 1)
+                )
+        )
     }
 
     private var kpiDivider: some View {
         Rectangle()
             .fill(Liquid.hairline)
-            .frame(width: 1, height: 34)
+            .frame(width: 1, height: 28)
             .padding(.trailing, Liquid.Space.lg)
     }
 
@@ -161,14 +182,14 @@ private struct LiquidHomeContent: View {
                     Text("–")
                 }
             }
-            .font(.liquidMono(24, weight: .medium))
+            .font(.liquidMono(18, weight: .medium))
             .foregroundStyle(value == nil ? Liquid.fg3 : Liquid.fg0)
             .contentTransition(.numericText())
 
             HStack(spacing: Liquid.Space.xs) {
                 Circle().fill(dot).frame(width: 5, height: 5)
                 Text(label)
-                    .font(.liquidSans(12, weight: .medium))
+                    .font(.liquidSans(11, weight: .medium))
                     .foregroundStyle(Liquid.fg2)
             }
         }

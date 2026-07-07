@@ -41,7 +41,7 @@ struct ScanEngine: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .hero, includesGreenOrb: rfid.isScanning)
+            TechnicalGridCanvas()
 
             VStack(spacing: 0) {
                 heroArea
@@ -81,7 +81,9 @@ struct ScanEngine: View {
                         .animation(reduceMotion ? nil : .snappy(duration: 0.22), value: rfid.tagCount)
 
                     Text(heroUnit)
-                        .liquidLabel(Liquid.fg2)
+                        .font(.liquidMono(10, weight: .medium))
+                        .tracking(1.2)
+                        .foregroundStyle(Liquid.fg2)
                 }
             }
 
@@ -143,7 +145,7 @@ struct ScanEngine: View {
         }
         .padding(.horizontal, Liquid.Space.lg)
         .padding(.vertical, Liquid.Space.md)
-        .glassSurface(cornerRadius: Liquid.Radius.md)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 
     // MARK: - Bottom Bar
@@ -152,7 +154,7 @@ struct ScanEngine: View {
         VStack(spacing: Liquid.Space.md) {
             if let errorMessage {
                 Text(errorMessage)
-                    .font(.liquidMono(11))
+                    .font(.liquidSans(12, weight: .medium))
                     .foregroundStyle(Liquid.accentRed)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
@@ -176,7 +178,8 @@ struct ScanEngine: View {
             recentTags.removeAll()
         } label: {
             Text("Limpar")
-                .liquidLabel(rfid.tagCount > 0 ? Liquid.fg2 : Liquid.fg3)
+                .font(.liquidSans(14, weight: .medium))
+                .foregroundStyle(rfid.tagCount > 0 ? Liquid.fg2 : Liquid.fg3)
         }
         .disabled(rfid.tagCount == 0)
         .accessibilityLabel("Limpar tags")
@@ -187,33 +190,40 @@ struct ScanEngine: View {
             onQRFallback?()
         } label: {
             Image(systemName: "qrcode.viewfinder")
-                .font(.system(size: 20, weight: .regular))
+                .font(.system(size: 19, weight: .regular))
                 .foregroundStyle(Liquid.fg1)
                 .frame(width: 44, height: 44)
-                .glassSurface(cornerRadius: Liquid.Radius.sm)
+                .panelSurface(cornerRadius: Liquid.Radius.sm)
         }
         .accessibilityLabel("Ler QR code")
     }
 
     private func primaryButton(_ action: ScanAction) -> some View {
-        Button {
+        let active = action.isEnabled && !action.isBusy
+        return Button {
             action.handler()
         } label: {
             HStack(spacing: Liquid.Space.sm) {
                 if action.isBusy {
                     ProgressView()
                         .controlSize(.small)
-                        .tint(Liquid.fg0)
+                        .tint(Liquid.fg2)
                 }
                 Text(action.label)
-                    .font(.liquidMono(13, weight: .medium))
-                    .textCase(.uppercase)
-                    .tracking(1.0)
+                    .font(.liquidSans(15, weight: .semibold))
             }
-            .foregroundStyle(action.isEnabled && !action.isBusy ? Liquid.fg0 : Liquid.fg3)
+            .foregroundStyle(active ? Liquid.bg0 : Liquid.fg3)
             .padding(.horizontal, Liquid.Space.xxl)
-            .padding(.vertical, Liquid.Space.md)
-            .glassSurface(cornerRadius: Liquid.Radius.lg, strong: true)
+            .frame(minHeight: 44)
+            .background {
+                let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                if active {
+                    shape.fill(Liquid.fg0)
+                } else {
+                    shape.fill(Liquid.bg1)
+                        .overlay(shape.strokeBorder(Liquid.hairline, lineWidth: 1))
+                }
+            }
         }
         .disabled(!action.isEnabled || action.isBusy)
     }
@@ -222,15 +232,17 @@ struct ScanEngine: View {
         Button {
             toggleScanning()
         } label: {
-            Text(rfid.isScanning ? "Parar" : "Escanear")
-                .font(.liquidMono(15, weight: .medium))
-                .textCase(.uppercase)
-                .tracking(2.0)
-                .foregroundStyle(rfid.isScanning ? Liquid.fg0 : Liquid.bg0)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Liquid.Space.lg)
-                .background(scanButtonBackground)
-                .scaleEffect(rfid.isScanning && scanPulse ? 1.015 : 1.0)
+            HStack(spacing: Liquid.Space.sm) {
+                Image(systemName: rfid.isScanning ? "stop.fill" : "dot.radiowaves.right")
+                    .font(.system(size: 15, weight: .semibold))
+                Text(rfid.isScanning ? "Parar" : "Escanear")
+                    .font(.liquidSans(16, weight: .semibold))
+            }
+            .foregroundStyle(rfid.isScanning ? Liquid.fg0 : Liquid.bg0)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 52)
+            .background(scanButtonBackground)
+            .scaleEffect(rfid.isScanning && scanPulse ? 1.015 : 1.0)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(rfid.isScanning ? "Parar leitura" : "Iniciar leitura")
@@ -238,22 +250,14 @@ struct ScanEngine: View {
 
     @ViewBuilder
     private var scanButtonBackground: some View {
-        let shape = RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
         if rfid.isScanning {
             shape
-                .stroke(Liquid.accentCyan, lineWidth: 1.5)
-                .background(shape.fill(Liquid.accentCyan.opacity(0.10)))
-                .opacity(scanPulse ? 0.7 : 1.0)
+                .fill(Liquid.bg1)
+                .overlay(shape.strokeBorder(Liquid.accentCyan.opacity(0.7), lineWidth: 1.5))
+                .opacity(scanPulse ? 0.75 : 1.0)
         } else {
-            shape
-                .fill(
-                    LinearGradient(
-                        colors: [Liquid.accentCyan, Liquid.accentGreen],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .liquidGlow(Liquid.accentCyan, radius: 20, opacity: 0.5)
+            shape.fill(Liquid.accentCyan)
         }
     }
 

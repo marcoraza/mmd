@@ -32,6 +32,10 @@ struct ScanEngine: View {
     var primaryAction: ScanAction? = nil
     var onQRFallback: (() -> Void)? = nil
 
+    /// Chamado quando o operador toca o CTA sem leitor conectado. A trilha
+    /// hospedeira normalmente empurra a tela de conectar.
+    var onNeedsReader: (() -> Void)? = nil
+
     /// Mensagem de erro vinda da trilha (resolucao, validacao).
     var errorMessage: String? = nil
 
@@ -227,24 +231,50 @@ struct ScanEngine: View {
         .disabled(!action.isEnabled || action.isBusy)
     }
 
+    // Sem leitor conectado o CTA nao finge que escaneia: vira "Conectar
+    // leitor" e leva pra conexao. Botao morto sem feedback e passo cego.
+    @ViewBuilder
     private var scanButton: some View {
-        Button {
-            toggleScanning()
-        } label: {
-            HStack(spacing: Liquid.Space.sm) {
-                Image(systemName: rfid.isScanning ? "stop.fill" : "dot.radiowaves.right")
-                    .font(.system(size: 15, weight: .semibold))
-                Text(rfid.isScanning ? "Parar" : "Escanear")
-                    .font(.liquidSans(16, weight: .semibold))
+        if rfid.isConnected {
+            Button {
+                toggleScanning()
+            } label: {
+                HStack(spacing: Liquid.Space.sm) {
+                    Image(systemName: rfid.isScanning ? "stop.fill" : "dot.radiowaves.right")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text(rfid.isScanning ? "Parar" : "Escanear")
+                        .font(.liquidSans(16, weight: .semibold))
+                }
+                .foregroundStyle(rfid.isScanning ? Liquid.fg0 : Liquid.bg0)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 52)
+                .background(scanButtonBackground)
+                .scaleEffect(rfid.isScanning && scanPulse ? 1.015 : 1.0)
             }
-            .foregroundStyle(rfid.isScanning ? Liquid.fg0 : Liquid.bg0)
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: 52)
-            .background(scanButtonBackground)
-            .scaleEffect(rfid.isScanning && scanPulse ? 1.015 : 1.0)
+            .buttonStyle(.plain)
+            .accessibilityLabel(rfid.isScanning ? "Parar leitura" : "Iniciar leitura")
+        } else {
+            Button {
+                onNeedsReader?()
+            } label: {
+                HStack(spacing: Liquid.Space.sm) {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("Conectar leitor")
+                        .font(.liquidSans(16, weight: .semibold))
+                }
+                .foregroundStyle(Liquid.fg0)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 52)
+                .background {
+                    let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                    shape.fill(Liquid.bg1)
+                        .overlay(shape.strokeBorder(Liquid.hairlineStrong, lineWidth: 1))
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Conectar leitor RFID")
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(rfid.isScanning ? "Parar leitura" : "Iniciar leitura")
     }
 
     @ViewBuilder

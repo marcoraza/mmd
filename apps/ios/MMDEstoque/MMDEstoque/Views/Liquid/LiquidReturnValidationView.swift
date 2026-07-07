@@ -233,6 +233,7 @@ private struct LiquidReturnValidationContent: View {
                 Task { await viewModel.finalizeReturn() }
             },
             onQRFallback: { showQRScanner = true },
+            onNeedsReader: { router.push(.conectar) },
             errorMessage: viewModel.error
         )
         .frame(maxHeight: .infinity)

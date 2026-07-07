@@ -53,6 +53,7 @@ private struct LiquidCheckoutValidationContent: View {
 
     @StateObject private var viewModel: CheckoutViewModel
 
+    @EnvironmentObject private var router: LiquidRouter
     @State private var showConfirmation = false
     @State private var showQRScanner = false
 
@@ -255,6 +256,7 @@ private struct LiquidCheckoutValidationContent: View {
                 showConfirmation = true
             },
             onQRFallback: { showQRScanner = true },
+            onNeedsReader: { router.push(.conectar) },
             errorMessage: viewModel.error
         )
         .frame(maxHeight: .infinity)

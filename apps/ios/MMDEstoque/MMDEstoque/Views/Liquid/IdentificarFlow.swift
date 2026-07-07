@@ -71,6 +71,9 @@ struct IdentificarFlow: View {
 // Compartilhado pelas trilhas que dependem de scan quando o leitor esta off.
 
 struct NeedsReaderPrompt: View {
+
+    @EnvironmentObject private var router: LiquidRouter
+
     var body: some View {
         ZStack {
             TechnicalGridCanvas()
@@ -90,11 +93,24 @@ struct NeedsReaderPrompt: View {
                         .font(.liquidSans(17, weight: .semibold))
                         .foregroundStyle(Liquid.fg0)
 
-                    Text("Conecte o RFD40 pra escanear. Toque no status no topo da tela.")
+                    Text("Conecte o RFD40 pra escanear.")
                         .font(.liquidSans(14, weight: .regular))
                         .foregroundStyle(Liquid.fg2)
                         .multilineTextAlignment(.center)
                 }
+
+                Button { router.push(.conectar) } label: {
+                    Text("Conectar leitor")
+                        .font(.liquidSans(15, weight: .semibold))
+                        .foregroundStyle(Liquid.bg0)
+                        .padding(.horizontal, Liquid.Space.section)
+                        .frame(minHeight: 48)
+                        .background(
+                            RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                                .fill(Liquid.fg0)
+                        )
+                }
+                .buttonStyle(.plain)
             }
             .padding(Liquid.Space.xxl)
         }

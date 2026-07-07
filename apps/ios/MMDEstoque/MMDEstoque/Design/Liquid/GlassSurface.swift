@@ -149,20 +149,30 @@ struct TechnicalGridCanvas: View {
         ZStack {
             Liquid.bg0
 
-            // Luz-chave: fria, alta, entrando pela esquerda.
+            // Luz-chave: fria, alta, entrando pela esquerda. O raio passa da
+            // diagonal da tela e o falloff tem parada intermediaria: a luz
+            // morre FORA do quadro, nunca desenha borda dentro dele.
             RadialGradient(
-                colors: [Color(oklch: 0.78, 0.06, 230, opacity: 0.16), .clear],
+                gradient: Gradient(stops: [
+                    .init(color: Color(oklch: 0.78, 0.06, 230, opacity: 0.15), location: 0.0),
+                    .init(color: Color(oklch: 0.78, 0.06, 230, opacity: 0.06), location: 0.42),
+                    .init(color: .clear, location: 1.0),
+                ]),
                 center: UnitPoint(x: 0.22, y: -0.12),
                 startRadius: 0,
-                endRadius: 560
+                endRadius: 1100
             )
 
             // Contraluz de marca: MMD red no pe da cena, quase subliminar.
             RadialGradient(
-                colors: [Color(oklch: 0.55, 0.16, 25, opacity: 0.08), .clear],
+                gradient: Gradient(stops: [
+                    .init(color: Color(oklch: 0.55, 0.16, 25, opacity: 0.09), location: 0.0),
+                    .init(color: Color(oklch: 0.55, 0.16, 25, opacity: 0.035), location: 0.45),
+                    .init(color: .clear, location: 1.0),
+                ]),
                 center: UnitPoint(x: 1.05, y: 1.10),
                 startRadius: 0,
-                endRadius: 480
+                endRadius: 900
             )
 
             Canvas { context, size in

@@ -24,39 +24,10 @@ struct LiquidHome: View {
 private struct LiquidHomeContent: View {
 
     @EnvironmentObject private var router: LiquidRouter
-    @EnvironmentObject private var rfid: RFIDManager
     @StateObject private var vm: LiquidHomeViewModel
 
     init(apiClient: APIClient) {
         _vm = StateObject(wrappedValue: LiquidHomeViewModel(apiClient: apiClient))
-    }
-
-    // Os tiles carregam dado vivo: Receber mostra quantos itens estao em
-    // campo, Etiquetar quantos ainda nao tem tag, Identificar o estado do
-    // leitor. Despachar fica limpo (o hero ja carrega o proximo evento).
-    private var jobs: [HomeJob] {
-        [
-            HomeJob(route: .identificarScan, icon: "dot.radiowaves.right",
-                    title: "Identificar", subtitle: "Ler tag, ver item",
-                    accent: Liquid.accentCyan, meta: readerMeta),
-            HomeJob(route: .projetos(.aSair), icon: "shippingbox",
-                    title: "Despachar", subtitle: "Saída pra campo",
-                    accent: Liquid.accentAmber, meta: nil),
-            HomeJob(route: .projetos(.emCampo), icon: "tray.and.arrow.down",
-                    title: "Receber", subtitle: "Volta do campo",
-                    accent: Liquid.accentGreen,
-                    meta: countMeta(vm.counts.emCampo, dot: Liquid.accentAmber)),
-            HomeJob(route: .etiquetar(tag: nil), icon: "tag",
-                    title: "Etiquetar", subtitle: "Vincular tag nova",
-                    accent: Liquid.accentViolet,
-                    meta: countMeta(vm.counts.semTag, dot: Liquid.fg2)),
-        ]
-    }
-
-    private var readerMeta: HomeJobMeta? {
-        guard let reader = rfid.connectionState.readerInfo else { return nil }
-        let battery = reader.batteryLevel.map { " \($0)%" } ?? ""
-        return HomeJobMeta(text: "Leitor\(battery)", dot: Liquid.accentGreen)
     }
 
     private func countMeta(_ count: Int, dot: Color) -> HomeJobMeta? {
@@ -77,9 +48,15 @@ private struct LiquidHomeContent: View {
                 errorNote(erro)
             }
 
-            Spacer(minLength: 0)
+            if !vm.proximosEventos.isEmpty {
+                agendaSection
+            }
 
-            jobsSection
+            if let semTag = countMeta(vm.counts.semTag, dot: Liquid.accentAmber) {
+                atencaoSection(semTag)
+            }
+
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, Liquid.Space.xxl)
         .padding(.top, Liquid.Space.md)
@@ -216,14 +193,102 @@ private struct LiquidHomeContent: View {
 
     // MARK: Jobs
 
-    private var jobsSection: some View {
+    // MARK: Agenda
+    //
+    // A fila depois do hero: proximos eventos confirmados, cada row com um
+    // bloco de data (dia mono + mes) fazendo papel de icone.
+
+    private var agendaSection: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.md) {
-            LiquidSectionHeader(title: "Ações")
+            LiquidSectionHeader(title: "Agenda")
 
             VStack(spacing: Liquid.Space.sm) {
-                ForEach(jobs) { job in
-                    HomeActionRow(job: job) { router.push(job.route) }
+                ForEach(vm.proximosEventos) { evento in
+                    agendaRow(evento)
                 }
+            }
+        }
+    }
+
+    private func agendaRow(_ evento: Project) -> some View {
+        Button { router.push(.packing(evento)) } label: {
+            HStack(spacing: Liquid.Space.md) {
+                dateBlock(evento)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(evento.nome)
+                        .font(.liquidSans(15, weight: .semibold))
+                        .foregroundStyle(Liquid.fg0)
+                        .lineLimit(1)
+                    if let sub = evento.cliente ?? evento.local {
+                        Text(sub)
+                            .font(.liquidSans(12, weight: .regular))
+                            .foregroundStyle(Liquid.fg2)
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer(minLength: Liquid.Space.sm)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Liquid.fg3)
+            }
+            .padding(.horizontal, Liquid.Space.md)
+            .padding(.vertical, Liquid.Space.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .panelSurface(cornerRadius: Liquid.Radius.md)
+        }
+        .buttonStyle(.pressableCard)
+        .accessibilityLabel("Evento \(evento.nome), abrir packing")
+    }
+
+    /// Dia (mono) sobre mes abreviado, num chip: calendario de instrumento.
+    private func dateBlock(_ evento: Project) -> some View {
+        VStack(spacing: 0) {
+            Text(evento.dataInicioDate.map { Self.diaFormatter.string(from: $0) } ?? "–")
+                .font(.liquidMono(15, weight: .medium))
+                .foregroundStyle(Liquid.fg0)
+            Text(evento.dataInicioDate.map { Self.mesFormatter.string(from: $0).uppercased() } ?? "")
+                .font(.liquidSans(9, weight: .semibold))
+                .tracking(0.5)
+                .foregroundStyle(Liquid.fg2)
+        }
+        .frame(width: 40, height: 40)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Liquid.bg2)
+        )
+    }
+
+    private static let diaFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "pt_BR")
+        f.dateFormat = "d"
+        return f
+    }()
+
+    private static let mesFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "pt_BR")
+        f.dateFormat = "MMM"
+        return f
+    }()
+
+    // MARK: Atenção
+    //
+    // Pendencia acionavel: itens sem tag apontando direto pro Etiquetar.
+
+    private func atencaoSection(_ meta: HomeJobMeta) -> some View {
+        VStack(alignment: .leading, spacing: Liquid.Space.md) {
+            LiquidSectionHeader(title: "Atenção")
+
+            HomeActionRow(
+                job: HomeJob(route: .etiquetar(tag: nil), icon: "tag",
+                             title: "Itens sem tag", subtitle: "Etiquetar pra rastrear",
+                             accent: Liquid.accentAmber, meta: meta)
+            ) {
+                router.push(.etiquetar(tag: nil))
             }
         }
     }

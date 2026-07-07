@@ -36,6 +36,7 @@ struct StatusCounts {
 final class LiquidHomeViewModel: ObservableObject {
 
     @Published private(set) var proximoEvento: Project?
+    @Published private(set) var proximosEventos: [Project] = []
     @Published private(set) var counts = StatusCounts.zero
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
@@ -56,7 +57,11 @@ final class LiquidHomeViewModel: ObservableObject {
 
             let (conf, snap) = try await (confirmados, snapshot)
 
-            proximoEvento = pickProximo(conf)
+            let proximo = pickProximo(conf)
+            proximoEvento = proximo
+            // Fila da agenda: os confirmados seguintes (a lista ja vem
+            // ordenada por data_inicio.asc), sem repetir o hero.
+            proximosEventos = Array(conf.filter { $0.id != proximo?.id }.prefix(3))
             counts = aggregate(snap)
             carregou = true
         } catch {

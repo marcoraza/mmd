@@ -76,6 +76,35 @@ extension Int {
     }
 }
 
+// MARK: - LiquidSectionHeader
+//
+// Header de secao com tick vermelho de marca: pontuacao visual do MMD.
+// Trailing opcional em mono pra contagem ou dado tecnico.
+
+struct LiquidSectionHeader: View {
+    let title: String
+    var trailing: String? = nil
+
+    var body: some View {
+        HStack(spacing: Liquid.Space.sm) {
+            RoundedRectangle(cornerRadius: 1.5)
+                .fill(Liquid.accentRed)
+                .frame(width: 3, height: 12)
+
+            Text(title)
+                .liquidSection(Liquid.fg1)
+
+            Spacer()
+
+            if let trailing {
+                Text(trailing)
+                    .font(.liquidMono(12, weight: .medium))
+                    .foregroundStyle(Liquid.fg2)
+            }
+        }
+    }
+}
+
 // MARK: - LiquidStatusBadge
 //
 // Pill de vidro: texto na cor do estado, fundo tint suave, borda na mesma cor.

@@ -223,23 +223,13 @@ private struct LiquidHomeContent: View {
 
     private var jobsSection: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.lg) {
-            sectionHeader("Ações")
+            LiquidSectionHeader(title: "Ações")
 
             LazyVGrid(columns: columns, spacing: Liquid.Space.md) {
                 ForEach(jobs) { job in
                     HomeActionTile(job: job) { router.push(job.route) }
                 }
             }
-        }
-    }
-
-    private func sectionHeader(_ title: String) -> some View {
-        HStack(spacing: Liquid.Space.sm) {
-            RoundedRectangle(cornerRadius: 1.5)
-                .fill(Liquid.accentRed)
-                .frame(width: 3, height: 12)
-            Text(title)
-                .liquidSection(Liquid.fg1)
         }
     }
 }

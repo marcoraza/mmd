@@ -23,23 +23,23 @@ enum ProjectFilter: Hashable {
         switch self {
         case .aSair:   return "Prontos pra despacho"
         case .emCampo: return "Em campo"
-        case .todos:   return "Projetos ativos"
+        case .todos:   return "Eventos ativos"
         }
     }
 
     var emptyTitle: String {
         switch self {
-        case .aSair:   return "Nenhum projeto pra despachar"
-        case .emCampo: return "Nenhum projeto em campo"
-        case .todos:   return "Nenhum projeto ativo"
+        case .aSair:   return "Nenhum evento pra despachar"
+        case .emCampo: return "Nenhum evento em campo"
+        case .todos:   return "Nenhum evento ativo"
         }
     }
 
     var emptyHint: String {
         switch self {
-        case .aSair:   return "Projetos confirmados aparecem aqui pra sair pra campo."
-        case .emCampo: return "Projetos que saíram pra campo aparecem aqui pra receber."
-        case .todos:   return "Projetos confirmados ou em campo aparecem aqui."
+        case .aSair:   return "Eventos confirmados aparecem aqui pra sair pra campo."
+        case .emCampo: return "Eventos que saíram pra campo aparecem aqui pra receber."
+        case .todos:   return "Eventos confirmados ou em campo aparecem aqui."
         }
     }
 }
@@ -64,11 +64,11 @@ struct LiquidProjectsListView: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
 
             content
         }
-        .navigationTitle("Projetos")
+        .navigationTitle("Eventos")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task { await loadProjects() }
@@ -91,19 +91,17 @@ struct LiquidProjectsListView: View {
     private var projectList: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Liquid.Space.lg) {
-                HStack {
-                    Text(filter.sectionLabel).liquidLabel(Liquid.accentCyan)
-                    Spacer()
-                    Text("\(projects.count)")
-                        .liquidMonoData(13, color: Liquid.fg2)
-                }
+                LiquidSectionHeader(
+                    title: filter.sectionLabel,
+                    trailing: "\(projects.count)"
+                )
                 .padding(.horizontal, Liquid.Space.xs)
 
                 ForEach(projects) { project in
                     Button { onSelect(project) } label: {
                         projectCard(project)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressableCard)
                 }
             }
             .padding(Liquid.Space.xxl)
@@ -112,65 +110,70 @@ struct LiquidProjectsListView: View {
     }
 
     // MARK: Project Card
+    //
+    // Anatomia: identidade (nome + cliente + badge), metadados mono, rodape
+    // com hairline e CTA na cor da trilha.
 
     private func projectCard(_ project: Project) -> some View {
-        GlassCard(strong: true, padding: Liquid.Space.xl) {
-            VStack(alignment: .leading, spacing: Liquid.Space.md) {
-                HStack(alignment: .top, spacing: Liquid.Space.md) {
-                    VStack(alignment: .leading, spacing: Liquid.Space.xs) {
-                        Text(project.nome)
-                            .liquidH3()
-                            .foregroundStyle(Liquid.fg0)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
+        VStack(alignment: .leading, spacing: Liquid.Space.lg) {
+            HStack(alignment: .top, spacing: Liquid.Space.md) {
+                VStack(alignment: .leading, spacing: Liquid.Space.xs) {
+                    Text(project.nome)
+                        .font(.liquidSans(18, weight: .semibold))
+                        .tracking(-0.3)
+                        .foregroundStyle(Liquid.fg0)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
 
-                        if let cliente = project.cliente {
-                            Text(cliente)
-                                .liquidSmall()
-                                .lineLimit(1)
-                        }
-                    }
-
-                    Spacer(minLength: Liquid.Space.sm)
-
-                    LiquidStatusBadge(projeto: project.status)
-                }
-
-                if let dateLine = dateLine(for: project) {
-                    HStack(spacing: Liquid.Space.sm) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Liquid.fg3)
-                        Text(dateLine)
-                            .liquidMonoData(11, color: Liquid.fg2)
-                    }
-                }
-
-                if let local = project.local {
-                    HStack(spacing: Liquid.Space.sm) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Liquid.fg3)
-                        Text(local)
-                            .liquidMonoData(11, color: Liquid.fg2)
+                    if let cliente = project.cliente {
+                        Text(cliente)
+                            .font(.liquidSans(13, weight: .regular))
+                            .foregroundStyle(Liquid.fg2)
                             .lineLimit(1)
                     }
                 }
 
+                Spacer(minLength: Liquid.Space.sm)
+
+                LiquidStatusBadge(projeto: project.status)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                if let dateLine = dateLine(for: project) {
+                    Label(dateLine, systemImage: "calendar")
+                        .liquidMonoData(11, color: Liquid.fg2)
+                        .lineLimit(1)
+                }
+                if let local = project.local {
+                    Label(local, systemImage: "mappin.and.ellipse")
+                        .liquidMonoData(11, color: Liquid.fg2)
+                        .lineLimit(1)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: Liquid.Space.md) {
+                Rectangle()
+                    .fill(Liquid.hairline)
+                    .frame(height: 1)
+
                 HStack {
                     Spacer()
                     Text(ctaLabel)
-                        .font(.liquidMono(11, weight: .medium))
-                        .textCase(.uppercase)
-                        .tracking(1.0)
-                        .foregroundStyle(filter == .emCampo ? Liquid.accentGreen : Liquid.accentAmber)
+                        .font(.liquidSans(13, weight: .semibold))
+                        .foregroundStyle(ctaTint)
                     Image(systemName: "chevron.right")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(filter == .emCampo ? Liquid.accentGreen : Liquid.accentAmber)
+                        .foregroundStyle(ctaTint)
                 }
-                .padding(.top, Liquid.Space.xxs)
             }
         }
+        .padding(Liquid.Space.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
+    }
+
+    private var ctaTint: Color {
+        filter == .emCampo ? Liquid.accentGreen : Liquid.accentAmber
     }
 
     private var ctaLabel: String {
@@ -195,30 +198,40 @@ struct LiquidProjectsListView: View {
     private var loadingState: some View {
         VStack(spacing: Liquid.Space.lg) {
             ProgressView().tint(Liquid.fg2)
-            Text("Carregando").liquidLabel()
+            Text("Carregando")
+                .font(.liquidSans(14, weight: .medium))
+                .foregroundStyle(Liquid.fg2)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var emptyState: some View {
         VStack(spacing: Liquid.Space.lg) {
-            GlassCard {
-                VStack(spacing: Liquid.Space.lg) {
-                    Image(systemName: error == nil ? "folder" : "exclamationmark.triangle")
-                        .font(.system(size: 34, weight: .thin))
-                        .foregroundStyle(error == nil ? Liquid.fg3 : Liquid.accentAmber)
+            Image(systemName: error == nil ? "calendar" : "exclamationmark.triangle")
+                .font(.system(size: 24, weight: .medium))
+                .foregroundStyle(error == nil ? Liquid.fg2 : Liquid.accentAmber)
+                .frame(width: 56, height: 56)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Liquid.bg1)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(Liquid.hairline, lineWidth: 1)
+                )
 
-                    Text(error == nil ? filter.emptyTitle : "Falha ao carregar")
-                        .liquidH3()
-                        .multilineTextAlignment(.center)
+            VStack(spacing: Liquid.Space.xs) {
+                Text(error == nil ? filter.emptyTitle : "Falha ao carregar")
+                    .font(.liquidSans(17, weight: .semibold))
+                    .foregroundStyle(Liquid.fg0)
+                    .multilineTextAlignment(.center)
 
-                    Text(error ?? filter.emptyHint)
-                        .liquidBody()
-                        .foregroundStyle(Liquid.fg2)
-                        .multilineTextAlignment(.center)
-                }
+                Text(error ?? filter.emptyHint)
+                    .font(.liquidSans(14, weight: .regular))
+                    .foregroundStyle(Liquid.fg2)
+                    .multilineTextAlignment(.center)
             }
-            .padding(Liquid.Space.xxl)
+            .padding(.horizontal, Liquid.Space.section)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

@@ -30,7 +30,7 @@ struct LiquidPackingListView: View {
         Group {
             if mode == .lista {
                 ZStack {
-                    CausticBackground(intensity: .work)
+                    TechnicalGridCanvas()
                     content
                 }
             } else {
@@ -78,73 +78,104 @@ struct LiquidPackingListView: View {
     }
 
     // MARK: Header
+    //
+    // Card conectado: identidade do evento por cima, progresso de conferencia
+    // no card acoplado em meio-tom por baixo (mesmo padrao do hero da home).
+
+    private let headerOverlap: CGFloat = 18
 
     private var header: some View {
-        GlassCard(strong: true) {
-            VStack(alignment: .leading, spacing: Liquid.Space.lg) {
-                HStack(alignment: .top, spacing: Liquid.Space.md) {
-                    VStack(alignment: .leading, spacing: Liquid.Space.xs) {
-                        Text(project.nome)
-                            .liquidH2()
-                            .foregroundStyle(Liquid.fg0)
-                            .lineLimit(3)
+        VStack(spacing: -headerOverlap) {
+            identityCard
+                .zIndex(1)
 
-                        if let cliente = project.cliente {
-                            Text(cliente).liquidSmall()
-                        }
+            progressAttachedCard
+        }
+    }
+
+    private var identityCard: some View {
+        VStack(alignment: .leading, spacing: Liquid.Space.lg) {
+            HStack(alignment: .top, spacing: Liquid.Space.md) {
+                VStack(alignment: .leading, spacing: Liquid.Space.xs) {
+                    Text("EVENTO")
+                        .font(.liquidMono(10, weight: .medium))
+                        .tracking(1.2)
+                        .foregroundStyle(Liquid.fg2)
+                        .padding(.bottom, Liquid.Space.xs)
+
+                    Text(project.nome)
+                        .font(.liquidSans(22, weight: .semibold))
+                        .tracking(-0.4)
+                        .foregroundStyle(Liquid.fg0)
+                        .lineLimit(3)
+
+                    if let cliente = project.cliente {
+                        Text(cliente)
+                            .font(.liquidSans(13, weight: .regular))
+                            .foregroundStyle(Liquid.fg2)
                     }
-
-                    Spacer(minLength: Liquid.Space.sm)
-
-                    LiquidStatusBadge(projeto: project.status)
                 }
 
-                if let dateLine = dateLine {
-                    HStack(spacing: Liquid.Space.sm) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Liquid.fg3)
-                        Text(dateLine).liquidMonoData(11, color: Liquid.fg2)
-                    }
-                }
+                Spacer(minLength: Liquid.Space.sm)
 
-                Divider().overlay(Liquid.glassBorder)
+                LiquidStatusBadge(projeto: project.status)
+            }
 
-                HStack(spacing: Liquid.Space.xl) {
-                    ReadinessGauge(
-                        progress: 0,
-                        state: .missing,
-                        diameter: Liquid.Ring.sizeMd,
-                        stroke: Liquid.Ring.strokeMd,
-                        caption: nil
-                    )
-
-                    VStack(alignment: .leading, spacing: Liquid.Space.xxs) {
-                        Text("0/\(totalExpected)")
-                            .font(.liquidMono(26, weight: .medium))
-                            .foregroundStyle(Liquid.fg0)
-                        Text("itens conferidos")
-                            .liquidLabel(Liquid.fg2)
-                        Text("Confira no scan da validação")
-                            .liquidSmall()
-                    }
-
-                    Spacer()
-                }
+            if let dateLine = dateLine {
+                Label(dateLine, systemImage: "calendar")
+                    .liquidMonoData(11, color: Liquid.fg2)
+                    .lineLimit(1)
             }
         }
+        .padding(Liquid.Space.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
+    }
+
+    private var progressAttachedCard: some View {
+        HStack(spacing: Liquid.Space.lg) {
+            ReadinessGauge(
+                progress: 0,
+                state: .missing,
+                diameter: 48,
+                stroke: 5,
+                caption: nil
+            )
+
+            VStack(alignment: .leading, spacing: 2) {
+                (Text("0").foregroundColor(Liquid.fg0)
+                    + Text("/\(totalExpected)").foregroundColor(Liquid.fg2))
+                    .font(.liquidMono(17, weight: .medium))
+
+                Text("Conferidos no scan da validação")
+                    .font(.liquidSans(12, weight: .regular))
+                    .foregroundStyle(Liquid.fg2)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, Liquid.Space.xl)
+        .padding(.top, headerOverlap + Liquid.Space.md)
+        .padding(.bottom, Liquid.Space.md)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+                .fill(Liquid.bgInset)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+                        .strokeBorder(Liquid.hairline, lineWidth: 1)
+                )
+        )
     }
 
     // MARK: Items
 
     private var itemsSection: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.lg) {
-            HStack {
-                Text("Itens esperados").liquidLabel(Liquid.accentCyan)
-                Spacer()
-                Text("\(packingItems.count) linhas")
-                    .liquidMonoData(11, color: Liquid.fg2)
-            }
+            LiquidSectionHeader(
+                title: "Itens esperados",
+                trailing: "\(packingItems.count) linhas"
+            )
             .padding(.horizontal, Liquid.Space.xs)
 
             VStack(spacing: Liquid.Space.md) {
@@ -156,72 +187,71 @@ struct LiquidPackingListView: View {
     }
 
     private func packingItemCard(_ item: PackingListItem) -> some View {
-        GlassCard(cornerRadius: Liquid.Radius.md, strong: true, padding: Liquid.Space.lg) {
-            VStack(alignment: .leading, spacing: Liquid.Space.md) {
-                HStack(alignment: .top, spacing: Liquid.Space.md) {
-                    VStack(alignment: .leading, spacing: Liquid.Space.xs) {
-                        Text(item.displayName)
-                            .liquidBody()
-                            .foregroundStyle(Liquid.fg0)
-                            .lineLimit(2)
+        VStack(alignment: .leading, spacing: Liquid.Space.md) {
+            HStack(alignment: .top, spacing: Liquid.Space.md) {
+                VStack(alignment: .leading, spacing: Liquid.Space.sm) {
+                    Text(item.displayName)
+                        .font(.liquidSans(15, weight: .medium))
+                        .foregroundStyle(Liquid.fg0)
+                        .lineLimit(2)
 
-                        if let categoria = item.item?.categoria {
-                            LiquidCategoryBadge(categoria: categoria)
-                        }
-                    }
-
-                    Spacer(minLength: Liquid.Space.sm)
-
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("x\(item.quantidade)")
-                            .font(.liquidMono(18, weight: .medium))
-                            .foregroundStyle(Liquid.fg0)
-                        Text("qtd")
-                            .liquidLabel(Liquid.fg3)
+                    if let categoria = item.item?.categoria {
+                        LiquidCategoryBadge(categoria: categoria)
                     }
                 }
 
-                if let desgaste = averageDesgaste(for: item) {
-                    HStack(spacing: Liquid.Space.md) {
-                        Text("Desgaste")
-                            .liquidLabel(Liquid.fg2)
-                        LiquidWearBar(level: desgaste)
-                        Text("\(desgaste)/5")
-                            .font(.liquidMono(11, weight: .medium))
-                            .foregroundStyle(desgaste.liquidWearColor)
-                    }
+                Spacer(minLength: Liquid.Space.sm)
+
+                (Text("×").foregroundColor(Liquid.fg3)
+                    + Text("\(item.quantidade)").foregroundColor(Liquid.fg0))
+                    .font(.liquidMono(18, weight: .medium))
+            }
+
+            if let desgaste = averageDesgaste(for: item) {
+                HStack(spacing: Liquid.Space.md) {
+                    Text("Desgaste")
+                        .font(.liquidSans(11, weight: .medium))
+                        .foregroundStyle(Liquid.fg2)
+                    LiquidWearBar(level: desgaste)
+                    Text("\(desgaste)/5")
+                        .font(.liquidMono(11, weight: .medium))
+                        .foregroundStyle(desgaste.liquidWearColor)
                 }
             }
         }
+        .padding(Liquid.Space.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 
     // MARK: Advance Bar
 
     private var advanceBar: some View {
         VStack(spacing: 0) {
-            Divider().overlay(Liquid.glassBorder)
+            Rectangle()
+                .fill(Liquid.hairline)
+                .frame(height: 1)
 
             Button { onAdvance?() } label: {
                 HStack(spacing: Liquid.Space.sm) {
                     Image(systemName: advanceIcon)
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(size: 15, weight: .semibold))
                     Text(advanceLabel)
-                        .font(.liquidMono(14, weight: .medium))
-                        .textCase(.uppercase)
-                        .tracking(1.5)
+                        .font(.liquidSans(16, weight: .semibold))
                 }
                 .foregroundStyle(Liquid.bg0)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Liquid.Space.lg)
-                .background {
-                    let shape = RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
-                    shape.fill(advanceTint).liquidGlow(advanceTint, radius: 16, opacity: 0.4)
-                }
+                .frame(minHeight: 52)
+                .background(
+                    RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                        .fill(advanceTint)
+                )
             }
             .buttonStyle(.plain)
-            .padding(Liquid.Space.xxl)
+            .padding(.horizontal, Liquid.Space.xxl)
+            .padding(.vertical, Liquid.Space.lg)
         }
-        .background(Liquid.bg0.opacity(0.35))
+        .background(Liquid.bg0)
     }
 
     private var advanceLabel: String {
@@ -241,25 +271,36 @@ struct LiquidPackingListView: View {
     private var loadingState: some View {
         VStack(spacing: Liquid.Space.lg) {
             ProgressView().tint(Liquid.fg2)
-            Text("Carregando packing list").liquidLabel()
+            Text("Carregando packing list")
+                .font(.liquidSans(14, weight: .medium))
+                .foregroundStyle(Liquid.fg2)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var emptyItemsCard: some View {
-        GlassCard {
-            VStack(spacing: Liquid.Space.md) {
-                Image(systemName: error == nil ? "shippingbox" : "exclamationmark.triangle")
-                    .font(.system(size: 30, weight: .thin))
-                    .foregroundStyle(error == nil ? Liquid.fg3 : Liquid.accentAmber)
-                Text(error == nil ? "Packing list vazia" : "Falha ao carregar")
-                    .liquidH3()
-                Text(error ?? "Adicione itens pelo painel web.")
-                    .liquidBody()
-                    .foregroundStyle(Liquid.fg2)
-                    .multilineTextAlignment(.center)
-            }
+        VStack(spacing: Liquid.Space.md) {
+            Image(systemName: error == nil ? "shippingbox" : "exclamationmark.triangle")
+                .font(.system(size: 22, weight: .medium))
+                .foregroundStyle(error == nil ? Liquid.fg2 : Liquid.accentAmber)
+                .frame(width: 52, height: 52)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Liquid.bg2)
+                )
+
+            Text(error == nil ? "Packing list vazia" : "Falha ao carregar")
+                .font(.liquidSans(16, weight: .semibold))
+                .foregroundStyle(Liquid.fg0)
+
+            Text(error ?? "Adicione itens pelo painel web.")
+                .font(.liquidSans(13, weight: .regular))
+                .foregroundStyle(Liquid.fg2)
+                .multilineTextAlignment(.center)
         }
+        .padding(Liquid.Space.section)
+        .frame(maxWidth: .infinity)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
     }
 
     // MARK: Helpers

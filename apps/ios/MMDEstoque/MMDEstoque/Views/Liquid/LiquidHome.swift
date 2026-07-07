@@ -68,10 +68,7 @@ private struct LiquidHomeContent: View {
             .padding(Liquid.Space.xxl)
             .padding(.bottom, Liquid.Space.vast)
         }
-        .background(
-            CausticBackground(intensity: .work, includesGreenOrb: true)
-                .ignoresSafeArea()
-        )
+        .background(Liquid.bg0.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .task { if !vm.carregou { await vm.load() } }
         .refreshable { await vm.load() }
@@ -83,7 +80,7 @@ private struct LiquidHomeContent: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: Liquid.Space.xs) {
                 Text("MMD ESTOQUE")
-                    .liquidLabel(Liquid.accentCyan)
+                    .liquidLabel()
                 Text("Operação de campo")
                     .liquidTitle()
             }
@@ -126,8 +123,8 @@ private struct LiquidHomeContent: View {
 
     private var jobsSection: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.lg) {
-            Text("O que você vai fazer")
-                .liquidLabel()
+            Text("Ações")
+                .liquidSection()
 
             LazyVGrid(columns: columns, spacing: Liquid.Space.lg) {
                 ForEach(jobs) { job in
@@ -158,13 +155,13 @@ struct HomeHeroCard: View {
                     state: isLoading ? .partial : nil,
                     diameter: 96,
                     stroke: 8,
-                    glow: !isLoading,
+                    glow: false,
                     caption: isLoading ? nil : "DISPONÍVEL"
                 )
 
                 VStack(alignment: .leading, spacing: Liquid.Space.xs) {
                     Text(isLoading ? "CARREGANDO" : "PRÓXIMO A DESPACHAR")
-                        .liquidLabel(Liquid.accentViolet)
+                        .liquidLabel()
 
                     if let evento {
                         Text(evento.nome)
@@ -198,7 +195,6 @@ struct HomeHeroCard: View {
             .padding(Liquid.Space.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
             .glassSurface(cornerRadius: Liquid.Radius.lg, strong: true)
-            .liquidGlow(Liquid.accentViolet, radius: 22, opacity: 0.22)
         }
         .buttonStyle(.plain)
         .disabled(evento == nil)
@@ -249,11 +245,10 @@ struct HomeActionTile: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: Liquid.Space.md) {
                 Image(systemName: job.icon)
-                    .font(.system(size: 26, weight: .medium))
+                    .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(job.accent)
-                    .frame(width: 52, height: 52)
-                    .background(Circle().fill(job.accent.opacity(0.14)))
-                    .liquidGlow(job.accent, radius: 12, opacity: 0.25)
+                    .frame(width: 48, height: 48)
+                    .background(Circle().fill(job.accent.opacity(0.12)))
 
                 Spacer(minLength: Liquid.Space.lg)
 

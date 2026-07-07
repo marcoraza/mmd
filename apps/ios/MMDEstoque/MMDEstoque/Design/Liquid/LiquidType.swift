@@ -67,7 +67,7 @@ extension View {
     }
 
     func liquidTitle() -> some View {
-        self.font(.liquidTitle).tracking(-0.6).foregroundStyle(Liquid.fg0)
+        self.font(.liquidSans(28, weight: .semibold)).tracking(-0.4).foregroundStyle(Liquid.fg0)
     }
 
     func liquidH2() -> some View {
@@ -86,13 +86,21 @@ extension View {
         self.font(.liquidSmall).foregroundStyle(Liquid.fg2)
     }
 
-    /// Label mono: ALL CAPS, tracking 1.2, cor secundaria por padrao.
+    /// Label mono: ALL CAPS, tracking comedido, cor secundaria por padrao.
     /// Usado em headers de secao, metadados, badges.
     func liquidLabel(_ color: Color = Liquid.fg2) -> some View {
         self
             .font(.liquidMonoLabel)
             .textCase(.uppercase)
-            .tracking(1.2)
+            .tracking(0.8)
+            .foregroundStyle(color)
+    }
+
+    /// Header de secao em sans, sentence case. Substitui o label mono caps
+    /// onde a tela pede hierarquia mais calma (estilo lista do iOS).
+    func liquidSection(_ color: Color = Liquid.fg2) -> some View {
+        self
+            .font(.liquidSans(13, weight: .semibold))
             .foregroundStyle(color)
     }
 

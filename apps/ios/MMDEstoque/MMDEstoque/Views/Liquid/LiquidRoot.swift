@@ -116,7 +116,6 @@ struct ReaderStatusBar: View {
                 Circle()
                     .fill(dotColor)
                     .frame(width: 7, height: 7)
-                    .liquidGlow(dotColor, radius: 6, opacity: 0.7)
 
                 Image(systemName: rfid.statusIcon)
                     .font(.system(size: 13, weight: .medium))
@@ -146,7 +145,8 @@ struct ReaderStatusBar: View {
         switch rfid.connectionState {
         case .connected:                return Liquid.accentGreen
         case .discovering, .connecting: return Liquid.accentAmber
-        case .disconnected, .error:     return Liquid.accentRed
+        case .disconnected:             return Liquid.fg2
+        case .error:                    return Liquid.accentRed
         }
     }
 }

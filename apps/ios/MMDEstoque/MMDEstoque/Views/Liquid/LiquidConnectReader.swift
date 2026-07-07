@@ -11,7 +11,7 @@ struct LiquidConnectReader: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .hero)
+            Liquid.bg0.ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: Liquid.Space.section) {
@@ -34,21 +34,20 @@ struct LiquidConnectReader: View {
     private var statusHero: some View {
         VStack(spacing: Liquid.Space.lg) {
             ZStack {
-                Circle().fill(dotColor.opacity(0.12))
-                Circle().strokeBorder(dotColor.opacity(0.45), lineWidth: 2)
+                Circle().fill(dotColor.opacity(0.10))
                 Image(systemName: rfid.statusIcon)
-                    .font(.system(size: 44, weight: .thin))
+                    .font(.system(size: 34, weight: .regular))
                     .foregroundStyle(dotColor)
             }
-            .frame(width: 124, height: 124)
-            .liquidGlow(dotColor, radius: 26, opacity: 0.4)
+            .frame(width: 96, height: 96)
 
             Text(statusText)
-                .liquidLabel(dotColor)
+                .font(.liquidSans(17, weight: .semibold))
+                .foregroundStyle(Liquid.fg0)
 
             if case .error(let message) = rfid.connectionState {
                 Text(message)
-                    .liquidBody()
+                    .liquidSmall()
                     .foregroundStyle(Liquid.accentRed)
                     .multilineTextAlignment(.center)
             }
@@ -115,7 +114,7 @@ struct LiquidConnectReader: View {
     private var readersList: some View {
         if !rfid.discoveredReaders.isEmpty && !rfid.connectionState.isConnected {
             VStack(alignment: .leading, spacing: Liquid.Space.md) {
-                Text("Leitores Bluetooth").liquidLabel()
+                Text("Leitores encontrados").liquidSection()
 
                 VStack(spacing: Liquid.Space.sm) {
                     ForEach(rfid.discoveredReaders) { reader in
@@ -150,18 +149,18 @@ struct LiquidConnectReader: View {
     ) -> some View {
         Button(action: action) {
             HStack(spacing: Liquid.Space.sm) {
-                Image(systemName: icon).font(.system(size: 15, weight: .medium))
-                Text(label).font(.liquidMono(14, weight: .medium)).textCase(.uppercase).tracking(1.5)
+                Image(systemName: icon).font(.system(size: 15, weight: .semibold))
+                Text(label).font(.liquidSans(16, weight: .semibold))
             }
             .foregroundStyle(filled ? Liquid.bg0 : tint)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, Liquid.Space.lg)
+            .frame(minHeight: 50)
             .background {
-                let shape = RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+                let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
                 if filled {
-                    shape.fill(tint).liquidGlow(tint, radius: 18, opacity: 0.45)
+                    shape.fill(Liquid.fg0)
                 } else {
-                    shape.strokeBorder(tint, lineWidth: 1.5).background(shape.fill(tint.opacity(0.10)))
+                    shape.fill(Liquid.glassBgStrong)
                 }
             }
         }

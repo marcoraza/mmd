@@ -56,15 +56,11 @@ struct LiquidRoot: View {
         ZStack {
             Liquid.bg0.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                ReaderStatusBar { router.push(.conectar) }
-
-                NavigationStack(path: $router.path) {
-                    tabRoot
-                        .navigationDestination(for: AppRoute.self) { route in
-                            destination(for: route)
-                        }
-                }
+            NavigationStack(path: $router.path) {
+                tabRoot
+                    .navigationDestination(for: AppRoute.self) { route in
+                        destination(for: route)
+                    }
             }
         }
         .overlay(alignment: .bottom) {
@@ -156,52 +152,6 @@ struct LiquidRoot: View {
     }
 }
 
-// MARK: - ReaderStatusBar
-//
-// Pilula de vidro persistente: ponto colorido por estado, icone, label do
-// status. Toque abre a tela de conectar. Status sempre visivel.
-
-struct ReaderStatusBar: View {
-
-    @EnvironmentObject private var rfid: RFIDManager
-    var onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: Liquid.Space.sm) {
-                Circle()
-                    .fill(dotColor)
-                    .frame(width: 6, height: 6)
-
-                Text(rfid.statusText)
-                    .font(.liquidSans(13, weight: .medium))
-                    .foregroundStyle(Liquid.fg1)
-                    .lineLimit(1)
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Liquid.fg3)
-            }
-            .padding(.horizontal, Liquid.Space.lg)
-            .padding(.vertical, 10)
-            .background(Capsule().fill(Liquid.bg1))
-            .overlay(Capsule().strokeBorder(Liquid.hairline, lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Leitor: \(rfid.statusText)")
-        .padding(.horizontal, Liquid.Space.xxl)
-        .padding(.top, Liquid.Space.sm)
-        .padding(.bottom, Liquid.Space.xs)
-    }
-
-    private var dotColor: Color {
-        switch rfid.connectionState {
-        case .connected:                return Liquid.accentGreen
-        case .discovering, .connecting: return Liquid.accentAmber
-        case .disconnected:             return Liquid.fg2
-        case .error:                    return Liquid.accentRed
-        }
-    }
-}
+// A pilula global do leitor (ReaderStatusBar) saiu: status de hardware em
+// banner permanente e coisa de debug. O estado do leitor vive no contexto:
+// rodape da home, CTA das telas de scan e Ajustes.

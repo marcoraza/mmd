@@ -24,6 +24,7 @@ struct LiquidHome: View {
 private struct LiquidHomeContent: View {
 
     @EnvironmentObject private var router: LiquidRouter
+    @EnvironmentObject private var rfid: RFIDManager
     @StateObject private var vm: LiquidHomeViewModel
 
     init(apiClient: APIClient) {
@@ -55,6 +56,8 @@ private struct LiquidHomeContent: View {
             }
 
             Spacer(minLength: 0)
+
+            readerRow
         }
         .padding(.horizontal, Liquid.Space.xxl)
         .padding(.top, Liquid.Space.md)
@@ -242,6 +245,62 @@ private struct LiquidHomeContent: View {
         f.dateFormat = "MMM"
         return f
     }()
+
+    // MARK: Leitor
+    //
+    // Status do RFD40 no rodape do cockpit: dot de estado, nome e bateria
+    // quando pareado. Toque abre a conexao. Substitui a pilula global.
+
+    private var readerRow: some View {
+        Button { router.push(.conectar) } label: {
+            HStack(spacing: Liquid.Space.sm) {
+                Circle()
+                    .fill(readerDot)
+                    .frame(width: 6, height: 6)
+
+                Text(readerLabel)
+                    .font(.liquidSans(13, weight: .medium))
+                    .foregroundStyle(Liquid.fg2)
+                    .lineLimit(1)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Liquid.fg3)
+            }
+            .padding(.horizontal, Liquid.Space.md)
+            .padding(.vertical, 10)
+            .panelSurface(cornerRadius: Liquid.Radius.md, tone: .inset)
+        }
+        .buttonStyle(.pressableCard)
+        .accessibilityLabel("Leitor: \(readerLabel)")
+    }
+
+    private var readerLabel: String {
+        switch rfid.connectionState {
+        case .disconnected:
+            return "Leitor desconectado"
+        case .discovering:
+            return "Procurando leitores..."
+        case .connecting:
+            return "Conectando..."
+        case .connected(let reader):
+            let battery = reader.batteryLevel.map { " · \($0)%" } ?? ""
+            return "\(reader.name)\(battery)"
+        case .error:
+            return "Erro no leitor"
+        }
+    }
+
+    private var readerDot: Color {
+        switch rfid.connectionState {
+        case .connected:                return Liquid.accentGreen
+        case .discovering, .connecting: return Liquid.accentAmber
+        case .disconnected:             return Liquid.fg3
+        case .error:                    return Liquid.accentRed
+        }
+    }
 
     // MARK: Atenção
     //

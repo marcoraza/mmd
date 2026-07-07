@@ -39,15 +39,14 @@ struct ScanEngine: View {
     @State private var scanPulse = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    // Sem background proprio: o motor e transparente e o canvas vem da tela
+    // hospedeira, senao a luz de palco recomecaria no meio da tela (emenda
+    // visivel entre o painel de cima e a area de scan).
     var body: some View {
-        ZStack {
-            TechnicalGridCanvas()
-
-            VStack(spacing: 0) {
-                heroArea
-                tagList
-                bottomBar
-            }
+        VStack(spacing: 0) {
+            heroArea
+            tagList
+            bottomBar
         }
         .onChange(of: rfid.scannedTags) { newTags in
             markNewTags(newTags)

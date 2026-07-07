@@ -17,7 +17,9 @@ struct IdentificarFlow: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        Group {
+        ZStack {
+            TechnicalGridCanvas()
+
             if rfid.isConnected {
                 ScanEngine(
                     heroUnit: "TAGS",
@@ -71,19 +73,26 @@ struct IdentificarFlow: View {
 struct NeedsReaderPrompt: View {
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
 
-            GlassCard {
-                VStack(spacing: Liquid.Space.lg) {
-                    Image(systemName: "antenna.radiowaves.left.and.right.slash")
-                        .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(Liquid.accentAmber)
+            VStack(spacing: Liquid.Space.lg) {
+                Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(Liquid.fg2)
+                    .frame(width: 56, height: 56)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Liquid.bg2)
+                    )
 
+                VStack(spacing: Liquid.Space.xs) {
                     Text("Leitor desconectado")
-                        .liquidH3()
+                        .font(.liquidSans(17, weight: .semibold))
+                        .foregroundStyle(Liquid.fg0)
 
                     Text("Conecte o RFD40 pra escanear. Toque no status no topo da tela.")
-                        .liquidBody()
+                        .font(.liquidSans(14, weight: .regular))
+                        .foregroundStyle(Liquid.fg2)
                         .multilineTextAlignment(.center)
                 }
             }

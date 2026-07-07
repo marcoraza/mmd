@@ -26,7 +26,7 @@ struct LiquidVincularTagView: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
                 .ignoresSafeArea()
 
             switch step {
@@ -515,7 +515,7 @@ struct ScanTagStep: View {
 
     private var successState: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
                 .ignoresSafeArea()
 
             GlassCard(strong: true) {

@@ -27,7 +27,7 @@ struct LiquidScanResultView: View {
             .padding(Liquid.Space.xxl)
             .padding(.bottom, Liquid.Space.vast)
         }
-        .background(CausticBackground(intensity: .work).ignoresSafeArea())
+        .background(TechnicalGridCanvas())
         .navigationTitle("Resultado")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)

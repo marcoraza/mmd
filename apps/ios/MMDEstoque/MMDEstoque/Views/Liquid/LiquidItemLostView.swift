@@ -20,7 +20,7 @@ struct LiquidItemLostView: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
             // tom de alerta vermelho por cima do caustic
             RadialGradient(colors: [Liquid.accentRed.opacity(0.18), .clear],
                            center: .top, startRadius: 0, endRadius: 360)

@@ -40,8 +40,6 @@ private struct LiquidHomeContent: View {
     // Pull-to-refresh saiu junto com o ScrollView; o load roda no .task.
     var body: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.xl) {
-            header
-
             heroStack
 
             if let erro = vm.errorMessage {
@@ -65,29 +63,6 @@ private struct LiquidHomeContent: View {
         .background(TechnicalGridCanvas())
         .toolbar(.hidden, for: .navigationBar)
         .task { if !vm.carregou { await vm.load() } }
-    }
-
-    // MARK: Header
-
-    private var header: some View {
-        HStack {
-            (Text("MMD ").foregroundColor(Liquid.accentRed)
-                + Text("Estoque").foregroundColor(Liquid.fg0))
-                .font(.liquidSans(17, weight: .semibold))
-                .tracking(-0.2)
-
-            Spacer()
-
-            Button { router.push(.config) } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(Liquid.fg1)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Liquid.bg1))
-                    .overlay(Circle().strokeBorder(Liquid.hairline, lineWidth: 1))
-            }
-            .accessibilityLabel("Configurações")
-        }
     }
 
     // MARK: Hero Stack
@@ -128,7 +103,7 @@ private struct LiquidHomeContent: View {
         .padding(.top, heroOverlap + Liquid.Space.md)
         .padding(.bottom, Liquid.Space.md)
         .frame(maxWidth: .infinity)
-        .panelSurface(cornerRadius: Liquid.Radius.lg, tone: .inset)
+        .panelSurface(cornerRadius: Liquid.Radius.md, tone: .inset)
     }
 
     private var kpiDivider: some View {

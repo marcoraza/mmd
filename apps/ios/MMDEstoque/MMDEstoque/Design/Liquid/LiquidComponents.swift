@@ -78,8 +78,9 @@ extension Int {
 
 // MARK: - LiquidSectionHeader
 //
-// Header de secao com tick vermelho de marca: pontuacao visual do MMD.
-// Trailing opcional em mono pra contagem ou dado tecnico.
+// Header de secao na voz de micro-label do sistema: mono espacado, mesma
+// tipografia dos headers internos de card ("PROXIMO EVENTO"). Trailing
+// opcional em mono pra contagem ou dado tecnico.
 
 struct LiquidSectionHeader: View {
     let title: String
@@ -87,18 +88,16 @@ struct LiquidSectionHeader: View {
 
     var body: some View {
         HStack(spacing: Liquid.Space.sm) {
-            RoundedRectangle(cornerRadius: 1.5)
-                .fill(Liquid.accentRed)
-                .frame(width: 3, height: 12)
-
-            Text(title)
-                .liquidSection(Liquid.fg1)
+            Text(title.uppercased())
+                .font(.liquidMono(10, weight: .medium))
+                .tracking(1.2)
+                .foregroundStyle(Liquid.fg2)
 
             Spacer()
 
             if let trailing {
                 Text(trailing)
-                    .font(.liquidMono(12, weight: .medium))
+                    .font(.liquidMono(11, weight: .medium))
                     .foregroundStyle(Liquid.fg2)
             }
         }

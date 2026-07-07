@@ -158,7 +158,7 @@ struct LiquidPackingListView: View {
         .padding(.top, headerOverlap + Liquid.Space.md)
         .padding(.bottom, Liquid.Space.md)
         .frame(maxWidth: .infinity)
-        .panelSurface(cornerRadius: Liquid.Radius.lg, tone: .inset)
+        .panelSurface(cornerRadius: Liquid.Radius.md, tone: .inset)
     }
 
     // MARK: Items

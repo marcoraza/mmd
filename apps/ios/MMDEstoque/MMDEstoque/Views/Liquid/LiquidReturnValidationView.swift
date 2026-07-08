@@ -72,6 +72,15 @@ private struct LiquidReturnValidationContent: View {
                     onDismiss: { viewModel.pendingAssessmentId = nil }
                 )
             }
+
+            if viewModel.returnComplete {
+                LiquidCompletionOverlay(
+                    title: "Volta registrada",
+                    message: returnSummary
+                ) {
+                    router.popToRoot()
+                }
+            }
         }
         .navigationTitle("Confirmar volta")
         .navigationBarTitleDisplayMode(.inline)
@@ -82,6 +91,14 @@ private struct LiquidReturnValidationContent: View {
                 viewModel.processQRCode(code)
             }
         }
+    }
+
+    /// Resumo humano do retorno pro fechamento do fluxo.
+    private var returnSummary: String {
+        var partes = ["\(viewModel.okCount) OK"]
+        if viewModel.defectCount > 0 { partes.append("\(viewModel.defectCount) com defeito") }
+        if viewModel.missingCount > 0 { partes.append("\(viewModel.missingCount) não voltaram") }
+        return partes.joined(separator: " · ")
     }
 
     /// Motivo do "Confirmar volta" travado.

@@ -55,8 +55,12 @@ struct LiquidScanResultView: View {
                 .foregroundStyle(Liquid.fg0)
                 .contentTransition(.numericText())
 
-            Text(label)
-                .liquidLabel(color)
+            HStack(spacing: Liquid.Space.xs) {
+                Circle().fill(color).frame(width: 5, height: 5)
+                Text(label)
+                    .font(.liquidSans(12, weight: .medium))
+                    .foregroundStyle(Liquid.fg2)
+            }
         }
     }
 
@@ -66,8 +70,10 @@ struct LiquidScanResultView: View {
     private var resolvedSection: some View {
         if !resolved.isEmpty {
             VStack(alignment: .leading, spacing: Liquid.Space.md) {
-                Text("Itens identificados")
-                    .liquidLabel()
+                LiquidSectionHeader(
+                    title: "Itens identificados",
+                    trailing: "\(resolved.count)"
+                )
 
                 VStack(spacing: Liquid.Space.md) {
                     ForEach(resolved) { item in
@@ -97,7 +103,7 @@ struct LiquidScanResultView: View {
             }
         }
         .padding(Liquid.Space.lg)
-        .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 
     private func cardHeader(_ item: ResolvedItem, isExpanded: Bool) -> some View {
@@ -105,12 +111,12 @@ struct LiquidScanResultView: View {
             HStack(alignment: .top, spacing: Liquid.Space.md) {
                 VStack(alignment: .leading, spacing: Liquid.Space.xs) {
                     Text(item.displayName)
-                        .liquidH3()
+                        .font(.liquidSans(16, weight: .semibold))
                         .foregroundStyle(Liquid.fg0)
                         .lineLimit(1)
 
                     Text(item.codigoInterno)
-                        .liquidMonoData(12, color: Liquid.fg2)
+                        .liquidMonoData(12, color: Liquid.fg3)
                 }
 
                 Spacer(minLength: Liquid.Space.sm)
@@ -139,7 +145,7 @@ struct LiquidScanResultView: View {
         let serial = item.serialNumber
 
         return VStack(spacing: Liquid.Space.md) {
-            Divider().overlay(Liquid.glassBorder)
+            Rectangle().fill(Liquid.hairline).frame(height: 1)
 
             detailRow("Estado") {
                 Text(serial.estado.displayName)
@@ -203,14 +209,12 @@ struct LiquidScanResultView: View {
             } label: {
                 HStack {
                     Text("Ver condição completa")
-                        .font(.liquidMono(12, weight: .medium))
-                        .textCase(.uppercase)
-                        .tracking(1.0)
+                        .font(.liquidSans(14, weight: .semibold))
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.system(size: 11, weight: .semibold))
                 }
-                .foregroundStyle(Liquid.accentCyan)
+                .foregroundStyle(Liquid.fg0)
                 .padding(.top, Liquid.Space.sm)
             }
             .buttonStyle(.plain)
@@ -224,7 +228,8 @@ struct LiquidScanResultView: View {
     ) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: Liquid.Space.lg) {
             Text(label)
-                .liquidLabel()
+                .font(.liquidSans(13, weight: .regular))
+                .foregroundStyle(Liquid.fg2)
             Spacer(minLength: Liquid.Space.md)
             value()
         }
@@ -236,17 +241,15 @@ struct LiquidScanResultView: View {
     private var unresolvedSection: some View {
         if !unresolved.isEmpty {
             VStack(alignment: .leading, spacing: Liquid.Space.md) {
-                Text("Tags sem match")
-                    .liquidLabel(Liquid.accentAmber)
+                LiquidSectionHeader(
+                    title: "Tags sem match",
+                    trailing: "\(unresolved.count)"
+                )
 
                 // Atalho mental pra Etiquetar: a tag virgem precisa de vinculo.
-                HStack(spacing: Liquid.Space.sm) {
-                    Image(systemName: "tag")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Liquid.accentViolet)
-                    Text("Tags sem cadastro. Vincule em Etiquetar.")
-                        .liquidSmall()
-                }
+                Text("Tags sem cadastro. Vincule pra rastrear.")
+                    .font(.liquidSans(13, weight: .regular))
+                    .foregroundStyle(Liquid.fg2)
 
                 VStack(spacing: Liquid.Space.sm) {
                     ForEach(unresolved, id: \.self) { tag in
@@ -265,12 +268,13 @@ struct LiquidScanResultView: View {
 
             VStack(alignment: .leading, spacing: Liquid.Space.xxs) {
                 Text(tag)
-                    .liquidMonoData(12, color: Liquid.fg2)
+                    .liquidMonoData(12, color: Liquid.fg1)
                     .lineLimit(1)
                     .truncationMode(.middle)
 
                 Text("Tag não encontrada")
-                    .liquidLabel(Liquid.fg3)
+                    .font(.liquidSans(11, weight: .regular))
+                    .foregroundStyle(Liquid.fg3)
             }
 
             Spacer(minLength: Liquid.Space.sm)
@@ -279,22 +283,17 @@ struct LiquidScanResultView: View {
                 router.push(.etiquetar(tag: tag))
             } label: {
                 Text("Vincular")
-                    .font(.liquidMono(11, weight: .medium))
-                    .textCase(.uppercase)
-                    .tracking(1.0)
-                    .foregroundStyle(Liquid.accentViolet)
-                    .padding(.horizontal, Liquid.Space.md)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule().fill(Liquid.accentViolet.opacity(0.15))
-                            .overlay(Capsule().strokeBorder(Liquid.accentViolet.opacity(0.45), lineWidth: 1))
-                    )
+                    .font(.liquidSans(13, weight: .semibold))
+                    .foregroundStyle(Liquid.bg0)
+                    .padding(.horizontal, Liquid.Space.lg)
+                    .frame(minHeight: 32)
+                    .background(Capsule().fill(Liquid.fg0))
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, Liquid.Space.lg)
         .padding(.vertical, Liquid.Space.md)
-        .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 }
 

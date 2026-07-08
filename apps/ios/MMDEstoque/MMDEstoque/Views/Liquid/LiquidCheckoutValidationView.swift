@@ -83,6 +83,15 @@ private struct LiquidCheckoutValidationContent: View {
             if showConfirmation {
                 confirmationOverlay
             }
+
+            if viewModel.checkoutComplete {
+                LiquidCompletionOverlay(
+                    title: "Saída confirmada",
+                    message: "\(viewModel.totalScanned) itens em campo no evento \(project.nome)."
+                ) {
+                    router.popToRoot()
+                }
+            }
         }
         .task { await viewModel.loadPackingList() }
         .onChange(of: viewModel.checkoutComplete) { complete in

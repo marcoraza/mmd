@@ -104,6 +104,64 @@ struct LiquidSectionHeader: View {
     }
 }
 
+// MARK: - LiquidCompletionOverlay
+//
+// Fechamento de fluxo: check verde, o que aconteceu em uma frase, e um
+// unico botao que devolve pro cockpit. Fluxo de campo sem cerimonia de
+// fim deixa o operador sem saber se valeu.
+
+struct LiquidCompletionOverlay: View {
+
+    let title: String
+    let message: String
+    var buttonLabel: String = "Concluir"
+    let action: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.75).ignoresSafeArea()
+
+            VStack(spacing: Liquid.Space.xl) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(Liquid.accentGreen)
+                    .frame(width: 72, height: 72)
+                    .background(Circle().fill(Liquid.accentGreen.opacity(0.12)))
+                    .overlay(Circle().strokeBorder(Liquid.accentGreen.opacity(0.45), lineWidth: 1.5))
+
+                VStack(spacing: Liquid.Space.xs) {
+                    Text(title)
+                        .font(.liquidSans(20, weight: .semibold))
+                        .foregroundStyle(Liquid.fg0)
+
+                    Text(message)
+                        .font(.liquidSans(14, weight: .regular))
+                        .foregroundStyle(Liquid.fg1)
+                        .multilineTextAlignment(.center)
+                }
+
+                Button(action: action) {
+                    Text(buttonLabel)
+                        .font(.liquidSans(15, weight: .semibold))
+                        .foregroundStyle(Liquid.bg0)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 50)
+                        .background(
+                            RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                                .fill(Liquid.fg0)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(Liquid.Space.xxl)
+            .frame(maxWidth: .infinity)
+            .panelSurface(cornerRadius: Liquid.Radius.lg)
+            .padding(Liquid.Space.xxl)
+        }
+        .transition(.opacity)
+    }
+}
+
 // MARK: - LiquidSkeleton
 //
 // Placeholder de carregamento com a anatomia dos cards reais: barras no

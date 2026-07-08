@@ -66,6 +66,13 @@ private struct LiquidHomeContent: View {
         .background(TechnicalGridCanvas())
         .toolbar(.hidden, for: .navigationBar)
         .task { if !vm.carregou { await vm.load() } }
+        // Voltar de um fluxo (checkout, retorno, etiquetar) recarrega o
+        // cockpit: KPI velho depois de despachar 35 itens e decisao errada.
+        .onChange(of: router.path.count) { count in
+            if count == 0 {
+                Task { await vm.load() }
+            }
+        }
     }
 
     // MARK: Hero Stack
@@ -80,7 +87,7 @@ private struct LiquidHomeContent: View {
         VStack(spacing: -heroOverlap) {
             HomeHeroCard(
                 evento: vm.proximoEvento,
-                prontidao: vm.counts.prontidao,
+                prontidao: vm.prontidaoEvento,
                 isLoading: vm.isLoading && !vm.carregou
             ) {
                 if let evento = vm.proximoEvento { router.push(.packing(evento)) }

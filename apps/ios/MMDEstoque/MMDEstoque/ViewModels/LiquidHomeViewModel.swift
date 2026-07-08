@@ -7,8 +7,8 @@ import SwiftUI
 // prontidao) de proposito: nao esta disponivel, entao derruba a prontidao, mas
 // nao ganha contador proprio. "critico" (desgaste <= 2) e ortogonal aos
 // contadores de status: atravessa disponivel/em campo/manutencao, nao soma com
-// eles. "prontidao" e derivada (fracao disponivel) ate haver match real de
-// packing vs disponibilidade.
+// eles. A prontidao do hero NAO vem daqui: e calculada por evento (match de
+// packing vs disponibilidade real) em prontidaoDoEvento.
 
 struct StatusCounts {
     var disponivel = 0
@@ -19,12 +19,6 @@ struct StatusCounts {
     var total = 0       // operacional (exclui vendido/baixa)
 
     static let zero = StatusCounts()
-
-    /// Fracao do estoque pronta pra sair. Derivada (nao especifica de evento).
-    var prontidao: Double {
-        guard total > 0 else { return 0 }
-        return Double(disponivel) / Double(total)
-    }
 }
 
 // MARK: - LiquidHomeViewModel
@@ -38,6 +32,7 @@ final class LiquidHomeViewModel: ObservableObject {
     @Published private(set) var proximoEvento: Project?
     @Published private(set) var proximosEventos: [Project] = []
     @Published private(set) var counts = StatusCounts.zero
+    @Published private(set) var prontidaoEvento: Double = 0
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var carregou = false
@@ -49,6 +44,7 @@ final class LiquidHomeViewModel: ObservableObject {
     }
 
     func load() async {
+        guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
         do {
@@ -63,11 +59,45 @@ final class LiquidHomeViewModel: ObservableObject {
             // ordenada por data_inicio.asc), sem repetir o hero.
             proximosEventos = Array(conf.filter { $0.id != proximo?.id }.prefix(3))
             counts = aggregate(snap)
+            // Prontidao do EVENTO, nao do estoque: falha aqui nao derruba a
+            // home, so zera o ring (estado honesto de "nada garantido").
+            prontidaoEvento = (try? await prontidaoDoEvento(proximo)) ?? 0
             carregou = true
         } catch {
             errorMessage = (error as? APIError)?.errorDescription ?? error.localizedDescription
         }
         isLoading = false
+    }
+
+    // MARK: - Prontidao do evento
+    //
+    // Fracao da quantidade esperada do packing coberta por unidades
+    // designadas que estao disponiveis AGORA (disponivel ou packed). Nada
+    // designado = 0%: prontidao e garantia, nao esperanca.
+
+    private func prontidaoDoEvento(_ evento: Project?) async throws -> Double {
+        guard let evento else { return 0 }
+
+        let packing = try await apiClient.fetchPackingList(projectId: evento.id)
+        let totalEsperado = packing.reduce(0) { $0 + $1.quantidade }
+        guard totalEsperado > 0 else { return 0 }
+
+        let designados = Array(Set(packing.flatMap { $0.serialNumbersDesignados ?? [] }))
+        guard !designados.isEmpty else { return 0 }
+
+        let serials = try await apiClient.fetchSerialsByIds(designados)
+        let statusPorId = Dictionary(serials.map { ($0.id, $0.status) },
+                                     uniquingKeysWith: { first, _ in first })
+
+        let prontos = packing.reduce(0) { acc, item in
+            let ids = item.serialNumbersDesignados ?? []
+            let disponiveis = ids.filter { id in
+                let status = statusPorId[id]
+                return status == .disponivel || status == .packed
+            }.count
+            return acc + min(disponiveis, item.quantidade)
+        }
+        return Double(prontos) / Double(totalEsperado)
     }
 
     // MARK: - Derivacao

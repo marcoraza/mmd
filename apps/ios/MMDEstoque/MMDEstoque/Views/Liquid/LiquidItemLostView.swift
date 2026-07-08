@@ -3,39 +3,48 @@ import SwiftUI
 // MARK: - LiquidItemLostView
 //
 // Item nao encontrado: busca por sinal (geiger de RFID). Header de alerta,
-// ultima leitura, medidor de forca de sinal que pulsa (fica mais forte perto),
-// e as acoes (marcar perdido, substituir, iniciar busca). Porte do mockup
-// ItemLost.
+// ultima localizacao real e o medidor de sinal.
 //
-// MOCK: a forca de sinal e simulada (nao ha proximidade RF real ainda). O dBm
-// e os textos sao de exemplo ate a busca por sinal entrar de verdade.
+// Honestidade primeiro: nada de dado inventado nem botao sem handler. A
+// forca de sinal e uma PREVIA simulada (nao ha leitura de RSSI no manager
+// ainda) e esta rotulada como tal. Acoes de baixa/substituicao entram
+// quando existir endpoint.
 
 struct LiquidItemLostView: View {
 
     let serial: SerialNumber
 
+    @EnvironmentObject private var rfid: RFIDManager
+    @EnvironmentObject private var router: LiquidRouter
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var nome: String { serial.item?.displayName ?? serial.item?.nome ?? "Unidade" }
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
-            // tom de alerta vermelho por cima do caustic
-            RadialGradient(colors: [Liquid.accentRed.opacity(0.18), .clear],
-                           center: .top, startRadius: 0, endRadius: 360)
-                .ignoresSafeArea()
-                .blendMode(.screen)
+            TechnicalGridCanvas()
+
+            // Tom de alerta: mesmo desenho da luz de palco, na cor do estado.
+            RadialGradient(
+                gradient: Gradient(stops: [
+                    .init(color: Liquid.accentRed.opacity(0.14), location: 0.0),
+                    .init(color: Liquid.accentRed.opacity(0.05), location: 0.45),
+                    .init(color: .clear, location: 1.0),
+                ]),
+                center: .top,
+                startRadius: 0,
+                endRadius: 900
+            )
+            .ignoresSafeArea()
+            .blendMode(.screen)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Liquid.Space.lg) {
                     header
                     lastSeenCard
                     beaconSearch
-                    actions
-                    cta
                 }
-                .padding(Liquid.Space.lg)
+                .padding(Liquid.Space.xxl)
                 .padding(.bottom, Liquid.Space.vast)
             }
         }
@@ -49,109 +58,99 @@ struct LiquidItemLostView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.xs) {
             Label("Item não encontrado", systemImage: "exclamationmark.triangle.fill")
-                .liquidLabel(Liquid.accentRed)
-            Text(nome).liquidTitle()
-            Text("\(serial.codigoInterno), esperado no Casamento Santos")
+                .font(.liquidSans(12, weight: .semibold))
+                .foregroundStyle(Liquid.accentRed)
+
+            Text(nome)
+                .font(.liquidSans(24, weight: .semibold))
+                .tracking(-0.4)
+                .foregroundStyle(Liquid.fg0)
+                .lineLimit(2)
+
+            Text(serial.codigoInterno)
                 .liquidMonoData(12, color: Liquid.fg2)
         }
         .padding(.top, Liquid.Space.sm)
     }
 
-    // MARK: Ultima leitura
+    // MARK: Ultima localizacao
 
     private var lastSeenCard: some View {
-        GlassCard(strong: true) {
-            VStack(alignment: .leading, spacing: Liquid.Space.sm) {
-                Text("Última leitura").liquidLabel()
-                Text(serial.localizacao ?? "Galpão A, Prateleira 12")
-                    .font(.liquidSans(15, weight: .medium)).foregroundStyle(Liquid.fg0)
-                Text("há 6 dias, check-in do Réveillon Copacabana").liquidSmall()
-                HStack(spacing: Liquid.Space.sm) {
-                    pill("Ver no mapa")
-                    pill("Histórico")
-                }
-                .padding(.top, Liquid.Space.xs)
-            }
-        }
-    }
+        VStack(alignment: .leading, spacing: Liquid.Space.xs) {
+            Text("Última localização")
+                .liquidSection()
 
-    private func pill(_ label: String) -> some View {
-        Text(label)
-            .font(.liquidSans(11, weight: .medium))
-            .foregroundStyle(Liquid.fg1)
-            .padding(.horizontal, Liquid.Space.md)
-            .padding(.vertical, 6)
-            .background(Capsule().fill(Liquid.glassBg).overlay(Capsule().strokeBorder(Liquid.glassBorder, lineWidth: 1)))
+            Text(serial.localizacao ?? "Sem localização registrada")
+                .font(.liquidSans(15, weight: .medium))
+                .foregroundStyle(serial.localizacao == nil ? Liquid.fg2 : Liquid.fg0)
+        }
+        .padding(Liquid.Space.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
     }
 
     // MARK: Busca por sinal (geiger)
 
+    @ViewBuilder
     private var beaconSearch: some View {
         VStack(spacing: Liquid.Space.md) {
-            Text("Busca ativa, RFID").liquidLabel(Liquid.accentRed)
-            Text("Procurando a tag pelo prédio")
-                .font(.liquidSans(17, weight: .medium)).foregroundStyle(Liquid.fg0)
+            HStack(spacing: Liquid.Space.sm) {
+                Text("Busca por sinal")
+                    .font(.liquidSans(17, weight: .semibold))
+                    .foregroundStyle(Liquid.fg0)
 
-            SignalMeter(reduceMotion: reduceMotion)
-                .frame(height: 80)
-                .overlay(alignment: .topTrailing) {
-                    Text("-68 dBm").liquidMonoData(11, color: Liquid.accentRed)
+                Text("PRÉVIA")
+                    .font(.liquidMono(9, weight: .medium))
+                    .tracking(1.2)
+                    .foregroundStyle(Liquid.fg2)
+                    .padding(.horizontal, Liquid.Space.sm)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Liquid.bg2))
+            }
+
+            if rfid.isConnected {
+                SignalMeter(reduceMotion: reduceMotion)
+                    .frame(height: 80)
+
+                Text("Ande pelo galpão. As barras ficam mais fortes perto da tag.")
+                    .font(.liquidSans(13, weight: .regular))
+                    .foregroundStyle(Liquid.fg2)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text("Conecte o leitor pra procurar a tag pelo sinal.")
+                    .font(.liquidSans(13, weight: .regular))
+                    .foregroundStyle(Liquid.fg2)
+                    .multilineTextAlignment(.center)
+
+                Button { router.push(.conectar) } label: {
+                    Text("Conectar leitor")
+                        .font(.liquidSans(15, weight: .semibold))
+                        .foregroundStyle(Liquid.bg0)
+                        .padding(.horizontal, Liquid.Space.section)
+                        .frame(minHeight: 44)
+                        .background(
+                            RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                                .fill(Liquid.fg0)
+                        )
                 }
-
-            Text("Sinal fraco, ande pelo galpão").liquidSmall().foregroundStyle(Liquid.fg1)
-            Text("Fica mais forte quando você se aproxima").liquidSmall().foregroundStyle(Liquid.fg3)
+                .buttonStyle(.plain)
+            }
         }
         .padding(Liquid.Space.xl)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
-                .fill(Liquid.accentRed.opacity(0.08))
+                .fill(Liquid.accentRed.opacity(0.06))
                 .overlay(RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
-                    .strokeBorder(Liquid.accentRed.opacity(0.3), lineWidth: 1))
+                    .strokeBorder(Liquid.accentRed.opacity(0.25), lineWidth: 1))
         )
-    }
-
-    // MARK: Acoes
-
-    private var actions: some View {
-        VStack(spacing: Liquid.Space.sm) {
-            actionRow("exclamationmark.triangle", "Marcar como perdido definitivamente")
-            actionRow("shippingbox", "Substituir pelo unit #0089")
-        }
-    }
-
-    private func actionRow(_ icon: String, _ label: String) -> some View {
-        HStack(spacing: Liquid.Space.md) {
-            Image(systemName: icon).font(.system(size: 15)).foregroundStyle(Liquid.fg2)
-            Text(label).liquidBody().foregroundStyle(Liquid.fg0)
-            Spacer()
-            Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(Liquid.fg3)
-        }
-        .padding(Liquid.Space.lg)
-        .glassSurface(cornerRadius: Liquid.Radius.md)
-    }
-
-    // MARK: CTA
-
-    private var cta: some View {
-        Text("Iniciar busca no galpão")
-            .font(.liquidMono(14, weight: .medium)).textCase(.uppercase).tracking(1.2)
-            .foregroundStyle(Liquid.fg0)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, Liquid.Space.lg)
-            .background(
-                RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
-                    .fill(Liquid.accentRed)
-                    .liquidGlow(Liquid.accentRed, radius: 18, opacity: 0.4)
-            )
-            .padding(.top, Liquid.Space.xs)
     }
 }
 
 // MARK: - SignalMeter (geiger)
 //
 // 20 barras de sinal que ondulam, sugerindo a busca viva. Congela com Reduzir
-// Movimento.
+// Movimento. Simulacao: vira leitura real quando o manager expor RSSI.
 
 private struct SignalMeter: View {
     let reduceMotion: Bool

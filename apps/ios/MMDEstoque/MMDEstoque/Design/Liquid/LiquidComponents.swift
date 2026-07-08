@@ -76,6 +76,148 @@ extension Int {
     }
 }
 
+// MARK: - LiquidSectionHeader
+//
+// Header de secao na voz de micro-label do sistema: mono espacado, mesma
+// tipografia dos headers internos de card ("PROXIMO EVENTO"). Trailing
+// opcional em mono pra contagem ou dado tecnico.
+
+struct LiquidSectionHeader: View {
+    let title: String
+    var trailing: String? = nil
+
+    var body: some View {
+        HStack(spacing: Liquid.Space.sm) {
+            Text(title.uppercased())
+                .font(.liquidMono(10, weight: .medium))
+                .tracking(1.2)
+                .foregroundStyle(Liquid.fg2)
+
+            Spacer()
+
+            if let trailing {
+                Text(trailing)
+                    .font(.liquidMono(11, weight: .medium))
+                    .foregroundStyle(Liquid.fg2)
+            }
+        }
+    }
+}
+
+// MARK: - LiquidCompletionOverlay
+//
+// Fechamento de fluxo: check verde, o que aconteceu em uma frase, e um
+// unico botao que devolve pro cockpit. Fluxo de campo sem cerimonia de
+// fim deixa o operador sem saber se valeu.
+
+struct LiquidCompletionOverlay: View {
+
+    let title: String
+    let message: String
+    var buttonLabel: String = "Concluir"
+    let action: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.75).ignoresSafeArea()
+
+            VStack(spacing: Liquid.Space.xl) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(Liquid.accentGreen)
+                    .frame(width: 72, height: 72)
+                    .background(Circle().fill(Liquid.accentGreen.opacity(0.12)))
+                    .overlay(Circle().strokeBorder(Liquid.accentGreen.opacity(0.45), lineWidth: 1.5))
+
+                VStack(spacing: Liquid.Space.xs) {
+                    Text(title)
+                        .font(.liquidSans(20, weight: .semibold))
+                        .foregroundStyle(Liquid.fg0)
+
+                    Text(message)
+                        .font(.liquidSans(14, weight: .regular))
+                        .foregroundStyle(Liquid.fg1)
+                        .multilineTextAlignment(.center)
+                }
+
+                Button(action: action) {
+                    Text(buttonLabel)
+                        .font(.liquidSans(15, weight: .semibold))
+                        .foregroundStyle(Liquid.bg0)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 50)
+                        .background(
+                            RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                                .fill(Liquid.fg0)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(Liquid.Space.xxl)
+            .frame(maxWidth: .infinity)
+            .panelSurface(cornerRadius: Liquid.Radius.lg)
+            .padding(Liquid.Space.xxl)
+        }
+        .transition(.opacity)
+    }
+}
+
+// MARK: - LiquidSkeleton
+//
+// Placeholder de carregamento com a anatomia dos cards reais: barras no
+// lugar de titulo e metadados, pulso lento de opacidade. Mantem a estrutura
+// percebida da tela enquanto o dado chega (spinner central some com o
+// layout). Respeita reduce motion.
+
+struct LiquidSkeletonCard: View {
+
+    var minHeight: CGFloat = 0
+
+    @State private var dimmed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Liquid.Space.sm) {
+            bar(width: 180, height: 14)
+            bar(width: 110, height: 10)
+            bar(width: 150, height: 10)
+        }
+        .padding(Liquid.Space.lg)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
+        .opacity(dimmed ? 0.55 : 1)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                dimmed = true
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func bar(width: CGFloat, height: CGFloat) -> some View {
+        Capsule()
+            .fill(Liquid.bg2)
+            .frame(width: width, height: height)
+    }
+}
+
+/// Lista de skeletons pronta pra estados de loading de tela.
+struct LiquidSkeletonList: View {
+
+    var rows: Int = 4
+    var rowMinHeight: CGFloat = 0
+
+    var body: some View {
+        VStack(spacing: Liquid.Space.sm) {
+            ForEach(0..<rows, id: \.self) { _ in
+                LiquidSkeletonCard(minHeight: rowMinHeight)
+            }
+        }
+        .accessibilityLabel("Carregando")
+    }
+}
+
 // MARK: - LiquidStatusBadge
 //
 // Pill de vidro: texto na cor do estado, fundo tint suave, borda na mesma cor.

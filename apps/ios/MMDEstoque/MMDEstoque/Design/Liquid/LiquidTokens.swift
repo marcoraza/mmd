@@ -97,6 +97,10 @@ extension Liquid {
     static let bg1 = Color(oklch: 0.16, 0.018, 250)   // secondary surface
     static let bg2 = Color(oklch: 0.20, 0.020, 250)   // raised panels
 
+    /// Meio-tom entre bg0 e bg1: card acoplado que desliza por baixo de um
+    /// card principal (padrao de card conectado).
+    static let bgInset = Color(oklch: 0.14, 0.017, 250)
+
     // Foregrounds.
     static let fg0 = Color(oklch: 0.98, 0.005, 250)   // hi-contrast / primary
     static let fg1 = Color(oklch: 0.85, 0.008, 250)   // body
@@ -116,6 +120,10 @@ extension Liquid {
     static let glassBorder       = Color.white.opacity(0.10)
     static let glassBorderStrong = Color.white.opacity(0.18)
     static let glassHighlight    = Color.white.opacity(0.18)   // inset top/left fake thickness
+
+    // Hairlines: bordas de painel solido (telas sem caustic atras).
+    static let hairline       = Color.white.opacity(0.07)
+    static let hairlineStrong = Color.white.opacity(0.12)
 }
 
 // MARK: - Radii

@@ -49,6 +49,7 @@
 		82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E2603B965BC0BCF3345FE4 /* WearBar.swift */; };
 		8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D783BB916661590B5F095A88 /* Theme.swift */; };
 		8F9898AB605E8F464206AEF4 /* LiquidRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B517935CBFA8F9727632FE3 /* LiquidRouter.swift */; };
+		972812F070BC6553F42B3468 /* LiquidTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B80E41DB8736AC3D036C2A /* LiquidTabBar.swift */; };
 		973BF48053AF163FAC988E40 /* QRScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5106F306DE231604F7C7654F /* QRScanView.swift */; };
 		9857C64EFE0961251A12F8E7 /* LiquidHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0256BEA6E7FDE5B35BCA99DC /* LiquidHome.swift */; };
 		98C0CC07F3637CF069ADA970 /* LiquidRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90FA78E14C96A04D71C1A90 /* LiquidRoot.swift */; };
@@ -103,6 +104,7 @@
 		5A610DE08D4BF24DF8468841 /* SpaceGrotesk-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Medium.ttf"; sourceTree = "<group>"; };
 		5D7B747B07C0DCAAB961D438 /* ProgressSegmentBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressSegmentBar.swift; sourceTree = "<group>"; };
 		5F031040DF7F5CBFC1BE8ECB /* LiquidReturnValidationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidReturnValidationView.swift; sourceTree = "<group>"; };
+		60B80E41DB8736AC3D036C2A /* LiquidTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidTabBar.swift; sourceTree = "<group>"; };
 		697343529A7D932791D008B3 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		69E2603B965BC0BCF3345FE4 /* WearBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearBar.swift; sourceTree = "<group>"; };
 		6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Doto[ROND,wght].ttf"; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 				F90FA78E14C96A04D71C1A90 /* LiquidRoot.swift */,
 				3B517935CBFA8F9727632FE3 /* LiquidRouter.swift */,
 				E29E94F5BA704C200216CD50 /* LiquidScanResultView.swift */,
+				60B80E41DB8736AC3D036C2A /* LiquidTabBar.swift */,
 				C9D9D504B5C588341FA4F5AD /* LiquidVincularTagView.swift */,
 			);
 			path = Liquid;
@@ -467,6 +470,7 @@
 				98C0CC07F3637CF069ADA970 /* LiquidRoot.swift in Sources */,
 				8F9898AB605E8F464206AEF4 /* LiquidRouter.swift in Sources */,
 				434CF652B4768AFF45D04C03 /* LiquidScanResultView.swift in Sources */,
+				972812F070BC6553F42B3468 /* LiquidTabBar.swift in Sources */,
 				D4240CDFEF996F16BAC289F5 /* LiquidTokens.swift in Sources */,
 				537B65D21BD39AB76AFABD4E /* LiquidType.swift in Sources */,
 				4F76F08A5C27B586081EA3F1 /* LiquidVincularTagView.swift in Sources */,

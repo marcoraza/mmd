@@ -7,9 +7,8 @@ import SwiftUI
 //   PASSO 1: achar o item/serial alvo (busca por codigo MMD ou nome).
 //   PASSO 2: ler a tag virgem (ScanEngine, gated por leitor) e confirmar.
 //
-// Reskin Liquid, dark-first, legibilidade primeiro: as telas de leitura de
-// dado usam CausticBackground(.work) e GlassCard(strong: true). So o momento
-// de capturar a tag toma emprestado o hero do ScanEngine.
+// Regua nova: canvas de luz de palco + paineis de vidro com tint. So o
+// momento de capturar a tag toma emprestado o hero do ScanEngine.
 
 struct LiquidVincularTagView: View {
 
@@ -26,7 +25,7 @@ struct LiquidVincularTagView: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
                 .ignoresSafeArea()
 
             switch step {
@@ -163,7 +162,7 @@ private struct FindSerialStep: View {
         }
         .padding(.horizontal, Liquid.Space.lg)
         .padding(.vertical, Liquid.Space.md)
-        .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 
     // MARK: Item card
@@ -179,11 +178,12 @@ private struct FindSerialStep: View {
                 HStack(spacing: Liquid.Space.md) {
                     VStack(alignment: .leading, spacing: Liquid.Space.xxs) {
                         Text(item.displayName)
-                            .liquidBody()
+                            .font(.liquidSans(15, weight: .medium))
                             .foregroundStyle(Liquid.fg0)
                             .lineLimit(1)
                         Text(item.nome)
-                            .liquidSmall()
+                            .font(.liquidSans(12, weight: .regular))
+                            .foregroundStyle(Liquid.fg2)
                             .lineLimit(1)
                     }
 
@@ -203,7 +203,7 @@ private struct FindSerialStep: View {
                 serialSublist(for: item)
             }
         }
-        .glassSurface(cornerRadius: Liquid.Radius.lg, strong: true)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
     }
 
     @ViewBuilder
@@ -213,7 +213,7 @@ private struct FindSerialStep: View {
 
         VStack(alignment: .leading, spacing: Liquid.Space.sm) {
             Rectangle()
-                .fill(Liquid.glassBorder)
+                .fill(Liquid.hairline)
                 .frame(height: 1)
                 .padding(.bottom, Liquid.Space.xs)
 
@@ -242,7 +242,7 @@ private struct FindSerialStep: View {
             HStack(spacing: Liquid.Space.md) {
                 Image(systemName: "tag")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Liquid.accentViolet)
+                    .foregroundStyle(Liquid.fg2)
 
                 Text(serial.codigoInterno)
                     .liquidMonoData(13, color: Liquid.fg1)
@@ -258,9 +258,9 @@ private struct FindSerialStep: View {
             }
             .padding(.horizontal, Liquid.Space.md)
             .padding(.vertical, Liquid.Space.md)
-            .glassSurface(cornerRadius: Liquid.Radius.md)
+            .panelSurface(cornerRadius: Liquid.Radius.md, tone: .inset)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressableCard)
         .accessibilityLabel("Vincular tag em \(serial.codigoInterno)")
     }
 
@@ -374,7 +374,7 @@ struct ScanTagStep: View {
 
             if let linkError {
                 Text(linkError)
-                    .font(.liquidMono(11))
+                    .font(.liquidSans(12, weight: .medium))
                     .foregroundStyle(Liquid.accentRed)
                     .multilineTextAlignment(.center)
             }
@@ -414,15 +414,17 @@ struct ScanTagStep: View {
                     .frame(width: 32, height: 32)
                     .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Liquid.accentCyan.opacity(0.2)))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Tag detectada").liquidLabel()
+                    Text("Tag detectada")
+                        .font(.liquidSans(12, weight: .medium))
+                        .foregroundStyle(Liquid.fg2)
                     Text(tag).liquidMonoData(12, color: Liquid.fg0).lineLimit(1).truncationMode(.middle)
                 }
                 Spacer()
                 Circle().fill(Liquid.accentGreen).frame(width: 8, height: 8)
-                    .liquidGlow(Liquid.accentGreen, radius: 6, opacity: 0.8)
             }
-            Text("EPC Gen 2, sinal -42 dBm, livre pra vincular")
-                .liquidSmall().foregroundStyle(Liquid.fg2)
+            Text("Livre pra vincular ao serial acima.")
+                .font(.liquidSans(12, weight: .regular))
+                .foregroundStyle(Liquid.fg2)
         }
         .padding(Liquid.Space.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -442,11 +444,15 @@ struct ScanTagStep: View {
                 if rfid.isConnected { rfid.startInventory() }
             } label: {
                 Text("Ler outra")
-                    .font(.liquidMono(13, weight: .medium)).textCase(.uppercase).tracking(1.0)
+                    .font(.liquidSans(15, weight: .semibold))
                     .foregroundStyle(Liquid.fg1)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, Liquid.Space.lg)
-                    .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+                    .frame(minHeight: 50)
+                    .background {
+                        let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                        shape.fill(Liquid.bg2)
+                            .overlay(shape.strokeBorder(Liquid.hairlineStrong, lineWidth: 1))
+                    }
             }
             .buttonStyle(.plain)
 
@@ -456,15 +462,14 @@ struct ScanTagStep: View {
                 HStack(spacing: Liquid.Space.sm) {
                     if isLinking { ProgressView().controlSize(.small).tint(Liquid.bg0) }
                     Text("Confirmar vínculo")
-                        .font(.liquidMono(13, weight: .medium)).textCase(.uppercase).tracking(1.0)
+                        .font(.liquidSans(15, weight: .semibold))
                 }
                 .foregroundStyle(capturedTag != nil ? Liquid.bg0 : Liquid.fg3)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Liquid.Space.lg)
+                .frame(minHeight: 50)
                 .background(
                     RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
-                        .fill(capturedTag != nil ? Liquid.accentCyan : Liquid.glassBg)
-                        .liquidGlow(capturedTag != nil ? Liquid.accentCyan : .clear, radius: 14, opacity: 0.4)
+                        .fill(capturedTag != nil ? Liquid.fg0 : Liquid.bg1)
                 )
             }
             .buttonStyle(.plain)
@@ -485,28 +490,31 @@ struct ScanTagStep: View {
     // MARK: Selected serial card (fixado no topo)
 
     private var selectedSerialCard: some View {
-        GlassCard(cornerRadius: Liquid.Radius.lg, strong: true, padding: Liquid.Space.lg) {
-            HStack(spacing: Liquid.Space.md) {
-                VStack(alignment: .leading, spacing: Liquid.Space.xxs) {
-                    Text("SERIAL ALVO")
-                        .liquidLabel(Liquid.accentViolet)
-                    if let nome = equipment?.displayName ?? serial.item?.displayName {
-                        Text(nome)
-                            .liquidH3()
-                            .foregroundStyle(Liquid.fg0)
-                            .lineLimit(1)
-                    }
-                    Text(serial.codigoInterno)
-                        .liquidMonoData(13, color: Liquid.fg2)
+        HStack(spacing: Liquid.Space.md) {
+            VStack(alignment: .leading, spacing: Liquid.Space.xxs) {
+                Text("SERIAL ALVO")
+                    .font(.liquidMono(10, weight: .medium))
+                    .tracking(1.2)
+                    .foregroundStyle(Liquid.fg2)
+                if let nome = equipment?.displayName ?? serial.item?.displayName {
+                    Text(nome)
+                        .font(.liquidSans(16, weight: .semibold))
+                        .foregroundStyle(Liquid.fg0)
+                        .lineLimit(1)
                 }
-
-                Spacer()
-
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 24))
-                    .foregroundStyle(Liquid.accentGreen)
+                Text(serial.codigoInterno)
+                    .liquidMonoData(13, color: Liquid.fg2)
             }
+
+            Spacer()
+
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 22))
+                .foregroundStyle(Liquid.accentGreen)
         }
+        .padding(Liquid.Space.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
         .padding(.horizontal, Liquid.Space.lg)
         .padding(.top, Liquid.Space.lg)
     }
@@ -515,53 +523,15 @@ struct ScanTagStep: View {
 
     private var successState: some View {
         ZStack {
-            CausticBackground(intensity: .work)
-                .ignoresSafeArea()
+            TechnicalGridCanvas()
 
-            GlassCard(strong: true) {
-                VStack(spacing: Liquid.Space.lg) {
-                    Image(systemName: "tag.fill")
-                        .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(Liquid.accentGreen)
-                        .frame(width: 72, height: 72)
-                        .background(Circle().fill(Liquid.accentGreen.opacity(0.14)))
-                        .liquidGlow(Liquid.accentGreen, radius: 16, opacity: 0.3)
-
-                    Text("Tag vinculada")
-                        .liquidH2()
-
-                    Text("\(serial.codigoInterno) agora responde à etiqueta nova.")
-                        .liquidBody()
-                        .multilineTextAlignment(.center)
-
-                    if let tag = capturedTag {
-                        Text(tag)
-                            .liquidMonoData(12, color: Liquid.fg2)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-
-                    Button {
-                        resetForNext()
-                    } label: {
-                        Text("Vincular outra")
-                            .font(.liquidMono(14, weight: .medium))
-                            .textCase(.uppercase)
-                            .tracking(1.5)
-                            .foregroundStyle(Liquid.bg0)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, Liquid.Space.lg)
-                            .background(
-                                RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
-                                    .fill(Liquid.accentGreen)
-                                    .liquidGlow(Liquid.accentGreen, radius: 18, opacity: 0.45)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, Liquid.Space.sm)
-                }
+            LiquidCompletionOverlay(
+                title: "Tag vinculada",
+                message: "\(serial.codigoInterno) agora responde à etiqueta nova.",
+                buttonLabel: "Vincular outra"
+            ) {
+                resetForNext()
             }
-            .padding(Liquid.Space.xxl)
         }
     }
 
@@ -646,11 +616,16 @@ private struct StepHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.xs) {
             Text("PASSO \(index) DE 2")
-                .liquidLabel(Liquid.accentViolet)
+                .font(.liquidMono(10, weight: .medium))
+                .tracking(1.2)
+                .foregroundStyle(Liquid.fg2)
             Text(title)
-                .liquidH2()
+                .font(.liquidSans(22, weight: .semibold))
+                .tracking(-0.4)
+                .foregroundStyle(Liquid.fg0)
             Text(subtitle)
-                .liquidBody()
+                .font(.liquidSans(14, weight: .regular))
+                .foregroundStyle(Liquid.fg2)
         }
     }
 }
@@ -670,6 +645,6 @@ private struct InlineNotice: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Liquid.Space.md)
-        .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 }

@@ -9,6 +9,12 @@ struct ScanAction {
     let label: String
     var isBusy: Bool = false
     var isEnabled: Bool = true
+
+    /// Por que a acao esta travada, em uma frase ("Faltam 12 itens...").
+    /// Mostrada so quando isEnabled e false. Botao desabilitado sem motivo
+    /// visivel e beco sem saida.
+    var disabledHint: String? = nil
+
     let handler: () -> Void
 }
 
@@ -32,6 +38,10 @@ struct ScanEngine: View {
     var primaryAction: ScanAction? = nil
     var onQRFallback: (() -> Void)? = nil
 
+    /// Chamado quando o operador toca o CTA sem leitor conectado. A trilha
+    /// hospedeira normalmente empurra a tela de conectar.
+    var onNeedsReader: (() -> Void)? = nil
+
     /// Mensagem de erro vinda da trilha (resolucao, validacao).
     var errorMessage: String? = nil
 
@@ -39,15 +49,14 @@ struct ScanEngine: View {
     @State private var scanPulse = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    // Sem background proprio: o motor e transparente e o canvas vem da tela
+    // hospedeira, senao a luz de palco recomecaria no meio da tela (emenda
+    // visivel entre o painel de cima e a area de scan).
     var body: some View {
-        ZStack {
-            CausticBackground(intensity: .hero, includesGreenOrb: rfid.isScanning)
-
-            VStack(spacing: 0) {
-                heroArea
-                tagList
-                bottomBar
-            }
+        VStack(spacing: 0) {
+            heroArea
+            tagList
+            bottomBar
         }
         .onChange(of: rfid.scannedTags) { newTags in
             markNewTags(newTags)
@@ -81,7 +90,9 @@ struct ScanEngine: View {
                         .animation(reduceMotion ? nil : .snappy(duration: 0.22), value: rfid.tagCount)
 
                     Text(heroUnit)
-                        .liquidLabel(Liquid.fg2)
+                        .font(.liquidMono(10, weight: .medium))
+                        .tracking(1.2)
+                        .foregroundStyle(Liquid.fg2)
                 }
             }
 
@@ -143,7 +154,7 @@ struct ScanEngine: View {
         }
         .padding(.horizontal, Liquid.Space.lg)
         .padding(.vertical, Liquid.Space.md)
-        .glassSurface(cornerRadius: Liquid.Radius.md)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 
     // MARK: - Bottom Bar
@@ -152,8 +163,17 @@ struct ScanEngine: View {
         VStack(spacing: Liquid.Space.md) {
             if let errorMessage {
                 Text(errorMessage)
-                    .font(.liquidMono(11))
+                    .font(.liquidSans(12, weight: .medium))
                     .foregroundStyle(Liquid.accentRed)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
+
+            if let primaryAction, !primaryAction.isEnabled,
+               let hint = primaryAction.disabledHint {
+                Text(hint)
+                    .font(.liquidSans(12, weight: .medium))
+                    .foregroundStyle(Liquid.fg3)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }
@@ -176,7 +196,8 @@ struct ScanEngine: View {
             recentTags.removeAll()
         } label: {
             Text("Limpar")
-                .liquidLabel(rfid.tagCount > 0 ? Liquid.fg2 : Liquid.fg3)
+                .font(.liquidSans(14, weight: .medium))
+                .foregroundStyle(rfid.tagCount > 0 ? Liquid.fg2 : Liquid.fg3)
         }
         .disabled(rfid.tagCount == 0)
         .accessibilityLabel("Limpar tags")
@@ -187,73 +208,100 @@ struct ScanEngine: View {
             onQRFallback?()
         } label: {
             Image(systemName: "qrcode.viewfinder")
-                .font(.system(size: 20, weight: .regular))
+                .font(.system(size: 19, weight: .regular))
                 .foregroundStyle(Liquid.fg1)
                 .frame(width: 44, height: 44)
-                .glassSurface(cornerRadius: Liquid.Radius.sm)
+                .panelSurface(cornerRadius: Liquid.Radius.sm)
         }
         .accessibilityLabel("Ler QR code")
     }
 
     private func primaryButton(_ action: ScanAction) -> some View {
-        Button {
+        let active = action.isEnabled && !action.isBusy
+        return Button {
             action.handler()
         } label: {
             HStack(spacing: Liquid.Space.sm) {
                 if action.isBusy {
                     ProgressView()
                         .controlSize(.small)
-                        .tint(Liquid.fg0)
+                        .tint(Liquid.fg2)
                 }
                 Text(action.label)
-                    .font(.liquidMono(13, weight: .medium))
-                    .textCase(.uppercase)
-                    .tracking(1.0)
+                    .font(.liquidSans(15, weight: .semibold))
             }
-            .foregroundStyle(action.isEnabled && !action.isBusy ? Liquid.fg0 : Liquid.fg3)
+            .foregroundStyle(active ? Liquid.bg0 : Liquid.fg3)
             .padding(.horizontal, Liquid.Space.xxl)
-            .padding(.vertical, Liquid.Space.md)
-            .glassSurface(cornerRadius: Liquid.Radius.lg, strong: true)
+            .frame(minHeight: 44)
+            .background {
+                let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                if active {
+                    shape.fill(Liquid.fg0)
+                } else {
+                    shape.fill(Liquid.bg1)
+                        .overlay(shape.strokeBorder(Liquid.hairline, lineWidth: 1))
+                }
+            }
         }
         .disabled(!action.isEnabled || action.isBusy)
     }
 
+    // Sem leitor conectado o CTA nao finge que escaneia: vira "Conectar
+    // leitor" e leva pra conexao. Botao morto sem feedback e passo cego.
+    @ViewBuilder
     private var scanButton: some View {
-        Button {
-            toggleScanning()
-        } label: {
-            Text(rfid.isScanning ? "Parar" : "Escanear")
-                .font(.liquidMono(15, weight: .medium))
-                .textCase(.uppercase)
-                .tracking(2.0)
+        if rfid.isConnected {
+            Button {
+                toggleScanning()
+            } label: {
+                HStack(spacing: Liquid.Space.sm) {
+                    Image(systemName: rfid.isScanning ? "stop.fill" : "dot.radiowaves.right")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text(rfid.isScanning ? "Parar" : "Escanear")
+                        .font(.liquidSans(16, weight: .semibold))
+                }
                 .foregroundStyle(rfid.isScanning ? Liquid.fg0 : Liquid.bg0)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Liquid.Space.lg)
+                .frame(minHeight: 52)
                 .background(scanButtonBackground)
                 .scaleEffect(rfid.isScanning && scanPulse ? 1.015 : 1.0)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(rfid.isScanning ? "Parar leitura" : "Iniciar leitura")
+        } else {
+            Button {
+                onNeedsReader?()
+            } label: {
+                HStack(spacing: Liquid.Space.sm) {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("Conectar leitor")
+                        .font(.liquidSans(16, weight: .semibold))
+                }
+                .foregroundStyle(Liquid.fg0)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 52)
+                .background {
+                    let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                    shape.fill(Liquid.bg1)
+                        .overlay(shape.strokeBorder(Liquid.hairlineStrong, lineWidth: 1))
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Conectar leitor RFID")
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(rfid.isScanning ? "Parar leitura" : "Iniciar leitura")
     }
 
     @ViewBuilder
     private var scanButtonBackground: some View {
-        let shape = RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
         if rfid.isScanning {
             shape
-                .stroke(Liquid.accentCyan, lineWidth: 1.5)
-                .background(shape.fill(Liquid.accentCyan.opacity(0.10)))
-                .opacity(scanPulse ? 0.7 : 1.0)
+                .fill(Liquid.bg1)
+                .overlay(shape.strokeBorder(Liquid.accentCyan.opacity(0.7), lineWidth: 1.5))
+                .opacity(scanPulse ? 0.75 : 1.0)
         } else {
-            shape
-                .fill(
-                    LinearGradient(
-                        colors: [Liquid.accentCyan, Liquid.accentGreen],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .liquidGlow(Liquid.accentCyan, radius: 20, opacity: 0.5)
+            shape.fill(Liquid.accentCyan)
         }
     }
 

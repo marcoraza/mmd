@@ -28,7 +28,7 @@ struct LiquidPackingMapView: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
 
             ScrollView {
                 VStack(spacing: Liquid.Space.lg) {

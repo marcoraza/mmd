@@ -37,7 +37,7 @@ struct LiquidCheckoutGridView: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work)
+            TechnicalGridCanvas()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Liquid.Space.lg) {

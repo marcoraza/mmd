@@ -11,7 +11,9 @@ import SwiftUI
 // EnvironmentObjects nao chegam no init, entao este wrapper le rfid/api e
 // repassa pro conteudo, que e dono do @StateObject do view model.
 
-enum CheckoutMode { case scan, conferencia }
+// O modo Conferencia (LiquidCheckoutGridView) saiu do toggle: e mockup com
+// dado de exemplo. Volta quando o grid for alimentado pelo estado real do
+// scan.
 
 struct LiquidCheckoutValidationView: View {
 
@@ -19,29 +21,17 @@ struct LiquidCheckoutValidationView: View {
 
     @EnvironmentObject private var rfid: RFIDManager
     @EnvironmentObject private var apiClient: APIClient
-    @State private var mode: CheckoutMode = .scan
 
     var body: some View {
-        Group {
-            if mode == .scan {
-                LiquidCheckoutValidationContent(
-                    project: project,
-                    apiClient: apiClient,
-                    rfidManager: rfid
-                )
-                .environmentObject(rfid)
-            } else {
-                LiquidCheckoutGridView(project: project)
-            }
-        }
+        LiquidCheckoutValidationContent(
+            project: project,
+            apiClient: apiClient,
+            rfidManager: rfid
+        )
+        .environmentObject(rfid)
         .navigationTitle("Check-out")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                LiquidPillToggle(selection: $mode, options: [(.scan, "Scan"), (.conferencia, "Conferência")])
-            }
-        }
     }
 }
 
@@ -53,6 +43,7 @@ private struct LiquidCheckoutValidationContent: View {
 
     @StateObject private var viewModel: CheckoutViewModel
 
+    @EnvironmentObject private var router: LiquidRouter
     @State private var showConfirmation = false
     @State private var showQRScanner = false
 
@@ -72,7 +63,7 @@ private struct LiquidCheckoutValidationContent: View {
 
     var body: some View {
         ZStack {
-            CausticBackground(intensity: .work).ignoresSafeArea()
+            TechnicalGridCanvas()
 
             VStack(spacing: 0) {
                 validationPanel
@@ -81,6 +72,15 @@ private struct LiquidCheckoutValidationContent: View {
 
             if showConfirmation {
                 confirmationOverlay
+            }
+
+            if viewModel.checkoutComplete {
+                LiquidCompletionOverlay(
+                    title: "Saída confirmada",
+                    message: "\(viewModel.totalScanned) itens em campo no evento \(project.nome)."
+                ) {
+                    router.popToRoot()
+                }
             }
         }
         .task { await viewModel.loadPackingList() }
@@ -116,40 +116,45 @@ private struct LiquidCheckoutValidationContent: View {
     }
 
     private var progressHeader: some View {
-        GlassCard(strong: true) {
-            HStack(spacing: Liquid.Space.xl) {
-                ReadinessGauge(
-                    progress: progress,
-                    diameter: Liquid.Ring.sizeMd,
-                    stroke: Liquid.Ring.strokeMd,
-                    caption: nil
-                )
+        HStack(spacing: Liquid.Space.xl) {
+            ReadinessGauge(
+                progress: progress,
+                diameter: 56,
+                stroke: 5,
+                caption: nil
+            )
 
-                VStack(alignment: .leading, spacing: Liquid.Space.xs) {
-                    Text(project.nome)
-                        .liquidH3()
-                        .foregroundStyle(Liquid.fg0)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(project.nome)
+                    .font(.liquidSans(17, weight: .semibold))
+                    .foregroundStyle(Liquid.fg0)
+                    .lineLimit(1)
+
+                (Text("\(viewModel.totalScanned)").foregroundColor(Liquid.fg0)
+                    + Text(" de \(viewModel.totalExpected) conferidos").foregroundColor(Liquid.fg2))
+                    .font(.liquidMono(12, weight: .medium))
+
+                if let cliente = project.cliente {
+                    Text(cliente)
+                        .font(.liquidSans(12, weight: .regular))
+                        .foregroundStyle(Liquid.fg2)
                         .lineLimit(1)
-
-                    Text("\(viewModel.totalScanned) de \(viewModel.totalExpected) conferidos")
-                        .liquidMonoData(12, color: Liquid.fg2)
-
-                    if let cliente = project.cliente {
-                        Text(cliente)
-                            .liquidSmall()
-                            .lineLimit(1)
-                    }
                 }
-
-                Spacer(minLength: 0)
             }
+
+            Spacer(minLength: 0)
         }
+        .padding(Liquid.Space.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
     }
 
     private var packingList: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.md) {
-            Text("Packing list")
-                .liquidLabel()
+            LiquidSectionHeader(
+                title: "Packing list",
+                trailing: "\(viewModel.packingListItems.count) linhas"
+            )
 
             VStack(spacing: Liquid.Space.sm) {
                 ForEach(viewModel.packingListItems) { item in
@@ -174,17 +179,17 @@ private struct LiquidCheckoutValidationContent: View {
             Circle()
                 .fill(color)
                 .frame(width: 7, height: 7)
-                .liquidGlow(color, radius: 5, opacity: 0.7)
 
             VStack(alignment: .leading, spacing: Liquid.Space.xxs) {
                 Text(item.displayName)
-                    .liquidBody()
+                    .font(.liquidSans(14, weight: .medium))
                     .foregroundStyle(Liquid.fg0)
                     .lineLimit(1)
 
                 if let categoria = item.item?.categoria {
                     Text(categoria.displayName)
-                        .liquidLabel(categoria.liquidColor)
+                        .font(.liquidSans(11, weight: .medium))
+                        .foregroundStyle(Liquid.fg2)
                 }
             }
 
@@ -197,16 +202,19 @@ private struct LiquidCheckoutValidationContent: View {
         }
         .padding(.horizontal, Liquid.Space.lg)
         .padding(.vertical, Liquid.Space.md)
-        .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+        .panelSurface(cornerRadius: Liquid.Radius.md)
     }
 
     private var extrasSection: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.md) {
-            Text("Itens fora da lista")
-                .liquidLabel(Liquid.accentRed)
+            LiquidSectionHeader(
+                title: "Fora da lista",
+                trailing: "\(viewModel.extraItems.count)"
+            )
 
             Text("Estes itens foram lidos mas não estão no packing. Remova-os antes de confirmar.")
-                .liquidSmall()
+                .font(.liquidSans(13, weight: .regular))
+                .foregroundStyle(Liquid.fg2)
 
             VStack(spacing: Liquid.Space.sm) {
                 ForEach(viewModel.extraItems, id: \.serialNumber.id) { item in
@@ -228,7 +236,7 @@ private struct LiquidCheckoutValidationContent: View {
                     }
                     .padding(.horizontal, Liquid.Space.lg)
                     .padding(.vertical, Liquid.Space.md)
-                    .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
+                    .panelSurface(cornerRadius: Liquid.Radius.md)
                 }
             }
         }
@@ -242,14 +250,35 @@ private struct LiquidCheckoutValidationContent: View {
             emptyHint: "Aponte o leitor pra conferir a saída do projeto",
             primaryAction: ScanAction(
                 label: "Confirmar saída",
-                isEnabled: viewModel.canFinalize
+                isEnabled: viewModel.canFinalize,
+                disabledHint: finalizeHint
             ) {
                 showConfirmation = true
             },
             onQRFallback: { showQRScanner = true },
+            onNeedsReader: { router.push(.conectar) },
             errorMessage: viewModel.error
         )
         .frame(maxHeight: .infinity)
+    }
+
+    /// Motivo do "Confirmar saída" travado, na ordem em que o operador
+    /// consegue agir: extras primeiro, depois o que falta ler.
+    private var finalizeHint: String? {
+        guard !viewModel.canFinalize else { return nil }
+        guard !viewModel.packingListItems.isEmpty else { return nil }
+
+        if !viewModel.extraItems.isEmpty {
+            return "Remova os itens fora da lista pra liberar a saída"
+        }
+
+        let faltam = viewModel.packingListItems.reduce(0) {
+            $0 + max(0, $1.quantidade - (viewModel.matchedCounts[$1.id] ?? 0))
+        }
+        guard faltam > 0 else { return nil }
+        return faltam == 1
+            ? "Falta 1 item pra liberar a saída"
+            : "Faltam \(faltam) itens pra liberar a saída"
     }
 
     // MARK: - Confirmation Overlay
@@ -262,27 +291,31 @@ private struct LiquidCheckoutValidationContent: View {
                     if !viewModel.isProcessingCheckout { showConfirmation = false }
                 }
 
-            GlassCard(strong: true) {
-                VStack(spacing: Liquid.Space.xl) {
+            VStack(spacing: Liquid.Space.xl) {
+                VStack(spacing: Liquid.Space.xs) {
                     Text("Confirmar saída")
-                        .liquidH2()
+                        .font(.liquidSans(20, weight: .semibold))
+                        .foregroundStyle(Liquid.fg0)
 
-                    Text("\(viewModel.totalScanned) itens vão para EM CAMPO no projeto \(project.nome).")
-                        .liquidBody()
+                    Text("\(viewModel.totalScanned) itens vão para EM CAMPO no evento \(project.nome).")
+                        .font(.liquidSans(14, weight: .regular))
+                        .foregroundStyle(Liquid.fg1)
                         .multilineTextAlignment(.center)
+                }
 
-                    if viewModel.isProcessingCheckout {
-                        ProgressView().tint(Liquid.fg1)
-                    } else {
-                        HStack(spacing: Liquid.Space.md) {
-                            secondaryButton("Cancelar") { showConfirmation = false }
-                            primaryButton("Confirmar") {
-                                Task { await viewModel.finalizeCheckout() }
-                            }
+                if viewModel.isProcessingCheckout {
+                    ProgressView().tint(Liquid.fg1)
+                } else {
+                    HStack(spacing: Liquid.Space.md) {
+                        secondaryButton("Cancelar") { showConfirmation = false }
+                        primaryButton("Confirmar") {
+                            Task { await viewModel.finalizeCheckout() }
                         }
                     }
                 }
             }
+            .padding(Liquid.Space.xxl)
+            .panelSurface(cornerRadius: Liquid.Radius.lg)
             .padding(Liquid.Space.xxl)
         }
         .liquidElevatedShadow()
@@ -291,16 +324,15 @@ private struct LiquidCheckoutValidationContent: View {
     private func secondaryButton(_ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.liquidMono(13, weight: .medium))
-                .textCase(.uppercase)
-                .tracking(1.0)
+                .font(.liquidSans(15, weight: .semibold))
                 .foregroundStyle(Liquid.fg1)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Liquid.Space.md)
-                .background(
-                    RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
-                        .strokeBorder(Liquid.glassBorderStrong, lineWidth: 1)
-                )
+                .frame(minHeight: 48)
+                .background {
+                    let shape = RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
+                    shape.fill(Liquid.bg2)
+                        .overlay(shape.strokeBorder(Liquid.hairlineStrong, lineWidth: 1))
+                }
         }
         .buttonStyle(.plain)
     }
@@ -308,16 +340,13 @@ private struct LiquidCheckoutValidationContent: View {
     private func primaryButton(_ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.liquidMono(13, weight: .medium))
-                .textCase(.uppercase)
-                .tracking(1.0)
+                .font(.liquidSans(15, weight: .semibold))
                 .foregroundStyle(Liquid.bg0)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Liquid.Space.md)
+                .frame(minHeight: 48)
                 .background(
-                    RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
+                    RoundedRectangle(cornerRadius: Liquid.Radius.md, style: .continuous)
                         .fill(Liquid.accentGreen)
-                        .liquidGlow(Liquid.accentGreen, radius: 16, opacity: 0.4)
                 )
         }
         .buttonStyle(.plain)

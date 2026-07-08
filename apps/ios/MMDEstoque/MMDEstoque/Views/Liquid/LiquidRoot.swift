@@ -49,22 +49,74 @@ struct LiquidRoot: View {
 
     @EnvironmentObject private var router: LiquidRouter
 
+    @State private var showQuickActions = false
+    @State private var tabDirection: CGFloat = 1
+
     var body: some View {
         ZStack {
             Liquid.bg0.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                ReaderStatusBar { router.push(.conectar) }
-
-                NavigationStack(path: $router.path) {
-                    LiquidHome()
-                        .navigationDestination(for: AppRoute.self) { route in
-                            destination(for: route)
-                        }
-                }
+            NavigationStack(path: $router.path) {
+                tabRoot
+                    .navigationDestination(for: AppRoute.self) { route in
+                        destination(for: route)
+                    }
             }
         }
+        .overlay(alignment: .bottom) {
+            if router.path.isEmpty {
+                LiquidTabBar(selection: tabSelection) { showQuickActions = true }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Liquid.Motion.default, value: router.path.isEmpty)
+        .sheet(isPresented: $showQuickActions) {
+            QuickActionsSheet { route in
+                showQuickActions = false
+                router.push(route)
+            }
+            .presentationDetents([.height(400)])
+            .presentationDragIndicator(.visible)
+        }
         .preferredColorScheme(.dark)
+    }
+
+    // MARK: Tabs
+
+    /// Raiz da tab ativa, com transicao direcional curta na troca.
+    @ViewBuilder
+    private var tabRoot: some View {
+        Group {
+            switch router.tab {
+            case .inicio:
+                LiquidHome()
+            case .eventos:
+                LiquidProjectsListView(filter: .todos) { project in
+                    router.push(project.status == .emCampo ? .retorno(project) : .packing(project))
+                }
+            case .ajustes:
+                LiquidConfigView()
+            }
+        }
+        .id(router.tab)
+        .transition(.asymmetric(
+            insertion: .offset(x: tabDirection * 28).combined(with: .opacity),
+            removal: .offset(x: -tabDirection * 28).combined(with: .opacity)
+        ))
+    }
+
+    /// Binding que registra a direcao da troca e anima indicador + conteudo.
+    private var tabSelection: Binding<LiquidTab> {
+        Binding(
+            get: { router.tab },
+            set: { newTab in
+                guard newTab != router.tab else { return }
+                tabDirection = newTab.rawValue > router.tab.rawValue ? 1 : -1
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    router.tab = newTab
+                }
+            }
+        )
     }
 
     @ViewBuilder
@@ -100,53 +152,6 @@ struct LiquidRoot: View {
     }
 }
 
-// MARK: - ReaderStatusBar
-//
-// Pilula de vidro persistente: ponto colorido por estado, icone, label do
-// status. Toque abre a tela de conectar. Status sempre visivel.
-
-struct ReaderStatusBar: View {
-
-    @EnvironmentObject private var rfid: RFIDManager
-    var onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: Liquid.Space.sm) {
-                Circle()
-                    .fill(dotColor)
-                    .frame(width: 7, height: 7)
-                    .liquidGlow(dotColor, radius: 6, opacity: 0.7)
-
-                Image(systemName: rfid.statusIcon)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(dotColor)
-
-                Text(rfid.statusText)
-                    .liquidLabel(Liquid.fg1)
-                    .lineLimit(1)
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Liquid.fg3)
-            }
-            .padding(.horizontal, Liquid.Space.lg)
-            .padding(.vertical, Liquid.Space.md)
-            .glassSurface(cornerRadius: Liquid.Radius.md, strong: true)
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, Liquid.Space.lg)
-        .padding(.top, Liquid.Space.sm)
-        .padding(.bottom, Liquid.Space.xs)
-    }
-
-    private var dotColor: Color {
-        switch rfid.connectionState {
-        case .connected:                return Liquid.accentGreen
-        case .discovering, .connecting: return Liquid.accentAmber
-        case .disconnected, .error:     return Liquid.accentRed
-        }
-    }
-}
+// A pilula global do leitor (ReaderStatusBar) saiu: status de hardware em
+// banner permanente e coisa de debug. O estado do leitor vive no contexto:
+// rodape da home, CTA das telas de scan e Ajustes.

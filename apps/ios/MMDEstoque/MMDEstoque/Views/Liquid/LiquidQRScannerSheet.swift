@@ -28,15 +28,15 @@ struct LiquidQRScannerSheet: View {
                     .clipShape(RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous))
 
                     RoundedRectangle(cornerRadius: Liquid.Radius.lg, style: .continuous)
-                        .strokeBorder(Liquid.accentCyan.opacity(0.6), lineWidth: 1.5)
-                        .liquidGlow(Liquid.accentCyan, radius: 16, opacity: 0.3)
+                        .strokeBorder(Liquid.accentCyan.opacity(0.55), lineWidth: 1.5)
 
                     VStack {
                         Text("Aponte pro QR code")
-                            .liquidLabel(Liquid.fg0)
+                            .font(.liquidSans(13, weight: .medium))
+                            .foregroundStyle(Liquid.fg0)
                             .padding(.horizontal, Liquid.Space.lg)
                             .padding(.vertical, Liquid.Space.sm)
-                            .background(Capsule().fill(Liquid.bg0.opacity(0.7)))
+                            .background(Capsule().fill(Liquid.bg0.opacity(0.75)))
                             .padding(.top, Liquid.Space.lg)
                         Spacer()
                     }
@@ -56,14 +56,16 @@ struct LiquidQRScannerSheet: View {
     private var header: some View {
         HStack {
             Text("Ler QR code")
-                .liquidH2()
+                .font(.liquidSans(20, weight: .semibold))
+                .tracking(-0.3)
+                .foregroundStyle(Liquid.fg0)
             Spacer()
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Liquid.fg1)
-                    .frame(width: 44, height: 44)
-                    .glassSurface(cornerRadius: Liquid.Radius.md)
+                    .frame(width: 36, height: 36)
+                    .background(Circle().fill(Liquid.bg2))
             }
             .accessibilityLabel("Fechar")
         }

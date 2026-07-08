@@ -9,6 +9,7 @@ import SwiftUI
 final class LiquidRouter: ObservableObject {
 
     @Published var path = NavigationPath()
+    @Published var tab: LiquidTab = .inicio
 
     func push(_ route: AppRoute) {
         path.append(route)

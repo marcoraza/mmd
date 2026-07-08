@@ -41,33 +41,40 @@ struct LiquidItemDetailView: View {
     // MARK: Identidade
 
     private var identityCard: some View {
-        GlassCard(strong: true) {
-            VStack(alignment: .leading, spacing: Liquid.Space.lg) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: Liquid.Space.xs) {
-                        Text("Unidade física").liquidLabel(Liquid.accentCyan)
-                        Text(item?.displayName ?? item?.nome ?? "Serial")
-                            .liquidH2()
-                        if let item {
-                            Text([item.marca, item.modelo, item.categoria.displayName]
-                                .compactMap { $0 }.joined(separator: ", "))
-                                .liquidSmall()
-                        }
+        VStack(alignment: .leading, spacing: Liquid.Space.lg) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: Liquid.Space.xs) {
+                    Text("UNIDADE FÍSICA")
+                        .font(.liquidMono(10, weight: .medium))
+                        .tracking(1.2)
+                        .foregroundStyle(Liquid.fg2)
+                    Text(item?.displayName ?? item?.nome ?? "Serial")
+                        .font(.liquidSans(20, weight: .semibold))
+                        .tracking(-0.3)
+                        .foregroundStyle(Liquid.fg0)
+                    if let item {
+                        Text([item.marca, item.modelo, item.categoria.displayName]
+                            .compactMap { $0 }.joined(separator: ", "))
+                            .font(.liquidSans(12, weight: .regular))
+                            .foregroundStyle(Liquid.fg2)
                     }
-                    Spacer()
-                    LiquidStatusBadge(status: serial.status)
                 }
+                Spacer()
+                LiquidStatusBadge(status: serial.status)
+            }
 
-                Rectangle().fill(Liquid.glassBorder).frame(height: 1)
+            Rectangle().fill(Liquid.hairline).frame(height: 1)
 
-                VStack(spacing: Liquid.Space.sm) {
-                    kv("Código interno", serial.codigoInterno)
-                    if let tag = serial.tagRfid { kv("Tag RFID", tag) }
-                    if let fab = serial.serialFabrica { kv("Serial fábrica", fab) }
-                    if let loc = serial.localizacao { kv("Localização", loc) }
-                }
+            VStack(spacing: Liquid.Space.sm) {
+                kv("Código interno", serial.codigoInterno)
+                if let tag = serial.tagRfid { kv("Tag RFID", tag) }
+                if let fab = serial.serialFabrica { kv("Serial fábrica", fab) }
+                if let loc = serial.localizacao { kv("Localização", loc) }
             }
         }
+        .padding(Liquid.Space.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
     }
 
     private func kv(_ label: String, _ value: String) -> some View {
@@ -81,26 +88,29 @@ struct LiquidItemDetailView: View {
     // MARK: Condicao
 
     private var conditionCard: some View {
-        GlassCard(strong: true) {
-            VStack(alignment: .leading, spacing: Liquid.Space.xl) {
-                Text("Condição da unidade").liquidH3()
+        VStack(alignment: .leading, spacing: Liquid.Space.xl) {
+            Text("Condição da unidade")
+                .font(.liquidSans(17, weight: .semibold))
+                .foregroundStyle(Liquid.fg0)
 
-                wearRing
+            wearRing
 
-                estadoSegmented
+            estadoScale
 
-                depreciacaoBlock
+            depreciacaoBlock
 
-                formulaBlock
-            }
+            formulaBlock
         }
+        .padding(Liquid.Space.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSurface(cornerRadius: Liquid.Radius.lg)
     }
 
     private var wearRing: some View {
         let color = serial.desgaste.liquidWearColor
         return HStack(spacing: Liquid.Space.xl) {
             ZStack {
-                Circle().stroke(Liquid.glassBorderStrong, lineWidth: 8)
+                Circle().stroke(Liquid.hairlineStrong, lineWidth: 8)
                 Circle()
                     .trim(from: 0, to: CGFloat(serial.desgaste) / 5)
                     .stroke(color, style: StrokeStyle(lineWidth: 8, lineCap: .round))
@@ -113,46 +123,48 @@ struct LiquidItemDetailView: View {
             .frame(width: 104, height: 104)
 
             VStack(alignment: .leading, spacing: Liquid.Space.xs) {
-                Text("Desgaste").liquidLabel()
+                Text("Desgaste")
+                    .liquidSection()
                 Text(desgasteLabel).font(.liquidSans(17, weight: .medium)).foregroundStyle(color)
-                Text("Última avaliação no retorno").liquidSmall().foregroundStyle(Liquid.fg3)
             }
             Spacer()
         }
     }
 
-    private var estadoSegmented: some View {
+    // Escala de estado (leitura, nao controle): o atual em chip cheio, os
+    // demais apagados. Nada aqui parece botao porque nada aqui e botao.
+    private var estadoScale: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.sm) {
-            Text("Estado").liquidLabel()
+            Text("Estado")
+                .liquidSection()
             HStack(spacing: Liquid.Space.sm) {
                 ForEach(Estado.allCases) { e in
                     let on = e == serial.estado
                     Text(estadoShort(e))
                         .font(.liquidMono(11, weight: .medium))
-                        .foregroundStyle(on ? Liquid.bg0 : Liquid.fg2)
+                        .foregroundStyle(on ? Liquid.fg0 : Liquid.fg3)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, Liquid.Space.sm)
                         .background(
                             RoundedRectangle(cornerRadius: Liquid.Radius.sm, style: .continuous)
-                                .fill(on ? Liquid.accentCyan : Liquid.glassBg)
-                                .overlay(RoundedRectangle(cornerRadius: Liquid.Radius.sm, style: .continuous)
-                                    .strokeBorder(on ? Color.clear : Liquid.glassBorder, lineWidth: 1))
+                                .fill(on ? Liquid.bg2 : Color.clear)
                         )
                 }
             }
-            Text("fator \(String(format: "%.2f", fator))").liquidMonoData(10, color: Liquid.accentCyan)
+            Text("fator \(String(format: "%.2f", fator))")
+                .liquidMonoData(10, color: Liquid.fg2)
         }
     }
 
     private var depreciacaoBlock: some View {
         VStack(alignment: .leading, spacing: Liquid.Space.sm) {
-            Text("Depreciação").liquidLabel()
+            Text("Depreciação")
+                .liquidSection()
             ZStack(alignment: .leading) {
-                Capsule().fill(Liquid.glassBorderStrong).frame(height: 8)
+                Capsule().fill(Liquid.hairlineStrong).frame(height: 8)
                 GeometryReader { geo in
                     Capsule()
-                        .fill(LinearGradient(colors: [Liquid.accentGreen, Liquid.accentCyan],
-                                             startPoint: .leading, endPoint: .trailing))
+                        .fill(Liquid.accentGreen)
                         .frame(width: geo.size.width * pctRestante, height: 8)
                 }
                 .frame(height: 8)
@@ -167,7 +179,9 @@ struct LiquidItemDetailView: View {
 
     private func valueBlock(_ label: String, _ value: String, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).liquidLabel()
+            Text(label)
+                .font(.liquidSans(11, weight: .medium))
+                .foregroundStyle(Liquid.fg2)
             Text(value).font(.liquidSans(18, weight: .medium)).foregroundStyle(color)
         }
     }
@@ -178,7 +192,7 @@ struct LiquidItemDetailView: View {
             Text("valor_atual = \(money(valorOriginal)) × (\(d)/5) × \(String(format: "%.2f", fator))")
             Text("= \(money(valorOriginal)) × \(String(format: "%.2f", Double(d) / 5)) × \(String(format: "%.2f", fator))")
             (Text("= ").foregroundColor(Liquid.fg2)
-                + Text(money(valorAtual)).foregroundColor(Liquid.accentCyan))
+                + Text(money(valorAtual)).foregroundColor(Liquid.fg0))
         }
         .font(.liquidMono(12))
         .foregroundStyle(Liquid.fg2)
@@ -188,7 +202,7 @@ struct LiquidItemDetailView: View {
             RoundedRectangle(cornerRadius: Liquid.Radius.sm, style: .continuous)
                 .fill(Liquid.bg0.opacity(0.5))
                 .overlay(RoundedRectangle(cornerRadius: Liquid.Radius.sm, style: .continuous)
-                    .strokeBorder(Liquid.glassBorder, lineWidth: 1))
+                    .strokeBorder(Liquid.hairline, lineWidth: 1))
         )
     }
 

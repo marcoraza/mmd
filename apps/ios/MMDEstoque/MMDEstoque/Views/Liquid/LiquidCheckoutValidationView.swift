@@ -11,7 +11,9 @@ import SwiftUI
 // EnvironmentObjects nao chegam no init, entao este wrapper le rfid/api e
 // repassa pro conteudo, que e dono do @StateObject do view model.
 
-enum CheckoutMode { case scan, conferencia }
+// O modo Conferencia (LiquidCheckoutGridView) saiu do toggle: e mockup com
+// dado de exemplo. Volta quando o grid for alimentado pelo estado real do
+// scan.
 
 struct LiquidCheckoutValidationView: View {
 
@@ -19,29 +21,17 @@ struct LiquidCheckoutValidationView: View {
 
     @EnvironmentObject private var rfid: RFIDManager
     @EnvironmentObject private var apiClient: APIClient
-    @State private var mode: CheckoutMode = .scan
 
     var body: some View {
-        Group {
-            if mode == .scan {
-                LiquidCheckoutValidationContent(
-                    project: project,
-                    apiClient: apiClient,
-                    rfidManager: rfid
-                )
-                .environmentObject(rfid)
-            } else {
-                LiquidCheckoutGridView(project: project)
-            }
-        }
+        LiquidCheckoutValidationContent(
+            project: project,
+            apiClient: apiClient,
+            rfidManager: rfid
+        )
+        .environmentObject(rfid)
         .navigationTitle("Check-out")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                LiquidPillToggle(selection: $mode, options: [(.scan, "Scan"), (.conferencia, "Conferência")])
-            }
-        }
     }
 }
 

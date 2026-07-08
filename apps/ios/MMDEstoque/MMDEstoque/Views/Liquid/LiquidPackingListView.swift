@@ -1,9 +1,5 @@
 import SwiftUI
 
-// MARK: - PackingMode
-
-enum PackingMode { case lista, mapa }
-
 // MARK: - LiquidPackingListView
 //
 // Packing/detalhe do projeto, reskin Liquid de PackingListView. Header com
@@ -24,27 +20,17 @@ struct LiquidPackingListView: View {
     @State private var serials: [SerialNumber] = []
     @State private var isLoading = false
     @State private var error: String?
-    @State private var mode: PackingMode = .lista
 
+    // O modo Mapa (LiquidPackingMapView) saiu do toggle: galpao de exemplo
+    // hardcoded. Volta quando houver layout real do galpao.
     var body: some View {
-        Group {
-            if mode == .lista {
-                ZStack {
-                    TechnicalGridCanvas()
-                    content
-                }
-            } else {
-                LiquidPackingMapView(project: project)
-            }
+        ZStack {
+            TechnicalGridCanvas()
+            content
         }
         .navigationTitle("Packing")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                LiquidPillToggle(selection: $mode, options: [(.lista, "Lista"), (.mapa, "Mapa")])
-            }
-        }
         .task { await load() }
     }
 

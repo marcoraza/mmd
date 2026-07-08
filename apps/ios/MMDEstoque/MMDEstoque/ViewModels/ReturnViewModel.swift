@@ -212,11 +212,73 @@ final class ReturnViewModel: ObservableObject {
         pendingAssessmentId = nil
     }
 
+    // MARK: - Demo Scan (video capture only)
+    //
+    // Encena a volta pra gravação do tour em vídeo: marca os itens reais em
+    // campo como OK, um a um, pro efeito de conferência. Não toca hardware nem
+    // banco. Só roda com o launch arg -demoScan.
+
+    var isDemoMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("-demoScan")
+    }
+
+    func runDemoScanIfNeeded() {
+        guard isDemoMode, scannedCount == 0 else { return }
+        Task { @MainActor in
+            // No seed atual nenhum evento tem movimentação de saída, então o
+            // fluxo real não acha itens em campo. Pra encenar, monto a volta a
+            // partir da packing real do evento (serials de verdade, sem tocar
+            // o banco).
+            if outboundItems.isEmpty {
+                await loadDemoOutboundFromPacking()
+            }
+            for item in outboundItems {
+                try? await Task.sleep(nanoseconds: 550_000_000)
+                markAsOK(serialId: item.id)
+            }
+        }
+    }
+
+    private func loadDemoOutboundFromPacking() async {
+        do {
+            let packing = try await apiClient.fetchPackingList(projectId: project.id)
+            // Os seriais designados do seed são órfãos (não existem em
+            // serial_numbers), então busco seriais reais pelos tipos de item da
+            // packing. Limita pra o efeito de conferência não ficar longo no vídeo.
+            let itemIds = Array(Set(packing.map { $0.itemId }))
+            guard !itemIds.isEmpty else { return }
+
+            let serials = try await apiClient.fetchSerialsByItemIds(itemIds, limit: 6)
+            var items: [ReturnItemState] = []
+            for serial in serials {
+                guard let equipment = serial.item else { continue }
+                let resolved = ResolvedItem(serialNumber: serial, equipment: equipment)
+                items.append(ReturnItemState(id: serial.id, resolved: resolved))
+            }
+
+            outboundItems = items
+            serialIdToIndex.removeAll()
+            for (index, item) in outboundItems.enumerated() {
+                serialIdToIndex[item.id] = index
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     // MARK: - Finalize Return
 
     func finalizeReturn() async {
         isProcessingReturn = true
         error = nil
+
+        // Encenação: mostra a volta registrada sem gravar nada no Supabase.
+        if isDemoMode {
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            returnComplete = true
+            isProcessingReturn = false
+            return
+        }
 
         do {
             var returns: [(serialId: UUID, tipo: TipoMovimentacao, statusNovo: String, desgaste: Int?, metodoScan: MetodoScan, notas: String?)] = []

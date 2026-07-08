@@ -15,6 +15,7 @@ struct LiquidPackingListView: View {
     var onAdvance: (() -> Void)? = nil
 
     @EnvironmentObject private var apiClient: APIClient
+    @EnvironmentObject private var tour: TourController
 
     @State private var packingItems: [PackingListItem] = []
     @State private var serials: [SerialNumber] = []
@@ -32,6 +33,19 @@ struct LiquidPackingListView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task { await load() }
+        .onAppear(perform: startCheckoutTourIfNeeded)
+    }
+
+    // MARK: Tour Kickoff
+    //
+    // So o fluxo de check-out (evento a sair) dispara o tour; retorno nao.
+    private func startCheckoutTourIfNeeded() {
+        guard project.status != .emCampo else { return }
+        guard !AppConfig.shared.isTourDone(.checkout), !tour.isActive else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            guard !tour.isActive else { return }
+            tour.start(TourDefinitions.checkout)
+        }
     }
 
     // MARK: Content
@@ -74,6 +88,7 @@ struct LiquidPackingListView: View {
         VStack(spacing: -headerOverlap) {
             identityCard
                 .zIndex(1)
+                .tourAnchor(.packingHero)
 
             progressAttachedCard
         }
@@ -211,7 +226,10 @@ struct LiquidPackingListView: View {
                 .fill(Liquid.hairline)
                 .frame(height: 1)
 
-            Button { onAdvance?() } label: {
+            Button {
+                onAdvance?()
+                tour.notifyAction(.openCheckout)
+            } label: {
                 HStack(spacing: Liquid.Space.sm) {
                     Image(systemName: advanceIcon)
                         .font(.system(size: 15, weight: .semibold))
@@ -227,6 +245,7 @@ struct LiquidPackingListView: View {
                 )
             }
             .buttonStyle(.plain)
+            .tourAnchor(.openCheckout)
             .padding(.horizontal, Liquid.Space.xxl)
             .padding(.vertical, Liquid.Space.lg)
         }
@@ -343,6 +362,7 @@ struct LiquidPackingListView_Previews: PreviewProvider {
                 onAdvance: {}
             )
             .environmentObject(APIClient())
+            .environmentObject(TourController())
         }
         .preferredColorScheme(.dark)
     }

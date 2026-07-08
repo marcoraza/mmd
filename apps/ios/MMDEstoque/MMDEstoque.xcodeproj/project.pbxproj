@@ -14,6 +14,7 @@
 		167854D8B69A9174711490F8 /* IdentificarFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C0607155D6DC883DE6CFD6 /* IdentificarFlow.swift */; };
 		1B8B619FF7FDC83F5769E9B0 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3693B929629F89DF34776D4 /* ScanView.swift */; };
 		1C107A68EFE105D977195842 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AB7BD33ACC289E8E383823 /* Typography.swift */; };
+		1CDCB23E96ABC5569C24583D /* TourCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CDAF6832A9CA3930B861E3 /* TourCard.swift */; };
 		1E0A2B8E09321B0C2E2E139F /* LiquidComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3190CB2AF35C21208B73BD /* LiquidComponents.swift */; };
 		28DD05892BD412505E3D1D2B /* SpaceMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FD0EBB90366EF3CE4ED3E946 /* SpaceMono-Regular.ttf */; };
 		2A05F29086ED00B7BD8BBE5B /* RFIDReaderProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */; };
@@ -25,6 +26,7 @@
 		3AC9F0992DD583F6CDE60C76 /* CheckoutViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C261ACAAFA0E12EA5E39371C /* CheckoutViewModel.swift */; };
 		3B16C581F26EBDCD8E80A3ED /* PackingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323EEDFB17A87E8066DC3BE4 /* PackingListView.swift */; };
 		3BCED949C8CF5437D3100DA4 /* RFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 055631E395FA08130AE30B7B /* RFIDManager.swift */; };
+		3C8E42B2A0BD99FB45048024 /* TourDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0CDC9AEEF428686EEA2B79 /* TourDefinitions.swift */; };
 		3FFA14A4DFD77FD2ABABEE9F /* ParticleScanField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5313E40987DD26AA2F896208 /* ParticleScanField.swift */; };
 		434CF652B4768AFF45D04C03 /* LiquidScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29E94F5BA704C200216CD50 /* LiquidScanResultView.swift */; };
 		497A60E3B584853374BD94EE /* LiquidConnectReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3364F435E0AD7CAE925AFDF4 /* LiquidConnectReader.swift */; };
@@ -48,6 +50,7 @@
 		8095731D9E3391AF2659C8ED /* InterTight-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2064F95FE826DBEFC1C79CBD /* InterTight-VF.ttf */; };
 		82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E2603B965BC0BCF3345FE4 /* WearBar.swift */; };
 		8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D783BB916661590B5F095A88 /* Theme.swift */; };
+		8D3FED5C3FF62B3C631C0572 /* TourModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789726D330C0030DADB6DC61 /* TourModels.swift */; };
 		8F9898AB605E8F464206AEF4 /* LiquidRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B517935CBFA8F9727632FE3 /* LiquidRouter.swift */; };
 		972812F070BC6553F42B3468 /* LiquidTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B80E41DB8736AC3D036C2A /* LiquidTabBar.swift */; };
 		973BF48053AF163FAC988E40 /* QRScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5106F306DE231604F7C7654F /* QRScanView.swift */; };
@@ -56,6 +59,8 @@
 		9B14EC641849C9DBEC1A22DA /* LiquidPillToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9898C57CE4330B27044AD28 /* LiquidPillToggle.swift */; };
 		9B9A873DC375D16AFE902993 /* LiquidCheckoutValidationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF66AFB7AFB6B238AAE27E61 /* LiquidCheckoutValidationView.swift */; };
 		9D832587FC784D77CDC71A93 /* ScanEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A8884A51467AEC388EAB58 /* ScanEngine.swift */; };
+		9F49441C0064E2929C450897 /* TourAnchor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E099C2F904E7FD53B24549BB /* TourAnchor.swift */; };
+		B1AD92FC71BBB566690C39B9 /* SpotlightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E9C34BDA3F2F912A0B7E2A /* SpotlightView.swift */; };
 		B38C0A694D23764EB5DEC33E /* SerialNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E012404B07763AD5EDFB000 /* SerialNumber.swift */; };
 		B5CB60B005D0EF80343B60DE /* LiquidQRScannerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4522CE0EE36A98C81663B0A /* LiquidQRScannerSheet.swift */; };
 		B794D8231303607CEA517059 /* CheckoutFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E98702B08CD63F5D51C5464 /* CheckoutFlowView.swift */; };
@@ -63,11 +68,13 @@
 		BAEB16A1FB4D271E59FCA09F /* JetBrainsMono-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BE890B23B9358DB67F77E1E /* JetBrainsMono-VF.ttf */; };
 		BDEE57E847D2F9C0FD19BFA8 /* ProgressSegmentBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7B747B07C0DCAAB961D438 /* ProgressSegmentBar.swift */; };
 		CBA758122F52D8B985210F40 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB277F62D429AADEB3F854A /* StatusBadge.swift */; };
+		CFE3CF649F01C1790F5041C8 /* TourController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A34A6FF45CB6009AB81661 /* TourController.swift */; };
 		D2864B58426DB3E37C05FBBC /* ReadinessRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA25CE570D3FA227EFC31C00 /* ReadinessRing.swift */; };
 		D4240CDFEF996F16BAC289F5 /* LiquidTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5117594BA29CAEEFB800B0E /* LiquidTokens.swift */; };
 		D432285F9D7BBFC391CD7DF1 /* ConnectReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */; };
 		D4B4C2225BBC61DB65998546 /* MockRFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */; };
 		DE912E8CD5F8083590AF076B /* Doto[ROND,wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */; };
+		E73A527AACD107A391FD56E8 /* TourOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76162D22DEDC95AC9329F414 /* TourOverlay.swift */; };
 		EC4AA9821282C23AE01B835D /* GlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33AAC2836ED72FC7A3BDEF53 /* GlassSurface.swift */; };
 		EC87BEFC3296EFF194E31241 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D4FDA78BC93DCA00DF2AA1 /* Project.swift */; };
 		F38FC1A4AE155AD056E9B332 /* DotGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = E333E0ED277DC56507062423 /* DotGrid.swift */; };
@@ -96,6 +103,7 @@
 		3E98702B08CD63F5D51C5464 /* CheckoutFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutFlowView.swift; sourceTree = "<group>"; };
 		40C2DAC838AD374C6FACBDBF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4122E7C0CEDDD090C54D5204 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
+		43A34A6FF45CB6009AB81661 /* TourController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourController.swift; sourceTree = "<group>"; };
 		43C0607155D6DC883DE6CFD6 /* IdentificarFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentificarFlow.swift; sourceTree = "<group>"; };
 		4BE890B23B9358DB67F77E1E /* JetBrainsMono-VF.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMono-VF.ttf"; sourceTree = "<group>"; };
 		4C04051CAF01598328A91F1E /* LiquidProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidProjectsListView.swift; sourceTree = "<group>"; };
@@ -110,8 +118,11 @@
 		6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Doto[ROND,wght].ttf"; sourceTree = "<group>"; };
 		6F7111DBCDAB5AE6001D2987 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		719EDC67268900320B934F5A /* LiquidHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidHomeViewModel.swift; sourceTree = "<group>"; };
+		76162D22DEDC95AC9329F414 /* TourOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourOverlay.swift; sourceTree = "<group>"; };
+		789726D330C0030DADB6DC61 /* TourModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourModels.swift; sourceTree = "<group>"; };
 		7D69133C4625DC54D3FECAB7 /* LiquidType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidType.swift; sourceTree = "<group>"; };
 		87370481D0344955AD756252 /* LiquidCheckoutGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidCheckoutGridView.swift; sourceTree = "<group>"; };
+		8D0CDC9AEEF428686EEA2B79 /* TourDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourDefinitions.swift; sourceTree = "<group>"; };
 		91C280E45EF7DE19F6A70637 /* LiquidPackingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidPackingListView.swift; sourceTree = "<group>"; };
 		94F6B766C87B3CAD8FC1BDA7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		95853E0984BED96A8AD15E91 /* LiquidItemLostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidItemLostView.swift; sourceTree = "<group>"; };
@@ -119,6 +130,7 @@
 		9E012404B07763AD5EDFB000 /* SerialNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialNumber.swift; sourceTree = "<group>"; };
 		A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		A847CCF6E06CA63C8477C614 /* Movement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movement.swift; sourceTree = "<group>"; };
+		A9CDAF6832A9CA3930B861E3 /* TourCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourCard.swift; sourceTree = "<group>"; };
 		AA25CE570D3FA227EFC31C00 /* ReadinessRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessRing.swift; sourceTree = "<group>"; };
 		AA85700566F16313CA24DE15 /* ReturnViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnViewModel.swift; sourceTree = "<group>"; };
 		AED1B9A1B4DA3DEE5CA71187 /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
@@ -136,12 +148,14 @@
 		CF66AFB7AFB6B238AAE27E61 /* LiquidCheckoutValidationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidCheckoutValidationView.swift; sourceTree = "<group>"; };
 		D1C23407FE45571DFB9F2F4A /* LiquidPackingMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidPackingMapView.swift; sourceTree = "<group>"; };
 		D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRFIDManager.swift; sourceTree = "<group>"; };
+		D4E9C34BDA3F2F912A0B7E2A /* SpotlightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightView.swift; sourceTree = "<group>"; };
 		D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDReaderProtocol.swift; sourceTree = "<group>"; };
 		D783BB916661590B5F095A88 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		D9898C57CE4330B27044AD28 /* LiquidPillToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidPillToggle.swift; sourceTree = "<group>"; };
 		DA6C2E3944AC480102EACFE1 /* CausticBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CausticBackground.swift; sourceTree = "<group>"; };
 		DA8B1AC5E5ADEBDC3055D61D /* MMDEstoqueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MMDEstoqueApp.swift; sourceTree = "<group>"; };
 		DAB277F62D429AADEB3F854A /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		E099C2F904E7FD53B24549BB /* TourAnchor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourAnchor.swift; sourceTree = "<group>"; };
 		E29E94F5BA704C200216CD50 /* LiquidScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidScanResultView.swift; sourceTree = "<group>"; };
 		E333E0ED277DC56507062423 /* DotGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotGrid.swift; sourceTree = "<group>"; };
 		E3693B929629F89DF34776D4 /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
@@ -229,6 +243,7 @@
 				AEDAC127BE3C377441358254 /* Config */,
 				C6D637D5D278D7D212BB2E92 /* Design */,
 				292DC28C740B13CEA10F63A2 /* Models */,
+				DADAB3FE9B7C721ED65FB4B9 /* Onboarding */,
 				B2E748A52C5DAC4DC68A131B /* Resources */,
 				D736582F537F4EF6FE0530FF /* Services */,
 				712E6D6FA9B9162CAE5D9AD8 /* ViewModels */,
@@ -319,6 +334,20 @@
 				0A291F2455227FD8841936B9 /* ZebraRFIDManager.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		DADAB3FE9B7C721ED65FB4B9 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				D4E9C34BDA3F2F912A0B7E2A /* SpotlightView.swift */,
+				E099C2F904E7FD53B24549BB /* TourAnchor.swift */,
+				A9CDAF6832A9CA3930B861E3 /* TourCard.swift */,
+				43A34A6FF45CB6009AB81661 /* TourController.swift */,
+				8D0CDC9AEEF428686EEA2B79 /* TourDefinitions.swift */,
+				789726D330C0030DADB6DC61 /* TourModels.swift */,
+				76162D22DEDC95AC9329F414 /* TourOverlay.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		F115C8878A7AEF7CB61B418F /* Fonts */ = {
@@ -494,8 +523,15 @@
 				4AD2EAFC171B47C40E7BA5EE /* ScanResultView.swift in Sources */,
 				1B8B619FF7FDC83F5769E9B0 /* ScanView.swift in Sources */,
 				B38C0A694D23764EB5DEC33E /* SerialNumber.swift in Sources */,
+				B1AD92FC71BBB566690C39B9 /* SpotlightView.swift in Sources */,
 				CBA758122F52D8B985210F40 /* StatusBadge.swift in Sources */,
 				8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */,
+				9F49441C0064E2929C450897 /* TourAnchor.swift in Sources */,
+				1CDCB23E96ABC5569C24583D /* TourCard.swift in Sources */,
+				CFE3CF649F01C1790F5041C8 /* TourController.swift in Sources */,
+				3C8E42B2A0BD99FB45048024 /* TourDefinitions.swift in Sources */,
+				8D3FED5C3FF62B3C631C0572 /* TourModels.swift in Sources */,
+				E73A527AACD107A391FD56E8 /* TourOverlay.swift in Sources */,
 				1C107A68EFE105D977195842 /* Typography.swift in Sources */,
 				82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */,
 				57CBF41E7EF073ABA2F0DF4C /* ZebraRFIDManager.swift in Sources */,

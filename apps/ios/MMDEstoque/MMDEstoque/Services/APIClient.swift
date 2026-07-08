@@ -238,6 +238,20 @@ final class APIClient: ObservableObject {
         return try await perform(request)
     }
 
+    /// Fetch real serial numbers that belong to the given item types, with
+    /// joined equipment data, capped by `limit`.
+    func fetchSerialsByItemIds(_ itemIds: [UUID], limit: Int) async throws -> [SerialNumber] {
+        guard !itemIds.isEmpty else { return [] }
+        let quoted = itemIds.map { "\"\($0.uuidString)\"" }.joined(separator: ",")
+        let queryItems = [
+            URLQueryItem(name: "item_id", value: "in.(\(quoted))"),
+            URLQueryItem(name: "select", value: "*,item:items(*)"),
+            URLQueryItem(name: "limit", value: "\(limit)")
+        ]
+        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
+        return try await perform(request)
+    }
+
     // MARK: - Inventory Snapshot (Home)
 
     /// Linha enxuta de um serial pra agregacao na Home: status, desgaste e se

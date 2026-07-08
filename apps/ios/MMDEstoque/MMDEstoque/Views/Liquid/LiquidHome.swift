@@ -93,6 +93,7 @@ private struct LiquidHomeContent: View {
                 if let evento = vm.proximoEvento { router.push(.packing(evento)) }
             }
             .zIndex(1)
+            .tourAnchor(.heroCard)
 
             kpiAttachedCard
         }
@@ -114,6 +115,7 @@ private struct LiquidHomeContent: View {
         .padding(.bottom, Liquid.Space.md)
         .frame(maxWidth: .infinity)
         .panelSurface(cornerRadius: Liquid.Radius.md, tone: .inset)
+        .tourAnchor(.kpiCard)
     }
 
     private var kpiDivider: some View {
@@ -262,6 +264,7 @@ private struct LiquidHomeContent: View {
         }
         .buttonStyle(.pressableCard)
         .accessibilityLabel("Leitor: \(readerLabel)")
+        .tourAnchor(.readerStatus)
     }
 
     private var readerLabel: String {

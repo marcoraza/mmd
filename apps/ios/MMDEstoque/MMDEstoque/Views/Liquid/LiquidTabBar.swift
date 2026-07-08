@@ -72,6 +72,7 @@ struct LiquidTabBar: View {
             }
             .buttonStyle(.pressableCard)
             .accessibilityLabel("Ações rápidas")
+            .tourAnchor(.plusButton)
         }
         .padding(.horizontal, Liquid.Space.xl)
         .padding(.bottom, Liquid.Space.xs)
@@ -99,12 +100,15 @@ struct LiquidTabBar: View {
         .buttonStyle(.plain)
         .accessibilityLabel(tab.title)
         .accessibilityAddTraits(selection == tab ? .isSelected : [])
+        .tourAnchor(if: tab == .eventos ? .eventosTab : nil)
     }
 
+    // Preenchimento solido no lugar do .ultraThinMaterial: a barra flutua
+    // fixa sobre a home, entao o blur nao some, so custa. Um tom elevado
+    // opaco + hairline + sombra ja da a leitura de peca destacada.
     private func glassBar<S: InsettableShape>(in shape: S) -> some View {
         shape
-            .fill(.ultraThinMaterial)
-            .overlay(shape.fill(Liquid.bg0.opacity(0.55)))
+            .fill(Liquid.bg2)
             .overlay(shape.strokeBorder(Liquid.hairlineStrong, lineWidth: 1))
             .shadow(color: .black.opacity(0.35), radius: 20, x: 0, y: 10)
     }

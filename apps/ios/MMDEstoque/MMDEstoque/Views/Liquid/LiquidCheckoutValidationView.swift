@@ -83,7 +83,10 @@ private struct LiquidCheckoutValidationContent: View {
                 }
             }
         }
-        .task { await viewModel.loadPackingList() }
+        .task {
+            await viewModel.loadPackingList()
+            viewModel.runDemoScanIfNeeded()
+        }
         .onChange(of: viewModel.checkoutComplete) { complete in
             if complete { showConfirmation = false }
         }
@@ -147,6 +150,7 @@ private struct LiquidCheckoutValidationContent: View {
         .padding(Liquid.Space.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .panelSurface(cornerRadius: Liquid.Radius.lg)
+        .tourAnchor(.checkoutScan)
     }
 
     private var packingList: some View {

@@ -36,6 +36,7 @@ private struct LiquidReturnValidationContent: View {
     @StateObject private var viewModel: ReturnViewModel
 
     @EnvironmentObject private var router: LiquidRouter
+    @EnvironmentObject private var tour: TourController
     @State private var showQRScanner = false
 
     init(project: Project, apiClient: APIClient, rfidManager: RFIDManager) {
@@ -85,11 +86,25 @@ private struct LiquidReturnValidationContent: View {
         .navigationTitle("Confirmar volta")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .task { await viewModel.loadOutboundItems() }
+        .task {
+            await viewModel.loadOutboundItems()
+            viewModel.runDemoScanIfNeeded()
+        }
+        .onAppear(perform: startReturnTourIfNeeded)
         .sheet(isPresented: $showQRScanner) {
             LiquidQRScannerSheet { code in
                 viewModel.processQRCode(code)
             }
+        }
+    }
+
+    // MARK: Tour Kickoff
+
+    private func startReturnTourIfNeeded() {
+        guard !AppConfig.shared.isTourDone(.retorno), !tour.isActive else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            guard !tour.isActive else { return }
+            tour.start(TourDefinitions.retorno)
         }
     }
 
@@ -145,6 +160,7 @@ private struct LiquidReturnValidationContent: View {
         .padding(Liquid.Space.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .panelSurface(cornerRadius: Liquid.Radius.lg)
+        .tourAnchor(.retornoHeader)
     }
 
     private func countPill(_ value: String, label: String, dot: Color) -> some View {
@@ -469,6 +485,7 @@ struct LiquidReturnValidationView_Previews: PreviewProvider {
             )
             .environmentObject(RFIDManager(useMock: true))
             .environmentObject(APIClient())
+            .environmentObject(TourController())
         }
         .preferredColorScheme(.dark)
     }

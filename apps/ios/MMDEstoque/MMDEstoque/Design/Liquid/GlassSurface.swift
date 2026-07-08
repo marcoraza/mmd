@@ -25,14 +25,9 @@ struct GlassBackground: View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
     }
 
-    /// Piso de contraste: escurece o vidro sob o texto. Mais forte em telas de
-    /// trabalho (strong), mais leve no padrao, onde o caustic respira mais.
-    private var scrimOpacity: Double { strong ? 0.48 : 0.30 }
-
     var body: some View {
         shape
-            .fill(.ultraThinMaterial)
-            .overlay(shape.fill(Liquid.bg0.opacity(scrimOpacity)))
+            .fill(strong ? Liquid.bg2 : Liquid.bg1)
             .overlay(shape.fill(strong ? Liquid.glassBgStrong : Liquid.glassBg))
             .overlay(
                 shape.strokeBorder(
@@ -78,21 +73,23 @@ struct GlassCard<Content: View>: View {
 
 // MARK: - PanelBackground
 //
-// Superficie de painel: vidro com tint. O material amostra a luz de palco
-// do canvas (por isso o vidro volta a ler como vidro), o tint em camadas
-// da o contraste de valor (bg1 sobre bg0, bg2 nos chips, bgInset nos cards
-// acoplados) e a hairline com gradiente vertical finge aresta iluminada.
+// Superficie de painel: preenchimento solido opaco + realce de luz no topo,
+// sem backdrop blur. Antes usava .ultraThinMaterial, que em device custa
+// caro (o blur re-amostra o fundo a cada frame, e mais ainda quando o painel
+// se move numa transicao). O vidro le como vidro pela combinacao de tom
+// (bg1/bg2/bgInset), aresta iluminada no topo e hairline, nao pelo blur: a
+// luz de palco entra pelos vaos entre os paineis, nao atraves deles.
 
 enum LiquidPanelTone {
     case base       // card padrao (bg1)
     case elevated   // painel destacado (bg2)
     case inset      // card acoplado que desliza por baixo (bgInset)
 
-    var tint: Color {
+    var fill: Color {
         switch self {
-        case .base:     return Liquid.bg1.opacity(0.72)
-        case .elevated: return Liquid.bg2.opacity(0.72)
-        case .inset:    return Liquid.bgInset.opacity(0.78)
+        case .base:     return Liquid.bg1
+        case .elevated: return Liquid.bg2
+        case .inset:    return Liquid.bgInset
         }
     }
 }
@@ -118,8 +115,18 @@ struct PanelBackground: View {
 
     var body: some View {
         shape
-            .fill(.ultraThinMaterial)
-            .overlay(shape.fill(tone.tint))
+            .fill(tone.fill)
+            // Realce de luz no topo: finge o vidro pegando a luz-chave, sem
+            // custo de blur (um gradiente linear estatico).
+            .overlay(
+                shape.fill(
+                    LinearGradient(
+                        colors: [.white.opacity(0.05), .clear],
+                        startPoint: .top,
+                        endPoint: .center
+                    )
+                )
+            )
             .overlay(
                 shape.strokeBorder(
                     LinearGradient(
@@ -139,9 +146,12 @@ struct PanelBackground: View {
 // Canvas do app: o palco. Duas fontes de luz fixas e direcionais no lugar
 // dos orbs decorativos: uma luz-chave fria e alta (fresnel apagado lavando
 // o topo da cena) e um contraluz vermelho de marca quase subliminar no pe.
-// E a grade de pontos de blueprint por cima. A luz da ao vidro dos paineis
-// o que refratar; a disciplina (fontes fixas, sem cor flutuando) mantem a
-// sobriedade que o caustic nao tinha. Desenho estatico, barato.
+// E a grade de pontos de blueprint por cima.
+//
+// Performance: o desenho e 100% estatico, entao `.drawingGroup()` rasteriza
+// a cena inteira (gradientes + grade) numa unica textura Metal, renderizada
+// uma vez e cacheada. Sem isso, o Canvas refazia o loop de pontos e os
+// gradientes recompunham a cada frame, o que pesava ao animar a troca de aba.
 
 struct TechnicalGridCanvas: View {
 
@@ -190,6 +200,7 @@ struct TechnicalGridCanvas: View {
                 }
             }
         }
+        .drawingGroup()
         .ignoresSafeArea()
         .accessibilityHidden(true)
     }

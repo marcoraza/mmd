@@ -192,11 +192,43 @@ final class CheckoutViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Demo Scan (video capture only)
+    //
+    // Encena a conferência pra gravação do tour em vídeo: marca os itens reais
+    // da packing como lidos, um a um, pro efeito de scan enchendo. Não toca
+    // hardware nem banco. Só roda com o launch arg -demoScan (ausente no uso
+    // normal), então o fluxo real fica intocado.
+
+    var isDemoMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("-demoScan")
+    }
+
+    func runDemoScanIfNeeded() {
+        guard isDemoMode, !packingListItems.isEmpty, totalScanned == 0 else { return }
+        Task { @MainActor in
+            for item in packingListItems {
+                let faltam = max(0, item.quantidade - (matchedCounts[item.id] ?? 0))
+                for _ in 0..<faltam {
+                    try? await Task.sleep(nanoseconds: 550_000_000)
+                    matchedCounts[item.id, default: 0] += 1
+                }
+            }
+        }
+    }
+
     // MARK: - Finalize Checkout
 
     func finalizeCheckout() async {
         isProcessingCheckout = true
         error = nil
+
+        // Encenação: mostra a saída confirmada sem gravar nada no Supabase.
+        if isDemoMode {
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            checkoutComplete = true
+            isProcessingCheckout = false
+            return
+        }
 
         do {
             // Build serial list for API

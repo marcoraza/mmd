@@ -48,9 +48,12 @@ struct ScanResultPayload: Hashable {
 struct LiquidRoot: View {
 
     @EnvironmentObject private var router: LiquidRouter
+    @EnvironmentObject private var tour: TourController
 
     @State private var showQuickActions = false
-    @State private var tabDirection: CGFloat = 1
+    // Abas ja visitadas ficam vivas (opacity), pra nao recriar a tela nem
+    // refazer o fetch a cada troca. Inicio nasce visitada.
+    @State private var visitedTabs: Set<LiquidTab> = [.inicio]
 
     var body: some View {
         ZStack {
@@ -78,41 +81,71 @@ struct LiquidRoot: View {
             .presentationDetents([.height(400)])
             .presentationDragIndicator(.visible)
         }
+        .overlayPreferenceValue(TourAnchorKey.self) { anchors in
+            GeometryReader { proxy in
+                TourOverlayContent(anchors: anchors, proxy: proxy)
+            }
+        }
+        .onChange(of: tour.requestedTab) { newTab in
+            guard let newTab else { return }
+            tabSelection.wrappedValue = newTab
+        }
+        .onAppear(perform: startTourIfNeeded)
         .preferredColorScheme(.dark)
+    }
+
+    // MARK: Tour Kickoff
+
+    private func startTourIfNeeded() {
+        if ProcessInfo.processInfo.arguments.contains("-tourDemo") {
+            AppConfig.shared.resetTours()
+        }
+        guard !AppConfig.shared.isTourDone(.orientacao) else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            tour.start(TourDefinitions.orientacao)
+        }
     }
 
     // MARK: Tabs
 
-    /// Raiz da tab ativa, com transicao direcional curta na troca.
-    @ViewBuilder
+    /// As abas coexistem em camadas; a ativa fica opaca e recebe toque, as
+    /// outras somem. Estado (view models, scroll, dado carregado) persiste,
+    /// entao trocar de aba e um crossfade barato, sem recriar tela nem
+    /// refazer fetch. So entra na arvore quem ja foi visitado (lazy).
     private var tabRoot: some View {
-        Group {
-            switch router.tab {
-            case .inicio:
-                LiquidHome()
-            case .eventos:
-                LiquidProjectsListView(filter: .todos) { project in
-                    router.push(project.status == .emCampo ? .retorno(project) : .packing(project))
+        ZStack {
+            ForEach(LiquidTab.allCases) { tab in
+                if visitedTabs.contains(tab) {
+                    tabContent(tab)
+                        .opacity(router.tab == tab ? 1 : 0)
+                        .allowsHitTesting(router.tab == tab)
                 }
-            case .ajustes:
-                LiquidConfigView()
             }
         }
-        .id(router.tab)
-        .transition(.asymmetric(
-            insertion: .offset(x: tabDirection * 28).combined(with: .opacity),
-            removal: .offset(x: -tabDirection * 28).combined(with: .opacity)
-        ))
     }
 
-    /// Binding que registra a direcao da troca e anima indicador + conteudo.
+    @ViewBuilder
+    private func tabContent(_ tab: LiquidTab) -> some View {
+        switch tab {
+        case .inicio:
+            LiquidHome()
+        case .eventos:
+            LiquidProjectsListView(filter: .todos) { project in
+                router.push(project.status == .emCampo ? .retorno(project) : .packing(project))
+            }
+        case .ajustes:
+            LiquidConfigView()
+        }
+    }
+
+    /// Marca a aba como visitada e faz o crossfade curto.
     private var tabSelection: Binding<LiquidTab> {
         Binding(
             get: { router.tab },
             set: { newTab in
                 guard newTab != router.tab else { return }
-                tabDirection = newTab.rawValue > router.tab.rawValue ? 1 : -1
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                visitedTabs.insert(newTab)
+                withAnimation(.easeInOut(duration: 0.2)) {
                     router.tab = newTab
                 }
             }

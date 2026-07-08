@@ -12,9 +12,14 @@ struct AppConfig {
         static let supabaseUrl = "mmd_supabase_url"
         static let supabaseAnonKey = "mmd_supabase_anon_key"
         static let useMockRFID = "mmd_use_mock_rfid"
+        static let tourDonePrefix = "mmd_tour_done_"
     }
 
     // MARK: - Properties
+    //
+    // Credenciais do Supabase vem do UserDefaults (Ajustes > Avancado).
+    // Sem default embutido: o repo e publico, a anon key nao e versionada.
+    // Build de dispositivo local injeta a sua.
 
     var supabaseUrl: String {
         get { UserDefaults.standard.string(forKey: Keys.supabaseUrl) ?? "" }
@@ -65,5 +70,21 @@ struct AppConfig {
     func clearSupabaseConfig() {
         UserDefaults.standard.removeObject(forKey: Keys.supabaseUrl)
         UserDefaults.standard.removeObject(forKey: Keys.supabaseAnonKey)
+    }
+
+    // MARK: - Onboarding Tours
+
+    func isTourDone(_ id: TourID) -> Bool {
+        UserDefaults.standard.bool(forKey: Keys.tourDonePrefix + id.rawValue)
+    }
+
+    func markTourDone(_ id: TourID) {
+        UserDefaults.standard.set(true, forKey: Keys.tourDonePrefix + id.rawValue)
+    }
+
+    func resetTours() {
+        for id in TourID.allCases {
+            UserDefaults.standard.removeObject(forKey: Keys.tourDonePrefix + id.rawValue)
+        }
     }
 }

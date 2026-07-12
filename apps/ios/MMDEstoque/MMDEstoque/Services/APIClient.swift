@@ -7,6 +7,7 @@ enum APIError: LocalizedError {
     case invalidURL
     case notConfigured
     case webApiNotConfigured
+    case sessionExpired
     case httpError(statusCode: Int, body: String?)
     case decodingError(Error)
     case networkError(Error)
@@ -19,6 +20,8 @@ enum APIError: LocalizedError {
             return "Supabase nao configurado. Acesse Ajustes para inserir URL e chave."
         case .webApiNotConfigured:
             return "API Web nao configurada. Acesse Ajustes para ativar operacoes reais."
+        case .sessionExpired:
+            return "Sessão expirada. Faça login novamente."
         case .httpError(let code, let body):
             let detail = body.map { ": \($0)" } ?? ""
             return "Erro HTTP \(code)\(detail)"
@@ -44,10 +47,13 @@ final class APIClient: ObservableObject {
 
     @Published private(set) var isLoading = false
     @Published var lastError: APIError?
+    /// UI observa pra reabrir o gate de login sem resetar navegação.
+    @Published var needsReauthentication = false
 
     // MARK: - Dependencies
 
     private let session: URLSession
+    private let authStore: AuthSessionStore
     private let logger = Logger(subsystem: "com.mmd.estoque", category: "APIClient")
 
     private var baseURL: String { AppConfig.shared.supabaseUrl }
@@ -57,8 +63,14 @@ final class APIClient: ObservableObject {
     private var trimmedWebApiAuthToken: String {
         webApiAuthToken.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    private var supabaseBearerToken: String {
-        trimmedWebApiAuthToken.isEmpty ? apiKey : trimmedWebApiAuthToken
+
+    /// Em DEBUG, override manual do token tem precedência sobre a sessão.
+    private var isUsingDebugAuthOverride: Bool {
+        #if DEBUG
+        return !trimmedWebApiAuthToken.isEmpty
+        #else
+        return false
+        #endif
     }
 
     // MARK: - Date Decoding
@@ -107,8 +119,12 @@ final class APIClient: ObservableObject {
 
     // MARK: - Init
 
-    init(session: URLSession = .shared) {
+    init(
+        session: URLSession = .shared,
+        authStore: AuthSessionStore = .shared
+    ) {
         self.session = session
+        self.authStore = authStore
     }
 
     // MARK: - RFID Tag Resolution (primary use case)
@@ -136,7 +152,7 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "select", value: "*,item:items(*)")
         ]
 
-        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
         let serialNumbers: [SerialNumber] = try await perform(request)
 
         // Build resolved items from serial numbers that came back with a nested item.
@@ -176,7 +192,7 @@ final class APIClient: ObservableObject {
                 reader: reader
             )
         )
-        let request = try makeWebApiRequest(
+        let request = try await makeWebApiRequest(
             path: "/api/rfid/scans",
             method: "POST",
             body: body
@@ -232,7 +248,7 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "select", value: "*"),
             URLQueryItem(name: "order", value: "nome.asc")
         ]
-        let request = try makeRequest(path: "/rest/v1/items", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/items", queryItems: queryItems)
         return try await perform(request)
     }
 
@@ -244,7 +260,7 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "item_id", value: "eq.\(id.uuidString)"),
             URLQueryItem(name: "select", value: "*")
         ]
-        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
         return try await perform(request)
     }
 
@@ -258,7 +274,7 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "select", value: "*"),
             URLQueryItem(name: "order", value: "data_inicio.asc")
         ]
-        let request = try makeRequest(path: "/rest/v1/projetos", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/projetos", queryItems: queryItems)
         return try await perform(request)
     }
 
@@ -270,7 +286,7 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "projeto_id", value: "eq.\(projectId.uuidString)"),
             URLQueryItem(name: "select", value: "*,item:items(*)")
         ]
-        let request = try makeRequest(path: "/rest/v1/packing_list", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/packing_list", queryItems: queryItems)
         return try await perform(request)
     }
 
@@ -286,7 +302,7 @@ final class APIClient: ObservableObject {
         if let tipo = tipo {
             queryItems.append(URLQueryItem(name: "tipo", value: "eq.\(tipo.rawValue)"))
         }
-        let request = try makeRequest(path: "/rest/v1/movimentacoes", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/movimentacoes", queryItems: queryItems)
         return try await perform(request)
     }
 
@@ -298,7 +314,7 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "qr_code", value: "eq.\(code)"),
             URLQueryItem(name: "select", value: "*,item:items(*)")
         ]
-        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
         let results: [SerialNumber] = try await perform(request)
         return results.first
     }
@@ -313,7 +329,7 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "id", value: "in.(\(quoted))"),
             URLQueryItem(name: "select", value: "*,item:items(*)")
         ]
-        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
         return try await perform(request)
     }
 
@@ -327,7 +343,7 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "select", value: "*,item:items(*)"),
             URLQueryItem(name: "limit", value: "\(limit)")
         ]
-        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
+        let request = try await makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
         return try await perform(request)
     }
 
@@ -367,7 +383,7 @@ final class APIClient: ObservableObject {
         var offset = 0
 
         while true {
-            var request = try makeRequest(
+            var request = try await makeRequest(
                 path: "/rest/v1/serial_numbers",
                 queryItems: [URLQueryItem(name: "select", value: "status,desgaste,tag_rfid")]
             )
@@ -395,7 +411,7 @@ final class APIClient: ObservableObject {
                 overrideReason: overrideReason
             )
         )
-        let request = try makeWebApiRequest(
+        let request = try await makeWebApiRequest(
             path: "/api/eventos/\(projectId.uuidString)/checkout",
             method: "POST",
             body: body
@@ -420,7 +436,7 @@ final class APIClient: ObservableObject {
         }
 
         let movementBody = try encoder.encode(movements)
-        let movementRequest = try makeRequest(
+        let movementRequest = try await makeRequest(
             path: "/rest/v1/movimentacoes",
             method: "POST",
             body: movementBody,
@@ -431,7 +447,7 @@ final class APIClient: ObservableObject {
         // 2. PATCH serial_numbers status to EM_CAMPO
         let serialIds = serials.map { "\"\($0.serialId.uuidString)\"" }.joined(separator: ",")
         let statusBody = try encoder.encode(["status": StatusSerial.emCampo.rawValue])
-        let patchRequest = try makeRequest(
+        let patchRequest = try await makeRequest(
             path: "/rest/v1/serial_numbers",
             method: "PATCH",
             queryItems: [URLQueryItem(name: "id", value: "in.(\(serialIds))")],
@@ -457,7 +473,7 @@ final class APIClient: ObservableObject {
                 items: items
             )
         )
-        let request = try makeWebApiRequest(
+        let request = try await makeWebApiRequest(
             path: "/api/eventos/\(projectId.uuidString)/retorno",
             method: "POST",
             body: body
@@ -484,7 +500,7 @@ final class APIClient: ObservableObject {
         }
 
         let movementBody = try encoder.encode(movements)
-        let movementRequest = try makeRequest(
+        let movementRequest = try await makeRequest(
             path: "/rest/v1/movimentacoes",
             method: "POST",
             body: movementBody,
@@ -497,7 +513,7 @@ final class APIClient: ObservableObject {
             .map { "\"\($0.serialId.uuidString)\"" }
         if !okIds.isEmpty {
             let okBody = try encoder.encode(["status": StatusSerial.disponivel.rawValue])
-            let okPatch = try makeRequest(
+            let okPatch = try await makeRequest(
                 path: "/rest/v1/serial_numbers",
                 method: "PATCH",
                 queryItems: [URLQueryItem(name: "id", value: "in.(\(okIds.joined(separator: ",")))")],
@@ -515,7 +531,7 @@ final class APIClient: ObservableObject {
                 updates["desgaste"] = desgaste
             }
             let body = try JSONSerialization.data(withJSONObject: updates)
-            let patch = try makeRequest(
+            let patch = try await makeRequest(
                 path: "/rest/v1/serial_numbers",
                 method: "PATCH",
                 queryItems: [URLQueryItem(name: "id", value: "eq.\(item.serialId.uuidString)")],
@@ -533,7 +549,7 @@ final class APIClient: ObservableObject {
     /// Update a project's status.
     func updateProjectStatus(projectId: UUID, status: StatusProjeto) async throws {
         let body = try encoder.encode(["status": status.rawValue])
-        let request = try makeRequest(
+        let request = try await makeRequest(
             path: "/rest/v1/projetos",
             method: "PATCH",
             queryItems: [URLQueryItem(name: "id", value: "eq.\(projectId.uuidString)")],
@@ -549,7 +565,7 @@ final class APIClient: ObservableObject {
     /// `tag_rfid`. Espelha `updateProjectStatus`. Backend da trilha Etiquetar.
     func linkTag(serialId: UUID, tagRfid: String) async throws {
         let body = try encoder.encode(["tag_rfid": tagRfid])
-        let request = try makeRequest(
+        let request = try await makeRequest(
             path: "/rest/v1/serial_numbers",
             method: "PATCH",
             queryItems: [URLQueryItem(name: "id", value: "eq.\(serialId.uuidString)")],
@@ -563,8 +579,33 @@ final class APIClient: ObservableObject {
 
     // MARK: - Private Helpers
 
+    /// Resolve o Bearer: DEBUG override tem prioridade; senão sessão (sem fallback anon).
+    private func resolveBearerToken() async throws -> String {
+        #if DEBUG
+        if isUsingDebugAuthOverride {
+            return trimmedWebApiAuthToken
+        }
+        #endif
+
+        do {
+            return try await authStore.validAccessToken()
+        } catch AuthError.notAuthenticated, AuthError.sessionExpired {
+            needsReauthentication = true
+            throw APIError.sessionExpired
+        } catch AuthError.notConfigured {
+            throw APIError.notConfigured
+        } catch AuthError.invalidCredentials {
+            needsReauthentication = true
+            throw APIError.sessionExpired
+        } catch AuthError.network(let error) {
+            throw APIError.networkError(error)
+        } catch {
+            throw APIError.networkError(error)
+        }
+    }
+
     /// Build an authenticated URLRequest for the Supabase REST API.
-    private func makeRequest(path: String, queryItems: [URLQueryItem]) throws -> URLRequest {
+    private func makeRequest(path: String, queryItems: [URLQueryItem]) async throws -> URLRequest {
         guard !baseURL.isEmpty, !apiKey.isEmpty else {
             throw APIError.notConfigured
         }
@@ -582,10 +623,12 @@ final class APIClient: ObservableObject {
             throw APIError.invalidURL
         }
 
+        let bearer = try await resolveBearerToken()
+
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseBearerToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(bearer)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         #if DEBUG
@@ -602,7 +645,7 @@ final class APIClient: ObservableObject {
         queryItems: [URLQueryItem] = [],
         body: Data? = nil,
         additionalHeaders: [String: String] = [:]
-    ) throws -> URLRequest {
+    ) async throws -> URLRequest {
         guard !baseURL.isEmpty, !apiKey.isEmpty else {
             throw APIError.notConfigured
         }
@@ -621,10 +664,12 @@ final class APIClient: ObservableObject {
             throw APIError.invalidURL
         }
 
+        let bearer = try await resolveBearerToken()
+
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseBearerToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(bearer)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let body = body {
@@ -647,7 +692,7 @@ final class APIClient: ObservableObject {
         path: String,
         method: String = "GET",
         body: Data? = nil
-    ) throws -> URLRequest {
+    ) async throws -> URLRequest {
         guard !webApiBaseURL.isEmpty else {
             throw APIError.webApiNotConfigured
         }
@@ -658,15 +703,13 @@ final class APIClient: ObservableObject {
             throw APIError.invalidURL
         }
 
+        let bearer = try await resolveBearerToken()
+
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        let token = trimmedWebApiAuthToken
-        if !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
+        request.setValue("Bearer \(bearer)", forHTTPHeaderField: "Authorization")
 
         if let body = body {
             request.httpBody = body
@@ -680,7 +723,7 @@ final class APIClient: ObservableObject {
     }
 
     /// Execute a request and decode the JSON response into the expected type.
-    private func perform<T: Decodable>(_ request: URLRequest) async throws -> T {
+    private func perform<T: Decodable>(_ request: URLRequest, allowRefreshRetry: Bool = true) async throws -> T {
         isLoading = true
         lastError = nil
 
@@ -712,8 +755,30 @@ final class APIClient: ObservableObject {
         }
         #endif
 
+        if httpResponse.statusCode == 401,
+           allowRefreshRetry,
+           !isUsingDebugAuthOverride {
+            do {
+                let newToken = try await authStore.refreshedAccessToken()
+                var retry = request
+                retry.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
+                return try await perform(retry, allowRefreshRetry: false)
+            } catch {
+                needsReauthentication = true
+                let apiError = APIError.sessionExpired
+                lastError = apiError
+                throw apiError
+            }
+        }
+
         guard (200...299).contains(httpResponse.statusCode) else {
             let body = String(data: data, encoding: .utf8)
+            if httpResponse.statusCode == 401 {
+                needsReauthentication = true
+                let apiError = APIError.sessionExpired
+                lastError = apiError
+                throw apiError
+            }
             let apiError = APIError.httpError(statusCode: httpResponse.statusCode, body: body)
             lastError = apiError
             throw apiError
@@ -737,7 +802,7 @@ final class APIClient: ObservableObject {
     }
 
     /// Execute a request expecting no decoded response body (writes with Prefer: return=minimal).
-    private func performVoid(_ request: URLRequest) async throws {
+    private func performVoid(_ request: URLRequest, allowRefreshRetry: Bool = true) async throws {
         isLoading = true
         lastError = nil
 
@@ -766,7 +831,30 @@ final class APIClient: ObservableObject {
         logger.debug("Response: \(httpResponse.statusCode) (\(data.count) bytes)")
         #endif
 
+        if httpResponse.statusCode == 401,
+           allowRefreshRetry,
+           !isUsingDebugAuthOverride {
+            do {
+                let newToken = try await authStore.refreshedAccessToken()
+                var retry = request
+                retry.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
+                try await performVoid(retry, allowRefreshRetry: false)
+                return
+            } catch {
+                needsReauthentication = true
+                let apiError = APIError.sessionExpired
+                lastError = apiError
+                throw apiError
+            }
+        }
+
         guard (200...299).contains(httpResponse.statusCode) else {
+            if httpResponse.statusCode == 401 {
+                needsReauthentication = true
+                let apiError = APIError.sessionExpired
+                lastError = apiError
+                throw apiError
+            }
             let body = String(data: data, encoding: .utf8)
             let apiError = APIError.httpError(statusCode: httpResponse.statusCode, body: body)
             lastError = apiError

@@ -232,6 +232,8 @@ final class APIClientTests: XCTestCase {
         XCTAssertNotNil(APIError.invalidURL.errorDescription)
         XCTAssertNotNil(APIError.notConfigured.errorDescription)
         XCTAssertNotNil(APIError.webApiNotConfigured.errorDescription)
+        XCTAssertNotNil(APIError.sessionExpired.errorDescription)
+        XCTAssertTrue(APIError.sessionExpired.errorDescription!.contains("login"))
         XCTAssertNotNil(APIError.httpError(statusCode: 404, body: "Not found").errorDescription)
         XCTAssertTrue(APIError.httpError(statusCode: 404, body: nil).errorDescription!.contains("404"))
     }

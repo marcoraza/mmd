@@ -15,6 +15,8 @@ struct AppConfig {
         static let webApiAuthToken = "mmd_web_api_auth_token"
         static let useMockRFID = "mmd_use_mock_rfid"
         static let tourDonePrefix = "mmd_tour_done_"
+        /// Flag de migração: token manual limpo em Release no primeiro launch.
+        static let clearedManualWebApiToken = "mmd_cleared_manual_web_api_token_v1"
     }
 
     // MARK: - Properties
@@ -73,7 +75,46 @@ struct AppConfig {
 
     // MARK: - Init
 
-    private init() {}
+    private init() {
+        migrateLegacyManualAuthTokenIfNeeded()
+    }
+
+    // MARK: - Migration
+
+    /// Em Release, limpa o JWT colado à mão no primeiro launch desta versão.
+    /// Em DEBUG o campo permanece (override de desenvolvimento).
+    mutating func migrateLegacyManualAuthTokenIfNeeded() {
+        #if DEBUG
+        return
+        #else
+        applyLegacyManualAuthTokenMigration(
+            isRelease: true,
+            defaults: .standard
+        )
+        #endif
+    }
+
+    /// Lógica pura de migração (testável). Retorna true se limpou o token.
+    @discardableResult
+    static func applyLegacyManualAuthTokenMigration(
+        isRelease: Bool,
+        defaults: UserDefaults,
+        tokenKey: String = "mmd_web_api_auth_token",
+        flagKey: String = "mmd_cleared_manual_web_api_token_v1"
+    ) -> Bool {
+        guard isRelease else { return false }
+        guard !defaults.bool(forKey: flagKey) else { return false }
+
+        let current = defaults.string(forKey: tokenKey) ?? ""
+        let trimmed = current.trimmingCharacters(in: .whitespacesAndNewlines)
+        var cleared = false
+        if !trimmed.isEmpty {
+            defaults.removeObject(forKey: tokenKey)
+            cleared = true
+        }
+        defaults.set(true, forKey: flagKey)
+        return cleared
+    }
 
     // MARK: - Persistence
 

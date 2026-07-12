@@ -50,10 +50,13 @@ struct LiquidRoot: View {
     @EnvironmentObject private var router: LiquidRouter
     @EnvironmentObject private var tour: TourController
 
+    @EnvironmentObject private var apiClient: APIClient
+
     @State private var showQuickActions = false
     // Abas ja visitadas ficam vivas (opacity), pra nao recriar a tela nem
     // refazer o fetch a cada troca. Inicio nasce visitada.
     @State private var visitedTabs: Set<LiquidTab> = [.inicio]
+    @State private var showLogin = false
 
     var body: some View {
         ZStack {
@@ -91,7 +94,30 @@ struct LiquidRoot: View {
             tabSelection.wrappedValue = newTab
         }
         .onAppear(perform: startTourIfNeeded)
+        .task { await evaluateAuthGate() }
+        .onChange(of: apiClient.needsReauthentication) { needs in
+            if needs { showLogin = true }
+        }
+        .fullScreenCover(isPresented: $showLogin) {
+            LiquidLoginView {
+                apiClient.needsReauthentication = false
+                showLogin = false
+            }
+        }
         .preferredColorScheme(.dark)
+    }
+
+    // MARK: Auth Gate
+
+    /// Supabase configurado e sem sessão: login por cima, sem resetar nav.
+    @MainActor
+    private func evaluateAuthGate() async {
+        guard AppConfig.shared.isSupabaseConfigured else {
+            showLogin = false
+            return
+        }
+        let hasSession = await AuthSessionStore.shared.hasSession
+        showLogin = !hasSession || apiClient.needsReauthentication
     }
 
     // MARK: Tour Kickoff

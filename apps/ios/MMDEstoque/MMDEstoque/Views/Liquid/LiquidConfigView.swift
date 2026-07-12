@@ -16,6 +16,8 @@ struct LiquidConfigView: View {
     @State private var useMockReader: Bool = AppConfig.shared.useMockRFID
     @State private var showSaved = false
     @State private var showAdvanced = false
+    @State private var sessionEmail: String?
+    @State private var showLogin = false
 
     var body: some View {
         ZStack {
@@ -23,6 +25,7 @@ struct LiquidConfigView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Liquid.Space.section) {
+                    sessionSection
                     readerSection
                     aboutSection
                     advancedSection
@@ -36,6 +39,73 @@ struct LiquidConfigView: View {
         .toolbarColorScheme(.dark, for: .navigationBar)
         .overlay(alignment: .bottom) {
             if showSaved { savedToast }
+        }
+        .task { await refreshSessionEmail() }
+        .fullScreenCover(isPresented: $showLogin) {
+            LiquidLoginView {
+                showLogin = false
+                Task { await refreshSessionEmail() }
+            }
+        }
+    }
+
+    // MARK: Conta
+
+    private var sessionSection: some View {
+        VStack(alignment: .leading, spacing: Liquid.Space.md) {
+            LiquidSectionHeader(title: "Conta")
+
+            VStack(alignment: .leading, spacing: Liquid.Space.lg) {
+                if let sessionEmail, !sessionEmail.isEmpty {
+                    HStack(spacing: Liquid.Space.md) {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Conectado como")
+                                .font(.liquidSans(12, weight: .regular))
+                                .foregroundStyle(Liquid.fg2)
+                            Text(sessionEmail)
+                                .font(.liquidSans(15, weight: .semibold))
+                                .foregroundStyle(Liquid.fg0)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: Liquid.Space.sm)
+                        Button {
+                            Task { await signOut() }
+                        } label: {
+                            Text("Sair")
+                                .font(.liquidSans(13, weight: .semibold))
+                                .foregroundStyle(Liquid.accentRed)
+                                .padding(.horizontal, Liquid.Space.md)
+                                .frame(minHeight: 34)
+                                .background(Capsule().fill(Liquid.bg2))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } else {
+                    HStack(spacing: Liquid.Space.md) {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Sem sessão")
+                                .font(.liquidSans(15, weight: .medium))
+                                .foregroundStyle(Liquid.fg0)
+                            Text("Entre pra acessar dados reais")
+                                .font(.liquidSans(12, weight: .regular))
+                                .foregroundStyle(Liquid.fg2)
+                        }
+                        Spacer()
+                        Button { showLogin = true } label: {
+                            Text("Entrar")
+                                .font(.liquidSans(13, weight: .semibold))
+                                .foregroundStyle(Liquid.bg0)
+                                .padding(.horizontal, Liquid.Space.lg)
+                                .frame(minHeight: 34)
+                                .background(Capsule().fill(Liquid.fg0))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(Liquid.Space.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .panelSurface(cornerRadius: Liquid.Radius.lg)
         }
     }
 
@@ -185,7 +255,9 @@ struct LiquidConfigView: View {
                     field(label: "URL do Supabase", text: $supabaseUrl, secure: false, keyboard: .URL)
                     field(label: "API key (anon)", text: $supabaseKey, secure: true, keyboard: .default)
                     field(label: "API Web URL", text: $webApiUrl, secure: false, keyboard: .URL)
-                    field(label: "API Web token", text: $webApiAuthToken, secure: true, keyboard: .default)
+                    #if DEBUG
+                    field(label: "API Web token (debug)", text: $webApiAuthToken, secure: true, keyboard: .default)
+                    #endif
                     saveButton
                 }
             }
@@ -308,6 +380,18 @@ struct LiquidConfigView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             withAnimation(Liquid.Motion.default) { showSaved = false }
         }
+    }
+
+    @MainActor
+    private func refreshSessionEmail() async {
+        sessionEmail = await AuthSessionStore.shared.sessionEmail
+    }
+
+    @MainActor
+    private func signOut() async {
+        await AuthSessionStore.shared.signOut()
+        sessionEmail = nil
+        showLogin = true
     }
 
     private var connectionTitle: String {

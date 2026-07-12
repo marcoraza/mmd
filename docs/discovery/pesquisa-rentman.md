@@ -1,9 +1,9 @@
-# Rentman vs Build In-House — Análise Completa
+# Rentman vs Build In-House - Análise Completa
 
 ## 1. O que o Rentman faz (relevante pro Marcelo)
 
 ### Equipment Tracking com RFID
-- **RFID nativo** — não é integração de terceiro, é módulo próprio
+- **RFID nativo** - não é integração de terceiro, é módulo próprio
 - Tags oficiais: RM3 (metal/não-metal), RM4 (sticker não-metal), RM7 (sticker metal)
 - Hardware recomendado: **Zebra TC26/TC27** + sled **RFD40/RFD4030**
 - Fluxo: cola tag → vincula no app → escaneia em lote na saída/retorno
@@ -17,12 +17,12 @@
 - Templates customizáveis com branding da empresa
 - Puxa disponibilidade em tempo real (não oferta o que não tem)
 - Descontos em múltiplos níveis
-- **E-signature integrada** — cliente assina digitalmente
+- **E-signature integrada** - cliente assina digitalmente
 - Quando assina, status do projeto muda automaticamente (Pending → Confirmed)
 - Faturamento e invoicing no mesmo fluxo
 
 ### Contrato
-- **Sim, gera contrato a partir do orçamento** — mesmo template engine
+- **Sim, gera contrato a partir do orçamento** - mesmo template engine
 - Assinatura digital no contrato
 - PDF salvo automaticamente no projeto
 - Termos e condições anexados automaticamente
@@ -101,7 +101,7 @@ Usuários básicos (equipe de campo) = grátis.
 
 ## 5. Análise Build vs Buy
 
-### Cenário A — Rentman Puro
+### Cenário A - Rentman Puro
 
 | Aspecto | Avaliação |
 |---|---|
@@ -117,11 +117,11 @@ Usuários básicos (equipe de campo) = grátis.
 
 **Pro Marco como consultor:** valor tá em configurar, migrar dados, treinar. Mas o Marcelo pode pensar "eu poderia ter feito isso sozinho".
 
-### Cenário B — Build In-House (Sheets + Scripts + Make)
+### Cenário B - Build In-House (Sheets + Scripts + Make)
 
 | Aspecto | Avaliação |
 |---|---|
-| Cobre estoque RFID | ⚠️ Complexo — integrar Zebra com Sheets não é trivial |
+| Cobre estoque RFID | ⚠️ Complexo - integrar Zebra com Sheets não é trivial |
 | Cobre orçamento | ✅ Viável (Forms + Sheets + PDF) |
 | Cobre contrato | ✅ Viável (template + merge + PDF) |
 | Cobre briefing digital | ✅ Fácil (Google Forms) |
@@ -131,9 +131,9 @@ Usuários básicos (equipe de campo) = grátis.
 | Manutenção futura | Do Marco (ou o Marcelo fica dependente) |
 | Risco | Médio-alto (RFID é o ponto fraco) |
 
-**Problema central:** RFID in-house é overengineering. O Zebra SDK precisa de app mobile custom ou middleware. Isso não é "Sheets + script" — é projeto de dev. Sem RFID, perde o diferencial que o Marcelo mais quer.
+**Problema central:** RFID in-house é overengineering. O Zebra SDK precisa de app mobile custom ou middleware. Isso não é "Sheets + script" - é projeto de dev. Sem RFID, perde o diferencial que o Marcelo mais quer.
 
-### Cenário C — Híbrido (Rentman + Custom) ⭐
+### Cenário C - Híbrido (Rentman + Custom) ⭐
 
 | Aspecto | Avaliação |
 |---|---|
@@ -170,15 +170,15 @@ Usuários básicos (equipe de campo) = grátis.
 
 ## 7. Recomendação
 
-### Cenário C — Híbrido é o caminho.
+### Cenário C - Híbrido é o caminho.
 
 **Por quê:**
 
 1. **RFID não se builda em 30 dias com Sheets.** O Marcelo já tem o hardware Zebra, o Rentman é o único que integra nativamente com Zebra sem dev custom. Tentar buildar isso é overengineering e risco de não entregar.
 
-2. **O Rentman cobre 70% do escopo sozinho** (estoque + orçamento + contrato). Os R$640/mês são do Marcelo, não do Marco — e é custo baixo pro que entrega.
+2. **O Rentman cobre 70% do escopo sozinho** (estoque + orçamento + contrato). Os R$640/mês são do Marcelo, não do Marco - e é custo baixo pro que entrega.
 
-3. **O valor do Marco tá nos 30% que o Rentman não faz** — briefing digital, NPS, automações customizadas, mapeamento de processos, classificação de tarefas, treinamento. Isso é consultoria pura, não software.
+3. **O valor do Marco tá nos 30% que o Rentman não faz** - briefing digital, NPS, automações customizadas, mapeamento de processos, classificação de tarefas, treinamento. Isso é consultoria pura, não software.
 
 4. **Posicionamento perfeito:** "Eu vou implementar a melhor ferramenta do mercado pro teu core (Rentman), e vou construir em cima dela tudo que ela não faz. Tu fica com o melhor dos dois mundos."
 

@@ -43,3 +43,6 @@
 - Planilha real de evento não é packing puro. Importação precisa separar evento, financeiro, serviço, equipamento, candidato de catálogo e pendência de revisão antes de escrever no Supabase.
 - Evento cancelado deve entrar como histórico administrativo, sem packing e sem alimentar sugestão de equipamento.
 - Quando uma planilha usa dia/mês sem ano, o importador deve buscar o ano da aba ou do arquivo antes de cair no ano atual.
+- Evento real criado a partir de planilha não pode expor rastro técnico no produto. Backup fica em `tasks/evidence`, tela mostra nome humano, status, data, percentual e resumo curto da ficha.
+- Card de evento não deve renderizar a ficha inteira em `notas`. Cabeçalho mostra no máximo endereço, montagem e desmontagem; detalhe completo fica no fluxo da ficha.
+- Criar evento pela ficha não popula packing list. Quando a origem real for planilha, fazer backfill explícito da packing list e filtrar serviço, equipe, buffet, mobiliário solto e financeiro antes de criar item pendente no catálogo.

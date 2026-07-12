@@ -63,11 +63,11 @@ export function RfidBanner({
         gap: 12,
       }}
     >
-      {cells.map((c, i) => {
+      {cells.map((c) => {
         const isActive = c.filter != null && active === c.filter
         return (
           <button
-            key={i}
+            key={c.label}
             type="button"
             onClick={() => c.filter != null && c.clickable && onFilter(c.filter)}
             disabled={!c.clickable}

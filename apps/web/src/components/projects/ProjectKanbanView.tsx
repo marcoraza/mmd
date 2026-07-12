@@ -13,6 +13,7 @@ type Lane = {
 const LANES: Lane[] = [
   { status: 'PLANEJAMENTO', name: 'Planejado', color: 'var(--fg-3)' },
   { status: 'CONFIRMADO', name: 'Confirmado', color: 'var(--accent-cyan)' },
+  { status: 'MONTAGEM', name: 'Montagem', color: 'var(--accent-amber)' },
   { status: 'EM_CAMPO', name: 'Em campo', color: 'var(--accent-violet)' },
   { status: 'FINALIZADO', name: 'Finalizado', color: 'var(--accent-amber)' },
 ]
@@ -21,7 +22,9 @@ const DATE_FMT = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'shor
 
 function formatDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number)
-  return DATE_FMT.format(new Date(y, m - 1, d)).replace('.', '').toLowerCase()
+  return DATE_FMT.format(new Date(y, m - 1, d))
+    .replace('.', '')
+    .toLowerCase()
 }
 
 export function ProjectKanbanView({
@@ -71,7 +74,7 @@ export function ProjectKanbanView({
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+        gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
         gap: 14,
         minHeight: 520,
       }}
@@ -103,9 +106,7 @@ export function ProjectKanbanView({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px' }}>
               <StatusDot color={lane.color} size={8} />
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--fg-0)' }}>
-                {lane.name}
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--fg-0)' }}>{lane.name}</div>
               <div className="mono" style={{ fontSize: 11, color: 'var(--fg-3)' }}>
                 {cards.length}
               </div>

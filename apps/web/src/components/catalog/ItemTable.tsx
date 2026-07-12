@@ -2,19 +2,8 @@
 
 import { useMemo } from 'react'
 import type { CatalogItem } from '@/lib/data/items'
-import type {
-  ColumnKey,
-  GroupBy,
-  SortDir,
-  SortKey,
-} from '@/hooks/useCatalogView'
-import {
-  CATEGORIA_LABEL,
-  CICLO_LABEL,
-  SITUACAO_COLOR,
-  SITUACAO_LABEL,
-  formatBRL,
-} from './helpers'
+import type { ColumnKey, GroupBy, SortDir, SortKey } from '@/hooks/useCatalogView'
+import { CATEGORIA_LABEL, CICLO_LABEL, SITUACAO_COLOR, SITUACAO_LABEL, formatBRL } from './helpers'
 import { resolveTipo } from '@/lib/nomenclature'
 import { formatItemLabel } from '@/lib/item-label'
 import { EditableStars } from './EditableStars'
@@ -67,10 +56,7 @@ export function ItemTable({
   onQtdChange: (itemId: string, qtd: number) => void
   pending: string | null
 }) {
-  const activeCols = useMemo(
-    () => ALL_COLUMNS.filter((c) => columns[c.key]),
-    [columns]
-  )
+  const activeCols = useMemo(() => ALL_COLUMNS.filter((c) => columns[c.key]), [columns])
 
   const itemSlotAfter = useMemo<ColumnKey | null>(() => {
     if (activeCols.some((c) => c.key === 'tipo')) return 'tipo'
@@ -102,10 +88,7 @@ export function ItemTable({
   }
 
   return (
-    <div
-      className="glass"
-      style={{ borderRadius: 'var(--r-lg)', overflow: 'hidden' }}
-    >
+    <div className="glass" style={{ borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
       <div role="table" style={{ width: '100%', fontSize: 13 }}>
         <HeaderRow
           activeCols={activeCols}
@@ -115,40 +98,38 @@ export function ItemTable({
           sortDir={sortDir}
           onSort={onSort}
         />
-        <div style={{ maxHeight: 640, overflowY: 'auto' }}>
-          {groupBy === 'none' ? (
-            items.map((it) => (
-              <ItemRow
-                key={it.id}
-                item={it}
-                activeCols={activeCols}
-                itemSlotAfter={itemSlotAfter}
-                gridTemplate={gridTemplate}
-                selected={it.id === selectedId}
-                onSelect={onSelect}
-                onCondicaoChange={onCondicaoChange}
-                onQtdChange={onQtdChange}
-                pending={pending}
-              />
-            ))
-          ) : (
-            groups.map((g) => (
-              <GroupSection
-                key={g.key}
-                title={g.title}
-                count={g.items.length}
-                activeCols={activeCols}
-                itemSlotAfter={itemSlotAfter}
-                gridTemplate={gridTemplate}
-                items={g.items}
-                selectedId={selectedId}
-                onSelect={onSelect}
-                onCondicaoChange={onCondicaoChange}
-                onQtdChange={onQtdChange}
-                pending={pending}
-              />
-            ))
-          )}
+        <div>
+          {groupBy === 'none'
+            ? items.map((it) => (
+                <ItemRow
+                  key={it.id}
+                  item={it}
+                  activeCols={activeCols}
+                  itemSlotAfter={itemSlotAfter}
+                  gridTemplate={gridTemplate}
+                  selected={it.id === selectedId}
+                  onSelect={onSelect}
+                  onCondicaoChange={onCondicaoChange}
+                  onQtdChange={onQtdChange}
+                  pending={pending}
+                />
+              ))
+            : groups.map((g) => (
+                <GroupSection
+                  key={g.key}
+                  title={g.title}
+                  count={g.items.length}
+                  activeCols={activeCols}
+                  itemSlotAfter={itemSlotAfter}
+                  gridTemplate={gridTemplate}
+                  items={g.items}
+                  selectedId={selectedId}
+                  onSelect={onSelect}
+                  onCondicaoChange={onCondicaoChange}
+                  onQtdChange={onQtdChange}
+                  pending={pending}
+                />
+              ))}
         </div>
       </div>
     </div>
@@ -190,7 +171,7 @@ function HeaderRow({
       currentSortKey={sortKey}
       currentSortDir={sortDir}
       onSort={onSort}
-    />
+    />,
   )
   return (
     <div
@@ -240,8 +221,20 @@ function ItemRow({
   const { primary: nomeExibicao, secondary: nomeSubtitle } = formatItemLabel(
     item.nome,
     item.modelo,
-    item.marca
+    item.marca,
   )
+  const cableRfidLabel =
+    item.categoria !== 'CABO' || item.quantidade_total <= 0
+      ? null
+      : item.rfid_tagged_count === 0 && item.rfid_pending_count === 0
+        ? null
+        : item.rfid_pending_count > 0
+          ? `${item.rfid_pending_count} sem RFID`
+          : 'RFID OK'
+  const cableRfidColor =
+    cableRfidLabel === 'RFID OK'
+      ? 'var(--accent-green)'
+      : 'var(--accent-amber)'
 
   const cells = buildCells(
     activeCols,
@@ -348,7 +341,7 @@ function ItemRow({
           )
       }
     },
-    <span style={{ minWidth: 0 }}>
+    <div style={{ minWidth: 0 }}>
       <div
         style={{
           fontWeight: 500,
@@ -375,7 +368,26 @@ function ItemRow({
           {nomeSubtitle}
         </div>
       )}
-    </span>
+      {cableRfidLabel && (
+        <div
+          className="mono"
+          style={{
+            display: 'inline-flex',
+            marginTop: 5,
+            padding: '2px 6px',
+            borderRadius: 'var(--r-sm)',
+            border: `1px solid color-mix(in oklch, ${cableRfidColor} 34%, transparent)`,
+            color: cableRfidColor,
+            background: `color-mix(in oklch, ${cableRfidColor} 10%, transparent)`,
+            fontSize: 9,
+            textTransform: 'uppercase',
+            letterSpacing: 0.1,
+          }}
+        >
+          {cableRfidLabel}
+        </div>
+      )}
+    </div>,
   )
 
   return (
@@ -490,7 +502,7 @@ function buildCells(
   activeCols: ColumnDef[],
   itemSlotAfter: ColumnKey | null,
   renderCol: (col: ColumnDef) => React.ReactNode,
-  itemCell: React.ReactNode
+  itemCell: React.ReactNode,
 ): React.ReactNode[] {
   const out: React.ReactNode[] = []
   if (itemSlotAfter === null) out.push(<div key="__item__">{itemCell}</div>)
@@ -508,7 +520,7 @@ function buildCells(
         }}
       >
         {renderCol(col)}
-      </div>
+      </div>,
     )
     if (col.key === itemSlotAfter) out.push(<div key="__item__">{itemCell}</div>)
   }
@@ -534,9 +546,7 @@ function groupKey(it: CatalogItem, groupBy: GroupBy): { key: string; title: stri
     case 'subcategoria':
       return {
         key: it.subcategoria ?? '__none__',
-        title: it.subcategoria
-          ? resolveTipo(it.subcategoria, it.categoria)
-          : 'Sem tipo',
+        title: it.subcategoria ? resolveTipo(it.subcategoria, it.categoria) : 'Sem tipo',
       }
     case 'situacao':
       return { key: it.situacao, title: SITUACAO_LABEL[it.situacao] }

@@ -1,41 +1,32 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useStoredState } from '@/hooks/useStoredState'
 
 type Theme = 'light' | 'dark'
 
 const STORAGE_KEY = 'mmd-theme'
 
-function readTheme(): Theme {
-  if (typeof document === 'undefined') return 'light'
-  return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
-}
+// Inline script no layout grava 'mmd-theme' como string crua, sem JSON.stringify.
+// Mantemos esse formato pra coexistir com o boot do tema.
+const decodeTheme = (raw: string): Theme => (raw === 'dark' ? 'dark' : 'light')
+const encodeTheme = (value: Theme): string => value
 
-function applyTheme(theme: Theme) {
+function applyClass(theme: Theme) {
   const root = document.documentElement
   if (theme === 'dark') root.classList.add('dark')
   else root.classList.remove('dark')
-  try {
-    localStorage.setItem(STORAGE_KEY, theme)
-  } catch {}
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('light')
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setTheme(readTheme())
-    setMounted(true)
-  }, [])
+  const [theme, setTheme] = useStoredState<Theme>(STORAGE_KEY, 'light', decodeTheme, encodeTheme)
 
   const toggle = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
+    applyClass(next)
     setTheme(next)
-    applyTheme(next)
   }
 
-  const isDark = mounted && theme === 'dark'
+  const isDark = theme === 'dark'
 
   return (
     <button

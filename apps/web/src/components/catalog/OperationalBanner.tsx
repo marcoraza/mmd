@@ -134,7 +134,9 @@ export function OperationalBanner({
               className="catalog-banner__cell"
               onClick={() => onFilter(c.filter as BannerFilter)}
               aria-pressed={isActive}
-              title={isActive ? `Limpar filtro: ${c.label}` : `Filtrar por ${c.label.toLowerCase()}`}
+              title={
+                isActive ? `Limpar filtro: ${c.label}` : `Filtrar por ${c.label.toLowerCase()}`
+              }
               style={{
                 ...commonStyle,
                 border: 'none',

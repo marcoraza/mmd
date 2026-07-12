@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ────────────────────────────────────────────────────────
    Estoque Inteligente MMD · Liquid Glass 2030
@@ -9,13 +9,13 @@
 @theme {
   /* ─── font families ─── */
   --font-sans: var(--font-inter-tight), -apple-system, system-ui, sans-serif;
-  --font-mono: var(--font-jb-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-mono: var(--font-jb-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* ─── color · accents (temas-agnósticos) ─── */
   --color-mmd-cyan: oklch(0.72 0.14 210);
   --color-mmd-violet: oklch(0.62 0.17 295);
   --color-mmd-amber: oklch(0.72 0.15 75);
-  --color-mmd-green: oklch(0.70 0.17 150);
+  --color-mmd-green: oklch(0.7 0.17 150);
   --color-mmd-red: oklch(0.62 0.18 25);
 
   /* ─── radii (flat, craft industrial) ─── */
@@ -29,31 +29,36 @@
 :root {
   --bg-0: oklch(0.97 0.005 250);
   --bg-1: oklch(0.94 0.008 250);
-  --bg-2: oklch(0.90 0.01 250);
+  --bg-2: oklch(0.9 0.01 250);
 
   --fg-0: oklch(0.15 0.01 250);
-  --fg-1: oklch(0.30 0.01 250);
-  --fg-2: oklch(0.50 0.01 250);
-  --fg-3: oklch(0.65 0.01 250);
+  --fg-1: oklch(0.3 0.01 250);
+  --fg-2: oklch(0.5 0.01 250);
+  /* --fg-3 ajustado de L=0.65 (2.96:1) para L=0.62 (3.34:1) para passar WCAG AA-large (>=3:1). */
+  --fg-3: oklch(0.62 0.01 250);
 
   --accent-cyan: oklch(0.72 0.14 210);
   --accent-cyan-soft: oklch(0.72 0.14 210 / 0.22);
   --accent-violet: oklch(0.62 0.17 295);
   --accent-violet-soft: oklch(0.62 0.17 295 / 0.22);
   --accent-amber: oklch(0.72 0.15 75);
-  --accent-green: oklch(0.70 0.17 150);
+  --accent-green: oklch(0.7 0.17 150);
   --accent-red: oklch(0.62 0.18 25);
 
-  --glass-bg: rgba(255, 255, 255, 0.66);
-  --glass-bg-strong: rgba(255, 255, 255, 0.82);
-  --glass-border: rgba(0, 0, 0, 0.14);
-  --glass-border-strong: rgba(0, 0, 0, 0.20);
-  --glass-highlight: rgba(255, 255, 255, 0.9);
-  --glass-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 20px 60px rgba(0, 0, 0, 0.12);
-  --glass-shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.12), 0 40px 100px rgba(0, 0, 0, 0.20);
+  --glass-bg: oklch(1 0 0 / 0.66);
+  --glass-bg-strong: oklch(1 0 0 / 0.82);
+  --glass-border: oklch(0 0 0 / 0.14);
+  --glass-border-strong: oklch(0 0 0 / 0.2);
+  --glass-highlight: oklch(1 0 0 / 0.9);
+  --glass-shadow: 0 2px 6px oklch(0 0 0 / 0.06), 0 20px 60px oklch(0 0 0 / 0.12);
+  --glass-shadow-elevated: 0 8px 24px oklch(0 0 0 / 0.12), 0 40px 100px oklch(0 0 0 / 0.2);
 
   --rail-bg: rgba(0, 0, 0, 0.03);
   --scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  /* Overlay de modais bloqueantes (ConflictModal, CheckinDialog, CheckoutDialog). */
+  --dialog-overlay: rgba(0, 0, 0, 0.45);
+  /* Overlay mais leve para side panels e drawers (ItemSidePanel, UnitDrawer). */
+  --drawer-overlay: rgba(0, 0, 0, 0.35);
 
   --r-sm: 4px;
   --r-md: 8px;
@@ -66,7 +71,7 @@
   --motion-slow: 420ms cubic-bezier(0.4, 0, 0.2, 1);
 
   --font-sans-raw: var(--font-inter-tight), -apple-system, system-ui, sans-serif;
-  --font-mono-raw: var(--font-jb-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-mono-raw: var(--font-jb-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 
   color-scheme: light;
 }
@@ -75,31 +80,34 @@
 :root.dark {
   --bg-0: oklch(0.12 0.015 250);
   --bg-1: oklch(0.16 0.018 250);
-  --bg-2: oklch(0.20 0.02 250);
+  --bg-2: oklch(0.2 0.02 250);
 
   --fg-0: oklch(0.98 0.005 250);
   --fg-1: oklch(0.85 0.008 250);
   --fg-2: oklch(0.65 0.01 250);
-  --fg-3: oklch(0.48 0.012 250);
+  /* --fg-3 ajustado de L=0.48 (3.11:1) para L=0.51 (3.54:1) para margem confortável sobre AA-large. */
+  --fg-3: oklch(0.51 0.012 250);
 
   --accent-cyan: oklch(0.75 0.14 210);
   --accent-cyan-soft: oklch(0.75 0.14 210 / 0.28);
-  --accent-violet: oklch(0.70 0.17 295);
-  --accent-violet-soft: oklch(0.70 0.17 295 / 0.28);
-  --accent-amber: oklch(0.80 0.15 75);
-  --accent-green: oklch(0.80 0.17 150);
-  --accent-red: oklch(0.70 0.18 25);
+  --accent-violet: oklch(0.7 0.17 295);
+  --accent-violet-soft: oklch(0.7 0.17 295 / 0.28);
+  --accent-amber: oklch(0.8 0.15 75);
+  --accent-green: oklch(0.8 0.17 150);
+  --accent-red: oklch(0.7 0.18 25);
 
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-bg-strong: rgba(255, 255, 255, 0.09);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --glass-border-strong: rgba(255, 255, 255, 0.18);
-  --glass-highlight: rgba(255, 255, 255, 0.18);
-  --glass-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 20px 60px rgba(0, 0, 0, 0.35);
-  --glass-shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.35), 0 40px 100px rgba(0, 0, 0, 0.55);
+  --glass-bg: oklch(1 0 0 / 0.05);
+  --glass-bg-strong: oklch(1 0 0 / 0.09);
+  --glass-border: oklch(1 0 0 / 0.1);
+  --glass-border-strong: oklch(1 0 0 / 0.18);
+  --glass-highlight: oklch(1 0 0 / 0.18);
+  --glass-shadow: 0 2px 6px oklch(0 0 0 / 0.25), 0 20px 60px oklch(0 0 0 / 0.35);
+  --glass-shadow-elevated: 0 8px 24px oklch(0 0 0 / 0.35), 0 40px 100px oklch(0 0 0 / 0.55);
 
   --rail-bg: rgba(0, 0, 0, 0.15);
   --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --dialog-overlay: rgba(0, 0, 0, 0.55);
+  --drawer-overlay: rgba(0, 0, 0, 0.45);
 
   color-scheme: dark;
 }
@@ -117,8 +125,10 @@ body {
   color: var(--fg-0);
   font-family: var(--font-sans-raw);
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "ss01", "cv11";
-  transition: background var(--motion-default), color var(--motion-default);
+  font-feature-settings: 'ss01', 'cv11';
+  transition:
+    background var(--motion-default),
+    color var(--motion-default);
 }
 
 .mono {
@@ -135,7 +145,7 @@ body {
 }
 .caustic-bg::before,
 .caustic-bg::after {
-  content: "";
+  content: '';
   position: absolute;
   border-radius: 50%;
   filter: blur(70px);
@@ -154,7 +164,7 @@ body {
   aspect-ratio: 1;
   right: -8%;
   bottom: 8%;
-  background: radial-gradient(circle, oklch(0.72 0.20 295) 0%, transparent 60%);
+  background: radial-gradient(circle, oklch(0.72 0.2 295) 0%, transparent 60%);
 }
 .caustic-bg .orb3 {
   position: absolute;
@@ -162,7 +172,7 @@ body {
   aspect-ratio: 1;
   left: 42%;
   top: 28%;
-  background: radial-gradient(circle, oklch(0.80 0.15 150) 0%, transparent 60%);
+  background: radial-gradient(circle, oklch(0.8 0.15 150) 0%, transparent 60%);
   border-radius: 50%;
   filter: blur(90px);
   opacity: 0.28;
@@ -189,14 +199,14 @@ body {
   box-shadow: var(--glass-shadow);
 }
 .glass::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   box-shadow:
     inset 1.5px 1.5px 0 var(--glass-highlight),
-    inset -1px -1px 0 rgba(255, 255, 255, 0.04);
+    inset -1px -1px 0 oklch(1 0 0 / 0.04);
 }
 .glass-strong {
   background: var(--glass-bg-strong);
@@ -206,7 +216,9 @@ body {
 /* ─── interactive card ─── */
 .card-interactive {
   cursor: pointer;
-  transition: transform var(--motion-default), box-shadow var(--motion-default),
+  transition:
+    transform var(--motion-default),
+    box-shadow var(--motion-default),
     border-color var(--motion-default);
   text-decoration: none;
   color: inherit;
@@ -257,13 +269,27 @@ body {
 .reveal {
   animation: mmd-reveal 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-.reveal-0 { animation-delay: 0ms; }
-.reveal-1 { animation-delay: 40ms; }
-.reveal-2 { animation-delay: 80ms; }
-.reveal-3 { animation-delay: 120ms; }
-.reveal-4 { animation-delay: 160ms; }
-.reveal-5 { animation-delay: 200ms; }
-.reveal-6 { animation-delay: 240ms; }
+.reveal-0 {
+  animation-delay: 0ms;
+}
+.reveal-1 {
+  animation-delay: 40ms;
+}
+.reveal-2 {
+  animation-delay: 80ms;
+}
+.reveal-3 {
+  animation-delay: 120ms;
+}
+.reveal-4 {
+  animation-delay: 160ms;
+}
+.reveal-5 {
+  animation-delay: 200ms;
+}
+.reveal-6 {
+  animation-delay: 240ms;
+}
 
 @keyframes mmd-orbit {
   to {
@@ -280,16 +306,27 @@ body {
 }
 
 @keyframes mmd-pulse-soft {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.02); }
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
 }
 .pulse-soft {
   animation: mmd-pulse-soft 4s ease-in-out infinite;
 }
 
 @keyframes mmd-shimmer {
-  from { background-position: -200% 0; }
-  to { background-position: 200% 0; }
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
 }
 .skeleton {
   background: linear-gradient(
@@ -303,6 +340,19 @@ body {
   border-radius: var(--r-sm);
 }
 
+/* Drawer lateral. Promovido pra cá pra evitar drift entre ItemSidePanel e
+   UnitDrawer, que mantinham a mesma keyframe declarada inline em <style>. */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .orbit-slow,
@@ -314,6 +364,12 @@ body {
   .reveal {
     opacity: 1;
     transform: none;
+  }
+  /* Dialogs e drawers usam animação inline via style={{ animation }}.
+     Aqui zeramos animação no role do dialog/aside (WCAG 2.3.3). */
+  [role='dialog'],
+  aside[role='dialog'] {
+    animation: none !important;
   }
 }
 
@@ -330,4 +386,29 @@ body {
   width: 14px;
   height: 5px;
   border-radius: 0;
+}
+
+/* ─── a11y: skip link (WCAG 2.4.1 Bypass Blocks) ─── */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 9999;
+  padding: 10px 16px;
+  background: var(--fg-0);
+  color: var(--bg-0);
+  font-family: var(--font-sans-raw);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: var(--r-md);
+  box-shadow: var(--glass-shadow);
+  transform: translateY(-200%);
+  transition: transform var(--motion-fast);
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
 }

@@ -8,6 +8,8 @@ import { MetadataFooter } from '@/components/dashboard/MetadataFooter'
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton'
 import { loadDashboard } from '@/lib/data/dashboard'
 
+export const dynamic = 'force-dynamic'
+
 async function DashboardContent() {
   const data = await loadDashboard()
   return (

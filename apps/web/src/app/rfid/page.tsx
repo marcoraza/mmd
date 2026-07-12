@@ -4,6 +4,8 @@ import { TopBar } from '@/components/mmd/TopBar'
 import { RfidClient } from '@/components/rfid/RfidClient'
 import { loadRfid } from '@/lib/data/rfid'
 
+export const dynamic = 'force-dynamic'
+
 async function RfidContent() {
   const data = await loadRfid()
   return (
@@ -19,7 +21,7 @@ async function RfidContent() {
 function RfidFallback() {
   return (
     <div style={{ padding: '32px 0', color: 'var(--fg-2)', fontSize: 13 }}>
-      Carregando leituras…
+      Carregando leituras
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Projeto, ProjectsData, StatusProjeto } from '@/lib/data/projects'
 import { Icons } from '@/components/mmd/Icons'
@@ -34,7 +35,7 @@ export function ProjectsClient({ data }: { data: ProjectsData }) {
 
   const projetos = data.projetos
   const ativos = projetos.filter(
-    (p) => p.status !== 'FINALIZADO' && p.status !== 'CANCELADO'
+    (p) => p.status !== 'FINALIZADO' && p.status !== 'CANCELADO',
   ).length
 
   function refresh() {
@@ -157,6 +158,22 @@ export function ProjectsClient({ data }: { data: ProjectsData }) {
 
         <div style={{ flex: 1 }} />
 
+        <Link
+          href="/ficha-evento"
+          style={{
+            padding: '8px 16px',
+            borderRadius: 999,
+            border: '1px solid var(--glass-border)',
+            background: 'transparent',
+            color: 'var(--fg-0)',
+            textDecoration: 'none',
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+        >
+          Ficha
+        </Link>
+
         <button
           type="button"
           onClick={() => setCreating((v) => !v)}
@@ -174,7 +191,7 @@ export function ProjectsClient({ data }: { data: ProjectsData }) {
             transition: 'background var(--motion-fast)',
           }}
         >
-          {creating ? '× Cancelar' : '+ Novo projeto'}
+          {creating ? '× Cancelar' : '+ Novo evento'}
         </button>
       </div>
 

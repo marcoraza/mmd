@@ -123,8 +123,7 @@ export function ReadinessCluster({
               backdropFilter: 'blur(20px) saturate(180%)',
               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
               whiteSpace: 'nowrap',
-              boxShadow:
-                '0 6px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06)',
+              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06)',
             }}
           >
             <div

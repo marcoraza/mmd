@@ -1,14 +1,17 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useRef } from 'react'
 import { Icons } from '@/components/mmd/Icons'
-import { GhostBtn, PrimaryBtn, StatusDot } from '@/components/mmd/Primitives'
+import { Btn, StatusDot } from '@/components/mmd/Primitives'
 import {
   CICLO_LABEL,
   SITUACAO_COLOR,
   SITUACAO_LABEL,
   formatBRL,
 } from '@/components/catalog/helpers'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useReturnFocus } from '@/hooks/useReturnFocus'
 import type { SerialRow } from '@/lib/data/items'
 import { formatTimestamp } from './helpers'
 
@@ -19,14 +22,14 @@ type Props = {
 }
 
 export function UnitDrawer({ serial, itemName, onClose }: Props) {
-  useEffect(() => {
-    if (!serial) return
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [serial, onClose])
+  const dialogRef = useRef<HTMLElement | null>(null)
+  const open = serial !== null
+  useEscapeKey(open, onClose)
+  // useReturnFocus precisa rodar antes de useFocusTrap: captura activeElement
+  // na montagem; se rodar depois, snapshot pega o elemento que useFocusTrap
+  // acabou de focar dentro do dialog (que some no unmount), e o foco se perde.
+  useReturnFocus(open)
+  useFocusTrap(dialogRef, open)
 
   if (!serial) return null
 
@@ -41,7 +44,7 @@ export function UnitDrawer({ serial, itemName, onClose }: Props) {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.35)',
+          background: 'var(--drawer-overlay)',
           backdropFilter: 'blur(4px)',
           WebkitBackdropFilter: 'blur(4px)',
           border: 'none',
@@ -51,8 +54,11 @@ export function UnitDrawer({ serial, itemName, onClose }: Props) {
         }}
       />
       <aside
+        ref={dialogRef}
         role="dialog"
+        aria-modal="true"
         aria-label={`Unidade ${serial.codigo_interno}`}
+        tabIndex={-1}
         style={{
           position: 'fixed',
           top: 0,
@@ -65,6 +71,7 @@ export function UnitDrawer({ serial, itemName, onClose }: Props) {
           zIndex: 41,
           overflowY: 'auto',
           animation: 'slide-in-right 280ms cubic-bezier(0.2, 0.7, 0.2, 1) both',
+          outline: 'none',
         }}
       >
         <div
@@ -162,11 +169,7 @@ export function UnitDrawer({ serial, itemName, onClose }: Props) {
 
           <Section title="Identificação">
             <Row label="Código interno" value={serial.codigo_interno} mono />
-            <Row
-              label="Serial fábrica"
-              value={serial.serial_fabrica ?? '–'}
-              mono
-            />
+            <Row label="Serial fábrica" value={serial.serial_fabrica ?? '–'} mono />
             <Row
               label="Tag RFID"
               value={
@@ -257,18 +260,11 @@ export function UnitDrawer({ serial, itemName, onClose }: Props) {
               borderTop: '1px solid var(--glass-border)',
             }}
           >
-            <PrimaryBtn small>Imprimir QR</PrimaryBtn>
-            <GhostBtn small>Marcar manutenção</GhostBtn>
-            <GhostBtn small>Editar</GhostBtn>
+            <Btn small>Imprimir QR</Btn>
+            <Btn variant="ghost" small>Marcar manutenção</Btn>
+            <Btn variant="ghost" small>Editar</Btn>
           </div>
         </div>
-
-        <style>{`
-          @keyframes slide-in-right {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-          }
-        `}</style>
       </aside>
     </>
   )
@@ -295,15 +291,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Row({
-  label,
-  value,
-  mono,
-}: {
-  label: string
-  value: React.ReactNode
-  mono?: boolean
-}) {
+function Row({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
     <div
       style={{

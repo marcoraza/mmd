@@ -5,23 +5,10 @@ import { Icons } from '@/components/mmd/Icons'
 import { StatusDot } from '@/components/mmd/Primitives'
 import type { CatalogUnit } from '@/lib/data/items'
 import { resolveTipo } from '@/lib/nomenclature'
-import {
-  CATEGORIA_LABEL,
-  CICLO_LABEL,
-  SITUACAO_COLOR,
-  SITUACAO_LABEL,
-  formatBRL,
-} from './helpers'
+import { CATEGORIA_LABEL, CICLO_LABEL, SITUACAO_COLOR, SITUACAO_LABEL, formatBRL } from './helpers'
 
 export type UnitGroupBy = 'none' | 'item' | 'status' | 'estado' | 'categoria'
-export type UnitSortKey =
-  | 'codigo'
-  | 'item'
-  | 'status'
-  | 'estado'
-  | 'desgaste'
-  | 'valor'
-  | 'local'
+export type UnitSortKey = 'codigo' | 'item' | 'status' | 'estado' | 'desgaste' | 'valor' | 'local'
 
 export type UnitSortDir = 'asc' | 'desc'
 
@@ -34,14 +21,7 @@ type Props = {
   onSelectItem: (itemId: string) => void
 }
 
-export function UnitsTable({
-  units,
-  groupBy,
-  sortKey,
-  sortDir,
-  onSort,
-  onSelectItem,
-}: Props) {
+export function UnitsTable({ units, groupBy, sortKey, sortDir, onSort, onSelectItem }: Props) {
   const sorted = useMemo(() => {
     const dir = sortDir === 'asc' ? 1 : -1
     return [...units].sort((a, b) => {
@@ -86,7 +66,7 @@ export function UnitsTable({
   return (
     <div className="glass" style={{ borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
       <UnitsHeaderRow sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-      <div style={{ maxHeight: 640, overflowY: 'auto' }}>
+      <div>
         {groupBy === 'none'
           ? sorted.map((u) => <UnitRow key={u.id} unit={u} onSelectItem={onSelectItem} />)
           : groups.map((g) => (
@@ -137,9 +117,22 @@ function UnitsHeaderRow({
       <HeaderCell label="Item" k="item" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
       <HeaderCell label="Status" k="status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
       <HeaderCell label="Estado" k="estado" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-      <HeaderCell label="Desgaste" k="desgaste" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+      <HeaderCell
+        label="Desgaste"
+        k="desgaste"
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSort={onSort}
+      />
       <HeaderCell label="Local" k="local" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-      <HeaderCell label="Valor" k="valor" sortKey={sortKey} sortDir={sortDir} onSort={onSort} align="right" />
+      <HeaderCell
+        label="Valor"
+        k="valor"
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSort={onSort}
+        align="right"
+      />
     </div>
   )
 }
@@ -320,9 +313,7 @@ function UnitRow({
       </span>
 
       {/* Estado */}
-      <span style={{ fontSize: 12, color: 'var(--fg-1)' }}>
-        {CICLO_LABEL[u.estado]}
-      </span>
+      <span style={{ fontSize: 12, color: 'var(--fg-1)' }}>{CICLO_LABEL[u.estado]}</span>
 
       {/* Desgaste */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
@@ -441,7 +432,7 @@ function UnitsGroupSection({
 
 function groupUnits(
   units: CatalogUnit[],
-  groupBy: UnitGroupBy
+  groupBy: UnitGroupBy,
 ): { key: string; title: string; items: CatalogUnit[] }[] {
   if (groupBy === 'none') return [{ key: 'all', title: '', items: units }]
 

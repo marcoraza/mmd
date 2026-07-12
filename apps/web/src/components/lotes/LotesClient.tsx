@@ -5,12 +5,7 @@ import { Icons } from '@/components/mmd/Icons'
 import type { LotesData } from '@/lib/data/lotes'
 import type { Categoria } from '@/lib/types'
 import { CATEGORIA_LABEL } from '@/components/catalog/helpers'
-import {
-  LotesTable,
-  type LotesGroupBy,
-  type LotesSortDir,
-  type LotesSortKey,
-} from './LotesTable'
+import { LotesTable, type LotesGroupBy, type LotesSortDir, type LotesSortKey } from './LotesTable'
 import { LotesBanner, type LotesBannerFilter } from './LotesBanner'
 
 export function LotesClient({ data }: { data: LotesData }) {
@@ -27,7 +22,7 @@ export function LotesClient({ data }: { data: LotesData }) {
       set.set(l.item_categoria, (set.get(l.item_categoria) ?? 0) + 1)
     }
     return [...set.entries()].sort((a, b) =>
-      CATEGORIA_LABEL[a[0]].localeCompare(CATEGORIA_LABEL[b[0]], 'pt-BR')
+      CATEGORIA_LABEL[a[0]].localeCompare(CATEGORIA_LABEL[b[0]], 'pt-BR'),
     )
   }, [data.lotes])
 

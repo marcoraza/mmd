@@ -8,13 +8,7 @@ import { CATEGORIA_LABEL } from '@/components/catalog/helpers'
 import type { LoteRow } from '@/lib/data/lotes'
 import { STATUS_LOTE_COLOR, STATUS_LOTE_LABEL } from './helpers'
 
-export type LotesSortKey =
-  | 'codigo'
-  | 'item'
-  | 'descricao'
-  | 'quantidade'
-  | 'status'
-  | 'atualizado'
+export type LotesSortKey = 'codigo' | 'item' | 'descricao' | 'quantidade' | 'status' | 'atualizado'
 export type LotesSortDir = 'asc' | 'desc'
 export type LotesGroupBy = 'none' | 'categoria' | 'item' | 'status'
 
@@ -90,7 +84,13 @@ function HeaderRow({
       <HeaderCell label="Código" k="codigo" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
       <HeaderCell label="Categoria" k={null} />
       <HeaderCell label="Item" k="item" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-      <HeaderCell label="Descrição" k="descricao" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+      <HeaderCell
+        label="Descrição"
+        k="descricao"
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSort={onSort}
+      />
       <HeaderCell
         label="Qtd"
         k="quantidade"
@@ -332,15 +332,7 @@ function LoteRowView({ lote: l }: { lote: LoteRow }) {
   )
 }
 
-function GroupSection({
-  title,
-  count,
-  lotes,
-}: {
-  title: string
-  count: number
-  lotes: LoteRow[]
-}) {
+function GroupSection({ title, count, lotes }: { title: string; count: number; lotes: LoteRow[] }) {
   return (
     <div>
       <div
@@ -385,11 +377,11 @@ function sortLotes(lotes: LoteRow[], key: LotesSortKey, dir: LotesSortDir): Lote
       case 'quantidade':
         return (a.quantidade - b.quantidade) * factor
       case 'status':
-        return STATUS_LOTE_LABEL[a.status].localeCompare(STATUS_LOTE_LABEL[b.status], 'pt-BR') * factor
-      case 'atualizado':
         return (
-          (new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()) * factor
+          STATUS_LOTE_LABEL[a.status].localeCompare(STATUS_LOTE_LABEL[b.status], 'pt-BR') * factor
         )
+      case 'atualizado':
+        return (new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()) * factor
       default:
         return 0
     }
@@ -398,7 +390,7 @@ function sortLotes(lotes: LoteRow[], key: LotesSortKey, dir: LotesSortDir): Lote
 
 function groupLotes(
   lotes: LoteRow[],
-  groupBy: LotesGroupBy
+  groupBy: LotesGroupBy,
 ): { key: string; title: string; items: LoteRow[] }[] {
   if (groupBy === 'none') return [{ key: 'all', title: '', items: lotes }]
   const map = new Map<string, { key: string; title: string; items: LoteRow[] }>()

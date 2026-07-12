@@ -2,11 +2,7 @@
 
 import { GlassCard, StatusDot } from '@/components/mmd/Primitives'
 import type { RfidReader } from '@/lib/data/rfid'
-import {
-  READER_STATUS_COLOR,
-  READER_STATUS_LABEL,
-  formatRelativeTime,
-} from './helpers'
+import { READER_STATUS_COLOR, READER_STATUS_LABEL, formatRelativeTime } from './helpers'
 
 export function ReaderCard({ reader }: { reader: RfidReader }) {
   const color = READER_STATUS_COLOR[reader.status]
@@ -120,7 +116,7 @@ export function ReaderCard({ reader }: { reader: RfidReader }) {
         }}
       >
         <span>Última atividade</span>
-        <span className="mono" style={{ color: 'var(--fg-2)' }}>
+        <span className="mono" suppressHydrationWarning style={{ color: 'var(--fg-2)' }}>
           {reader.ultima_atividade ? formatRelativeTime(reader.ultima_atividade) : 'nunca'}
         </span>
       </div>

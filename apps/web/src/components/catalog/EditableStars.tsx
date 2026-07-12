@@ -20,12 +20,19 @@ export function EditableStars({
   const display = hover ?? current
 
   const color =
-    display <= 2 ? 'var(--accent-red)' : display >= 4 ? 'var(--accent-green)' : 'var(--accent-amber)'
+    display <= 2
+      ? 'var(--accent-red)'
+      : display >= 4
+        ? 'var(--accent-green)'
+        : 'var(--accent-amber)'
 
   return (
     <span
       role="radiogroup"
       aria-label={`Condição ${current} de 5, clique para editar`}
+      // Focus rove pelos botões filhos (cada estrela é um <button role="radio">).
+      // tabIndex=-1 no container satisfaz interactive-supports-focus sem entrar no tab order.
+      tabIndex={-1}
       onMouseLeave={() => setHover(null)}
       style={{
         display: 'inline-flex',

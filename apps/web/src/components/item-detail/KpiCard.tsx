@@ -40,7 +40,12 @@ export function KpiCard({ label, value, hint, accent, trend }: Props) {
         <div
           style={{
             fontSize: 11,
-            color: trend === 'down' ? 'var(--accent-red)' : trend === 'up' ? 'var(--accent-green)' : 'var(--fg-3)',
+            color:
+              trend === 'down'
+                ? 'var(--accent-red)'
+                : trend === 'up'
+                  ? 'var(--accent-green)'
+                  : 'var(--fg-3)',
             fontFamily: trend ? 'var(--font-mono-raw)' : 'inherit',
           }}
         >

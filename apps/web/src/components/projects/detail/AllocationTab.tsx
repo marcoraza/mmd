@@ -1,16 +1,18 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { GlassCard, StatusDot, GhostBtn } from '@/components/mmd/Primitives'
+import { GlassCard, StatusDot, Btn } from '@/components/mmd/Primitives'
 import type { ProjectDetail, ProjectPackingLine } from '@/lib/data/project-detail'
 import type { AvailableSerial } from '@/lib/data/serials'
 import {
+  addExternalRentalCoverage,
   autoAllocate,
   releaseSerial,
+  removeExternalRentalCoverage,
   setAllocation,
   listAvailableSerialsForPacking,
 } from '@/lib/actions/projetos'
+import { formatProjetoDate } from '../helpers'
 import { SerialPicker } from './SerialPicker'
 
 type Props = {
@@ -20,13 +22,16 @@ type Props = {
 }
 
 export function AllocationTab({ projeto, onError, onDone }: Props) {
-  const canEdit = projeto.status === 'PLANEJAMENTO' || projeto.status === 'CONFIRMADO'
+  const canEdit =
+    projeto.status === 'PLANEJAMENTO' ||
+    projeto.status === 'CONFIRMADO' ||
+    projeto.status === 'MONTAGEM'
 
   if (projeto.packing.length === 0) {
     return (
       <GlassCard style={{ padding: 32, textAlign: 'center' }}>
         <div style={{ fontSize: 13, color: 'var(--fg-3)' }}>
-          Nenhum item no packing. Volte para /projetos para montar o packing list.
+          Nenhum item no packing. Volte para Eventos para montar o packing list.
         </div>
       </GlassCard>
     )
@@ -34,6 +39,43 @@ export function AllocationTab({ projeto, onError, onDone }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <GlassCard style={{ padding: 14 }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 12,
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div>
+            <div
+              className="mono"
+              style={{ color: 'var(--fg-3)', fontSize: 10, letterSpacing: 0.1 }}
+            >
+              JANELA DO EVENTO
+            </div>
+            <div style={{ color: 'var(--fg-0)', fontSize: 14, marginTop: 4 }}>
+              {formatProjetoDate(projeto.data_inicio)} até {formatProjetoDate(projeto.data_fim)}
+            </div>
+          </div>
+          <div
+            style={{
+              flex: '1 1 360px',
+              border: '1px solid color-mix(in oklch, var(--accent-amber) 35%, transparent)',
+              borderRadius: 8,
+              background: 'color-mix(in oklch, var(--accent-amber) 10%, transparent)',
+              color: 'var(--fg-1)',
+              padding: '10px 12px',
+              fontSize: 12,
+            }}
+          >
+            Conflito de data alerta a equipe, mas não bloqueia planejamento. Falta pode ser
+            resolvida depois com aluguel avulso.
+          </div>
+        </div>
+      </GlassCard>
       {!canEdit && (
         <div
           className="mono"
@@ -47,7 +89,7 @@ export function AllocationTab({ projeto, onError, onDone }: Props) {
             letterSpacing: 0.06,
           }}
         >
-          Alocação travada: projeto em {projeto.status}.
+          Alocação travada: Evento em {projeto.status}.
         </div>
       )}
       {projeto.packing.map((line) => (
@@ -78,8 +120,12 @@ function AllocationRow({
   const [picking, setPicking] = useState(false)
   const [candidates, setCandidates] = useState<AvailableSerial[] | null>(null)
   const [loadingPicker, setLoadingPicker] = useState(false)
+  const [rentalOpen, setRentalOpen] = useState(false)
+  const [rentalFornecedor, setRentalFornecedor] = useState('')
+  const [rentalQuantidade, setRentalQuantidade] = useState(String(Math.max(line.qtd_faltante, 1)))
+  const [rentalObservacao, setRentalObservacao] = useState('')
 
-  const missing = line.qtd_necessaria - line.qtd_alocada
+  const missing = line.qtd_faltante
 
   const handleAuto = () => {
     startTransition(async () => {
@@ -124,12 +170,39 @@ function AllocationRow({
     })
   }
 
+  const handleAddRental = () => {
+    startTransition(async () => {
+      const res = await addExternalRentalCoverage(line.id, {
+        fornecedor: rentalFornecedor,
+        quantidade: Number(rentalQuantidade),
+        observacao: rentalObservacao,
+      })
+      if (!res.ok) {
+        onError(res.error)
+        return
+      }
+      setRentalOpen(false)
+      setRentalFornecedor('')
+      setRentalQuantidade(String(Math.max(line.qtd_faltante, 1)))
+      setRentalObservacao('')
+      onDone()
+    })
+  }
+
+  const handleRemoveRental = (rentalId: string) => {
+    startTransition(async () => {
+      const res = await removeExternalRentalCoverage(line.id, rentalId)
+      if (!res.ok) onError(res.error)
+      else onDone()
+    })
+  }
+
   const statusColor =
-    line.qtd_alocada >= line.qtd_necessaria
+    line.qtd_coberta >= line.qtd_necessaria
       ? 'var(--accent-green)'
-      : line.qtd_alocada > 0
-      ? 'var(--accent-amber)'
-      : 'var(--accent-red)'
+      : line.qtd_coberta > 0
+        ? 'var(--accent-amber)'
+        : 'var(--accent-red)'
 
   return (
     <GlassCard style={{ padding: 16 }}>
@@ -140,7 +213,10 @@ function AllocationRow({
           justifyContent: 'space-between',
           gap: 16,
           flexWrap: 'wrap',
-          marginBottom: line.seriais_alocados.length > 0 ? 12 : 0,
+          marginBottom:
+            line.seriais_alocados.length > 0 || line.alugueis_avulsos.length > 0 || rentalOpen
+              ? 12
+              : 0,
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, flex: 1 }}>
@@ -156,28 +232,50 @@ function AllocationRow({
               alignItems: 'center',
               gap: 8,
               letterSpacing: 0.06,
+              flexWrap: 'wrap',
             }}
           >
             <span>{line.codigo_interno}</span>
             <span>·</span>
             <StatusDot color={statusColor} size={5} />
             <span style={{ color: statusColor }}>
-              {line.qtd_alocada}/{line.qtd_necessaria}
+              {line.qtd_coberta}/{line.qtd_necessaria} cobertos
             </span>
+            <span>·</span>
+            <span>{line.qtd_alocada} próprias</span>
+            {line.qtd_alugada_avulsa > 0 && (
+              <>
+                <span>·</span>
+                <span>{line.qtd_alugada_avulsa} avulso</span>
+              </>
+            )}
           </div>
         </div>
 
         {canEdit && (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', position: 'relative' }}>
+          <div
+            className="allocation-actions"
+            style={{ display: 'flex', gap: 8, alignItems: 'center', position: 'relative' }}
+          >
             {missing > 0 && (
-              <GhostBtn small onClick={handleAuto} disabled={pending}>
-                Auto-alocar {missing}
-              </GhostBtn>
+              <Btn variant="ghost" small onClick={handleAuto} disabled={pending}>
+                Auto-alocar disponíveis ({missing})
+              </Btn>
             )}
-            {line.qtd_alocada < line.qtd_necessaria && (
-              <GhostBtn small onClick={handleOpenPicker} disabled={pending}>
-                Adicionar
-              </GhostBtn>
+            {line.qtd_coberta < line.qtd_necessaria && (
+              <Btn variant="ghost" small onClick={handleOpenPicker} disabled={pending}>
+                Selecionar unidade
+              </Btn>
+            )}
+            {missing > 0 && (
+              <Btn
+                variant="ghost"
+                small
+                onClick={() => setRentalOpen((open) => !open)}
+                disabled={pending}
+              >
+                Registrar aluguel
+              </Btn>
             )}
             {picking && (
               <SerialPicker
@@ -187,25 +285,239 @@ function AllocationRow({
                 onClose={() => setPicking(false)}
               />
             )}
+            <style>{`
+              @media (max-width: 720px) {
+                .allocation-actions {
+                  width: 100%;
+                  flex-direction: column;
+                  align-items: stretch !important;
+                }
+
+                .allocation-actions > button {
+                  width: 100%;
+                }
+              }
+            `}</style>
           </div>
         )}
       </div>
 
-      {line.seriais_alocados.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {line.seriais_alocados.map((s) => (
-            <SerialChip
-              key={s.id}
-              codigo={s.codigo_interno}
-              desgaste={s.desgaste}
-              status={s.status}
-              canRemove={canEdit && s.status === 'DISPONIVEL'}
-              onRemove={() => handleRelease(s.id)}
-            />
-          ))}
+      {(line.seriais_alocados.length > 0 || line.alugueis_avulsos.length > 0 || rentalOpen) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {line.seriais_alocados.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {line.seriais_alocados.map((s) => (
+                <SerialChip
+                  key={s.id}
+                  codigo={s.codigo_interno}
+                  desgaste={s.desgaste}
+                  status={s.status}
+                  canRemove={canEdit && s.status === 'DISPONIVEL'}
+                  onRemove={() => handleRelease(s.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {(line.alugueis_avulsos.length > 0 || rentalOpen) && (
+            <div
+              style={{
+                border: '1px solid color-mix(in oklch, var(--accent-cyan) 30%, transparent)',
+                borderRadius: 8,
+                background: 'color-mix(in oklch, var(--accent-cyan) 7%, transparent)',
+                padding: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div
+                  className="mono"
+                  style={{ color: 'var(--fg-3)', fontSize: 10, letterSpacing: 0.08 }}
+                >
+                  COBERTURA AVULSA
+                </div>
+                <div
+                  className="mono"
+                  style={{ color: 'var(--accent-cyan)', fontSize: 10, letterSpacing: 0.06 }}
+                >
+                  {line.qtd_alugada_avulsa}/{line.qtd_necessaria} via parceiro
+                </div>
+              </div>
+
+              {line.alugueis_avulsos.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {line.alugueis_avulsos.map((rental) => (
+                    <ExternalRentalChip
+                      key={rental.id}
+                      fornecedor={rental.fornecedor}
+                      quantidade={rental.quantidade}
+                      observacao={rental.observacao}
+                      canRemove={canEdit}
+                      onRemove={() => handleRemoveRental(rental.id)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {rentalOpen && (
+                <div
+                  className="external-rental-form"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(160px, 1.2fr) 82px minmax(180px, 1.4fr) auto',
+                    gap: 8,
+                    alignItems: 'center',
+                  }}
+                >
+                  <input
+                    value={rentalFornecedor}
+                    onChange={(event) => setRentalFornecedor(event.target.value)}
+                    placeholder="Parceiro"
+                    aria-label="Parceiro do aluguel avulso"
+                    style={rentalInputStyle}
+                  />
+                  <input
+                    value={rentalQuantidade}
+                    onChange={(event) => setRentalQuantidade(event.target.value)}
+                    type="number"
+                    min={1}
+                    max={missing || undefined}
+                    placeholder="Qtd"
+                    aria-label="Quantidade do aluguel avulso"
+                    style={rentalInputStyle}
+                  />
+                  <input
+                    value={rentalObservacao}
+                    onChange={(event) => setRentalObservacao(event.target.value)}
+                    placeholder="Obs mínima"
+                    aria-label="Observação do aluguel avulso"
+                    style={rentalInputStyle}
+                  />
+                  <Btn variant="primary" small onClick={handleAddRental} disabled={pending}>
+                    Salvar
+                  </Btn>
+                  <style>{`
+                    @media (max-width: 720px) {
+                      .external-rental-form {
+                        grid-template-columns: 1fr !important;
+                      }
+
+                      .external-rental-form > button {
+                        width: 100%;
+                      }
+                    }
+                  `}</style>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </GlassCard>
+  )
+}
+
+const rentalInputStyle: React.CSSProperties = {
+  width: '100%',
+  border: '1px solid var(--glass-border)',
+  borderRadius: 7,
+  background: 'var(--bg-0)',
+  color: 'var(--fg-0)',
+  fontSize: 12,
+  padding: '8px 10px',
+  outline: 'none',
+}
+
+function ExternalRentalChip({
+  fornecedor,
+  quantidade,
+  observacao,
+  canRemove,
+  onRemove,
+}: {
+  fornecedor: string
+  quantidade: number
+  observacao: string
+  canRemove: boolean
+  onRemove: () => void
+}) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        maxWidth: '100%',
+        padding: '5px 10px',
+        borderRadius: 999,
+        fontSize: 11,
+        background: 'var(--bg-0)',
+        border: '1px solid color-mix(in oklch, var(--accent-cyan) 35%, transparent)',
+        color: 'var(--fg-1)',
+      }}
+    >
+      <span className="mono" style={{ color: 'var(--accent-cyan)', letterSpacing: 0.05 }}>
+        {quantidade} avulso
+      </span>
+      <span style={{ color: 'var(--fg-0)', whiteSpace: 'nowrap' }}>{fornecedor}</span>
+      <span
+        style={{
+          color: 'var(--fg-3)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          minWidth: 0,
+        }}
+      >
+        {observacao}
+      </span>
+      {canRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remover aluguel avulso de ${fornecedor}`}
+          style={{
+            marginLeft: 2,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 14,
+            height: 14,
+            padding: 0,
+            border: 'none',
+            borderRadius: 999,
+            background: 'transparent',
+            color: 'var(--fg-3)',
+            cursor: 'pointer',
+            fontSize: 12,
+            lineHeight: 1,
+            flex: '0 0 auto',
+            transition: 'background var(--motion-fast), color var(--motion-fast)',
+          }}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.background =
+              'color-mix(in oklch, var(--accent-red) 16%, transparent)'
+            event.currentTarget.style.color = 'var(--accent-red)'
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.background = 'transparent'
+            event.currentTarget.style.color = 'var(--fg-3)'
+          }}
+        >
+          ×
+        </button>
+      )}
+    </span>
   )
 }
 
@@ -223,7 +535,11 @@ function SerialChip({
   onRemove: () => void
 }) {
   const wearColor =
-    desgaste >= 4 ? 'var(--accent-green)' : desgaste === 3 ? 'var(--accent-amber)' : 'var(--accent-red)'
+    desgaste >= 4
+      ? 'var(--accent-green)'
+      : desgaste === 3
+        ? 'var(--accent-amber)'
+        : 'var(--accent-red)'
   const isField = status === 'EM_CAMPO'
 
   return (
@@ -285,7 +601,8 @@ function SerialChip({
             transition: 'background var(--motion-fast), color var(--motion-fast)',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'color-mix(in oklch, var(--accent-red) 16%, transparent)'
+            e.currentTarget.style.background =
+              'color-mix(in oklch, var(--accent-red) 16%, transparent)'
             e.currentTarget.style.color = 'var(--accent-red)'
           }}
           onMouseLeave={(e) => {

@@ -34,8 +34,8 @@ export function InlineItemPicker({
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     const t = setTimeout(async () => {
+      if (!cancelled) setLoading(true)
       try {
         const list = await searchItems(query)
         if (!cancelled) {
@@ -71,14 +71,14 @@ export function InlineItemPicker({
         background: 'var(--glass-bg-strong)',
       }}
     >
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por nome ou código…"
-          style={{ ...FIELD_STYLE, flex: 1 }}
+          placeholder="Buscar por nome ou código"
+          style={{ ...FIELD_STYLE, flex: '1 1 220px', minWidth: 0 }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
@@ -91,7 +91,7 @@ export function InlineItemPicker({
           min={1}
           value={qtd}
           onChange={(e) => setQtd(Math.max(1, Number(e.target.value) || 1))}
-          style={{ ...FIELD_STYLE, width: 80, textAlign: 'right' }}
+          style={{ ...FIELD_STYLE, flex: '0 0 80px', textAlign: 'right' }}
           aria-label="Quantidade"
         />
         <button
@@ -111,7 +111,7 @@ export function InlineItemPicker({
             opacity: pending || !selectedId ? 0.5 : 1,
           }}
         >
-          {pending ? 'Adicionando…' : 'Adicionar'}
+          {pending ? 'Adicionando' : 'Adicionar'}
         </button>
       </div>
 
@@ -124,9 +124,7 @@ export function InlineItemPicker({
         }}
       >
         {loading && results.length === 0 && (
-          <div style={{ padding: 14, fontSize: 12, color: 'var(--fg-3)' }}>
-            Buscando…
-          </div>
+          <div style={{ padding: 14, fontSize: 12, color: 'var(--fg-3)' }}>Buscando</div>
         )}
         {!loading && results.length === 0 && (
           <div style={{ padding: 14, fontSize: 12, color: 'var(--fg-3)' }}>
@@ -149,6 +147,7 @@ export function InlineItemPicker({
                 padding: '10px 12px',
                 display: 'flex',
                 alignItems: 'center',
+                flexWrap: 'wrap',
                 gap: 12,
                 border: 'none',
                 borderBottom: '1px solid var(--glass-border)',
@@ -165,11 +164,12 @@ export function InlineItemPicker({
                   fontSize: 10,
                   color: 'var(--fg-3)',
                   minWidth: 96,
+                  flex: '0 0 96px',
                 }}
               >
                 {item.codigo_interno ?? '·'}
               </span>
-              <span style={{ flex: 1, fontSize: 13, color: 'var(--fg-0)' }}>
+              <span style={{ flex: '1 1 180px', fontSize: 13, color: 'var(--fg-0)' }}>
                 {item.nome}
               </span>
               <span className="mono" style={{ fontSize: 10, color: 'var(--fg-2)' }}>

@@ -15,11 +15,12 @@ export function TopBar({
 }) {
   return (
     <header
-      className="reveal reveal-0"
+      className="reveal reveal-0 mmd-topbar"
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 16,
+        flexWrap: 'wrap',
         height: 48,
         position: 'relative',
         zIndex: 1,
@@ -111,6 +112,24 @@ export function TopBar({
         .topbar-search:focus-within {
           outline: 2px solid var(--accent-cyan);
           outline-offset: 2px;
+        }
+        @media (max-width: 720px) {
+          .mmd-topbar {
+            height: auto !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+          }
+
+          .mmd-topbar .topbar-search {
+            order: 10;
+            flex: 1 1 100%;
+            width: 100%;
+            min-width: 0 !important;
+          }
+
+          .mmd-topbar .topbar-search kbd {
+            display: none;
+          }
         }
       `}</style>
     </header>

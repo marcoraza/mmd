@@ -3,9 +3,16 @@ import QRCode from 'qrcode'
 import { Document, Page, View, Text, Image, StyleSheet, pdf } from '@react-pdf/renderer'
 import { createElement } from 'react'
 import { MM_TO_PT, QR_LAYOUTS, type QrItem, type QrLayoutKey } from '@/components/qrcodes/layouts'
+import { isAuthRequiredForEnv } from '@/lib/auth-config'
+import { getVerifiedUser } from '@/lib/supabase-ssr'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+// Vercel: 60s cobre seleções médias em Pro. Hobby ignora valores > 10s.
+// Em batches grandes, cliente trata 504 com mensagem específica. Plano de
+// chunking server-side está documentado em
+// tasks/auditoria-frontend/w2-qr-sheet-timeout-validation.md (P2).
+export const maxDuration = 60
 
 type Body = {
   items: QrItem[]
@@ -13,6 +20,11 @@ type Body = {
 }
 
 export async function POST(req: Request) {
+  if (isAuthRequiredForEnv()) {
+    const user = await getVerifiedUser()
+    if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
   let body: Body
   try {
     body = (await req.json()) as Body
@@ -36,8 +48,8 @@ export async function POST(req: Request) {
         margin: 0,
         width: 512,
         color: { dark: '#000000', light: '#FFFFFF' },
-      })
-    )
+      }),
+    ),
   )
 
   // Paginar em folhas de `perSheet` etiquetas
@@ -147,14 +159,12 @@ function buildDocument({ pages, layout }: DocProps) {
                 it.subtitle
                   ? createElement(Text, { style: pageStyle.subtitle }, it.subtitle)
                   : null,
-                it.caption
-                  ? createElement(Text, { style: pageStyle.caption }, it.caption)
-                  : null
-              )
-            )
-          )
-        )
-      )
-    )
+                it.caption ? createElement(Text, { style: pageStyle.caption }, it.caption) : null,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
   )
 }

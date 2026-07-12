@@ -164,10 +164,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 loadEnv(path.join(__dirname, '..', '.env.local'))
 loadEnv(path.join(__dirname, '..', '.env'))
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error)
-  process.exitCode = 1
-})
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error)
+    process.exitCode = 1
+  })
+}
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
@@ -268,7 +270,10 @@ async function loadExistingEventCodes(supabase: SupabaseClient): Promise<Set<str
   return new Set((data ?? []).map((row) => row.codigo_evento).filter(Boolean) as string[])
 }
 
-async function buildFileDraft(filePath: string, catalog: CatalogSearchItem[]): Promise<FileDraft> {
+export async function buildFileDraft(
+  filePath: string,
+  catalog: CatalogSearchItem[],
+): Promise<FileDraft> {
   const fileName = path.basename(filePath)
   const sourceHash = createHash('sha256').update(await readFile(filePath)).digest('hex')
   const workbook = new ExcelJS.Workbook()
@@ -863,7 +868,7 @@ async function upsertCandidate(
   return data.id as string
 }
 
-function matchCatalogLine(
+export function matchCatalogLine(
   line: Pick<RawLine, 'normalizedName' | 'categoriaSugerida'>,
   catalog: CatalogSearchItem[],
 ):
@@ -903,7 +908,7 @@ function scoreCatalogMatch(
   return Math.min(1, Math.max(lineOverlap, itemOverlap) + categoryBonus + fullBonus)
 }
 
-function toCatalogSearchItem(item: CatalogItem): CatalogSearchItem {
+export function toCatalogSearchItem(item: CatalogItem): CatalogSearchItem {
   const searchText = normalizeCandidateName(
     [item.codigo_interno, item.nome, item.subcategoria, item.marca, item.modelo].filter(Boolean).join(' '),
   )

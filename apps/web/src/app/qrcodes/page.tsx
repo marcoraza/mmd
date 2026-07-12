@@ -4,6 +4,8 @@ import { TopBar } from '@/components/mmd/TopBar'
 import { QrCodesClient } from '@/components/qrcodes/QrCodesClient'
 import { loadQrSources } from '@/lib/data/qrcodes'
 
+export const dynamic = 'force-dynamic'
+
 async function QrCodesContent() {
   const data = await loadQrSources()
   return (

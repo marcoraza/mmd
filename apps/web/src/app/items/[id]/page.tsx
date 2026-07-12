@@ -6,11 +6,9 @@ import { CATEGORIA_LABEL } from '@/components/catalog/helpers'
 import { ItemDetailClient } from '@/components/item-detail/ItemDetailClient'
 import { getItemById } from '@/lib/data/items'
 
-export default async function ItemDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export const dynamic = 'force-dynamic'
+
+export default async function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const detail = await getItemById(id)
   if (!detail) notFound()
@@ -29,10 +27,7 @@ export default async function ItemDetailPage({
       >
         <TopBar
           kicker={
-            <Link
-              href="/items"
-              style={{ color: 'var(--fg-3)', textDecoration: 'none' }}
-            >
+            <Link href="/items" style={{ color: 'var(--fg-3)', textDecoration: 'none' }}>
               ← Catálogo
             </Link>
           }
@@ -61,12 +56,7 @@ export default async function ItemDetailPage({
           <span style={{ color: 'var(--fg-0)' }}>{item.nome}</span>
         </div>
 
-        <ItemDetailClient
-          item={item}
-          serials={serials}
-          timeline={timeline}
-          notas={notas}
-        />
+        <ItemDetailClient item={item} serials={serials} timeline={timeline} notas={notas} />
       </div>
     </div>
   )

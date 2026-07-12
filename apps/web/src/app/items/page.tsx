@@ -4,6 +4,8 @@ import { TopBar } from '@/components/mmd/TopBar'
 import { CatalogClient } from '@/components/catalog/CatalogClient'
 import { loadCatalog, loadUnits } from '@/lib/data/items'
 
+export const dynamic = 'force-dynamic'
+
 async function CatalogContent() {
   const [data, units] = await Promise.all([loadCatalog(), loadUnits()])
   return (
@@ -25,7 +27,7 @@ function CatalogFallback() {
         fontSize: 13,
       }}
     >
-      Carregando catálogo…
+      Carregando catálogo
     </div>
   )
 }

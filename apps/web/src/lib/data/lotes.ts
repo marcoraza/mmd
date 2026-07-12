@@ -1,4 +1,6 @@
 import 'server-only'
+import { getDemoLoteById, getDemoRelatedLotes, loadDemoLotes } from '@/lib/data/demo'
+import { withDemoFallback } from '@/lib/data/demo-mode'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import type { Categoria } from '@/lib/types'
 
@@ -77,12 +79,16 @@ function flatten(r: LoteJoinedRow): LoteRow | null {
 }
 
 export async function loadLotes(): Promise<LotesData> {
+  return withDemoFallback('lotes', loadLotesFromSupabase, loadDemoLotes)
+}
+
+async function loadLotesFromSupabase(): Promise<LotesData> {
   const { data, error } = await supabaseAdmin
     .from('lotes')
     .select(
       `id, codigo_lote, descricao, quantidade, tag_rfid, qr_code, status,
        created_at, updated_at,
-       items!inner (id, nome, categoria, subcategoria, marca, valor_mercado_unitario)`
+       items!inner (id, nome, categoria, subcategoria, marca, valor_mercado_unitario)`,
     )
     .order('codigo_lote', { ascending: true })
 
@@ -110,12 +116,20 @@ export async function loadLotes(): Promise<LotesData> {
 }
 
 export async function getLoteById(id: string): Promise<LoteRow | null> {
+  return withDemoFallback(
+    `lote:${id}`,
+    () => getLoteByIdFromSupabase(id),
+    () => getDemoLoteById(id),
+  )
+}
+
+async function getLoteByIdFromSupabase(id: string): Promise<LoteRow | null> {
   const { data, error } = await supabaseAdmin
     .from('lotes')
     .select(
       `id, codigo_lote, descricao, quantidade, tag_rfid, qr_code, status,
        created_at, updated_at,
-       items!inner (id, nome, categoria, subcategoria, marca, valor_mercado_unitario)`
+       items!inner (id, nome, categoria, subcategoria, marca, valor_mercado_unitario)`,
     )
     .eq('id', id)
     .maybeSingle()
@@ -125,16 +139,24 @@ export async function getLoteById(id: string): Promise<LoteRow | null> {
   return flatten(data as unknown as LoteJoinedRow)
 }
 
-export async function getRelatedLotes(
+export async function getRelatedLotes(itemId: string, excludeLoteId: string): Promise<LoteRow[]> {
+  return withDemoFallback(
+    `related-lotes:${itemId}`,
+    () => getRelatedLotesFromSupabase(itemId, excludeLoteId),
+    () => getDemoRelatedLotes(itemId, excludeLoteId),
+  )
+}
+
+async function getRelatedLotesFromSupabase(
   itemId: string,
-  excludeLoteId: string
+  excludeLoteId: string,
 ): Promise<LoteRow[]> {
   const { data, error } = await supabaseAdmin
     .from('lotes')
     .select(
       `id, codigo_lote, descricao, quantidade, tag_rfid, qr_code, status,
        created_at, updated_at,
-       items!inner (id, nome, categoria, subcategoria, marca, valor_mercado_unitario)`
+       items!inner (id, nome, categoria, subcategoria, marca, valor_mercado_unitario)`,
     )
     .eq('item_id', itemId)
     .neq('id', excludeLoteId)

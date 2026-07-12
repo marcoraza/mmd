@@ -16,22 +16,60 @@ export type ItemLabel = {
 }
 
 const JUNK_PREFIXES = [
-  /^0+\.?0+\s+/i,   // "0.0 ", "00 "
-  /^0+\s+/,         // "0 "
-  /^\.+\s*/,        // ". ", "..."
-  /^-+\s*/,         // "- "
+  /^0+\.?0+\s+/i, // "0.0 ", "00 "
+  /^0+\s+/, // "0 "
+  /^\.+\s*/, // ". ", "..."
+  /^-+\s*/, // "- "
 ]
 
 // Palavras comuns em title case tradicional (stopwords, preposições, conjunções)
 const LOWER_WORDS = new Set([
-  'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'com', 'sem', 'para', 'por', 'o', 'a',
+  'de',
+  'da',
+  'do',
+  'das',
+  'dos',
+  'e',
+  'em',
+  'com',
+  'sem',
+  'para',
+  'por',
+  'o',
+  'a',
 ])
 
 // Siglas / acrônimos / unidades que devem ficar em caps
 const UPPER_TOKENS = new Set([
-  'DJ', 'DI', 'RF', 'DMX', 'XLR', 'USB', 'HDMI', 'LED', 'UV', 'PAR', 'COB', 'TV',
-  'CO2', 'SM', 'AM', 'FM', 'AC', 'DC', 'PRO', 'HD', 'SDI', 'DDJ', 'XDJ', 'CDJ',
-  'BNC', 'TRS', 'TS', 'VDC', 'IEM',
+  'DJ',
+  'DI',
+  'RF',
+  'DMX',
+  'XLR',
+  'USB',
+  'HDMI',
+  'LED',
+  'UV',
+  'PAR',
+  'COB',
+  'TV',
+  'CO2',
+  'SM',
+  'AM',
+  'FM',
+  'AC',
+  'DC',
+  'PRO',
+  'HD',
+  'SDI',
+  'DDJ',
+  'XDJ',
+  'CDJ',
+  'BNC',
+  'TRS',
+  'TS',
+  'VDC',
+  'IEM',
 ])
 
 function stripJunk(s: string): string {
@@ -101,7 +139,7 @@ function prettify(s: string): string {
 export function formatItemLabel(
   nome: string | null | undefined,
   modelo: string | null | undefined,
-  marca: string | null | undefined
+  marca: string | null | undefined,
 ): ItemLabel {
   const n0 = normalize(nome)
   const m0 = normalize(modelo)

@@ -1,26 +1,35 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
-import { GhostBtn, PrimaryBtn, StatusDot } from '@/components/mmd/Primitives'
-import type { MetodoScan } from '@/lib/types'
-import { checkinProject, type CheckinItemInput } from '@/lib/actions/movimentacoes'
-
-// Retorno de campo: Marco recebe os equipamentos de volta, atualiza desgaste
-// e sinaliza quais precisam de manutenção. Slider global define o default
-// pra todos, detalhes collapsible permitem ajuste por serial. O default do
-// slider é a média arredondada do desgaste atual, não 3 fixo, porque isso
-// respeita o histórico e evita que Marco "rebaixe" em bloco sem querer.
+import { useMemo, useRef, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
+import { Btn, StatusDot } from '@/components/mmd/Primitives'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useReturnFocus } from '@/hooks/useReturnFocus'
+import {
+  type ReturnOutcome,
+  type ReturnResolutionAction,
+} from '@/lib/return-resolution-core'
+import type { MetodoScan, StatusSerial } from '@/lib/types'
+import {
+  checkinProject,
+  resolveReturnPending,
+  type CheckinItemInput,
+} from '@/lib/actions/movimentacoes'
+import type { ReturnPendingResolution } from '@/lib/data/project-detail'
 
 type SerialInput = {
   id: string
   codigo_interno: string
   item_nome: string
   desgaste_atual: number
+  status: StatusSerial
 }
 
 type Props = {
   projetoId: string
   seriais: SerialInput[]
+  pendencias: ReturnPendingResolution[]
   onClose: () => void
   onSuccess: () => void
   onError: (msg: string) => void
@@ -32,48 +41,98 @@ const METODOS: { value: MetodoScan; label: string }[] = [
   { value: 'RFID', label: 'RFID' },
 ]
 
-type Override = { desgaste: number; needs_maintenance: boolean }
+const OUTCOMES: { value: ReturnOutcome; label: string; color: string }[] = [
+  { value: 'OK', label: 'OK', color: 'var(--accent-green)' },
+  { value: 'PROBLEMA', label: 'Problema', color: 'var(--accent-amber)' },
+  { value: 'NAO_VOLTOU', label: 'Não voltou', color: 'var(--accent-red)' },
+]
 
-export function CheckinDialog({ projetoId, seriais, onClose, onSuccess, onError }: Props) {
+const RESOLUTION_ACTIONS: {
+  value: ReturnResolutionAction
+  label: string
+  color: string
+  needsObservation: boolean
+}[] = [
+  { value: 'ENCONTRADA', label: 'Encontrada', color: 'var(--accent-green)', needsObservation: false },
+  { value: 'MANUTENCAO', label: 'Manutenção', color: 'var(--accent-amber)', needsObservation: true },
+  { value: 'BAIXA', label: 'Baixa', color: 'var(--accent-red)', needsObservation: false },
+  { value: 'COBRANCA', label: 'Cobrança', color: 'var(--accent-cyan)', needsObservation: true },
+]
+
+type Override = { desgaste: number; resultado: ReturnOutcome; observacao: string }
+type ResolutionDraft = { observacao: string }
+
+export function CheckinDialog({
+  projetoId,
+  seriais,
+  pendencias,
+  onClose,
+  onSuccess,
+  onError,
+}: Props) {
+  const seriaisEmCampo = useMemo(
+    () => seriais.filter((serial) => serial.status === 'EM_CAMPO'),
+    [seriais],
+  )
+  const pendenciasAbertas = useMemo(
+    () => pendencias.filter((pendencia) => pendencia.status === 'ABERTA'),
+    [pendencias],
+  )
+
   const defaultDesgaste = useMemo(() => {
-    if (seriais.length === 0) return 3
-    const avg = seriais.reduce((a, s) => a + s.desgaste_atual, 0) / seriais.length
+    if (seriaisEmCampo.length === 0) return 3
+    const avg = seriaisEmCampo.reduce((a, s) => a + s.desgaste_atual, 0) / seriaisEmCampo.length
     return Math.max(1, Math.min(5, Math.round(avg)))
-  }, [seriais])
+  }, [seriaisEmCampo])
 
   const [metodo, setMetodo] = useState<MetodoScan>('MANUAL')
   const [globalDesgaste, setGlobalDesgaste] = useState(defaultDesgaste)
   const [overrides, setOverrides] = useState<Record<string, Override>>({})
-  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [resolutionDrafts, setResolutionDrafts] = useState<Record<string, ResolutionDraft>>({})
   const [pending, startTransition] = useTransition()
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  useEscapeKey(true, onClose)
+  useReturnFocus(true)
+  useFocusTrap(dialogRef, true)
 
-  const resolve = (s: SerialInput): Override => {
+  const resolveSerial = (s: SerialInput): Override => {
     const ov = overrides[s.id]
     return {
       desgaste: ov?.desgaste ?? globalDesgaste,
-      needs_maintenance: ov?.needs_maintenance ?? false,
+      resultado: ov?.resultado ?? 'OK',
+      observacao: ov?.observacao ?? '',
     }
   }
 
-  const toMaintain = seriais.filter((s) => resolve(s).needs_maintenance).length
+  const counts = seriaisEmCampo.reduce(
+    (acc, serial) => {
+      const outcome = resolveSerial(serial).resultado
+      if (outcome === 'OK') acc.ok += 1
+      else if (outcome === 'PROBLEMA') acc.problema += 1
+      else acc.pendente += 1
+      acc.total += 1
+      return acc
+    },
+    { ok: 0, problema: 0, pendente: 0, total: 0 },
+  )
+
+  const missingProblemObservation = seriaisEmCampo.some((serial) => {
+    const resolved = resolveSerial(serial)
+    return resolved.resultado === 'PROBLEMA' && resolved.observacao.trim().length < 3
+  })
 
   const confirm = () => {
-    const items: CheckinItemInput[] = seriais.map((s) => {
-      const r = resolve(s)
+    const items: CheckinItemInput[] = seriaisEmCampo.map((s) => {
+      const r = resolveSerial(s)
       return {
         serial_id: s.id,
         desgaste: r.desgaste,
-        needs_maintenance: r.needs_maintenance,
+        resultado: r.resultado,
+        observacao: r.observacao,
       }
     })
+
     startTransition(async () => {
       const res = await checkinProject(projetoId, metodo, items)
       if (!res.ok) onError(res.error)
@@ -83,12 +142,27 @@ export function CheckinDialog({ projetoId, seriais, onClose, onSuccess, onError 
 
   const updateOverride = (id: string, patch: Partial<Override>) => {
     setOverrides((prev) => {
-      const current = prev[id] ?? { desgaste: globalDesgaste, needs_maintenance: false }
+      const current = prev[id] ?? { desgaste: globalDesgaste, resultado: 'OK', observacao: '' }
       return { ...prev, [id]: { ...current, ...patch } }
     })
   }
 
-  return (
+  const updateResolutionDraft = (id: string, observacao: string) => {
+    setResolutionDrafts((prev) => ({ ...prev, [id]: { observacao } }))
+  }
+
+  const resolvePending = (pendenciaId: string, acao: ReturnResolutionAction) => {
+    const observacao = resolutionDrafts[pendenciaId]?.observacao ?? ''
+    startTransition(async () => {
+      const res = await resolveReturnPending(pendenciaId, acao, observacao)
+      if (!res.ok) onError(res.error)
+      else onSuccess()
+    })
+  }
+
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
     <>
       <button
         type="button"
@@ -97,25 +171,26 @@ export function CheckinDialog({ projetoId, seriais, onClose, onSuccess, onError 
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.45)',
+          background: 'var(--dialog-overlay)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
           border: 'none',
           cursor: 'pointer',
-          zIndex: 50,
+          zIndex: 1000,
           animation: 'mmd-reveal 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both',
         }}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Confirmar check-in"
+        aria-label="Conferência de retorno"
+        tabIndex={-1}
         style={{
           position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 'min(560px, calc(100vw - 32px))',
+          inset: 0,
+          margin: 'auto',
+          width: 'min(720px, calc(100vw - 32px))',
           maxHeight: 'calc(100vh - 64px)',
           display: 'flex',
           flexDirection: 'column',
@@ -123,18 +198,13 @@ export function CheckinDialog({ projetoId, seriais, onClose, onSuccess, onError 
           border: '1px solid var(--glass-border-strong)',
           borderRadius: 'var(--r-lg)',
           boxShadow: 'var(--glass-shadow-elevated)',
-          zIndex: 51,
+          zIndex: 1001,
           overflow: 'hidden',
           animation: 'mmd-reveal 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both',
+          outline: 'none',
         }}
       >
-        {/* Header */}
-        <div
-          style={{
-            padding: '20px 22px 16px',
-            borderBottom: '1px solid var(--glass-border)',
-          }}
-        >
+        <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid var(--glass-border)' }}>
           <div
             className="mono"
             style={{
@@ -151,33 +221,59 @@ export function CheckinDialog({ projetoId, seriais, onClose, onSuccess, onError 
             <StatusDot color="var(--accent-cyan)" size={6} />
             Check-in
           </div>
-          <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--fg-0)', letterSpacing: -0.3 }}>
-            Recebendo {seriais.length} {seriais.length === 1 ? 'serial' : 'seriais'} do campo
+          <div style={{ fontSize: 20, fontWeight: 500, color: 'var(--fg-0)' }}>
+            Conferência de retorno
           </div>
-          <div
-            className="mono"
-            style={{ fontSize: 11, color: 'var(--fg-2)', marginTop: 4, letterSpacing: 0.06 }}
-          >
-            {toMaintain > 0
-              ? `${toMaintain} para MANUTENÇÃO, ${seriais.length - toMaintain} para DISPONIVEL`
-              : 'todos voltam para DISPONIVEL'}
+          <div className="mono" style={{ fontSize: 11, color: 'var(--fg-2)', marginTop: 4 }}>
+            {seriaisEmCampo.length} em campo · {pendenciasAbertas.length} pendente
+            {pendenciasAbertas.length === 1 ? '' : 's'} de resolução
           </div>
         </div>
 
-        {/* Body */}
         <div
           style={{
             padding: '16px 22px',
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            gap: 18,
+            gap: 16,
             flex: 1,
           }}
         >
-          {/* Método */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))',
+              gap: 10,
+            }}
+          >
+            <CountTile label="OK" value={counts.ok} color="var(--accent-green)" />
+            <CountTile label="Manutenção" value={counts.problema} color="var(--accent-amber)" />
+            <CountTile label="Pendente" value={counts.pendente + pendenciasAbertas.length} color="var(--accent-red)" />
+            <CountTile label="Total" value={counts.total} color="var(--fg-2)" />
+          </div>
+
+          {(counts.pendente > 0 || pendenciasAbertas.length > 0) && (
+            <div
+              role="alert"
+              style={{
+                padding: '12px 14px',
+                borderRadius: 'var(--r-sm)',
+                border: '1px solid color-mix(in oklch, var(--accent-red) 32%, transparent)',
+                background: 'color-mix(in oklch, var(--accent-red) 8%, transparent)',
+                color: 'var(--fg-0)',
+                fontSize: 13,
+              }}
+            >
+              <strong style={{ color: 'var(--accent-red)', fontWeight: 500 }}>
+                Existem unidades pendentes de resolução.
+              </strong>{' '}
+              O Evento só fecha quando as pendências forem resolvidas ou registradas.
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <label
+            <span
               className="mono"
               style={{
                 fontSize: 10,
@@ -188,7 +284,7 @@ export function CheckinDialog({ projetoId, seriais, onClose, onSuccess, onError 
               }}
             >
               Método de scan
-            </label>
+            </span>
             <div
               role="radiogroup"
               aria-label="Método de scan"
@@ -230,194 +326,230 @@ export function CheckinDialog({ projetoId, seriais, onClose, onSuccess, onError 
             </div>
           </div>
 
-          {/* Slider global */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-                gap: 12,
-              }}
-            >
-              <label
-                className="mono"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: 0.12,
-                  textTransform: 'uppercase',
-                  color: 'var(--fg-3)',
-                  fontWeight: 500,
-                }}
-              >
-                Desgaste geral
-              </label>
-              <div
-                className="mono"
-                style={{ fontSize: 11, color: 'var(--fg-3)', letterSpacing: 0.05 }}
-              >
-                default: média {defaultDesgaste}/5
+          {seriaisEmCampo.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span
+                  className="mono"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: 0.12,
+                    textTransform: 'uppercase',
+                    color: 'var(--fg-3)',
+                    fontWeight: 500,
+                  }}
+                >
+                  Desgaste geral
+                </span>
+                <span className="mono" style={{ fontSize: 11, color: 'var(--fg-3)' }}>
+                  default: média {defaultDesgaste}/5
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input
+                  type="range"
+                  min={1}
+                  max={5}
+                  step={1}
+                  value={globalDesgaste}
+                  onChange={(e) => {
+                    const v = Number(e.target.value)
+                    setGlobalDesgaste(v)
+                    setOverrides((prev) => {
+                      const next: Record<string, Override> = {}
+                      for (const [k, ov] of Object.entries(prev)) {
+                        if (ov.resultado !== 'OK' || ov.observacao.trim().length > 0) {
+                          next[k] = { ...ov, desgaste: v }
+                        }
+                      }
+                      return next
+                    })
+                  }}
+                  aria-label="Desgaste geral"
+                  style={{ flex: 1, accentColor: 'var(--accent-cyan)' }}
+                />
+                <DesgasteBadge n={globalDesgaste} />
               </div>
             </div>
+          )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <input
-                type="range"
-                min={1}
-                max={5}
-                step={1}
-                value={globalDesgaste}
-                onChange={(e) => {
-                  const v = Number(e.target.value)
-                  setGlobalDesgaste(v)
-                  // Reset overrides de desgaste quando o global muda,
-                  // mantendo apenas needs_maintenance.
-                  setOverrides((prev) => {
-                    const next: Record<string, Override> = {}
-                    for (const [k, ov] of Object.entries(prev)) {
-                      if (ov.needs_maintenance) {
-                        next[k] = { desgaste: ov.desgaste, needs_maintenance: true }
-                      }
-                    }
-                    return next
-                  })
-                }}
-                aria-label="Desgaste geral"
-                style={{ flex: 1, accentColor: 'var(--accent-cyan)' }}
-              />
-              <DesgasteBadge n={globalDesgaste} />
-            </div>
-          </div>
-
-          {/* Overrides por serial */}
-          <details
-            open={detailsOpen}
-            onToggle={(e) => setDetailsOpen((e.target as HTMLDetailsElement).open)}
+          <section
+            aria-label="Unidades que saíram"
             style={{
               border: '1px solid var(--glass-border)',
               borderRadius: 'var(--r-sm)',
               background: 'var(--glass-bg)',
+              overflow: 'hidden',
             }}
           >
-            <summary
-              style={{
-                padding: '10px 14px',
-                cursor: 'pointer',
-                fontSize: 12,
-                color: 'var(--fg-1)',
-                listStyle: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 8,
-              }}
-            >
-              <span className="mono" style={{ letterSpacing: 0.06 }}>
-                Ajustar por serial ({seriais.length})
-              </span>
-              <span
-                className="mono"
-                style={{ fontSize: 10, color: 'var(--fg-3)', letterSpacing: 0.05 }}
-              >
-                {detailsOpen ? 'fechar' : 'abrir'}
-              </span>
-            </summary>
-
-            <div
-              style={{
-                maxHeight: 260,
-                overflowY: 'auto',
-                borderTop: '1px solid var(--glass-border)',
-              }}
-            >
-              {seriais.map((s) => {
-                const r = resolve(s)
+            <SectionHeader label={`Unidades que saíram (${seriaisEmCampo.length})`} />
+            {seriaisEmCampo.length === 0 ? (
+              <EmptyLine text="Não há unidades em campo para receber agora." />
+            ) : (
+              seriaisEmCampo.map((serial) => {
+                const resolved = resolveSerial(serial)
                 return (
                   <div
-                    key={s.id}
+                    key={serial.id}
                     style={{
-                      padding: '10px 14px',
-                      borderBottom: '1px solid var(--glass-border)',
+                      padding: '12px 14px',
+                      borderTop: '1px solid var(--glass-border)',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                      gap: 12,
+                      alignItems: 'start',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                      <span className="mono" style={{ fontSize: 12, color: 'var(--fg-0)' }}>
+                        {serial.codigo_interno}
+                      </span>
+                      <span style={{ fontSize: 12, color: 'var(--fg-2)' }}>{serial.item_nome}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <span className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
+                        era {serial.desgaste_atual}/5
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <input
+                          type="range"
+                          min={1}
+                          max={5}
+                          step={1}
+                          value={resolved.desgaste}
+                          onChange={(e) =>
+                            updateOverride(serial.id, { desgaste: Number(e.target.value) })
+                          }
+                          aria-label={`Desgaste ${serial.codigo_interno}`}
+                          style={{ width: 84, accentColor: 'var(--accent-cyan)' }}
+                          disabled={resolved.resultado === 'NAO_VOLTOU'}
+                        />
+                        <DesgasteBadge n={resolved.desgaste} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {OUTCOMES.map((outcome) => (
+                          <OutcomeButton
+                            key={outcome.value}
+                            label={outcome.label}
+                            color={outcome.color}
+                            active={resolved.resultado === outcome.value}
+                            onClick={() => updateOverride(serial.id, { resultado: outcome.value })}
+                          />
+                        ))}
+                      </div>
+                      {resolved.resultado === 'PROBLEMA' && (
+                        <textarea
+                          value={resolved.observacao}
+                          onChange={(e) =>
+                            updateOverride(serial.id, { observacao: e.target.value })
+                          }
+                          placeholder="OBS do Evento: problema identificado"
+                          aria-label={`Observação de problema ${serial.codigo_interno}`}
+                          rows={2}
+                          style={textareaStyle}
+                        />
+                      )}
+                      {resolved.resultado === 'NAO_VOLTOU' && (
+                        <textarea
+                          value={resolved.observacao}
+                          onChange={(e) =>
+                            updateOverride(serial.id, { observacao: e.target.value })
+                          }
+                          placeholder="OBS opcional: última informação sobre a unidade"
+                          aria-label={`Observação de pendência ${serial.codigo_interno}`}
+                          rows={2}
+                          style={textareaStyle}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </section>
+
+          <section
+            aria-label="Pendências de resolução"
+            style={{
+              border: '1px solid color-mix(in oklch, var(--accent-red) 25%, var(--glass-border))',
+              borderRadius: 'var(--r-sm)',
+              background: 'color-mix(in oklch, var(--accent-red) 5%, var(--glass-bg))',
+              overflow: 'hidden',
+            }}
+          >
+            <SectionHeader label={`Pendências de resolução (${pendenciasAbertas.length})`} />
+            {pendenciasAbertas.length === 0 ? (
+              <EmptyLine text="Nenhuma pendência aberta." />
+            ) : (
+              pendenciasAbertas.map((pendencia) => {
+                const draft = resolutionDrafts[pendencia.id]?.observacao ?? ''
+                return (
+                  <div
+                    key={pendencia.id}
+                    style={{
+                      padding: '12px 14px',
+                      borderTop: '1px solid var(--glass-border)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 8,
+                      gap: 10,
                     }}
                   >
                     <div
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'baseline',
-                        gap: 8,
+                        gap: 12,
                         flexWrap: 'wrap',
                       }}
                     >
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                        <span
-                          className="mono"
-                          style={{ fontSize: 12, color: 'var(--fg-0)', letterSpacing: 0.05 }}
-                        >
-                          {s.codigo_interno}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <span className="mono" style={{ fontSize: 12, color: 'var(--fg-0)' }}>
+                          {pendencia.codigo_interno}
                         </span>
-                        <span style={{ fontSize: 11, color: 'var(--fg-3)' }}>
-                          {s.item_nome}
+                        <span style={{ fontSize: 12, color: 'var(--fg-2)' }}>
+                          {pendencia.item_nome}
                         </span>
+                        {pendencia.observacao && (
+                          <span style={{ fontSize: 12, color: 'var(--fg-3)' }}>
+                            {pendencia.observacao}
+                          </span>
+                        )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span
-                          className="mono"
-                          style={{ fontSize: 10, color: 'var(--fg-3)', letterSpacing: 0.05 }}
-                        >
-                          era {s.desgaste_atual}/5
-                        </span>
-                        <DesgasteBadge n={r.desgaste} />
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'start' }}>
+                        {RESOLUTION_ACTIONS.map((action) => (
+                          <OutcomeButton
+                            key={action.value}
+                            label={action.label}
+                            color={action.color}
+                            active={false}
+                            onClick={() => resolvePending(pendencia.id, action.value)}
+                            disabled={
+                              pending ||
+                              (action.needsObservation && draft.trim().length < 3)
+                            }
+                          />
+                        ))}
                       </div>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <input
-                        type="range"
-                        min={1}
-                        max={5}
-                        step={1}
-                        value={r.desgaste}
-                        onChange={(e) =>
-                          updateOverride(s.id, { desgaste: Number(e.target.value) })
-                        }
-                        aria-label={`Desgaste ${s.codigo_interno}`}
-                        style={{ flex: 1, accentColor: 'var(--accent-cyan)' }}
-                      />
-                      <label
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          fontSize: 11,
-                          color: r.needs_maintenance ? 'var(--accent-amber)' : 'var(--fg-2)',
-                          cursor: 'pointer',
-                          userSelect: 'none',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={r.needs_maintenance}
-                          onChange={(e) =>
-                            updateOverride(s.id, { needs_maintenance: e.target.checked })
-                          }
-                          style={{ accentColor: 'var(--accent-amber)' }}
-                        />
-                        manutenção
-                      </label>
-                    </div>
+                    <textarea
+                      value={draft}
+                      onChange={(e) => updateResolutionDraft(pendencia.id, e.target.value)}
+                      placeholder="Observação da resolução, obrigatória para manutenção ou cobrança"
+                      aria-label={`Observação da resolução ${pendencia.codigo_interno}`}
+                      rows={2}
+                      style={textareaStyle}
+                    />
                   </div>
                 )
-              })}
-            </div>
-          </details>
+              })
+            )}
+          </section>
         </div>
 
-        {/* Footer */}
         <div
           style={{
             padding: '14px 22px',
@@ -428,15 +560,113 @@ export function CheckinDialog({ projetoId, seriais, onClose, onSuccess, onError 
             background: 'var(--glass-bg)',
           }}
         >
-          <GhostBtn onClick={onClose} disabled={pending}>
+          <Btn variant="ghost" onClick={onClose} disabled={pending}>
             Cancelar
-          </GhostBtn>
-          <PrimaryBtn onClick={confirm} disabled={pending || seriais.length === 0}>
-            {pending ? 'Recebendo…' : `Confirmar retorno (${seriais.length})`}
-          </PrimaryBtn>
+          </Btn>
+          <Btn
+            onClick={confirm}
+            disabled={pending || seriaisEmCampo.length === 0 || missingProblemObservation}
+          >
+            {pending
+              ? 'Recebendo'
+              : `Confirmar retorno (${counts.total})`}
+          </Btn>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
+  )
+}
+
+function CountTile({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div
+      style={{
+        padding: '12px 10px',
+        borderRadius: 'var(--r-sm)',
+        background: `color-mix(in oklch, ${color} 9%, var(--glass-bg))`,
+        border: `1px solid color-mix(in oklch, ${color} 25%, var(--glass-border))`,
+        textAlign: 'center',
+      }}
+    >
+      <div className="mono" style={{ fontSize: 10, color, textTransform: 'uppercase' }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 24, fontWeight: 600, color: 'var(--fg-0)', lineHeight: 1.1 }}>
+        {value}
+      </div>
+      <div className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
+        {value === 1 ? 'unidade' : 'unidades'}
+      </div>
+    </div>
+  )
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div
+      className="mono"
+      style={{
+        padding: '10px 14px',
+        fontSize: 10,
+        letterSpacing: 0.12,
+        textTransform: 'uppercase',
+        color: 'var(--fg-3)',
+      }}
+    >
+      {label}
+    </div>
+  )
+}
+
+function EmptyLine({ text }: { text: string }) {
+  return (
+    <div
+      style={{
+        padding: '14px',
+        borderTop: '1px solid var(--glass-border)',
+        color: 'var(--fg-3)',
+        fontSize: 13,
+      }}
+    >
+      {text}
+    </div>
+  )
+}
+
+function OutcomeButton({
+  label,
+  color,
+  active,
+  disabled,
+  onClick,
+}: {
+  label: string
+  color: string
+  active: boolean
+  disabled?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: '6px 10px',
+        borderRadius: 7,
+        border: `1px solid color-mix(in oklch, ${color} 34%, var(--glass-border))`,
+        background: active ? color : 'var(--bg-0)',
+        color: active ? 'var(--bg-0)' : color,
+        fontSize: 11,
+        fontFamily: 'inherit',
+        fontWeight: 500,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      {label}
+    </button>
   )
 }
 
@@ -457,10 +687,23 @@ function DesgasteBadge({ n }: { n: number }) {
         background: `color-mix(in oklch, ${color} 14%, transparent)`,
         border: `1px solid color-mix(in oklch, ${color} 35%, transparent)`,
         color,
-        letterSpacing: 0.05,
       }}
     >
       {n}/5
     </span>
   )
 }
+
+const textareaStyle = {
+  width: '100%',
+  resize: 'vertical',
+  minHeight: 50,
+  padding: '9px 10px',
+  borderRadius: 8,
+  border: '1px solid var(--glass-border)',
+  background: 'var(--bg-0)',
+  color: 'var(--fg-0)',
+  fontFamily: 'inherit',
+  fontSize: 12,
+  outline: 'none',
+} as const

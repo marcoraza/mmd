@@ -1,8 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useRef } from 'react'
 import { Icons } from '@/components/mmd/Icons'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useReturnFocus } from '@/hooks/useReturnFocus'
 import type { CatalogItem } from '@/lib/data/items'
 import {
   CATEGORIA_ICON,
@@ -25,14 +28,14 @@ export function ItemSidePanel({
   onCondicaoChange?: (itemId: string, desgaste: number) => void
   pending?: string | null
 }) {
-  useEffect(() => {
-    if (!item) return
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [item, onClose])
+  const dialogRef = useRef<HTMLElement | null>(null)
+  const open = item !== null
+  useEscapeKey(open, onClose)
+  // useReturnFocus precisa rodar antes de useFocusTrap: captura activeElement
+  // na montagem; se rodar depois, snapshot pega o elemento que useFocusTrap
+  // acabou de focar dentro do dialog (que some no unmount), e o foco se perde.
+  useReturnFocus(open)
+  useFocusTrap(dialogRef, open)
 
   if (!item) return null
 
@@ -46,7 +49,7 @@ export function ItemSidePanel({
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.35)',
+          background: 'var(--drawer-overlay)',
           backdropFilter: 'blur(4px)',
           WebkitBackdropFilter: 'blur(4px)',
           border: 'none',
@@ -56,8 +59,11 @@ export function ItemSidePanel({
         }}
       />
       <aside
+        ref={dialogRef}
         role="dialog"
+        aria-modal="true"
         aria-label={`Detalhes de ${item.nome}`}
+        tabIndex={-1}
         style={{
           position: 'fixed',
           top: 0,
@@ -70,6 +76,7 @@ export function ItemSidePanel({
           zIndex: 41,
           overflowY: 'auto',
           animation: 'slide-in-right 280ms cubic-bezier(0.2, 0.7, 0.2, 1) both',
+          outline: 'none',
         }}
       >
         <div
@@ -148,7 +155,10 @@ export function ItemSidePanel({
             ) : (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ opacity: 0.5, marginBottom: 8 }}>{Icons[iconKey]}</div>
-                <div className="mono" style={{ fontSize: 10, letterSpacing: 0.1, textTransform: 'uppercase' }}>
+                <div
+                  className="mono"
+                  style={{ fontSize: 10, letterSpacing: 0.1, textTransform: 'uppercase' }}
+                >
                   Sem foto
                 </div>
               </div>
@@ -156,7 +166,9 @@ export function ItemSidePanel({
           </div>
 
           <section>
-            <div style={{ fontSize: 22, fontWeight: 500, letterSpacing: -0.3, color: 'var(--fg-0)' }}>
+            <div
+              style={{ fontSize: 22, fontWeight: 500, letterSpacing: -0.3, color: 'var(--fg-0)' }}
+            >
               {item.nome}
             </div>
             {(item.marca || item.modelo) && (
@@ -165,7 +177,16 @@ export function ItemSidePanel({
               </div>
             )}
             {item.subcategoria && (
-              <div className="mono" style={{ fontSize: 11, color: 'var(--fg-2)', marginTop: 8, letterSpacing: 0.1, textTransform: 'uppercase' }}>
+              <div
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--fg-2)',
+                  marginTop: 8,
+                  letterSpacing: 0.1,
+                  textTransform: 'uppercase',
+                }}
+              >
                 {item.subcategoria}
               </div>
             )}
@@ -222,14 +243,38 @@ export function ItemSidePanel({
           </Section>
 
           <Section title="Distribuição">
-            <Row label="Disponível" value={item.disponivel_count.toString()} mono color="var(--accent-green)" />
-            <Row label="Em campo" value={item.em_campo_count.toString()} mono color="var(--accent-cyan)" />
-            <Row label="Manutenção" value={item.manutencao_count.toString()} mono color="var(--accent-amber)" />
-            <Row label="Críticos" value={item.criticos_count.toString()} mono color={item.criticos_count > 0 ? 'var(--accent-red)' : 'var(--fg-2)'} />
+            <Row
+              label="Disponível"
+              value={item.disponivel_count.toString()}
+              mono
+              color="var(--accent-green)"
+            />
+            <Row
+              label="Em campo"
+              value={item.em_campo_count.toString()}
+              mono
+              color="var(--accent-cyan)"
+            />
+            <Row
+              label="Manutenção"
+              value={item.manutencao_count.toString()}
+              mono
+              color="var(--accent-amber)"
+            />
+            <Row
+              label="Críticos"
+              value={item.criticos_count.toString()}
+              mono
+              color={item.criticos_count > 0 ? 'var(--accent-red)' : 'var(--fg-2)'}
+            />
           </Section>
 
           <Section title="Valor">
-            <Row label="Valor mercado (unid.)" value={formatBRL(item.valor_mercado_unitario)} mono />
+            <Row
+              label="Valor mercado (unid.)"
+              value={formatBRL(item.valor_mercado_unitario)}
+              mono
+            />
             <Row label="Valor atual (total)" value={formatBRL(item.valor_atual_total)} mono />
           </Section>
 
@@ -266,13 +311,6 @@ export function ItemSidePanel({
             <ActionButton disabled>Imprimir etiqueta</ActionButton>
           </div>
         </div>
-
-        <style>{`
-          @keyframes slide-in-right {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-          }
-        `}</style>
       </aside>
     </>
   )
@@ -331,13 +369,7 @@ function Row({
   )
 }
 
-function ActionButton({
-  children,
-  disabled,
-}: {
-  children: React.ReactNode
-  disabled?: boolean
-}) {
+function ActionButton({ children, disabled }: { children: React.ReactNode; disabled?: boolean }) {
   return (
     <button
       disabled={disabled}

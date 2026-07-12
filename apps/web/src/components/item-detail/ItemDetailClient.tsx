@@ -9,11 +9,7 @@ import {
   SITUACAO_LABEL,
   formatBRL,
 } from '@/components/catalog/helpers'
-import type {
-  CatalogItem,
-  MovimentacaoTimeline,
-  SerialRow,
-} from '@/lib/data/items'
+import type { CatalogItem, MovimentacaoTimeline, SerialRow } from '@/lib/data/items'
 import { ItemHeroStrip } from './ItemHeroStrip'
 import { UnitCard } from './UnitCard'
 import { UnitDrawer } from './UnitDrawer'
@@ -52,11 +48,7 @@ export function ItemDetailClient({ item, serials, timeline, notas }: Props) {
 
   return (
     <>
-      <ItemHeroStrip
-        item={item}
-        serialsCount={serials.length}
-        serialEstados={serials}
-      />
+      <ItemHeroStrip item={item} serialEstados={serials} />
 
       <div
         role="tablist"
@@ -116,18 +108,9 @@ export function ItemDetailClient({ item, serials, timeline, notas }: Props) {
         })}
       </div>
 
-      {tab === 'unidades' && (
-        <TabUnits
-          serials={serials}
-          onOpenSerial={setOpenSerial}
-        />
-      )}
-      {tab === 'historico' && (
-        <TabHistory timeline={timeline} />
-      )}
-      {tab === 'financas' && (
-        <TabFinance item={item} serials={serials} />
-      )}
+      {tab === 'unidades' && <TabUnits serials={serials} onOpenSerial={setOpenSerial} />}
+      {tab === 'historico' && <TabHistory timeline={timeline} />}
+      {tab === 'financas' && <TabFinance item={item} serials={serials} />}
       {tab === 'saude' && (
         <TabHealth item={item} serials={serials} timeline={timeline} onOpenSerial={setOpenSerial} />
       )}
@@ -161,11 +144,7 @@ export function ItemDetailClient({ item, serials, timeline, notas }: Props) {
         </div>
       )}
 
-      <UnitDrawer
-        serial={openSerial}
-        itemName={item.nome}
-        onClose={() => setOpenSerial(null)}
-      />
+      <UnitDrawer serial={openSerial} itemName={item.nome} onClose={() => setOpenSerial(null)} />
     </>
   )
 }
@@ -243,9 +222,7 @@ function TabUnits({
                 padding: '6px 12px',
                 borderRadius: 8,
                 border: '1px solid',
-                borderColor: active
-                  ? (c.color ?? 'var(--accent-cyan)')
-                  : 'var(--glass-border)',
+                borderColor: active ? (c.color ?? 'var(--accent-cyan)') : 'var(--glass-border)',
                 background: active
                   ? `color-mix(in oklch, ${c.color ?? 'var(--accent-cyan)'} 16%, transparent)`
                   : 'var(--glass-bg)',
@@ -275,9 +252,7 @@ function TabUnits({
 
       {filtered.length === 0 ? (
         <GlassCard style={{ padding: 32, textAlign: 'center' }}>
-          <div style={{ fontSize: 13, color: 'var(--fg-3)' }}>
-            Nenhuma unidade nesse filtro.
-          </div>
+          <div style={{ fontSize: 13, color: 'var(--fg-3)' }}>Nenhuma unidade nesse filtro.</div>
         </GlassCard>
       ) : (
         <div
@@ -600,8 +575,12 @@ function TabFinance({ item, serials }: { item: CatalogItem; serials: SerialRow[]
                       <Td mono>{s.codigo_interno}</Td>
                       <Td>{CICLO_LABEL[s.estado]}</Td>
                       <Td mono>{s.desgaste}/5</Td>
-                      <Td mono align="right">{formatBRL(orig || null)}</Td>
-                      <Td mono align="right">{formatBRL(atual || null)}</Td>
+                      <Td mono align="right">
+                        {formatBRL(orig || null)}
+                      </Td>
+                      <Td mono align="right">
+                        {formatBRL(atual || null)}
+                      </Td>
                       <Td mono align="right" color={deltaColor}>
                         {delta.toFixed(1)}%
                       </Td>
@@ -968,13 +947,7 @@ function TabHealth({
    Table helpers
    ══════════════════════════════════════════════════════════════ */
 
-function Th({
-  children,
-  align,
-}: {
-  children: React.ReactNode
-  align?: 'left' | 'right'
-}) {
+function Th({ children, align }: { children: React.ReactNode; align?: 'left' | 'right' }) {
   return (
     <th
       className="mono"

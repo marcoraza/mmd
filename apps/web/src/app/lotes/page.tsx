@@ -1,16 +1,18 @@
 import { Suspense } from 'react'
+import { LotesLegacyClient } from '@/components/lotes/LotesLegacyClient'
 import { Caustic } from '@/components/mmd/Primitives'
 import { TopBar } from '@/components/mmd/TopBar'
-import { LotesClient } from '@/components/lotes/LotesClient'
 import { loadLotes } from '@/lib/data/lotes'
+
+export const dynamic = 'force-dynamic'
 
 async function LotesContent() {
   const data = await loadLotes()
   return (
     <>
-      <TopBar kicker="MMD Eventos" title="Lotes" notifications={0} />
+      <TopBar kicker="MMD Eventos" title="Lotes legados" notifications={0} />
       <div style={{ marginTop: 24 }}>
-        <LotesClient data={data} />
+        <LotesLegacyClient data={data} />
       </div>
     </>
   )
@@ -19,7 +21,7 @@ async function LotesContent() {
 function LotesFallback() {
   return (
     <div style={{ padding: '32px 0', color: 'var(--fg-2)', fontSize: 13 }}>
-      Carregando lotes…
+      Carregando lotes legados
     </div>
   )
 }

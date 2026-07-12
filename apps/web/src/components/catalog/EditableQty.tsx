@@ -13,11 +13,14 @@ export function EditableQty({
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(String(value))
+  // "Storing information from previous renders": fora do modo edição, draft segue
+  // o prop `value`. Evita useEffect + setDraft, que o Compiler trata como cascade.
+  const [prevValue, setPrevValue] = useState(value)
+  if (!editing && value !== prevValue) {
+    setPrevValue(value)
+    setDraft(String(value))
+  }
   const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (!editing) setDraft(String(value))
-  }, [value, editing])
 
   useEffect(() => {
     if (editing && inputRef.current) {

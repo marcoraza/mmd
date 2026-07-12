@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter_Tight, JetBrains_Mono, Instrument_Serif } from 'next/font/google'
 import './globals.css'
-import { SideRail } from '@/components/mmd/SideRail'
+import { AppShell } from '@/components/mmd/AppShell'
 
 const interTight = Inter_Tight({
   subsets: ['latin'],
@@ -36,7 +36,10 @@ const themeInitScript = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${interTight.variable} ${jetBrainsMono.variable} ${instrumentSerif.variable}`}>
+    <html
+      lang="pt-BR"
+      className={`${interTight.variable} ${jetBrainsMono.variable} ${instrumentSerif.variable}`}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
@@ -50,28 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           fontFamily: 'var(--font-sans-raw)',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            minHeight: '100dvh',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          <SideRail />
-          <main
-            id="main-content"
-            style={{
-              flex: 1,
-              position: 'relative',
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              paddingBottom: 'env(safe-area-inset-bottom)',
-            }}
-          >
-            {children}
-          </main>
-        </div>
+        <a href="#main-content" className="skip-link">
+          Pular para o conteúdo principal
+        </a>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   )

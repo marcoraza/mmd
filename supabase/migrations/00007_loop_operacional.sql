@@ -9,8 +9,8 @@
 --
 -- Convenções:
 -- - Shortcut DISPONIVEL -> EM_CAMPO -> DISPONIVEL (pula PACKED/RETORNANDO).
--- - registrado_por vem do caller (hard-coded 'Marco' hoje, auth.user.email
---   quando auth chegar).
+-- - registrado_por vem do caller. No web, server actions validam usuário
+--   quando auth está obrigatório e enviam o nome do profile.
 -- - Em erro, RAISE EXCEPTION aborta tudo. Transação garante atomicidade.
 
 -- Índices para acelerar timelines por projeto e por serial.

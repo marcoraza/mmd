@@ -25,6 +25,7 @@ export type Estado = 'NOVO' | 'SEMI_NOVO' | 'USADO' | 'RECONDICIONADO'
 export type StatusProjeto =
   | 'PLANEJAMENTO'
   | 'CONFIRMADO'
+  | 'MONTAGEM'
   | 'EM_CAMPO'
   | 'FINALIZADO'
   | 'CANCELADO'
@@ -90,6 +91,7 @@ export interface PackingList {
   item_id: string
   quantidade: number
   serial_numbers_designados?: string[]
+  alugueis_avulsos?: unknown[]
   notas?: string
 }
 

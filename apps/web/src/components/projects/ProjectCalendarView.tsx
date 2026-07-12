@@ -7,7 +7,11 @@ import type { Projeto } from '@/lib/data/projects'
 
 const WEEKDAY_FMT = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' })
 const MONTH_FMT = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
-const RANGE_FMT = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+const RANGE_FMT = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+})
 
 const TOTAL_DAYS = 15
 
@@ -28,11 +32,18 @@ function addDays(d: Date, n: number): Date {
 
 function statusColor(s: Projeto['status']): string {
   switch (s) {
-    case 'PLANEJAMENTO': return 'var(--fg-3)'
-    case 'CONFIRMADO': return 'var(--accent-cyan)'
-    case 'EM_CAMPO': return 'var(--accent-violet)'
-    case 'FINALIZADO': return 'var(--accent-amber)'
-    case 'CANCELADO': return 'var(--accent-red)'
+    case 'PLANEJAMENTO':
+      return 'var(--fg-3)'
+    case 'CONFIRMADO':
+      return 'var(--accent-cyan)'
+    case 'MONTAGEM':
+      return 'var(--accent-amber)'
+    case 'EM_CAMPO':
+      return 'var(--accent-violet)'
+    case 'FINALIZADO':
+      return 'var(--accent-amber)'
+    case 'CANCELADO':
+      return 'var(--accent-red)'
   }
 }
 
@@ -51,7 +62,7 @@ export function ProjectCalendarView({ projetos }: { projetos: Projeto[] }) {
 
   const days = useMemo(
     () => Array.from({ length: TOTAL_DAYS }, (_, i) => addDays(cursor, i)),
-    [cursor]
+    [cursor],
   )
   const end = days[TOTAL_DAYS - 1]
 
@@ -86,10 +97,7 @@ export function ProjectCalendarView({ projetos }: { projetos: Projeto[] }) {
           icon={Icons.chevron_left}
           onClick={() => setCursor((c) => addDays(c, -TOTAL_DAYS))}
         />
-        <NavBtn
-          label="Hoje"
-          onClick={() => setCursor(todayStart())}
-        />
+        <NavBtn label="Hoje" onClick={() => setCursor(todayStart())} />
         <NavBtn
           label="Próximo"
           icon={Icons.chevron_right}
@@ -150,7 +158,7 @@ export function ProjectCalendarView({ projetos }: { projetos: Projeto[] }) {
 
           {rows.length === 0 && (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--fg-2)', fontSize: 13 }}>
-              Nenhum projeto na janela atual.
+              Nenhum evento na janela atual.
             </div>
           )}
 

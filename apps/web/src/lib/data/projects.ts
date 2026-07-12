@@ -1,10 +1,20 @@
 import 'server-only'
+import { loadDemoProjects } from '@/lib/data/demo'
+import { withDemoFallback } from '@/lib/data/demo-mode'
+import { buildCheckoutGate } from '@/lib/checkout-gate-core'
+import {
+  calculateFichaChecklist,
+  calculateFichaRecordCompleteness,
+  parseEventoFichaRecord,
+} from '@/lib/evento-ficha-core'
+import { computePackingCoverage, parseExternalRentalCoverages } from '@/lib/external-rental-core'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import type { Categoria } from '@/lib/types'
 
 export type StatusProjeto =
   | 'PLANEJAMENTO'
   | 'CONFIRMADO'
+  | 'MONTAGEM'
   | 'EM_CAMPO'
   | 'FINALIZADO'
   | 'CANCELADO'
@@ -29,6 +39,9 @@ export type PackingItem = {
   categoria: Categoria
   qtd_necessaria: number
   qtd_alocada: number
+  qtd_alugada_avulsa: number
+  qtd_coberta: number
+  qtd_faltante: number
   status: PackingStatus
   conflicts_with?: ConflictRef[]
 }
@@ -58,6 +71,7 @@ type PackingRow = {
   item_id: string
   quantidade: number
   serial_numbers_designados: string[] | null
+  alugueis_avulsos?: unknown
   items: {
     codigo_interno: string | null
     nome: string
@@ -74,13 +88,8 @@ type ProjetoRow = {
   local: string | null
   status: StatusProjeto
   notas: string | null
+  ficha_evento?: unknown
   packing_list: PackingRow[]
-}
-
-function derivePackingStatus(alocada: number, necessaria: number): PackingStatus {
-  if (alocada >= necessaria && necessaria > 0) return 'ok'
-  if (alocada > 0) return 'partial'
-  return 'missing'
 }
 
 function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
@@ -88,7 +97,7 @@ function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: strin
 }
 
 function annotateConflicts(projetos: Projeto[]): Projeto[] {
-  const ACTIVE: StatusProjeto[] = ['PLANEJAMENTO', 'CONFIRMADO', 'EM_CAMPO']
+  const ACTIVE: StatusProjeto[] = ['PLANEJAMENTO', 'CONFIRMADO', 'MONTAGEM', 'EM_CAMPO']
   const ativos = projetos.filter((p) => ACTIVE.includes(p.status))
 
   return projetos.map((projeto) => {
@@ -97,7 +106,9 @@ function annotateConflicts(projetos: Projeto[]): Projeto[] {
       const conflicts: ConflictRef[] = []
       for (const other of ativos) {
         if (other.id === projeto.id) continue
-        if (!rangesOverlap(projeto.data_inicio, projeto.data_fim, other.data_inicio, other.data_fim)) {
+        if (
+          !rangesOverlap(projeto.data_inicio, projeto.data_fim, other.data_inicio, other.data_fim)
+        ) {
           continue
         }
         const match = other.packing.find((op) => op.item_id === pi.item_id)
@@ -126,7 +137,12 @@ function annotateConflicts(projetos: Projeto[]): Projeto[] {
 
 function rowToProjeto(row: ProjetoRow): Projeto {
   const packing: PackingItem[] = (row.packing_list ?? []).map((pl) => {
-    const alocada = pl.serial_numbers_designados?.length ?? 0
+    const alugueisAvulsos = parseExternalRentalCoverages(pl.alugueis_avulsos)
+    const coverage = computePackingCoverage({
+      qtdNecessaria: pl.quantidade,
+      qtdPropria: pl.serial_numbers_designados?.length ?? 0,
+      alugueisAvulsos,
+    })
     return {
       id: pl.id,
       item_id: pl.item_id,
@@ -134,12 +150,41 @@ function rowToProjeto(row: ProjetoRow): Projeto {
       nome: pl.items?.nome ?? 'Item removido',
       categoria: (pl.items?.categoria ?? 'ACESSORIO') as Categoria,
       qtd_necessaria: pl.quantidade,
-      qtd_alocada: alocada,
-      status: derivePackingStatus(alocada, pl.quantidade),
+      qtd_alocada: coverage.qtd_propria,
+      qtd_alugada_avulsa: coverage.qtd_alugada_avulsa,
+      qtd_coberta: coverage.qtd_coberta,
+      qtd_faltante: coverage.qtd_faltante,
+      status: coverage.status,
     }
   })
   const itens_total = packing.reduce((a, p) => a + p.qtd_necessaria, 0)
-  const itens_alocados = packing.reduce((a, p) => a + p.qtd_alocada, 0)
+  const itens_alocados = packing.reduce((a, p) => a + p.qtd_coberta, 0)
+  const fichaEvento = parseEventoFichaRecord(row.ficha_evento)
+  const fichaReadiness = fichaEvento
+    ? {
+        ...calculateFichaRecordCompleteness(fichaEvento),
+        ...calculateFichaChecklist(fichaEvento),
+      }
+    : null
+  const packingReadiness = itens_total > 0 ? Math.round((itens_alocados / itens_total) * 100) : 0
+  const checkoutGate = fichaReadiness
+    ? buildCheckoutGate({
+        status: row.status,
+        ficha: fichaReadiness,
+        packing: packing.map((line) => ({
+          id: line.id,
+          item_nome: line.nome,
+          qtd_necessaria: line.qtd_necessaria,
+          qtd_alocada: line.qtd_alocada,
+          qtd_alugada_avulsa: line.qtd_alugada_avulsa,
+          qtd_coberta: line.qtd_coberta,
+          qtd_faltante: line.qtd_faltante,
+          status: line.status,
+          conflicts_with: line.conflicts_with,
+        })),
+      })
+    : null
+
   return {
     id: row.id,
     nome: row.nome,
@@ -153,23 +198,58 @@ function rowToProjeto(row: ProjetoRow): Projeto {
     itens_count: packing.length,
     itens_total,
     itens_alocados,
-    readiness_pct: itens_total > 0 ? Math.round((itens_alocados / itens_total) * 100) : 0,
+    readiness_pct: checkoutGate?.readinessPct ?? packingReadiness,
   }
 }
 
 export async function loadProjects(): Promise<ProjectsData> {
-  const { data, error } = await supabaseAdmin
-    .from('projetos')
-    .select(
-      `id, nome, cliente, data_inicio, data_fim, local, status, notas,
-       packing_list (
-         id, item_id, quantidade, serial_numbers_designados,
-         items ( codigo_interno, nome, categoria )
-       )`
-    )
-    .order('data_inicio', { ascending: true })
+  return withDemoFallback('projects', loadProjectsFromSupabase, loadDemoProjects)
+}
+
+async function loadProjectsFromSupabase(): Promise<ProjectsData> {
+  let { data, error } = await queryProjects(true, true)
+
+  if (error && (isMissingExternalRentalsColumn(error) || isMissingFichaEventoColumn(error))) {
+    for (const attempt of [
+      { includeExternalRentals: false, includeFicha: true },
+      { includeExternalRentals: true, includeFicha: false },
+      { includeExternalRentals: false, includeFicha: false },
+    ]) {
+      const fallback = await queryProjects(attempt.includeExternalRentals, attempt.includeFicha)
+      data = fallback.data
+      error = fallback.error
+      if (!error) break
+    }
+  }
 
   if (error) throw error
   const projetos = ((data ?? []) as unknown as ProjetoRow[]).map(rowToProjeto)
   return { projetos: annotateConflicts(projetos) }
+}
+
+function isMissingExternalRentalsColumn(error: { message?: string; code?: string } | null) {
+  const message = error?.message?.toLowerCase() ?? ''
+  return message.includes('alugueis_avulsos') || error?.code === 'PGRST204'
+}
+
+function isMissingFichaEventoColumn(error: { message?: string; code?: string } | null) {
+  const message = error?.message?.toLowerCase() ?? ''
+  return message.includes('ficha_evento') || error?.code === 'PGRST204'
+}
+
+function queryProjects(includeExternalRentals: boolean, includeFicha: boolean) {
+  return supabaseAdmin
+    .from('projetos')
+    .select(
+      `id, nome, cliente, data_inicio, data_fim, local, status, notas,${
+        includeFicha ? ' ficha_evento,' : ''
+      }
+       packing_list (
+         id, item_id, quantidade, serial_numbers_designados${
+           includeExternalRentals ? ', alugueis_avulsos' : ''
+         },
+         items ( codigo_interno, nome, categoria )
+       )`,
+    )
+    .order('data_inicio', { ascending: true })
 }

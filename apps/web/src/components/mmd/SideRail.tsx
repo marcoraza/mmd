@@ -33,7 +33,7 @@ const items: RailItem[] = [
     id: 'projects',
     href: '/projetos',
     icon: Icons.package,
-    label: 'Projetos',
+    label: 'Eventos',
     matches: (p) => p.startsWith('/projetos'),
   },
   {
@@ -49,13 +49,6 @@ const items: RailItem[] = [
     icon: Icons.qr,
     label: 'QR codes',
     matches: (p) => p.startsWith('/qrcodes'),
-  },
-  {
-    id: 'lotes',
-    href: '/lotes',
-    icon: Icons.chart,
-    label: 'Lotes',
-    matches: (p) => p.startsWith('/lotes'),
   },
   {
     id: 'config',

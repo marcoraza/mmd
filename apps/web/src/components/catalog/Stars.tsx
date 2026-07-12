@@ -11,7 +11,8 @@ export function Stars({
   color?: string
 }) {
   const n = roundStars(value)
-  const c = color ?? (n <= 2 ? 'var(--accent-red)' : n >= 4 ? 'var(--accent-green)' : 'var(--accent-amber)')
+  const c =
+    color ?? (n <= 2 ? 'var(--accent-red)' : n >= 4 ? 'var(--accent-green)' : 'var(--accent-amber)')
   return (
     <span
       aria-label={`Condição ${n} de 5`}

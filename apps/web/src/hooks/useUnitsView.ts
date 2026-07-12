@@ -1,11 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import type {
-  UnitGroupBy,
-  UnitSortDir,
-  UnitSortKey,
-} from '@/components/catalog/UnitsTable'
+import { useStoredState } from './useStoredState'
+import type { UnitGroupBy, UnitSortDir, UnitSortKey } from '@/components/catalog/UnitsTable'
 
 export type UnitsView = {
   sortKey: UnitSortKey
@@ -32,36 +28,21 @@ function sanitize(raw: unknown): UnitsView {
 }
 
 export function useUnitsView() {
-  const [view, setView] = useState<UnitsView>(DEFAULT_UNITS_VIEW)
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
-      if (raw) setView(sanitize(JSON.parse(raw)))
-    } catch {}
-    setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(view))
-    } catch {}
-  }, [view, hydrated])
+  const [view, setView] = useStoredState<UnitsView>(STORAGE_KEY, DEFAULT_UNITS_VIEW, (raw) =>
+    sanitize(JSON.parse(raw)),
+  )
 
   function update(patch: Partial<UnitsView>) {
-    setView((v) => ({ ...v, ...patch }))
+    setView({ ...view, ...patch })
   }
 
   function toggleSort(key: UnitSortKey) {
-    setView((v) => {
-      if (v.sortKey === key) {
-        return { ...v, sortDir: v.sortDir === 'asc' ? 'desc' : 'asc' }
-      }
-      return { ...v, sortKey: key, sortDir: 'asc' }
-    })
+    if (view.sortKey === key) {
+      setView({ ...view, sortDir: view.sortDir === 'asc' ? 'desc' : 'asc' })
+    } else {
+      setView({ ...view, sortKey: key, sortDir: 'asc' })
+    }
   }
 
-  return { view, update, toggleSort, hydrated }
+  return { view, update, toggleSort }
 }

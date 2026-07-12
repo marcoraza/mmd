@@ -3,27 +3,22 @@
 import { useState } from 'react'
 import { Icons } from '@/components/mmd/Icons'
 import { GlassCard, Ring } from '@/components/mmd/Primitives'
-import {
-  CATEGORIA_ICON,
-  CATEGORIA_LABEL,
-} from '@/components/catalog/helpers'
+import { CATEGORIA_ICON, CATEGORIA_LABEL } from '@/components/catalog/helpers'
 import type { CatalogItem } from '@/lib/data/items'
 import { ESTADO_LABEL, dominantEstado } from './helpers'
 import type { Estado } from '@/lib/types'
 
 type Props = {
   item: CatalogItem
-  serialsCount: number
   serialEstados: { estado: Estado }[]
 }
 
-export function ItemHeroStrip({ item, serialsCount, serialEstados }: Props) {
+export function ItemHeroStrip({ item, serialEstados }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const iconKey = CATEGORIA_ICON[item.categoria] as keyof typeof Icons
   const disponivel = item.disponivel_count
-  const ativos =
-    item.disponivel_count + item.em_campo_count + item.manutencao_count
+  const ativos = item.disponivel_count + item.em_campo_count + item.manutencao_count
   const readyPct = ativos > 0 ? (disponivel / ativos) * 100 : 0
   const estado = dominantEstado(serialEstados)
 
@@ -178,9 +173,7 @@ export function ItemHeroStrip({ item, serialsCount, serialEstados }: Props) {
             {disponivel}
             <span style={{ color: 'var(--fg-3)', fontWeight: 400 }}>/{ativos}</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--fg-3)', marginTop: 2 }}>
-            disponíveis agora
-          </div>
+          <div style={{ fontSize: 11, color: 'var(--fg-3)', marginTop: 2 }}>disponíveis agora</div>
         </div>
         <Ring value={readyPct} size={88} stroke={7} state={ringState} decorative />
 
@@ -253,13 +246,7 @@ export function ItemHeroStrip({ item, serialsCount, serialEstados }: Props) {
   )
 }
 
-function MenuItem({
-  children,
-  danger,
-}: {
-  children: React.ReactNode
-  danger?: boolean
-}) {
+function MenuItem({ children, danger }: { children: React.ReactNode; danger?: boolean }) {
   return (
     <button
       role="menuitem"

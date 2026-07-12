@@ -1,4 +1,7 @@
 import 'server-only'
+import { loadDemoRfid } from '@/lib/data/demo'
+import { withDemoFallback } from '@/lib/data/demo-mode'
+import { resolveUnitOnlyRfidLegacy } from '@/lib/legacy-lotes-core'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import type { Categoria, StatusSerial } from '@/lib/types'
 import type { StatusLote } from './lotes'
@@ -61,10 +64,18 @@ export type RfidBannerStats = {
   leitores_ativos: number
 }
 
+export type CableRfidStats = {
+  total_units: number
+  tags_bound: number
+  tags_pending: number
+  legacy_lotes: number
+}
+
 export type RfidData = {
   readers: RfidReader[]
   scans: RfidScan[]
   banner: RfidBannerStats
+  cable_rfid: CableRfidStats
 }
 
 type ScanJoined = {
@@ -103,10 +114,16 @@ type ScanJoined = {
 const SCAN_LIMIT = 200
 
 export async function loadRfid(): Promise<RfidData> {
-  const [readersRes, scansRes] = await Promise.all([
+  return withDemoFallback('rfid', loadRfidFromSupabase, loadDemoRfid)
+}
+
+async function loadRfidFromSupabase(): Promise<RfidData> {
+  const [readersRes, scansRes, cableRfid] = await Promise.all([
     supabaseAdmin
       .from('rfid_readers')
-      .select('id, nome, modelo, serial_fabrica, operador, status, bateria, ultima_atividade, notas')
+      .select(
+        'id, nome, modelo, serial_fabrica, operador, status, bateria, ultima_atividade, notas',
+      )
       .order('nome', { ascending: true }),
     supabaseAdmin
       .from('rfid_scans')
@@ -115,10 +132,11 @@ export async function loadRfid(): Promise<RfidData> {
          rfid_readers (id, nome),
          serial_numbers (id, codigo_interno, status, items (id, nome, categoria)),
          lotes (id, codigo_lote, status, items (id, nome, categoria)),
-         projetos (id, nome)`
+         projetos (id, nome)`,
       )
       .order('timestamp', { ascending: false })
       .limit(SCAN_LIMIT),
+    loadCableRfidStats(),
   ])
 
   if (readersRes.error) throw readersRes.error
@@ -129,8 +147,12 @@ export async function loadRfid(): Promise<RfidData> {
 
   const scans: RfidScan[] = rawScans.map((r) => {
     const serialItem = r.serial_numbers?.items ?? null
-    const loteItem = r.lotes?.items ?? null
-    const resolvedItem = serialItem ?? loteItem
+    const legacy = resolveUnitOnlyRfidLegacy({
+      serial_id: r.serial_numbers?.id ?? null,
+      lote_id: r.lotes?.id ?? null,
+      lote_codigo: r.lotes?.codigo_lote ?? null,
+      notas: r.notas,
+    })
     return {
       id: r.id,
       tag_rfid: r.tag_rfid,
@@ -139,21 +161,21 @@ export async function loadRfid(): Promise<RfidData> {
       contexto: r.contexto,
       localizacao: r.localizacao,
       rssi: r.rssi,
-      notas: r.notas,
+      notas: legacy.notas,
       reader_id: r.rfid_readers?.id ?? null,
       reader_nome: r.rfid_readers?.nome ?? null,
       serial_id: r.serial_numbers?.id ?? null,
       serial_codigo: r.serial_numbers?.codigo_interno ?? null,
       serial_status: r.serial_numbers?.status ?? null,
-      lote_id: r.lotes?.id ?? null,
-      lote_codigo: r.lotes?.codigo_lote ?? null,
-      lote_status: r.lotes?.status ?? null,
+      lote_id: legacy.lote_id,
+      lote_codigo: legacy.lote_codigo,
+      lote_status: legacy.lote_status,
       projeto_id: r.projetos?.id ?? null,
       projeto_nome: r.projetos?.nome ?? null,
-      item_id: resolvedItem?.id ?? null,
-      item_nome: resolvedItem?.nome ?? null,
-      item_categoria: resolvedItem?.categoria ?? null,
-      reconhecido: r.serial_numbers != null || r.lotes != null,
+      item_id: serialItem?.id ?? null,
+      item_nome: serialItem?.nome ?? null,
+      item_categoria: serialItem?.categoria ?? null,
+      reconhecido: legacy.reconhecido,
     }
   })
 
@@ -186,5 +208,40 @@ export async function loadRfid(): Promise<RfidData> {
       nao_reconhecidos_24h: naoReconhecidos24h,
       leitores_ativos: leitoresAtivos,
     },
+    cable_rfid: cableRfid,
+  }
+}
+
+async function loadCableRfidStats(): Promise<CableRfidStats> {
+  const { data: cableItems, error: cableItemsError } = await supabaseAdmin
+    .from('items')
+    .select('id')
+    .eq('categoria', 'CABO')
+
+  if (cableItemsError) throw cableItemsError
+
+  const cableItemIds = (cableItems ?? []).map((item) => item.id)
+  if (cableItemIds.length === 0) {
+    return { total_units: 0, tags_bound: 0, tags_pending: 0, legacy_lotes: 0 }
+  }
+
+  const [serialsRes, lotesRes] = await Promise.all([
+    supabaseAdmin.from('serial_numbers').select('id, tag_rfid').in('item_id', cableItemIds),
+    supabaseAdmin.from('lotes').select('id').in('item_id', cableItemIds),
+  ])
+
+  if (serialsRes.error) throw serialsRes.error
+  if (lotesRes.error) throw lotesRes.error
+
+  const serials = serialsRes.data ?? []
+  const tagsBound = serials.filter(
+    (serial) => typeof serial.tag_rfid === 'string' && serial.tag_rfid.trim().length > 0,
+  ).length
+
+  return {
+    total_units: serials.length,
+    tags_bound: tagsBound,
+    tags_pending: serials.length - tagsBound,
+    legacy_lotes: lotesRes.data?.length ?? 0,
   }
 }

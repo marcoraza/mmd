@@ -1,12 +1,8 @@
 import 'server-only'
+import { getDemoItemById, loadDemoCatalog, loadDemoUnits } from '@/lib/data/demo'
+import { withDemoFallback } from '@/lib/data/demo-mode'
 import { supabaseAdmin } from '@/lib/supabase-server'
-import type {
-  Categoria,
-  Estado,
-  MetodoScan,
-  StatusSerial,
-  TipoMovimentacao,
-} from '@/lib/types'
+import type { Categoria, Estado, MetodoScan, StatusSerial, TipoMovimentacao } from '@/lib/types'
 
 export type CatalogItem = {
   id: string
@@ -29,6 +25,8 @@ export type CatalogItem = {
   criticos_count: number
   regular_count: number
   otimo_count: number
+  rfid_tagged_count: number
+  rfid_pending_count: number
 }
 
 export type CatalogBannerStats = {
@@ -87,6 +85,7 @@ type ItemRow = {
   valor_mercado_unitario: number | null
   foto_url: string | null
   serial_numbers: Array<{
+    tag_rfid: string | null
     status: StatusSerial
     estado: Estado
     desgaste: number
@@ -138,6 +137,17 @@ const ACTIVE_STATUSES: StatusSerial[] = [
   'MANUTENCAO',
 ]
 
+const HIDDEN_LEGACY_ITEM_CODES = new Set(['MMD-CAB-0001', 'MMD-ENE-0019'])
+
+function isHiddenLegacyItem(item: CatalogItem): boolean {
+  return (
+    item.codigo_interno != null &&
+    HIDDEN_LEGACY_ITEM_CODES.has(item.codigo_interno) &&
+    item.quantidade_total <= 0 &&
+    item.disponivel_count + item.em_campo_count + item.manutencao_count === 0
+  )
+}
+
 function aggregateItem(row: ItemRow): CatalogItem {
   const serials = row.serial_numbers ?? []
   const active = serials.filter((s) => ACTIVE_STATUSES.includes(s.status))
@@ -148,11 +158,11 @@ function aggregateItem(row: ItemRow): CatalogItem {
   const criticos = active.filter((s) => s.desgaste <= 2).length
   const regular = active.filter((s) => s.desgaste === 3).length
   const otimo = active.filter((s) => s.desgaste >= 4).length
+  const rfidTagged = active.filter((s) => s.tag_rfid?.trim()).length
+  const rfidPending = active.length - rfidTagged
 
   const condicaoMedia =
-    active.length > 0
-      ? active.reduce((acc, s) => acc + s.desgaste, 0) / active.length
-      : 0
+    active.length > 0 ? active.reduce((acc, s) => acc + s.desgaste, 0) / active.length : 0
 
   const valorAtualTotal = active.reduce((acc, s) => acc + (s.valor_atual ?? 0), 0)
 
@@ -188,22 +198,28 @@ function aggregateItem(row: ItemRow): CatalogItem {
     criticos_count: criticos,
     regular_count: regular,
     otimo_count: otimo,
+    rfid_tagged_count: rfidTagged,
+    rfid_pending_count: rfidPending,
   }
 }
 
 export async function loadCatalog(): Promise<CatalogData> {
+  return withDemoFallback('catalog', loadCatalogFromSupabase, loadDemoCatalog)
+}
+
+async function loadCatalogFromSupabase(): Promise<CatalogData> {
   const { data: itemsData, error: itemsError } = await supabaseAdmin
     .from('items')
     .select(
       `id, codigo_interno, nome, categoria, subcategoria, marca, modelo, quantidade_total,
        valor_mercado_unitario, foto_url,
-       serial_numbers ( status, estado, desgaste, valor_atual )`
+       serial_numbers ( tag_rfid, status, estado, desgaste, valor_atual )`,
     )
     .order('nome', { ascending: true })
 
   if (itemsError) throw itemsError
 
-  const items = (itemsData as ItemRow[]).map(aggregateItem)
+  const items = (itemsData as ItemRow[]).map(aggregateItem).filter((item) => !isHiddenLegacyItem(item))
 
   const { count: lotesCount, error: lotesError } = await supabaseAdmin
     .from('lotes')
@@ -225,8 +241,7 @@ export async function loadCatalog(): Promise<CatalogData> {
     criticos += it.criticos_count
     regular += it.regular_count
     otimo += it.otimo_count
-    const ativos =
-      it.disponivel_count + it.em_campo_count + it.manutencao_count
+    const ativos = it.disponivel_count + it.em_campo_count + it.manutencao_count
     ativosCount += ativos
   }
 
@@ -243,8 +258,7 @@ export async function loadCatalog(): Promise<CatalogData> {
 
   const catMap = new Map<Categoria, number>()
   for (const it of items) {
-    const ativos =
-      it.disponivel_count + it.em_campo_count + it.manutencao_count
+    const ativos = it.disponivel_count + it.em_campo_count + it.manutencao_count
     catMap.set(it.categoria, (catMap.get(it.categoria) ?? 0) + ativos)
   }
   const categories: CategoryCount[] = [...catMap.entries()]
@@ -284,18 +298,11 @@ type UnitFlatRow = {
 }
 
 export async function loadUnits(): Promise<CatalogUnit[]> {
-  const { data, error } = await supabaseAdmin
-    .from('serial_numbers')
-    .select(
-      `id, codigo_interno, serial_fabrica, tag_rfid, qr_code,
-       status, estado, desgaste, valor_atual, localizacao, updated_at,
-       items!inner (id, nome, categoria, subcategoria, marca, modelo, valor_mercado_unitario)`
-    )
-    .order('codigo_interno', { ascending: true })
+  return withDemoFallback('units', loadUnitsFromSupabase, loadDemoUnits)
+}
 
-  if (error) throw error
-
-  const rows = (data ?? []) as unknown as UnitFlatRow[]
+async function loadUnitsFromSupabase(): Promise<CatalogUnit[]> {
+  const rows = await loadAllUnitRows()
   return rows
     .filter((r) => r.items != null)
     .map((r) => ({
@@ -318,6 +325,29 @@ export async function loadUnits(): Promise<CatalogUnit[]> {
       item_modelo: r.items!.modelo,
       item_valor_mercado_unitario: r.items!.valor_mercado_unitario,
     }))
+}
+
+async function loadAllUnitRows(): Promise<UnitFlatRow[]> {
+  const pageSize = 1000
+  const rows: UnitFlatRow[] = []
+
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabaseAdmin
+      .from('serial_numbers')
+      .select(
+        `id, codigo_interno, serial_fabrica, tag_rfid, qr_code,
+         status, estado, desgaste, valor_atual, localizacao, updated_at,
+         items!inner (id, nome, categoria, subcategoria, marca, modelo, valor_mercado_unitario)`,
+      )
+      .order('codigo_interno', { ascending: true })
+      .range(from, from + pageSize - 1)
+
+    if (error) throw error
+
+    const page = (data ?? []) as unknown as UnitFlatRow[]
+    rows.push(...page)
+    if (page.length < pageSize) return rows
+  }
 }
 
 type ItemDetailRow = ItemRow & {
@@ -345,13 +375,21 @@ type MovimentacaoRow = {
 }
 
 export async function getItemById(id: string): Promise<ItemDetail | null> {
+  return withDemoFallback(
+    `item:${id}`,
+    () => getItemByIdFromSupabase(id),
+    () => getDemoItemById(id),
+  )
+}
+
+async function getItemByIdFromSupabase(id: string): Promise<ItemDetail | null> {
   const { data: itemData, error: itemErr } = await supabaseAdmin
     .from('items')
     .select(
       `id, codigo_interno, nome, categoria, subcategoria, marca, modelo,
        quantidade_total, valor_mercado_unitario, foto_url, notas,
        serial_numbers ( id, codigo_interno, serial_fabrica, tag_rfid, qr_code,
-                        status, estado, desgaste, valor_atual, localizacao, notas, updated_at )`
+                        status, estado, desgaste, valor_atual, localizacao, notas, updated_at )`,
     )
     .eq('id', id)
     .maybeSingle()
@@ -376,6 +414,7 @@ export async function getItemById(id: string): Promise<ItemDetail | null> {
     foto_url: row.foto_url,
     serial_numbers: serials.map((s) => ({
       status: s.status,
+      tag_rfid: s.tag_rfid,
       estado: s.estado,
       desgaste: s.desgaste,
       valor_atual: s.valor_atual,
@@ -391,7 +430,7 @@ export async function getItemById(id: string): Promise<ItemDetail | null> {
         `id, tipo, timestamp, status_anterior, status_novo, registrado_por,
          metodo_scan, notas,
          serial_numbers!inner ( codigo_interno, item_id ),
-         projetos ( id, nome )`
+         projetos ( id, nome )`,
       )
       .in('serial_number_id', serialIds)
       .order('timestamp', { ascending: false })
@@ -416,7 +455,7 @@ export async function getItemById(id: string): Promise<ItemDetail | null> {
 
   // Sort serials by codigo_interno for stable display
   const sortedSerials = [...serials].sort((a, b) =>
-    a.codigo_interno.localeCompare(b.codigo_interno)
+    a.codigo_interno.localeCompare(b.codigo_interno),
   )
 
   return {

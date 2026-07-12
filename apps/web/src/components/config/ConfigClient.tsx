@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { ThemeToggle } from '@/components/mmd/ThemeToggle'
+import { useStoredState } from '@/hooks/useStoredState'
 
 const CATALOG_MODE_KEY = 'mmd.catalog.mode.v1'
 
@@ -12,6 +13,32 @@ const STORAGE_KEYS = [
   'mmd.catalog.view.v1',
   'mmd.catalog.units.view.v1',
 ]
+
+type CatalogMode = 'tipos' | 'unidades'
+
+function decodeCatalogMode(raw: string): CatalogMode {
+  if (raw === 'tipos' || raw === 'unidades') return raw
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed === 'tipos' || parsed === 'unidades') return parsed
+  } catch {}
+  return 'tipos'
+}
+
+function subscribeStorage(callback: () => void): () => void {
+  const handler = () => callback()
+  window.addEventListener('storage', handler)
+  return () => window.removeEventListener('storage', handler)
+}
+
+function countSavedKeys(): number {
+  if (typeof window === 'undefined') return 0
+  let n = 0
+  for (const k of STORAGE_KEYS) {
+    if (window.localStorage.getItem(k) !== null) n += 1
+  }
+  return n
+}
 
 // ─── Building blocks ─────────────────────────────────────
 
@@ -48,13 +75,7 @@ function SettingRow({
   )
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string
-  children: ReactNode
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section
       style={{
@@ -178,45 +199,28 @@ function GhostButton({
 // ─── Main ────────────────────────────────────────────────
 
 export function ConfigClient() {
-  const [catalogMode, setCatalogMode] = useState<'tipos' | 'unidades'>('tipos')
-  const [savedCount, setSavedCount] = useState(0)
+  const [catalogMode, setCatalogMode] = useStoredState<CatalogMode>(
+    CATALOG_MODE_KEY,
+    'tipos',
+    decodeCatalogMode,
+  )
+  const savedCount = useSyncExternalStore(subscribeStorage, countSavedKeys, () => 0)
   const [confirming, setConfirming] = useState(false)
   const [justReset, setJustReset] = useState(false)
 
-  const refreshCount = () => {
-    if (typeof window === 'undefined') return
-    let n = 0
-    for (const k of STORAGE_KEYS) {
-      if (window.localStorage.getItem(k) !== null) n += 1
-    }
-    setSavedCount(n)
-  }
-
-  useEffect(() => {
-    refreshCount()
-    try {
-      const raw = window.localStorage.getItem(CATALOG_MODE_KEY)
-      if (raw === 'tipos' || raw === 'unidades') setCatalogMode(raw)
-    } catch {}
-  }, [])
-
-  const handleCatalogMode = (next: 'tipos' | 'unidades') => {
+  const handleCatalogMode = (next: CatalogMode) => {
     setCatalogMode(next)
-    try {
-      window.localStorage.setItem(CATALOG_MODE_KEY, next)
-    } catch {}
-    refreshCount()
   }
 
   const doReset = () => {
     for (const k of STORAGE_KEYS) {
       window.localStorage.removeItem(k)
+      // useSyncExternalStore subscribers (savedCount, useStoredState) precisam saber.
+      window.dispatchEvent(new StorageEvent('storage', { key: k }))
     }
     document.documentElement.classList.remove('dark')
-    setCatalogMode('tipos')
     setConfirming(false)
     setJustReset(true)
-    refreshCount()
     window.setTimeout(() => setJustReset(false), 2400)
   }
 
@@ -277,10 +281,7 @@ export function ConfigClient() {
                 </GhostButton>
               </div>
             ) : (
-              <GhostButton
-                onClick={() => setConfirming(true)}
-                disabled={savedCount === 0}
-              >
+              <GhostButton onClick={() => setConfirming(true)} disabled={savedCount === 0}>
                 Resetar
               </GhostButton>
             )

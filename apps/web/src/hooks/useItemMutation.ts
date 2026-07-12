@@ -5,6 +5,10 @@ import { supabase } from '@/lib/supabase'
 
 export type MutationError = { message: string }
 
+function clientWritesEnabled() {
+  return process.env.NEXT_PUBLIC_MMD_CLIENT_WRITES === 'true'
+}
+
 export function useItemMutation() {
   const [pending, setPending] = useState<string | null>(null)
   const [error, setError] = useState<MutationError | null>(null)
@@ -13,6 +17,11 @@ export function useItemMutation() {
   // Simplificação fase 1.5: trata condição em nível de item. Fase 2 isola
   // desgaste por serial quando a UI de seriais estiver pronta.
   async function updateDesgaste(itemId: string, desgaste: number): Promise<boolean> {
+    if (!clientWritesEnabled()) {
+      setError({ message: 'Modo somente leitura: alterações não são salvas.' })
+      return false
+    }
+
     const clamped = Math.max(1, Math.min(5, Math.round(desgaste)))
     setPending(`condicao:${itemId}`)
     setError(null)
@@ -32,6 +41,11 @@ export function useItemMutation() {
   }
 
   async function updateQuantidade(itemId: string, qtd: number): Promise<boolean> {
+    if (!clientWritesEnabled()) {
+      setError({ message: 'Modo somente leitura: alterações não são salvas.' })
+      return false
+    }
+
     const clamped = Math.max(0, Math.round(qtd))
     setPending(`qtd:${itemId}`)
     setError(null)

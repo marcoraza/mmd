@@ -2,11 +2,7 @@
 
 import { Icons } from '@/components/mmd/Icons'
 import { StatusDot } from '@/components/mmd/Primitives'
-import {
-  SITUACAO_COLOR,
-  SITUACAO_LABEL,
-  formatBRL,
-} from '@/components/catalog/helpers'
+import { SITUACAO_COLOR, SITUACAO_LABEL, formatBRL } from '@/components/catalog/helpers'
 import type { SerialRow } from '@/lib/data/items'
 import { ESTADO_SHORT } from './helpers'
 
@@ -50,7 +46,9 @@ export function UnitCard({ serial: s, onOpen, onPrintQr }: Props) {
         transition: 'transform var(--motion-fast), border-color var(--motion-fast)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <div
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           <StatusDot color={statusColor} size={8} />
           <span

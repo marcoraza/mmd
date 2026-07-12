@@ -34,8 +34,7 @@ export const READER_STATUS_COLOR: Record<StatusReader, string> = {
   MANUTENCAO: 'var(--accent-amber)',
 }
 
-export function formatRelativeTime(iso: string): string {
-  const now = Date.now()
+export function formatRelativeTime(iso: string, now = Date.now()): string {
   const then = new Date(iso).getTime()
   const diffMs = now - then
   if (diffMs < 0) return 'agora'
@@ -53,23 +52,28 @@ export function formatRelativeTime(iso: string): string {
 }
 
 const TIME_FMT = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
   hour: '2-digit',
   minute: '2-digit',
 })
 
 const DATE_FMT = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
   day: '2-digit',
   month: 'short',
+})
+
+const DAY_KEY_FMT = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Sao_Paulo',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
 })
 
 export function formatScanTime(iso: string): string {
   try {
     const d = new Date(iso)
-    const today = new Date()
-    const sameDay =
-      d.getFullYear() === today.getFullYear() &&
-      d.getMonth() === today.getMonth() &&
-      d.getDate() === today.getDate()
+    const sameDay = DAY_KEY_FMT.format(d) === DAY_KEY_FMT.format(new Date())
     if (sameDay) return TIME_FMT.format(d)
     return `${DATE_FMT.format(d).replace('.', '')} · ${TIME_FMT.format(d)}`
   } catch {

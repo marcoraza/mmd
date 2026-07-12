@@ -72,16 +72,11 @@ export function PreviewSheet({
   )
 }
 
-function SheetGrid({
-  layout,
-  items,
-  scale,
-}: {
-  layout: QrLayout
-  items: QrItem[]
-  scale: number
-}) {
-  const cells: (QrItem | null)[] = Array.from({ length: layout.perSheet }, (_, i) => items[i] ?? null)
+function SheetGrid({ layout, items, scale }: { layout: QrLayout; items: QrItem[]; scale: number }) {
+  const cells: (QrItem | null)[] = Array.from(
+    { length: layout.perSheet },
+    (_, i) => items[i] ?? null,
+  )
 
   return (
     <div
@@ -101,15 +96,7 @@ function SheetGrid({
   )
 }
 
-function Cell({
-  item,
-  layout,
-  scale,
-}: {
-  item: QrItem | null
-  layout: QrLayout
-  scale: number
-}) {
+function Cell({ item, layout, scale }: { item: QrItem | null; layout: QrLayout; scale: number }) {
   return (
     <div
       style={{

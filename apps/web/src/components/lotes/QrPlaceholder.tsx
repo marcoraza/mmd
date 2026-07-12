@@ -4,13 +4,7 @@
  * chega. Inclui os três finder patterns clássicos de QR e um grid ruidoso no
  * meio.
  */
-export function QrPlaceholder({
-  value,
-  size = 200,
-}: {
-  value: string
-  size?: number
-}) {
+export function QrPlaceholder({ value, size = 200 }: { value: string; size?: number }) {
   const modules = 25 // grid de 25x25
   const cell = size / modules
   const seed = hash(value || 'lote')
@@ -44,14 +38,7 @@ export function QrPlaceholder({
 
       {/* Módulos aleatórios (fora das áreas dos finders) */}
       {cells.map((c, i) => (
-        <rect
-          key={i}
-          x={c.x * cell}
-          y={c.y * cell}
-          width={cell}
-          height={cell}
-          fill="#000"
-        />
+        <rect key={i} x={c.x * cell} y={c.y * cell} width={cell} height={cell} fill="#000" />
       ))}
 
       {/* Finder patterns: top-left, top-right, bottom-left */}

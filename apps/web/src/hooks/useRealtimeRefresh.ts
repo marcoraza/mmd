@@ -20,18 +20,14 @@ export function useRealtimeRefresh(
     const channel = supabase.channel(channelName)
 
     for (const table of tables) {
-      channel.on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table },
-        () => {
-          if (timeoutRef.current !== null) {
-            window.clearTimeout(timeoutRef.current)
-          }
-          timeoutRef.current = window.setTimeout(() => {
-            onChangeRef.current()
-          }, debounceMs)
-        },
-      )
+      channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => {
+        if (timeoutRef.current !== null) {
+          window.clearTimeout(timeoutRef.current)
+        }
+        timeoutRef.current = window.setTimeout(() => {
+          onChangeRef.current()
+        }, debounceMs)
+      })
     }
 
     channel.subscribe()

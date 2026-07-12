@@ -58,12 +58,12 @@ export function LotesBanner({
         gap: 12,
       }}
     >
-      {cells.map((c, i) => {
+      {cells.map((c) => {
         const isActive = c.filter !== null && active === c.filter
         const clickable = c.filter !== null
         return (
           <button
-            key={i}
+            key={c.label}
             type="button"
             onClick={() => c.filter && onFilter(c.filter)}
             disabled={!clickable}

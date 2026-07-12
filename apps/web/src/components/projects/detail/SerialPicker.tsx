@@ -18,6 +18,14 @@ type Props = {
 export function SerialPicker({ candidates, onPick, onClose, loading }: Props) {
   const [query, setQuery] = useState('')
   const rootRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Foco inicial no campo de busca, intencional pra agilizar a digitação. Usa
+  // useEffect em vez de autoFocus pra controlar o foco no mount (jsx-a11y
+  // sinaliza autoFocus em geral, e o hook deixa explícita a intenção).
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -44,6 +52,7 @@ export function SerialPicker({ candidates, onPick, onClose, loading }: Props) {
   return (
     <div
       ref={rootRef}
+      className="serial-picker-popover"
       style={{
         position: 'absolute',
         top: 'calc(100% + 6px)',
@@ -56,11 +65,23 @@ export function SerialPicker({ candidates, onPick, onClose, loading }: Props) {
         border: '1px solid var(--glass-border-strong)',
         borderRadius: 'var(--r-md)',
         boxShadow: 'var(--glass-shadow-elevated)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
         zIndex: 30,
         overflow: 'hidden',
         animation: 'mmd-reveal 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both',
       }}
     >
+      <style>{`
+        @media (max-width: 720px) {
+          .serial-picker-popover {
+            position: static !important;
+            width: 100% !important;
+            max-height: 420px !important;
+            z-index: 1 !important;
+          }
+        }
+      `}</style>
       <div
         style={{
           padding: '10px 12px',
@@ -69,10 +90,10 @@ export function SerialPicker({ candidates, onPick, onClose, loading }: Props) {
         }}
       >
         <input
-          autoFocus
+          ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por código…"
+          placeholder="Buscar por código"
           className="mono"
           style={{
             width: '100%',
@@ -91,18 +112,16 @@ export function SerialPicker({ candidates, onPick, onClose, loading }: Props) {
       <div style={{ overflowY: 'auto', flex: 1 }}>
         {loading ? (
           <div style={{ padding: 20, fontSize: 12, color: 'var(--fg-3)', textAlign: 'center' }}>
-            Carregando…
+            Carregando
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: 20, fontSize: 12, color: 'var(--fg-3)', textAlign: 'center' }}>
             {candidates.length === 0
-              ? 'Nenhum serial DISPONIVEL pra este item.'
+              ? 'Nenhum serial disponível pra este item.'
               : 'Nada bate com a busca.'}
           </div>
         ) : (
-          filtered.map((c) => (
-            <SerialRow key={c.id} s={c} onPick={() => onPick(c.id)} />
-          ))
+          filtered.map((c) => <SerialRow key={c.id} s={c} onPick={() => onPick(c.id)} />)
         )}
       </div>
     </div>
@@ -111,10 +130,14 @@ export function SerialPicker({ candidates, onPick, onClose, loading }: Props) {
 
 function SerialRow({ s, onPick }: { s: AvailableSerial; onPick: () => void }) {
   const hasConflict = s.conflicts_with.length > 0
+  const canPick = s.selectable
   return (
     <button
       type="button"
-      onClick={onPick}
+      onClick={() => {
+        if (canPick) onPick()
+      }}
+      disabled={!canPick}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -125,13 +148,16 @@ function SerialRow({ s, onPick }: { s: AvailableSerial; onPick: () => void }) {
         border: 'none',
         borderBottom: '1px solid var(--glass-border)',
         background: 'transparent',
-        cursor: 'pointer',
+        cursor: canPick ? 'pointer' : 'not-allowed',
         fontFamily: 'inherit',
         textAlign: 'left',
-        color: 'var(--fg-0)',
+        color: canPick ? 'var(--fg-0)' : 'var(--fg-3)',
+        opacity: canPick ? 1 : 0.74,
         transition: 'background var(--motion-fast)',
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--glass-bg)')}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = canPick ? 'var(--glass-bg)' : 'transparent'
+      }}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0, flex: 1 }}>
@@ -140,6 +166,7 @@ function SerialRow({ s, onPick }: { s: AvailableSerial; onPick: () => void }) {
             {s.codigo_interno}
           </span>
           <DesgasteBadge n={s.desgaste} />
+          <StatusBadge serial={s} />
           {hasConflict && (
             <span
               className="mono"
@@ -158,18 +185,44 @@ function SerialRow({ s, onPick }: { s: AvailableSerial; onPick: () => void }) {
             </span>
           )}
         </div>
-        <div
-          className="mono"
-          style={{ fontSize: 10, color: 'var(--fg-3)', letterSpacing: 0.05 }}
-        >
-          {s.last_moved_at
-            ? `Último uso ${formatRelative(s.last_moved_at)}`
-            : 'Nunca foi usado'}
+        <div className="mono" style={{ fontSize: 10, color: 'var(--fg-3)', letterSpacing: 0.05 }}>
+          {s.last_moved_at ? `Último uso ${formatRelative(s.last_moved_at)}` : 'Nunca foi usado'}
           {s.localizacao && <span> · {s.localizacao}</span>}
         </div>
+        {s.allocation_alert && (
+          <div style={{ fontSize: 11, color: toneColor(s.allocation_tone) }}>
+            {s.allocation_alert}
+          </div>
+        )}
       </div>
     </button>
   )
+}
+
+function StatusBadge({ serial }: { serial: AvailableSerial }) {
+  const color = toneColor(serial.allocation_tone)
+  return (
+    <span
+      className="mono"
+      style={{
+        fontSize: 10,
+        padding: '2px 6px',
+        borderRadius: 4,
+        background: `color-mix(in oklch, ${color} 14%, transparent)`,
+        border: `1px solid color-mix(in oklch, ${color} 35%, transparent)`,
+        color,
+        letterSpacing: 0.05,
+      }}
+    >
+      {serial.allocation_label}
+    </span>
+  )
+}
+
+function toneColor(tone: AvailableSerial['allocation_tone']) {
+  if (tone === 'available') return 'var(--accent-green)'
+  if (tone === 'conflict') return 'var(--accent-amber)'
+  return 'var(--accent-red)'
 }
 
 function DesgasteBadge({ n }: { n: number }) {

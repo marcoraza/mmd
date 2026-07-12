@@ -57,7 +57,15 @@ export function TimelineStream({ events }: { events: MovimentacaoTimeline[] }) {
                 flexWrap: 'wrap',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                  minWidth: 0,
+                }}
+              >
                 <span
                   className="mono"
                   style={{
@@ -85,8 +93,8 @@ export function TimelineStream({ events }: { events: MovimentacaoTimeline[] }) {
                     {e.serial_codigo}
                   </span>
                 )}
-                {e.projeto_nome && (
-                  e.projeto_id ? (
+                {e.projeto_nome &&
+                  (e.projeto_id ? (
                     <Link
                       href={`/projetos/${e.projeto_id}`}
                       style={{
@@ -99,8 +107,7 @@ export function TimelineStream({ events }: { events: MovimentacaoTimeline[] }) {
                     </Link>
                   ) : (
                     <span style={{ fontSize: 12, color: 'var(--fg-1)' }}>{e.projeto_nome}</span>
-                  )
-                )}
+                  ))}
               </div>
               <span
                 className="mono"

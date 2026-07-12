@@ -71,9 +71,7 @@ function Pill({
         alignItems: 'center',
         gap: 8,
         padding: '10px 14px',
-        border: active
-          ? '1px solid var(--glass-border-strong)'
-          : '1px solid var(--glass-border)',
+        border: active ? '1px solid var(--glass-border-strong)' : '1px solid var(--glass-border)',
         borderRadius: 'var(--r-md)',
         background: active ? 'var(--glass-bg-strong)' : 'var(--glass-bg)',
         color: active ? 'var(--fg-0)' : 'var(--fg-1)',
@@ -83,12 +81,15 @@ function Pill({
         fontWeight: 500,
         letterSpacing: -0.1,
         whiteSpace: 'nowrap',
-        transition: 'background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast)',
+        transition:
+          'background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast)',
         backdropFilter: 'blur(18px) saturate(160%)',
         WebkitBackdropFilter: 'blur(18px) saturate(160%)',
       }}
     >
-      <span style={{ display: 'inline-flex', color: active ? 'var(--accent-cyan)' : 'var(--fg-2)' }}>
+      <span
+        style={{ display: 'inline-flex', color: active ? 'var(--accent-cyan)' : 'var(--fg-2)' }}
+      >
         {icon}
       </span>
       <span>{label}</span>

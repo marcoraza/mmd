@@ -1,4 +1,10 @@
 import 'server-only'
+import {
+  allocationRangesOverlap,
+  serialAllocationState,
+  sortAllocationCandidates,
+  type AllocationTone,
+} from '@/lib/allocation-core'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import type { Estado, StatusSerial } from '@/lib/types'
 import type { StatusProjeto } from '@/lib/data/projects'
@@ -18,10 +24,15 @@ export type SerialConflict = {
 export type AvailableSerial = {
   id: string
   codigo_interno: string
+  status: StatusSerial
   estado: Estado
   desgaste: number
   localizacao: string | null
   last_moved_at: string | null
+  selectable: boolean
+  allocation_tone: AllocationTone
+  allocation_label: string
+  allocation_alert: string | null
   // Quando o serial já está em outro packing_list de projeto ativo com overlap
   // de datas. Não bloqueia a alocação, só sinaliza pra UI.
   conflicts_with: SerialConflict[]
@@ -50,11 +61,7 @@ export type AllocatedSerial = {
 // projetoContext: se fornecido, anotamos conflicts_with: seriais que
 // aparecem em outros packing_list de projetos ativos com datas sobrepostas.
 
-const ACTIVE_PROJECT_STATUSES: StatusProjeto[] = [
-  'PLANEJAMENTO',
-  'CONFIRMADO',
-  'EM_CAMPO',
-]
+const ACTIVE_PROJECT_STATUSES: StatusProjeto[] = ['PLANEJAMENTO', 'CONFIRMADO', 'MONTAGEM', 'EM_CAMPO']
 
 export async function loadAvailableSerials(
   itemId: string,
@@ -66,17 +73,18 @@ export async function loadAvailableSerials(
       data_fim: string
     }
     limit?: number
-  } = {}
+  } = {},
 ): Promise<AvailableSerial[]> {
   const excludeIds = opts.excludeIds ?? []
-  const limit = opts.limit ?? 50
+  const limit = Math.max(opts.limit ?? 50, 50)
 
-  // Seriais DISPONIVEL do item, já excluindo os que queremos esconder.
+  // Lista unidades do item, já excluindo as alocadas nesta linha.
+  // A UI precisa enxergar bloqueadas para explicar manutenção/campo sem tentar
+  // alocar em silêncio.
   let builder = supabaseAdmin
     .from('serial_numbers')
-    .select('id, codigo_interno, estado, desgaste, localizacao')
+    .select('id, codigo_interno, status, estado, desgaste, localizacao')
     .eq('item_id', itemId)
-    .eq('status', 'DISPONIVEL')
     .limit(limit)
 
   if (excludeIds.length > 0) {
@@ -114,7 +122,7 @@ export async function loadAvailableSerials(
       .from('packing_list')
       .select(
         `serial_numbers_designados,
-         projetos!inner ( id, nome, data_inicio, data_fim, status )`
+         projetos!inner ( id, nome, data_inicio, data_fim, status )`,
       )
       .neq('projeto_id', ctx.projeto_id)
       .not('serial_numbers_designados', 'is', null)
@@ -136,7 +144,7 @@ export async function loadAvailableSerials(
       const p = raw.projetos
       if (!p) continue
       if (!ACTIVE_PROJECT_STATUSES.includes(p.status)) continue
-      if (!rangesOverlap(ctx.data_inicio, ctx.data_fim, p.data_inicio, p.data_fim)) {
+      if (!allocationRangesOverlap(ctx.data_inicio, ctx.data_fim, p.data_inicio, p.data_fim)) {
         continue
       }
       for (const sid of raw.serial_numbers_designados ?? []) {
@@ -154,33 +162,26 @@ export async function loadAvailableSerials(
     }
   }
 
-  const result: AvailableSerial[] = (serials ?? []).map((s) => ({
-    id: s.id,
-    codigo_interno: s.codigo_interno,
-    estado: s.estado,
-    desgaste: s.desgaste,
-    localizacao: s.localizacao,
-    last_moved_at: lastMovedMap.get(s.id) ?? null,
-    conflicts_with: conflictMap.get(s.id) ?? [],
-  }))
-
-  // FIFO rotacional: last_moved_at ASC (nulls first = nunca se moveu), depois
-  // desgaste ASC (desgastados primeiro, pra emparelhar rotação com reparo).
-  result.sort((a, b) => {
-    if (a.last_moved_at === null && b.last_moved_at !== null) return -1
-    if (a.last_moved_at !== null && b.last_moved_at === null) return 1
-    if (a.last_moved_at !== null && b.last_moved_at !== null) {
-      const cmp = a.last_moved_at.localeCompare(b.last_moved_at)
-      if (cmp !== 0) return cmp
+  const result: AvailableSerial[] = (serials ?? []).map((s) => {
+    const conflicts = conflictMap.get(s.id) ?? []
+    const state = serialAllocationState(s.status as StatusSerial, conflicts.length)
+    return {
+      id: s.id,
+      codigo_interno: s.codigo_interno,
+      status: s.status as StatusSerial,
+      estado: s.estado,
+      desgaste: s.desgaste,
+      localizacao: s.localizacao,
+      last_moved_at: lastMovedMap.get(s.id) ?? null,
+      selectable: state.selectable,
+      allocation_tone: state.tone,
+      allocation_label: state.label,
+      allocation_alert: state.alert,
+      conflicts_with: conflicts,
     }
-    return a.desgaste - b.desgaste
   })
 
-  return result
-}
-
-function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
-  return aStart <= bEnd && bStart <= aEnd
+  return sortAllocationCandidates(result)
 }
 
 // ─────────────────────────────────────────────────────────────────────────

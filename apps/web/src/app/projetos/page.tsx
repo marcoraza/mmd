@@ -4,11 +4,13 @@ import { TopBar } from '@/components/mmd/TopBar'
 import { ProjectsClient } from '@/components/projects/ProjectsClient'
 import { loadProjects } from '@/lib/data/projects'
 
+export const dynamic = 'force-dynamic'
+
 async function ProjectsContent() {
   const data = await loadProjects()
   return (
     <>
-      <TopBar kicker="MMD Eventos" title="Projetos" notifications={0} />
+      <TopBar kicker="MMD Eventos" title="Eventos" notifications={0} />
       <div style={{ marginTop: 24 }}>
         <ProjectsClient data={data} />
       </div>
@@ -19,7 +21,7 @@ async function ProjectsContent() {
 function ProjectsFallback() {
   return (
     <div style={{ padding: '32px 0', color: 'var(--fg-2)', fontSize: 13 }}>
-      Carregando projetos…
+      Carregando eventos
     </div>
   )
 }

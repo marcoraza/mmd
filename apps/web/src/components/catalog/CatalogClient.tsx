@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { CatalogData, CatalogItem, CatalogUnit } from '@/lib/data/items'
 import type { Categoria } from '@/lib/types'
 import { CategoryNav } from './CategoryNav'
@@ -14,69 +14,68 @@ import { UnitsTable } from './UnitsTable'
 import { ViewModeToggle, type CatalogMode } from './ViewModeToggle'
 import { useCatalogView } from '@/hooks/useCatalogView'
 import { useUnitsView } from '@/hooks/useUnitsView'
+import { useStoredState } from '@/hooks/useStoredState'
 import { useItemMutation } from '@/hooks/useItemMutation'
 import { resolveTipo } from '@/lib/nomenclature'
 import { SITUACAO_LABEL } from './helpers'
 
 const MODE_STORAGE_KEY = 'mmd.catalog.mode.v1'
 
-export function CatalogClient({
-  data,
-  units,
-}: {
-  data: CatalogData
-  units: CatalogUnit[]
-}) {
+// Aceita formato legado (raw string sem aspas) e novo (JSON.stringify).
+function decodeMode(raw: string): CatalogMode {
+  if (raw === 'tipos' || raw === 'unidades') return raw
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed === 'tipos' || parsed === 'unidades') return parsed
+  } catch {}
+  return 'tipos'
+}
+
+export function CatalogClient({ data, units }: { data: CatalogData; units: CatalogUnit[] }) {
   const [selectedCategoria, setSelectedCategoria] = useState<Categoria | 'ALL'>('ALL')
   const [bannerFilter, setBannerFilter] = useState<BannerFilter | null>(null)
   const [query, setQuery] = useState('')
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null)
-  const [mode, setMode] = useState<CatalogMode>('tipos')
+  const [mode, setMode] = useStoredState<CatalogMode>(MODE_STORAGE_KEY, 'tipos', decodeMode)
 
   const { view, update } = useCatalogView()
   const { view: unitsView, toggleSort: toggleUnitSort } = useUnitsView()
-  const { updateDesgaste, updateQuantidade, pending } = useItemMutation()
+  const { updateDesgaste, updateQuantidade, pending, error } = useItemMutation()
 
-  // Estado local editável; parte dos dados vindos do server.
+  // Estado local editável (optimistic updates), inicializado pelo server e
+  // ressincronizado quando o server retorna nova lista. Padrão "Storing information
+  // from previous renders" do React docs, evita o duplo render do useEffect.
   const [items, setItems] = useState<CatalogItem[]>(data.items)
-  useEffect(() => {
+  const [prevDataItems, setPrevDataItems] = useState(data.items)
+  if (data.items !== prevDataItems) {
+    setPrevDataItems(data.items)
     setItems(data.items)
-  }, [data.items])
+  }
 
-  // Hydrate mode from localStorage.
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(MODE_STORAGE_KEY)
-      if (raw === 'tipos' || raw === 'unidades') setMode(raw)
-    } catch {}
-  }, [])
-
-  const handleModeChange = useCallback((next: CatalogMode) => {
-    setMode(next)
-    try {
-      window.localStorage.setItem(MODE_STORAGE_KEY, next)
-    } catch {}
-  }, [])
+  const handleModeChange = useCallback(
+    (next: CatalogMode) => {
+      setMode(next)
+    },
+    [setMode],
+  )
 
   const handleCondicaoChange = useCallback(
     async (itemId: string, desgaste: number) => {
       const prev = items.find((i) => i.id === itemId)
       if (!prev) return
       setItems((list) =>
-        list.map((it) =>
-          it.id === itemId ? { ...it, condicao_media: desgaste } : it
-        )
+        list.map((it) => (it.id === itemId ? { ...it, condicao_media: desgaste } : it)),
       )
       const ok = await updateDesgaste(itemId, desgaste)
       if (!ok) {
         setItems((list) =>
           list.map((it) =>
-            it.id === itemId ? { ...it, condicao_media: prev.condicao_media } : it
-          )
+            it.id === itemId ? { ...it, condicao_media: prev.condicao_media } : it,
+          ),
         )
       }
     },
-    [items, updateDesgaste]
+    [items, updateDesgaste],
   )
 
   const handleQtdChange = useCallback(
@@ -84,20 +83,18 @@ export function CatalogClient({
       const prev = items.find((i) => i.id === itemId)
       if (!prev) return
       setItems((list) =>
-        list.map((it) =>
-          it.id === itemId ? { ...it, quantidade_total: qtd } : it
-        )
+        list.map((it) => (it.id === itemId ? { ...it, quantidade_total: qtd } : it)),
       )
       const ok = await updateQuantidade(itemId, qtd)
       if (!ok) {
         setItems((list) =>
           list.map((it) =>
-            it.id === itemId ? { ...it, quantidade_total: prev.quantidade_total } : it
-          )
+            it.id === itemId ? { ...it, quantidade_total: prev.quantidade_total } : it,
+          ),
         )
       }
     },
-    [items, updateQuantidade]
+    [items, updateQuantidade],
   )
 
   const filtered = useMemo(() => {
@@ -114,7 +111,7 @@ export function CatalogClient({
       rows = rows.filter((i) =>
         [i.nome, i.marca, i.modelo, i.subcategoria, i.codigo_interno, i.id]
           .filter(Boolean)
-          .some((v) => (v as string).toLowerCase().includes(q))
+          .some((v) => (v as string).toLowerCase().includes(q)),
       )
     }
 
@@ -124,10 +121,12 @@ export function CatalogClient({
         case 'codigo':
           return (a.codigo_interno ?? '').localeCompare(b.codigo_interno ?? '', 'pt-BR') * dir
         case 'tipo':
-          return resolveTipo(a.subcategoria, a.categoria).localeCompare(
-            resolveTipo(b.subcategoria, b.categoria),
-            'pt-BR'
-          ) * dir
+          return (
+            resolveTipo(a.subcategoria, a.categoria).localeCompare(
+              resolveTipo(b.subcategoria, b.categoria),
+              'pt-BR',
+            ) * dir
+          )
         case 'nome':
           return a.nome.localeCompare(b.nome, 'pt-BR') * dir
         case 'marca':
@@ -174,7 +173,7 @@ export function CatalogClient({
           u.localizacao,
         ]
           .filter(Boolean)
-          .some((v) => (v as string).toLowerCase().includes(q))
+          .some((v) => (v as string).toLowerCase().includes(q)),
       )
     }
 
@@ -191,7 +190,7 @@ export function CatalogClient({
       const target = items.find((i) => i.id === itemId)
       if (target) setSelectedItem(target)
     },
-    [items]
+    [items],
   )
 
   return (
@@ -235,6 +234,22 @@ export function CatalogClient({
       </div>
 
       <div style={{ marginTop: 16 }}>
+        {error && (
+          <div
+            style={{
+              marginBottom: 12,
+              padding: '10px 12px',
+              borderRadius: 8,
+              border: '1px solid var(--glass-border)',
+              background: 'var(--glass-bg-strong)',
+              color: 'var(--fg-1)',
+              fontSize: 13,
+            }}
+          >
+            {error.message}
+          </div>
+        )}
+
         {mode === 'tipos' ? (
           <ItemTable
             items={filtered}
@@ -264,7 +279,7 @@ export function CatalogClient({
       <LotesCard total={data.total_lotes} />
 
       <ItemSidePanel
-        item={selectedItem ? items.find((i) => i.id === selectedItem.id) ?? selectedItem : null}
+        item={selectedItem ? (items.find((i) => i.id === selectedItem.id) ?? selectedItem) : null}
         onClose={() => setSelectedItem(null)}
         onCondicaoChange={handleCondicaoChange}
         pending={pending}

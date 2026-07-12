@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useStoredState } from './useStoredState'
 
 export type ColumnKey =
   | 'codigo'
@@ -62,35 +62,21 @@ function sanitize(raw: unknown): CatalogView {
 }
 
 export function useCatalogView() {
-  const [view, setView] = useState<CatalogView>(DEFAULT_VIEW)
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
-      if (raw) setView(sanitize(JSON.parse(raw)))
-    } catch {}
-    setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(view))
-    } catch {}
-  }, [view, hydrated])
+  const [view, setView] = useStoredState<CatalogView>(STORAGE_KEY, DEFAULT_VIEW, (raw) =>
+    sanitize(JSON.parse(raw)),
+  )
 
   function update(patch: Partial<CatalogView>) {
-    setView((v) => ({ ...v, ...patch }))
+    setView({ ...view, ...patch })
   }
 
   function toggleColumn(key: ColumnKey) {
-    setView((v) => ({ ...v, columns: { ...v.columns, [key]: !v.columns[key] } }))
+    setView({ ...view, columns: { ...view.columns, [key]: !view.columns[key] } })
   }
 
   function reset() {
     setView(DEFAULT_VIEW)
   }
 
-  return { view, update, toggleColumn, reset, hydrated }
+  return { view, update, toggleColumn, reset }
 }

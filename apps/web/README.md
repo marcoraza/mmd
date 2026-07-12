@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MMD Web
 
-## Getting Started
+Web app do MMD Estoque. Este não é um scaffold genérico de Next. É o produto vivo em `https://mmd-zeta.vercel.app`.
 
-First, run the development server:
+Antes de trabalhar no PRD MAR-171, leia:
+
+- `../../docs/mar-171-agent-brief.md`
+- `AGENTS.md`
+- `../../tasks/mar-171-supervisor.md`
+- `../../tasks/auditoria-frontend/RELATORIO-FINAL.md`
+
+## Stack
+
+- Next.js 16 App Router
+- React 19
+- Tailwind v4 CSS-first
+- Liquid Glass 2030 próprio
+- Supabase como fonte de verdade
+
+## Design system
+
+Use o que já existe:
+
+- `src/components/mmd/Primitives.tsx`
+- `src/app/globals.css`
+- `public/handoff/`
+
+Não instale shadcn/ui, Radix ou outro kit. Não crie um front-end paralelo. Prints em `../../tasks/evidence/` são prova ou referência, não outro produto.
+
+## Produto e linguagem
+
+- UI fala `Evento`.
+- Rotas e modelos internos ainda podem usar `projetos`.
+- Cabos são unidades rastreáveis individuais.
+- Lotes são legado.
+- QR público é mínimo e não expõe dados sensíveis.
+- Mobile e web devem compartilhar regra operacional.
+
+## Comandos
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm exec tsc -- --noEmit
+npm run lint
+npm run build
+node --test src/lib/*.test.ts src/lib/data/*.test.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Use `MMD_DATA_MODE=demo` para QA visual sem depender do Supabase real.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Gates para PR visual
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Cada mudança visual relevante precisa ter:
 
-## Learn More
+- Issue Linear alvo.
+- Referência glass usada.
+- Imagegen quando houver UI nova ou mudança visual relevante.
+- Screenshot desktop.
+- Screenshot mobile.
+- Typecheck, lint e build verdes.
+- Nota clara se a entrega depende de Supabase real.
 
-To learn more about Next.js, take a look at the following resources:
+## Limites
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Front-end pode adaptar telas existentes, copy, layout, responsividade, acessibilidade e estados visuais.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Front-end não deve mexer em migration, RLS, RPC, grants, contrato de API ou status de produção real sem alinhar com o supervisor.

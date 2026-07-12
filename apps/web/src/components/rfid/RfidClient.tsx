@@ -5,19 +5,24 @@ import { Icons } from '@/components/mmd/Icons'
 import type { RfidData } from '@/lib/data/rfid'
 import { ReaderCard } from './ReaderCard'
 import { RfidBanner, type RfidBannerFilter } from './RfidBanner'
+import { RfidTagBinder } from './RfidTagBinder'
 import { ScanTimeline } from './ScanTimeline'
 
 export function RfidClient({ data }: { data: RfidData }) {
   const [banner, setBanner] = useState<RfidBannerFilter>(null)
   const [readerFilter, setReaderFilter] = useState<string>('ALL')
   const [query, setQuery] = useState('')
+  // Snapshot do "agora" no mount. Filtros "hoje"/"24h"/"órfãs" usam essa referência.
+  // Página é server-rendered, dados são estáticos até reload, então congelar é OK.
+  const [nowMs] = useState(() => Date.now())
+  const [startOfDayMs] = useState(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+  })
 
   const filtered = useMemo(() => {
-    const now = Date.now()
     const ms24h = 24 * 60 * 60 * 1000
-    const startOfDay = new Date()
-    startOfDay.setHours(0, 0, 0, 0)
-    const startOfDayMs = startOfDay.getTime()
     const q = query.trim().toLowerCase()
 
     return data.scans.filter((s) => {
@@ -25,10 +30,10 @@ export function RfidClient({ data }: { data: RfidData }) {
 
       const t = new Date(s.timestamp).getTime()
       if (banner === 'hoje' && t < startOfDayMs) return false
-      if (banner === '24h' && now - t > ms24h) return false
+      if (banner === '24h' && nowMs - t > ms24h) return false
       if (banner === 'orfas') {
         if (s.reconhecido) return false
-        if (now - t > ms24h) return false
+        if (nowMs - t > ms24h) return false
       }
 
       if (q) {
@@ -49,7 +54,7 @@ export function RfidClient({ data }: { data: RfidData }) {
       }
       return true
     })
-  }, [data.scans, banner, readerFilter, query])
+  }, [data.scans, banner, readerFilter, query, nowMs, startOfDayMs])
 
   return (
     <>
@@ -58,6 +63,8 @@ export function RfidClient({ data }: { data: RfidData }) {
         active={banner}
         onFilter={(f) => setBanner((prev) => (prev === f ? null : f))}
       />
+
+      <RfidTagBinder stats={data.cable_rfid} />
 
       {/* Toolbar */}
       <div
@@ -159,10 +166,7 @@ export function RfidClient({ data }: { data: RfidData }) {
         </div>
 
         <div style={{ minWidth: 0 }}>
-          <SectionHeader
-            title="Leitores pareados"
-            hint={`${data.readers.length} registrados`}
-          />
+          <SectionHeader title="Leitores pareados" hint={`${data.readers.length} registrados`} />
           <div
             style={{
               marginTop: 8,
@@ -214,9 +218,7 @@ function SectionHeader({ title, hint }: { title: string; hint?: string }) {
       >
         {title}
       </div>
-      {hint && (
-        <div style={{ fontSize: 11, color: 'var(--fg-3)' }}>{hint}</div>
-      )}
+      {hint && <div style={{ fontSize: 11, color: 'var(--fg-3)' }}>{hint}</div>}
     </div>
   )
 }

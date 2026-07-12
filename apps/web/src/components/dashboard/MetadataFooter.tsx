@@ -19,16 +19,22 @@ export function MetadataFooter({ operational }: { operational: OperationalPulse 
     >
       <div className="mono" style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
         <span>
-          <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>{operational.technicians_in_field}</span>{' '}
+          <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>
+            {operational.technicians_in_field}
+          </span>{' '}
           <span style={{ color: 'var(--fg-2)' }}>TÉCNICOS EM CAMPO</span>
         </span>
         <span>
-          <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>{operational.events_in_progress}</span>{' '}
+          <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>
+            {operational.events_in_progress}
+          </span>{' '}
           <span style={{ color: 'var(--fg-2)' }}>EVENTOS EM ANDAMENTO</span>
         </span>
         <span>
           <span style={{ color: 'var(--fg-2)' }}>PRÓXIMO CHECKOUT</span>{' '}
-          <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>{operational.next_checkout_label}</span>
+          <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>
+            {operational.next_checkout_label}
+          </span>
         </span>
       </div>
       <div className="mono" style={{ color: 'var(--fg-3)' }}>

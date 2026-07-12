@@ -77,7 +77,7 @@ export const QR_LAYOUTS: Record<QrLayoutKey, QrLayout> = {
 }
 
 export type QrItem = {
-  /** conteúdo do QR (código único do item ou lote) */
+  /** conteúdo do QR da unidade física */
   payload: string
   /** texto principal da etiqueta (código) */
   title: string

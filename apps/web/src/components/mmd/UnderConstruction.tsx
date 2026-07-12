@@ -71,9 +71,7 @@ export function UnderConstruction({
         >
           O que vai entrar aqui
         </div>
-        <div style={{ fontSize: 15, color: 'var(--fg-1)', lineHeight: 1.6 }}>
-          {planned}
-        </div>
+        <div style={{ fontSize: 15, color: 'var(--fg-1)', lineHeight: 1.6 }}>{planned}</div>
       </div>
 
       {children && (

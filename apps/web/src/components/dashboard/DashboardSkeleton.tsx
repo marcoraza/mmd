@@ -30,16 +30,30 @@ export function DashboardSkeleton() {
         }}
       >
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div
+            key={i}
+            style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 8 }}
+          >
             <div className="skeleton" style={{ width: '60%', height: 10 }} />
             <div className="skeleton" style={{ width: '80%', height: 28 }} />
           </div>
         ))}
       </div>
 
-      <div style={{ marginTop: 36, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
+      <div
+        style={{
+          marginTop: 36,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+          gap: 14,
+        }}
+      >
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="glass" style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div
+            key={i}
+            className="glass"
+            style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div className="skeleton" style={{ width: 44, height: 44, borderRadius: '50%' }} />
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>

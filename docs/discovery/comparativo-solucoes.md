@@ -8,17 +8,17 @@
 
 Este documento apresenta duas abordagens técnicas para estruturar o sistema operacional da empresa, cobrindo os principais fluxos: rastreamento de equipamentos via RFID, orçamentação, contratos, briefing de clientes, NPS pós-evento e checklists operacionais.
 
-Ambas as opções são tecnicamente viáveis e atendem aos requisitos levantados. A escolha depende de prioridades estratégicas da empresa — tempo de implantação, autonomia técnica e perfil de investimento.
+Ambas as opções são tecnicamente viáveis e atendem aos requisitos levantados. A escolha depende de prioridades estratégicas da empresa - tempo de implantação, autonomia técnica e perfil de investimento.
 
 ---
 
-## Opção 1 — Solução Integrada (Híbrida)
+## Opção 1 - Solução Integrada (Híbrida)
 
 **Conceito:** Utilizar uma plataforma especializada em gestão de equipamentos para AV e eventos como núcleo do sistema, complementada por uma camada customizada para os processos específicos da empresa que a plataforma não cobre nativamente.
 
 ### Pontos Fortes
 
-- **RFID nativo:** leitura em lote, rastreamento automático de saída/retorno, integração direta com hardware Zebra já existente — sem desenvolvimento adicional
+- **RFID nativo:** leitura em lote, rastreamento automático de saída/retorno, integração direta com hardware Zebra já existente - sem desenvolvimento adicional
 - **Orçamento e contrato automatizados:** geração de documentos a partir do inventário, com suporte a e-signature integrado
 - **Disponibilidade em tempo real:** painel de estoque com status de cada item por projeto, período e localização
 - **Camada customizada (add-on):** briefing digital do cliente, pesquisa NPS pós-evento, checklists operacionais por função, automações de notificação via WhatsApp
@@ -34,9 +34,9 @@ Ambas as opções são tecnicamente viáveis e atendem aos requisitos levantados
 
 ---
 
-## Opção 2 — Solução Modular com ClickUp (In-House)
+## Opção 2 - Solução Modular com ClickUp (In-House)
 
-**Conceito:** Utilizar o **ClickUp** como hub operacional central — gestão de projetos, pipeline comercial, estoque e operações — integrado a ferramentas complementares para os módulos que exigem especialização (formulários, assinatura digital, automações externas). Stack enxuta, altamente customizável e com custo significativamente menor.
+**Conceito:** Utilizar o **ClickUp** como hub operacional central - gestão de projetos, pipeline comercial, estoque e operações - integrado a ferramentas complementares para os módulos que exigem especialização (formulários, assinatura digital, automações externas). Stack enxuta, altamente customizável e com custo significativamente menor.
 
 ### Stack da solução
 
@@ -51,24 +51,24 @@ Ambas as opções são tecnicamente viáveis e atendem aos requisitos levantados
 | Contrato + assinatura digital | ClickUp workflow + Autentique ou DocuSign |
 | App mobile para equipe de campo | ClickUp Mobile (nativo) |
 | Estoque / equipamentos | ClickUp com custom fields (código, categoria, status, localização) |
-| RFID | Integração via API ou middleware *(ponto mais complexo — ver abaixo)* |
+| RFID | Integração via API ou middleware *(ponto mais complexo - ver abaixo)* |
 
 ### Pontos Fortes
 
-- **Custo de software reduzido:** ~R$ 20–60/mês por usuário (ClickUp Business), sem taxa fixa por empresa — custo escala com o time, não com o volume de projetos
-- **Dashboard operacional completo:** visões por projeto, equipamento, período e responsável — tudo em um único ambiente
+- **Custo de software reduzido:** ~R$ 20–60/mês por usuário (ClickUp Business), sem taxa fixa por empresa - custo escala com o time, não com o volume de projetos
+- **Dashboard operacional completo:** visões por projeto, equipamento, período e responsável - tudo em um único ambiente
 - **App mobile nativo para campo:** equipe acessa checklists, status de equipamentos e tarefas diretamente pelo celular, sem ferramenta adicional
 - **Automações nativas:** regras de status, notificações, movimentação de tarefas e alertas configuráveis sem código
-- **Make (Integromat) para integrações externas:** WhatsApp, e-mail, Google Forms, webhooks — fluxos complexos sem desenvolvimento
+- **Make (Integromat) para integrações externas:** WhatsApp, e-mail, Google Forms, webhooks - fluxos complexos sem desenvolvimento
 - **Pipeline comercial integrado:** oportunidades, propostas e follow-up no mesmo ambiente das operações
 - **Flexibilidade total:** custom fields, status overrides, views (lista, kanban, calendário, Gantt, dashboard) configuráveis por processo
-- **Briefing e NPS via formulário externo:** Google Forms ou Typeform integrados ao ClickUp via Make — dados chegam automaticamente como tarefas ou comentários
+- **Briefing e NPS via formulário externo:** Google Forms ou Typeform integrados ao ClickUp via Make - dados chegam automaticamente como tarefas ou comentários
 
 ### Pontos de Atenção
 
-- **RFID não é nativo:** a integração do hardware Zebra com o ClickUp requer API ou middleware customizado — é o ponto de maior complexidade técnica desta opção e exige desenvolvimento e testes em campo
+- **RFID não é nativo:** a integração do hardware Zebra com o ClickUp requer API ou middleware customizado - é o ponto de maior complexidade técnica desta opção e exige desenvolvimento e testes em campo
 - **Tempo de deploy maior:** 5 a 8 semanas para entrega completa (incluindo módulo RFID e integrações Make)
-- **Stack com múltiplas ferramentas:** ClickUp + Make + Typeform/Forms + ferramenta de assinatura — requer gestão de integrações e atenção a atualizações de API
+- **Stack com múltiplas ferramentas:** ClickUp + Make + Typeform/Forms + ferramenta de assinatura - requer gestão de integrações e atenção a atualizações de API
 - **Manutenção de automações:** fluxos no Make precisam de revisão periódica; qualquer mudança de processo exige ajuste nas automações
 
 ---
@@ -98,25 +98,25 @@ Ambas as opções são tecnicamente viáveis e atendem aos requisitos levantados
 
 ## Linha do Tempo Sugerida
 
-### Solução Integrada — 3 a 4 semanas
+### Solução Integrada - 3 a 4 semanas
 
 | Fase | Duração | Atividades |
 |---|---|---|
-| **Fase 1 — Setup e configuração** | Semana 1 | Configuração da plataforma, importação de inventário, perfis de usuário |
-| **Fase 2 — Integração RFID** | Semana 1–2 | Pareamento dos equipamentos, testes de leitura em lote com hardware Zebra |
-| **Fase 3 — Customizações** | Semana 2–3 | Briefing digital, NPS, checklists, automações WhatsApp |
-| **Fase 4 — Treinamento e go-live** | Semana 3–4 | Treinamento da equipe, ajustes finais, operação assistida |
+| **Fase 1 - Setup e configuração** | Semana 1 | Configuração da plataforma, importação de inventário, perfis de usuário |
+| **Fase 2 - Integração RFID** | Semana 1–2 | Pareamento dos equipamentos, testes de leitura em lote com hardware Zebra |
+| **Fase 3 - Customizações** | Semana 2–3 | Briefing digital, NPS, checklists, automações WhatsApp |
+| **Fase 4 - Treinamento e go-live** | Semana 3–4 | Treinamento da equipe, ajustes finais, operação assistida |
 
-### Solução Modular (ClickUp) — 5 a 8 semanas
+### Solução Modular (ClickUp) - 5 a 8 semanas
 
 | Fase | Duração | Atividades |
 |---|---|---|
-| **Fase 1 — Arquitetura e setup ClickUp** | Semana 1–2 | Estrutura de spaces, listas, status, custom fields, permissões de usuário |
-| **Fase 2 — Módulos operacionais core** | Semana 2–4 | Estoque com custom fields, checklists, pipeline comercial, dashboard |
-| **Fase 3 — Formulários e automações** | Semana 3–5 | Google Forms / Typeform (briefing + NPS), fluxos Make, notificações WhatsApp |
-| **Fase 4 — Contratos e assinatura digital** | Semana 4–6 | ClickUp workflow + integração Autentique / DocuSign, templates de proposta |
-| **Fase 5 — RFID (integração via API)** | Semana 4–7 | Desenvolvimento de middleware / integração Zebra → ClickUp, testes em campo |
-| **Fase 6 — Treinamento e go-live** | Semana 7–8 | Treinamento da equipe, ajustes finais, operação assistida |
+| **Fase 1 - Arquitetura e setup ClickUp** | Semana 1–2 | Estrutura de spaces, listas, status, custom fields, permissões de usuário |
+| **Fase 2 - Módulos operacionais core** | Semana 2–4 | Estoque com custom fields, checklists, pipeline comercial, dashboard |
+| **Fase 3 - Formulários e automações** | Semana 3–5 | Google Forms / Typeform (briefing + NPS), fluxos Make, notificações WhatsApp |
+| **Fase 4 - Contratos e assinatura digital** | Semana 4–6 | ClickUp workflow + integração Autentique / DocuSign, templates de proposta |
+| **Fase 5 - RFID (integração via API)** | Semana 4–7 | Desenvolvimento de middleware / integração Zebra → ClickUp, testes em campo |
+| **Fase 6 - Treinamento e go-live** | Semana 7–8 | Treinamento da equipe, ajustes finais, operação assistida |
 
 ---
 
@@ -128,4 +128,4 @@ Ambas as opções estão prontas para ser aprofundadas com um nível de detalhe 
 
 ---
 
-*Documento preparado para análise interna — uso restrito.*
+*Documento preparado para análise interna - uso restrito.*

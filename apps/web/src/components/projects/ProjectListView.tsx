@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { GlassCard, Ring, StatusDot, GhostBtn } from '@/components/mmd/Primitives'
+import { GlassCard, Ring, StatusDot, Btn } from '@/components/mmd/Primitives'
 import { EditableQty } from '@/components/catalog/EditableQty'
 import { Icons } from '@/components/mmd/Icons'
 import type { Projeto, PackingItem, PackingStatus } from '@/lib/data/projects'
@@ -13,33 +13,79 @@ const DATE_FMT = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'shor
 
 function formatDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number)
-  return DATE_FMT.format(new Date(y, m - 1, d)).replace('.', '').toLowerCase()
+  return DATE_FMT.format(new Date(y, m - 1, d))
+    .replace('.', '')
+    .toLowerCase()
 }
 
 function statusLabel(s: Projeto['status']): string {
   switch (s) {
-    case 'PLANEJAMENTO': return 'Planejamento'
-    case 'CONFIRMADO': return 'Confirmado'
-    case 'EM_CAMPO': return 'Em campo'
-    case 'FINALIZADO': return 'Finalizado'
-    case 'CANCELADO': return 'Cancelado'
+    case 'PLANEJAMENTO':
+      return 'Planejamento'
+    case 'CONFIRMADO':
+      return 'Confirmado'
+    case 'MONTAGEM':
+      return 'Montagem'
+    case 'EM_CAMPO':
+      return 'Em campo'
+    case 'FINALIZADO':
+      return 'Finalizado'
+    case 'CANCELADO':
+      return 'Cancelado'
   }
 }
 
 function statusColor(s: Projeto['status']): string {
   switch (s) {
-    case 'PLANEJAMENTO': return 'var(--fg-3)'
-    case 'CONFIRMADO': return 'var(--accent-cyan)'
-    case 'EM_CAMPO': return 'var(--accent-violet)'
-    case 'FINALIZADO': return 'var(--fg-3)'
-    case 'CANCELADO': return 'var(--accent-red)'
+    case 'PLANEJAMENTO':
+      return 'var(--fg-3)'
+    case 'CONFIRMADO':
+      return 'var(--accent-cyan)'
+    case 'MONTAGEM':
+      return 'var(--accent-amber)'
+    case 'EM_CAMPO':
+      return 'var(--accent-violet)'
+    case 'FINALIZADO':
+      return 'var(--fg-3)'
+    case 'CANCELADO':
+      return 'var(--accent-red)'
   }
+}
+
+function projectNoteSummary(notas: string | null): string[] {
+  if (!notas) return []
+  const lines = notas
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  if (lines[0] === 'Ficha do evento') {
+    return lines
+      .filter(
+        (line) =>
+          line.startsWith('Endereço:') ||
+          line.startsWith('Montagem:') ||
+          line.startsWith('Desmontagem:') ||
+          line.startsWith('Responsável principal:'),
+      )
+      .slice(0, 3)
+  }
+
+  return lines.slice(0, 2)
 }
 
 type SortKey = 'nome' | 'codigo' | 'categoria' | 'qtd' | 'alocado' | 'status'
 type SortDir = 'asc' | 'desc'
 
 const DEFAULT_SORT: { key: SortKey; dir: SortDir } = { key: 'nome', dir: 'asc' }
+
+function sortOperationalProjects(a: Projeto, b: Projeto): number {
+  const today = new Date().toISOString().slice(0, 10)
+  const aFuture = a.data_inicio >= today
+  const bFuture = b.data_inicio >= today
+  if (aFuture !== bFuture) return aFuture ? -1 : 1
+  return a.data_inicio.localeCompare(b.data_inicio) || a.nome.localeCompare(b.nome, 'pt-BR')
+}
 
 export function ProjectListView({
   projetos,
@@ -54,20 +100,22 @@ export function ProjectListView({
   onUpdateQty: (packingId: string, qtd: number) => void
   pending: boolean
 }) {
-  const ativos = projetos.filter((p) => p.status !== 'FINALIZADO' && p.status !== 'CANCELADO')
-  const concluidos = projetos.filter((p) => p.status === 'FINALIZADO' || p.status === 'CANCELADO')
-  const [selectedId, setSelectedId] = useState<string>(
-    ativos[0]?.id ?? projetos[0]?.id ?? ''
-  )
+  const ativos = projetos
+    .filter((p) => p.status !== 'FINALIZADO' && p.status !== 'CANCELADO')
+    .sort(sortOperationalProjects)
+  const concluidos = projetos
+    .filter((p) => p.status === 'FINALIZADO' || p.status === 'CANCELADO')
+    .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio) || a.nome.localeCompare(b.nome, 'pt-BR'))
+  const [selectedId, setSelectedId] = useState<string>(ativos[0]?.id ?? projetos[0]?.id ?? '')
   const selected = projetos.find((p) => p.id === selectedId) ?? projetos[0]
   const [conflictItem, setConflictItem] = useState<PackingItem | null>(null)
 
   if (projetos.length === 0) {
     return (
       <GlassCard style={{ padding: 40, textAlign: 'center', color: 'var(--fg-2)' }}>
-        <div style={{ fontSize: 13 }}>Nenhum projeto ainda.</div>
+        <div style={{ fontSize: 13 }}>Nenhum evento ainda.</div>
         <div className="mono" style={{ fontSize: 10, marginTop: 6, color: 'var(--fg-3)' }}>
-          Clique em “+ Novo projeto” para criar o primeiro.
+          Clique em “+ Novo evento” para criar o primeiro.
         </div>
       </GlassCard>
     )
@@ -75,89 +123,89 @@ export function ProjectListView({
 
   return (
     <>
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '320px 1fr',
-        gap: 18,
-        minHeight: 520,
-      }}
-    >
-      <GlassCard style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <SectionLabel>Ativos · {ativos.length}</SectionLabel>
-        {ativos.length === 0 && (
-          <div style={{ fontSize: 12, color: 'var(--fg-3)', padding: 8 }}>
-            Sem projetos ativos.
-          </div>
-        )}
-        {ativos.map((p) => (
-          <ProjectRow
-            key={p.id}
-            projeto={p}
-            active={p.id === selected?.id}
-            onClick={() => setSelectedId(p.id)}
-          />
-        ))}
-        {concluidos.length > 0 && (
-          <>
-            <div style={{ marginTop: 12 }}>
-              <SectionLabel>Concluídos · {concluidos.length}</SectionLabel>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '320px 1fr',
+          gap: 18,
+          minHeight: 520,
+        }}
+      >
+        <GlassCard style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <SectionLabel>Ativos · {ativos.length}</SectionLabel>
+          {ativos.length === 0 && (
+            <div style={{ fontSize: 12, color: 'var(--fg-3)', padding: 8 }}>
+              Sem eventos ativos.
             </div>
-            {concluidos.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setSelectedId(p.id)}
-                style={{
-                  padding: '10px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  opacity: 0.55,
-                  background: p.id === selected?.id ? 'var(--glass-bg-strong)' : 'transparent',
-                  border: 'none',
-                  borderRadius: 10,
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  textAlign: 'left',
-                  color: 'inherit',
-                }}
-              >
-                <StatusDot color="var(--fg-3)" size={6} glow={false} />
-                <div style={{ flex: 1, fontSize: 12, color: 'var(--fg-1)' }}>{p.nome}</div>
-                <div className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
-                  {formatDate(p.data_inicio)}
-                </div>
-              </button>
-            ))}
-          </>
-        )}
-      </GlassCard>
+          )}
+          {ativos.map((p) => (
+            <ProjectRow
+              key={p.id}
+              projeto={p}
+              active={p.id === selected?.id}
+              onClick={() => setSelectedId(p.id)}
+            />
+          ))}
+          {concluidos.length > 0 && (
+            <>
+              <div style={{ marginTop: 12 }}>
+                <SectionLabel>Concluídos · {concluidos.length}</SectionLabel>
+              </div>
+              {concluidos.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setSelectedId(p.id)}
+                  style={{
+                    padding: '10px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    opacity: 0.55,
+                    background: p.id === selected?.id ? 'var(--glass-bg-strong)' : 'transparent',
+                    border: 'none',
+                    borderRadius: 10,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    textAlign: 'left',
+                    color: 'inherit',
+                  }}
+                >
+                  <StatusDot color="var(--fg-3)" size={6} glow={false} />
+                  <div style={{ flex: 1, fontSize: 12, color: 'var(--fg-1)' }}>{p.nome}</div>
+                  <div className="mono" style={{ fontSize: 10, color: 'var(--fg-3)' }}>
+                    {formatDate(p.data_inicio)}
+                  </div>
+                </button>
+              ))}
+            </>
+          )}
+        </GlassCard>
 
+        {selected && (
+          <ProjectDetail
+            projeto={selected}
+            onAddItem={onAddItem}
+            onRemoveItem={onRemoveItem}
+            onUpdateQty={onUpdateQty}
+            onConflictClick={setConflictItem}
+            pending={pending}
+          />
+        )}
+      </div>
       {selected && (
-        <ProjectDetail
-          projeto={selected}
-          onAddItem={onAddItem}
-          onRemoveItem={onRemoveItem}
-          onUpdateQty={onUpdateQty}
-          onConflictClick={setConflictItem}
-          pending={pending}
+        <ConflictModal
+          item={conflictItem}
+          projetoAtualNome={selected.nome}
+          projetoAtualDataInicio={selected.data_inicio}
+          projetoAtualDataFim={selected.data_fim}
+          onClose={() => setConflictItem(null)}
+          onGoToProject={(id) => {
+            setSelectedId(id)
+            setConflictItem(null)
+          }}
         />
       )}
-    </div>
-    {selected && (
-      <ConflictModal
-        item={conflictItem}
-        projetoAtualNome={selected.nome}
-        projetoAtualDataInicio={selected.data_inicio}
-        projetoAtualDataFim={selected.data_fim}
-        onClose={() => setConflictItem(null)}
-        onGoToProject={(id) => {
-          setSelectedId(id)
-          setConflictItem(null)
-        }}
-      />
-    )}
     </>
   )
 }
@@ -179,6 +227,7 @@ function ProjectDetail({
 }) {
   const [sort, setSort] = useState(DEFAULT_SORT)
   const [adding, setAdding] = useState(false)
+  const noteSummary = projectNoteSummary(projeto.notas)
 
   const sorted = useMemo(() => sortPacking(projeto.packing, sort), [projeto.packing, sort])
 
@@ -226,9 +275,20 @@ function ProjectDetail({
               {projeto.local ? ` · ${projeto.local}` : ''}
               {projeto.cliente ? ` · ${projeto.cliente}` : ''}
             </div>
-            {projeto.notas && (
-              <div style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 8 }}>
-                {projeto.notas}
+            {noteSummary.length > 0 && (
+              <div
+                style={{
+                  display: 'grid',
+                  gap: 3,
+                  fontSize: 12,
+                  color: 'var(--fg-3)',
+                  marginTop: 8,
+                  lineHeight: 1.35,
+                }}
+              >
+                {noteSummary.map((line) => (
+                  <div key={line}>{line}</div>
+                ))}
               </div>
             )}
           </div>
@@ -251,10 +311,14 @@ function ProjectDetail({
                 transition: 'opacity var(--motion-fast)',
               }}
             >
-              Abrir página completa →
+              Abrir evento completo
             </Link>
-            <GhostBtn small>Gerar QR codes</GhostBtn>
-            <GhostBtn small>Exportar PDF</GhostBtn>
+            <Btn variant="ghost" small>
+              Gerar QR codes
+            </Btn>
+            <Btn variant="ghost" small>
+              Exportar PDF
+            </Btn>
           </div>
         </div>
       </GlassCard>
@@ -279,12 +343,12 @@ function ProjectDetail({
         >
           <div style={{ fontSize: 14, fontWeight: 500 }}>Packing list</div>
           <div className="mono" style={{ fontSize: 11, color: 'var(--fg-2)' }}>
-            {projeto.itens_count} itens · {projeto.itens_alocados}/{projeto.itens_total} alocados
+            {projeto.itens_count} itens · {projeto.itens_alocados}/{projeto.itens_total} cobertos
           </div>
           <div style={{ flex: 1 }} />
-          <GhostBtn small onClick={() => setAdding((v) => !v)}>
+          <Btn variant="ghost" small onClick={() => setAdding((v) => !v)}>
             {adding ? '× Cancelar' : '+ Adicionar item'}
-          </GhostBtn>
+          </Btn>
         </div>
 
         <div style={{ padding: '6px 12px', overflowX: 'auto' }}>
@@ -295,7 +359,7 @@ function ProjectDetail({
                 <SortTh label="CÓDIGO" col="codigo" sort={sort} onClick={toggleSort} />
                 <SortTh label="CATEGORIA" col="categoria" sort={sort} onClick={toggleSort} />
                 <SortTh label="QTD" col="qtd" sort={sort} onClick={toggleSort} align="right" />
-                <SortTh label="ALOCADO" col="alocado" sort={sort} onClick={toggleSort} />
+                <SortTh label="COBERTO" col="alocado" sort={sort} onClick={toggleSort} />
                 <SortTh label="STATUS" col="status" sort={sort} onClick={toggleSort} />
                 <th style={{ width: 40 }} />
               </tr>
@@ -397,14 +461,11 @@ function ProjectRow({
   )
 }
 
-const STATUS_META: Record<
-  PackingStatus,
-  { color: string; label: (i: PackingItem) => string }
-> = {
+const STATUS_META: Record<PackingStatus, { color: string; label: (i: PackingItem) => string }> = {
   ok: { color: 'var(--accent-green)', label: () => 'Pronto' },
   partial: {
     color: 'var(--accent-amber)',
-    label: (i) => `${i.qtd_alocada}/${i.qtd_necessaria}`,
+    label: (i) => `${i.qtd_coberta}/${i.qtd_necessaria}`,
   },
   missing: { color: 'var(--accent-red)', label: () => 'Faltando' },
   conflict: { color: 'var(--accent-red)', label: () => 'Conflito' },
@@ -424,8 +485,7 @@ function PackingRow({
   onConflictClick: () => void
 }) {
   const meta = STATUS_META[item.status]
-  const pct =
-    item.qtd_necessaria > 0 ? (item.qtd_alocada / item.qtd_necessaria) * 100 : 0
+  const pct = item.qtd_necessaria > 0 ? (item.qtd_coberta / item.qtd_necessaria) * 100 : 0
   const isConflict = item.status === 'conflict'
   const conflictCount = item.conflicts_with?.length ?? 0
 
@@ -453,7 +513,7 @@ function PackingRow({
             <div style={{ width: `${pct}%`, height: '100%', background: meta.color }} />
           </div>
           <span className="mono" style={{ fontSize: 11, color: 'var(--fg-2)' }}>
-            {item.qtd_alocada}/{item.qtd_necessaria}
+            {item.qtd_coberta}/{item.qtd_necessaria}
           </span>
         </div>
       </td>
@@ -462,7 +522,7 @@ function PackingRow({
           <button
             type="button"
             onClick={onConflictClick}
-            aria-label={`Ver ${conflictCount} projeto${conflictCount === 1 ? '' : 's'} em conflito`}
+            aria-label={`Ver ${conflictCount} evento${conflictCount === 1 ? '' : 's'} em conflito`}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -597,8 +657,7 @@ function SortTh({
             width: 10,
             opacity: active ? 1 : 0.3,
             fontSize: 9,
-            transform:
-              active && sort.dir === 'desc' ? 'rotate(180deg)' : 'rotate(0deg)',
+            transform: active && sort.dir === 'desc' ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform var(--motion-fast)',
           }}
         >
@@ -625,10 +684,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-function sortPacking(
-  items: PackingItem[],
-  sort: { key: SortKey; dir: SortDir }
-): PackingItem[] {
+function sortPacking(items: PackingItem[], sort: { key: SortKey; dir: SortDir }): PackingItem[] {
   const factor = sort.dir === 'asc' ? 1 : -1
   const STATUS_ORDER: Record<PackingStatus, number> = {
     conflict: 0,
@@ -647,7 +703,7 @@ function sortPacking(
       case 'qtd':
         return (a.qtd_necessaria - b.qtd_necessaria) * factor
       case 'alocado':
-        return (a.qtd_alocada - b.qtd_alocada) * factor
+        return (a.qtd_coberta - b.qtd_coberta) * factor
       case 'status':
         return (STATUS_ORDER[a.status] - STATUS_ORDER[b.status]) * factor
     }

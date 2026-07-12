@@ -46,15 +46,22 @@ export function ScanTimeline({ scans }: { scans: RfidScan[] }) {
   )
 }
 
-function ScanRow({ scan, isLast }: { scan: RfidScan; isLast: boolean }) {
+function ScanRow({
+  scan,
+  isLast,
+}: {
+  scan: RfidScan
+  isLast: boolean
+}) {
   const contextoColor = scan.contexto ? CONTEXTO_COLOR[scan.contexto] : 'var(--fg-3)'
   const contextoLabel = scan.contexto ? CONTEXTO_LABEL[scan.contexto] : 'Sem contexto'
 
-  const resolvedHref = scan.serial_id && scan.item_id
-    ? `/items/${scan.item_id}`
-    : scan.lote_id
-      ? `/lotes/${scan.lote_id}`
-      : null
+  const resolvedHref =
+    scan.serial_id && scan.item_id
+      ? `/items/${scan.item_id}`
+      : scan.lote_id
+        ? `/lotes/${scan.lote_id}`
+        : null
 
   const resolvedCode = scan.serial_codigo ?? scan.lote_codigo
   const resolvedKind = scan.serial_codigo ? 'Serial' : scan.lote_codigo ? 'Lote' : null
@@ -75,6 +82,7 @@ function ScanRow({ scan, isLast }: { scan: RfidScan; isLast: boolean }) {
       <div style={{ minWidth: 0 }}>
         <div
           className="mono"
+          suppressHydrationWarning
           style={{
             fontSize: 12,
             color: 'var(--fg-1)',
@@ -167,9 +175,7 @@ function ScanRow({ scan, isLast }: { scan: RfidScan; isLast: boolean }) {
             >
               Tag órfã
             </span>
-            <span style={{ fontSize: 11, color: 'var(--fg-3)' }}>
-              Sem match no catálogo
-            </span>
+            <span style={{ fontSize: 11, color: 'var(--fg-3)' }}>Sem match no catálogo</span>
           </div>
         )}
       </div>

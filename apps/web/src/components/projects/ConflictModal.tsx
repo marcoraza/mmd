@@ -1,14 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
-import { GhostBtn, StatusDot } from '@/components/mmd/Primitives'
+import { useRef } from 'react'
+import { Btn, StatusDot } from '@/components/mmd/Primitives'
+import { useEscapeKey } from '@/hooks/useEscapeKey'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useReturnFocus } from '@/hooks/useReturnFocus'
 import type { ConflictRef, PackingItem, StatusProjeto } from '@/lib/data/projects'
 
 const DATE_FMT = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' })
 
 function formatDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number)
-  return DATE_FMT.format(new Date(y, m - 1, d)).replace('.', '').toLowerCase()
+  return DATE_FMT.format(new Date(y, m - 1, d))
+    .replace('.', '')
+    .toLowerCase()
 }
 
 function formatRange(inicio: string, fim: string): string {
@@ -18,21 +23,35 @@ function formatRange(inicio: string, fim: string): string {
 
 function statusLabel(s: StatusProjeto): string {
   switch (s) {
-    case 'PLANEJAMENTO': return 'Planejamento'
-    case 'CONFIRMADO': return 'Confirmado'
-    case 'EM_CAMPO': return 'Em campo'
-    case 'FINALIZADO': return 'Finalizado'
-    case 'CANCELADO': return 'Cancelado'
+    case 'PLANEJAMENTO':
+      return 'Planejamento'
+    case 'CONFIRMADO':
+      return 'Confirmado'
+    case 'MONTAGEM':
+      return 'Montagem'
+    case 'EM_CAMPO':
+      return 'Em campo'
+    case 'FINALIZADO':
+      return 'Finalizado'
+    case 'CANCELADO':
+      return 'Cancelado'
   }
 }
 
 function statusColor(s: StatusProjeto): string {
   switch (s) {
-    case 'PLANEJAMENTO': return 'var(--fg-3)'
-    case 'CONFIRMADO': return 'var(--accent-cyan)'
-    case 'EM_CAMPO': return 'var(--accent-violet)'
-    case 'FINALIZADO': return 'var(--fg-3)'
-    case 'CANCELADO': return 'var(--accent-red)'
+    case 'PLANEJAMENTO':
+      return 'var(--fg-3)'
+    case 'CONFIRMADO':
+      return 'var(--accent-cyan)'
+    case 'MONTAGEM':
+      return 'var(--accent-amber)'
+    case 'EM_CAMPO':
+      return 'var(--accent-violet)'
+    case 'FINALIZADO':
+      return 'var(--fg-3)'
+    case 'CANCELADO':
+      return 'var(--accent-red)'
   }
 }
 
@@ -53,14 +72,14 @@ export function ConflictModal({
   onClose,
   onGoToProject,
 }: Props) {
-  useEffect(() => {
-    if (!item) return
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [item, onClose])
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const open = item !== null
+  useEscapeKey(open, onClose)
+  // useReturnFocus precisa rodar antes de useFocusTrap: captura activeElement
+  // na montagem; se rodar depois, snapshot pega o elemento que useFocusTrap
+  // acabou de focar dentro do dialog (que some no unmount), e o foco se perde.
+  useReturnFocus(open)
+  useFocusTrap(dialogRef, open)
 
   if (!item) return null
   const conflitos = item.conflicts_with ?? []
@@ -75,7 +94,7 @@ export function ConflictModal({
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.45)',
+          background: 'var(--dialog-overlay)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
           border: 'none',
@@ -85,9 +104,11 @@ export function ConflictModal({
         }}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={`Conflito de alocação: ${item.nome}`}
+        tabIndex={-1}
         style={{
           position: 'fixed',
           top: '50%',
@@ -104,6 +125,7 @@ export function ConflictModal({
           zIndex: 51,
           overflow: 'hidden',
           animation: 'mmd-reveal 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both',
+          outline: 'none',
         }}
       >
         {/* Header */}
@@ -148,8 +170,8 @@ export function ConflictModal({
               letterSpacing: 0.08,
             }}
           >
-            {item.codigo_interno} · necessário {item.qtd_necessaria} ·{' '}
-            {item.qtd_alocada} alocado aqui
+            {item.codigo_interno} · necessário {item.qtd_necessaria} · {item.qtd_alocada} alocado
+            aqui
           </div>
         </div>
 
@@ -166,8 +188,9 @@ export function ConflictModal({
         >
           <div style={{ fontSize: 13, color: 'var(--fg-1)', lineHeight: 1.5 }}>
             Também reservado em <strong>{conflitos.length}</strong>{' '}
-            {conflitos.length === 1 ? 'projeto que se sobrepõe' : 'projetos que se sobrepõem'} com{' '}
-            <strong>{projetoAtualNome}</strong> ({formatRange(projetoAtualDataInicio, projetoAtualDataFim)}).
+            {conflitos.length === 1 ? 'evento que se sobrepõe' : 'eventos que se sobrepõem'} com{' '}
+            <strong>{projetoAtualNome}</strong> (
+            {formatRange(projetoAtualDataInicio, projetoAtualDataFim)}).
           </div>
 
           {totalAlocadoOutros > 0 && (
@@ -184,7 +207,7 @@ export function ConflictModal({
               }}
             >
               {totalAlocadoOutros} unidade{totalAlocadoOutros === 1 ? '' : 's'} já alocada
-              {totalAlocadoOutros === 1 ? '' : 's'} em outros projetos neste período
+              {totalAlocadoOutros === 1 ? '' : 's'} em outros eventos neste período
             </div>
           )}
 
@@ -206,7 +229,9 @@ export function ConflictModal({
             background: 'var(--glass-bg)',
           }}
         >
-          <GhostBtn small onClick={onClose}>Fechar</GhostBtn>
+          <Btn variant="ghost" small onClick={onClose}>
+            Fechar
+          </Btn>
         </div>
       </div>
     </>
@@ -298,7 +323,7 @@ function ConflictRow({
           transition: 'background var(--motion-fast)',
         }}
       >
-        Ver projeto →
+        Ver evento
       </button>
     </div>
   )

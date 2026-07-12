@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { PrimaryBtn, GhostBtn, GlassCard } from '@/components/mmd/Primitives'
+import { Btn, GlassCard } from '@/components/mmd/Primitives'
 import type { StatusProjeto } from '@/lib/data/projects'
 
 const STATUS_OPTIONS: { value: StatusProjeto; label: string }[] = [
   { value: 'PLANEJAMENTO', label: 'Planejamento' },
   { value: 'CONFIRMADO', label: 'Confirmado' },
+  { value: 'MONTAGEM', label: 'Montagem' },
   { value: 'EM_CAMPO', label: 'Em campo' },
   { value: 'FINALIZADO', label: 'Finalizado' },
   { value: 'CANCELADO', label: 'Cancelado' },
@@ -95,7 +96,8 @@ export function InlineNewProjectForm({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(240px, 2fr) minmax(160px, 1fr) 150px 150px minmax(160px, 1fr) 160px',
+            gridTemplateColumns:
+              'minmax(240px, 2fr) minmax(160px, 1fr) 150px 150px minmax(160px, 1fr) 160px',
             gap: 16,
             alignItems: 'end',
           }}
@@ -198,16 +200,14 @@ export function InlineNewProjectForm({
             gap: 12,
           }}
         >
-          {error && (
-            <div style={{ fontSize: 12, color: 'var(--accent-red)' }}>{error}</div>
-          )}
+          {error && <div style={{ fontSize: 12, color: 'var(--accent-red)' }}>{error}</div>}
           <div style={{ flex: 1 }} />
-          <GhostBtn small onClick={onCancel}>
+          <Btn variant="ghost" small onClick={onCancel}>
             Cancelar
-          </GhostBtn>
-          <PrimaryBtn small type="submit" disabled={pending || !nome.trim()}>
-            {pending ? 'Criando…' : 'Criar projeto'}
-          </PrimaryBtn>
+          </Btn>
+          <Btn small type="submit" disabled={pending || !nome.trim()}>
+            {pending ? 'Criando' : 'Criar evento'}
+          </Btn>
         </div>
       </form>
     </GlassCard>

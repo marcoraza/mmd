@@ -1,11 +1,9 @@
-import Link from 'next/link'
 import { Icons } from '@/components/mmd/Icons'
 
 export function LotesCard({ total }: { total: number }) {
   return (
-    <Link
-      href="/lotes"
-      className="glass card-interactive"
+    <div
+      className="glass"
       style={{
         marginTop: 20,
         padding: '18px 22px',
@@ -39,16 +37,27 @@ export function LotesCard({ total }: { total: number }) {
             textTransform: 'uppercase',
           }}
         >
-          Lotes
+          Lotes legados
         </div>
         <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--fg-0)', marginTop: 2 }}>
-          {total} lotes de cabos e agrupamentos
+          {total} registros históricos
         </div>
         <div style={{ fontSize: 12, color: 'var(--fg-2)', marginTop: 2 }}>
-          Cabos e consumíveis gerenciados por QR Code em grupos.
+          Consulta legada por URL direta. Operação ativa segue por unidades.
         </div>
       </div>
-      <span style={{ color: 'var(--fg-2)' }}>{Icons.chevron_right}</span>
-    </Link>
+      <span
+        className="mono"
+        style={{
+          color: 'var(--accent-cyan)',
+          fontSize: 10,
+          textTransform: 'uppercase',
+          letterSpacing: 0.1,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Unit-only
+      </span>
+    </div>
   )
 }

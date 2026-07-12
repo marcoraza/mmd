@@ -2,16 +2,8 @@
 
 import Link from 'next/link'
 import { Icons } from '@/components/mmd/Icons'
-import {
-  GlassCard,
-  GhostBtn,
-  PrimaryBtn,
-  StatusDot,
-} from '@/components/mmd/Primitives'
-import {
-  CATEGORIA_ICON,
-  CATEGORIA_LABEL,
-} from '@/components/catalog/helpers'
+import { GlassCard, Btn, StatusDot } from '@/components/mmd/Primitives'
+import { CATEGORIA_ICON, CATEGORIA_LABEL } from '@/components/catalog/helpers'
 import type { LoteRow } from '@/lib/data/lotes'
 import { STATUS_LOTE_COLOR, STATUS_LOTE_LABEL, formatLoteDate } from './helpers'
 import { QrPlaceholder } from './QrPlaceholder'
@@ -121,9 +113,7 @@ export function LoteDetailClient({ lote, related }: Props) {
                 textDecoration: 'none',
               }}
             >
-              <span style={{ color: 'var(--fg-3)', display: 'inline-flex' }}>
-                {Icons[iconKey]}
-              </span>
+              <span style={{ color: 'var(--fg-3)', display: 'inline-flex' }}>{Icons[iconKey]}</span>
               <span>{lote.item_nome}</span>
               <span style={{ color: 'var(--fg-3)' }}>›</span>
             </Link>
@@ -157,9 +147,9 @@ export function LoteDetailClient({ lote, related }: Props) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
-          <PrimaryBtn small>Imprimir QR</PrimaryBtn>
-          <GhostBtn small>Editar lote</GhostBtn>
-          <GhostBtn small>Marcar manutenção</GhostBtn>
+          <Btn small>Imprimir QR</Btn>
+          <Btn variant="ghost" small>Editar lote</Btn>
+          <Btn variant="ghost" small>Marcar manutenção</Btn>
         </div>
       </GlassCard>
 
@@ -197,8 +187,8 @@ export function LoteDetailClient({ lote, related }: Props) {
             </span>
           </div>
           <div style={{ fontSize: 12, color: 'var(--fg-2)', marginTop: 8 }}>
-            Todas do mesmo tipo ({lote.item_nome}), agrupadas sob um único QR
-            code para leitura rápida em campo.
+            Todas do mesmo tipo ({lote.item_nome}), agrupadas sob um único QR code para leitura
+            rápida em campo.
           </div>
           {valorTotal != null && (
             <div
@@ -211,7 +201,15 @@ export function LoteDetailClient({ lote, related }: Props) {
                 alignItems: 'center',
               }}
             >
-              <span className="mono" style={{ fontSize: 10, color: 'var(--fg-3)', letterSpacing: 0.12, textTransform: 'uppercase' }}>
+              <span
+                className="mono"
+                style={{
+                  fontSize: 10,
+                  color: 'var(--fg-3)',
+                  letterSpacing: 0.12,
+                  textTransform: 'uppercase',
+                }}
+              >
                 Valor estimado
               </span>
               <span className="mono" style={{ fontSize: 14, color: 'var(--fg-0)' }}>
@@ -223,7 +221,12 @@ export function LoteDetailClient({ lote, related }: Props) {
 
         <GlassCard style={{ padding: 18 }}>
           <SectionLabel>Identificação</SectionLabel>
-          <MetaRow label="Tag RFID" value={lote.tag_rfid} mono highlight={lote.tag_rfid ? 'cyan' : undefined} />
+          <MetaRow
+            label="Tag RFID"
+            value={lote.tag_rfid}
+            mono
+            highlight={lote.tag_rfid ? 'cyan' : undefined}
+          />
           <MetaRow label="QR code" value={lote.qr_code} mono />
           <MetaRow label="ID interno" value={lote.id} mono muted />
         </GlassCard>
@@ -232,7 +235,11 @@ export function LoteDetailClient({ lote, related }: Props) {
           <SectionLabel>Histórico</SectionLabel>
           <MetaRow label="Criado" value={formatLoteDate(lote.created_at)} />
           <MetaRow label="Atualizado" value={formatLoteDate(lote.updated_at)} />
-          <MetaRow label="Status atual" value={STATUS_LOTE_LABEL[lote.status]} highlightColor={color} />
+          <MetaRow
+            label="Status atual"
+            value={STATUS_LOTE_LABEL[lote.status]}
+            highlightColor={color}
+          />
         </GlassCard>
       </div>
 
@@ -251,10 +258,9 @@ export function LoteDetailClient({ lote, related }: Props) {
             lineHeight: 1.5,
           }}
         >
-          Movimentações por lote ainda não são rastreadas individualmente. No
-          momento, o sistema registra movimentações apenas por serial (item
-          único). Quando um lote é levado para evento, a leitura do QR marca o
-          status do lote inteiro.
+          Movimentações por lote ainda não são rastreadas individualmente. No momento, o sistema
+          registra movimentações apenas por serial (item único). Quando um lote é levado para
+          evento, a leitura do QR marca o status do lote inteiro.
         </div>
       </GlassCard>
 
@@ -307,7 +313,13 @@ export function LoteDetailClient({ lote, related }: Props) {
                     e.currentTarget.style.background = 'var(--glass-bg)'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
                     <span
                       className="mono"
                       style={{ fontSize: 12, color: 'var(--fg-0)', fontWeight: 500 }}
@@ -326,7 +338,14 @@ export function LoteDetailClient({ lote, related }: Props) {
                     }}
                   >
                     {r.quantidade}
-                    <span style={{ fontSize: 11, color: 'var(--fg-3)', marginLeft: 6, letterSpacing: 0 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: 'var(--fg-3)',
+                        marginLeft: 6,
+                        letterSpacing: 0,
+                      }}
+                    >
                       un
                     </span>
                   </div>

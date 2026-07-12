@@ -12,16 +12,17 @@ export function Caustic({ orb3 = false, style }: { orb3?: boolean; style?: CSSPr
 }
 
 // ─── Glass Card ─────────────────────────────────────────
+// Container visual passivo. Pra card clicável use <button> ou wrap externo;
+// não adicione onClick aqui sem ajustar role/keyboard handlers (a11y).
 export function GlassCard({
   children,
   strong = false,
   style,
   className = '',
-  onClick,
-}: CommonStyle & { children: ReactNode; strong?: boolean; onClick?: () => void }) {
+}: CommonStyle & { children: ReactNode; strong?: boolean }) {
   const cls = `glass${strong ? ' glass-strong' : ''} ${className}`.trim()
   return (
-    <div className={cls} style={style} onClick={onClick}>
+    <div className={cls} style={style}>
       {children}
     </div>
   )
@@ -123,10 +124,7 @@ export function Ring({
       }
 
   return (
-    <div
-      style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}
-      {...roleProps}
-    >
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }} {...roleProps}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }} aria-hidden="true">
         <defs>
           <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -309,6 +307,7 @@ export function PlaceholderImg({
 // ─── Buttons ────────────────────────────────────────────
 type BtnProps = {
   children: ReactNode
+  variant?: 'primary' | 'ghost'
   small?: boolean
   onClick?: () => void
   type?: 'button' | 'submit' | 'reset'
@@ -316,51 +315,45 @@ type BtnProps = {
   style?: CSSProperties
 }
 
-export function PrimaryBtn({ children, small = false, onClick, type = 'button', disabled = false, style }: BtnProps) {
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      style={{
+export function Btn({
+  children,
+  variant = 'primary',
+  small = false,
+  onClick,
+  type = 'button',
+  disabled = false,
+  style,
+}: BtnProps) {
+  const isPrimary = variant === 'primary'
+  const variantStyle: CSSProperties = isPrimary
+    ? {
         border: 'none',
-        padding: small ? '7px 14px' : '10px 18px',
-        borderRadius: small ? 8 : 10,
-        fontFamily: 'var(--font-sans-raw)',
-        fontWeight: 500,
-        fontSize: small ? 12 : 13,
         color: '#fff',
-        cursor: disabled ? 'not-allowed' : 'pointer',
         background: 'linear-gradient(180deg, oklch(0.78 0.14 210), oklch(0.68 0.15 220))',
-        boxShadow: '0 4px 12px oklch(0.70 0.14 220 / 0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
+        boxShadow:
+          '0 4px 12px oklch(0.70 0.14 220 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.25)',
         transition: 'transform var(--motion-fast), box-shadow var(--motion-fast)',
-        opacity: disabled ? 0.5 : 1,
-        ...style,
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
-export function GhostBtn({ children, small = false, onClick, type = 'button', disabled = false, style }: BtnProps) {
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className="glass"
-      style={{
-        padding: small ? '7px 14px' : '10px 18px',
-        borderRadius: small ? 8 : 10,
-        fontFamily: 'var(--font-sans-raw)',
-        fontWeight: 500,
-        fontSize: small ? 12 : 13,
+      }
+    : {
         color: 'var(--fg-0)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
         background: 'var(--glass-bg)',
         transition: 'background var(--motion-fast)',
+      }
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={isPrimary ? undefined : 'glass'}
+      style={{
+        padding: small ? '7px 14px' : '10px 18px',
+        borderRadius: small ? 8 : 10,
+        fontFamily: 'var(--font-sans-raw)',
+        fontWeight: 500,
+        fontSize: small ? 12 : 13,
+        cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
+        ...variantStyle,
         ...style,
       }}
     >
@@ -379,14 +372,8 @@ export function Badge({
   color?: string
   tone?: 'soft' | 'solid'
 }) {
-  const bg =
-    tone === 'solid'
-      ? color
-      : `color-mix(in oklch, ${color} 22%, transparent)`
-  const border =
-    tone === 'solid'
-      ? 'transparent'
-      : `color-mix(in oklch, ${color} 40%, transparent)`
+  const bg = tone === 'solid' ? color : `color-mix(in oklch, ${color} 22%, transparent)`
+  const border = tone === 'solid' ? 'transparent' : `color-mix(in oklch, ${color} 40%, transparent)`
   const text = tone === 'solid' ? '#0b0b0b' : color
   return (
     <span

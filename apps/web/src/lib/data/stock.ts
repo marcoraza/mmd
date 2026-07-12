@@ -1,4 +1,6 @@
 import 'server-only'
+import { loadDemoStockStats } from '@/lib/data/demo'
+import { withDemoFallback } from '@/lib/data/demo-mode'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import type { StatusSerial } from '@/lib/types'
 
@@ -9,6 +11,8 @@ export type StockStats = {
   manutencao: number
   criticos: number
   patrimonio_total: number
+  baixas: number
+  vendidos: number
 }
 
 type SerialRow = {
@@ -26,6 +30,10 @@ const ACTIVE_STATUSES: StatusSerial[] = [
 ]
 
 export async function loadStockStats(): Promise<StockStats> {
+  return withDemoFallback('stock', loadStockStatsFromSupabase, loadDemoStockStats)
+}
+
+async function loadStockStatsFromSupabase(): Promise<StockStats> {
   const { data, error } = await supabaseAdmin
     .from('serial_numbers')
     .select('status, desgaste, valor_atual')
@@ -40,6 +48,8 @@ export async function loadStockStats(): Promise<StockStats> {
   let manutencao = 0
   let criticos = 0
   let patrimonio = 0
+  let baixas = 0
+  let vendidos = 0
 
   for (const s of rows) {
     const isActive = ACTIVE_STATUSES.includes(s.status)
@@ -61,6 +71,12 @@ export async function loadStockStats(): Promise<StockStats> {
       case 'MANUTENCAO':
         manutencao += 1
         break
+      case 'BAIXA':
+        baixas += 1
+        break
+      case 'VENDIDO':
+        vendidos += 1
+        break
     }
   }
 
@@ -71,5 +87,7 @@ export async function loadStockStats(): Promise<StockStats> {
     manutencao,
     criticos,
     patrimonio_total: patrimonio,
+    baixas,
+    vendidos,
   }
 }

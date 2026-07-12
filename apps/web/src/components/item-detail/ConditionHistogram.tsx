@@ -46,9 +46,7 @@ export function ConditionHistogram({ serials }: { serials: SerialRow[] }) {
               >
                 {b}/5
               </span>
-              <span style={{ fontSize: 11, color: 'var(--fg-3)' }}>
-                {BUCKET_LABEL[b]}
-              </span>
+              <span style={{ fontSize: 11, color: 'var(--fg-3)' }}>{BUCKET_LABEL[b]}</span>
             </div>
             <div
               style={{

@@ -131,7 +131,7 @@ export function UpcomingEventsRail({
           return (
             <Link
               key={e.id}
-              href={`/projetos/detalhe/${e.id}`}
+              href={`/projetos/${e.id}`}
               className={`glass card-interactive reveal reveal-${Math.min(i + 3, 6)} upcoming-card`}
               aria-label={`Abrir evento ${e.title}`}
               style={{
@@ -287,16 +287,10 @@ export function UpcomingEventsRail({
                     color: 'var(--fg-3)',
                   }}
                 >
-                  <span
-                    className="mono"
-                    style={{ fontSize: 10, letterSpacing: 0.08 }}
-                  >
+                  <span className="mono" style={{ fontSize: 10, letterSpacing: 0.08 }}>
                     {e.items_count} itens
                   </span>
-                  <span
-                    className="mono"
-                    style={{ fontSize: 10, letterSpacing: 0.08 }}
-                  >
+                  <span className="mono" style={{ fontSize: 10, letterSpacing: 0.08 }}>
                     {e.crew} téc
                   </span>
                   <span
@@ -344,8 +338,7 @@ export function UpcomingEventsRail({
                 borderRadius: 999,
                 border: 'none',
                 padding: 0,
-                background:
-                  p === activePage ? 'var(--fg-1)' : 'var(--glass-border-strong)',
+                background: p === activePage ? 'var(--fg-1)' : 'var(--glass-border-strong)',
                 cursor: 'pointer',
                 transition: 'width var(--motion-default), background var(--motion-default)',
               }}

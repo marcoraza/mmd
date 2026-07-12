@@ -1,74 +1,50 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { Icons } from '@/components/mmd/Icons'
-import { GlassCard, GhostBtn, PrimaryBtn } from '@/components/mmd/Primitives'
 import { CATEGORIA_LABEL } from '@/components/catalog/helpers'
-import type { QrLote, QrSources, QrUnit } from '@/lib/data/qrcodes'
+import { Icons } from '@/components/mmd/Icons'
+import { Badge, Btn, GlassCard } from '@/components/mmd/Primitives'
+import type { QrSources, QrUnit } from '@/lib/data/qrcodes'
 import { QR_LAYOUTS, type QrItem, type QrLayoutKey } from './layouts'
 import { PreviewSheet } from './PreviewSheet'
 
-type Mode = 'unidades' | 'lotes'
-
 export function QrCodesClient({ data }: { data: QrSources }) {
-  const [mode, setMode] = useState<Mode>('unidades')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [layoutKey, setLayoutKey] = useState<QrLayoutKey>('small')
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const source: Array<{ id: string; row: QrUnit | QrLote; kind: Mode }> = useMemo(() => {
-    if (mode === 'unidades') {
-      return data.units.map((u) => ({ id: u.id, row: u, kind: 'unidades' as const }))
-    }
-    return data.lotes.map((l) => ({ id: l.id, row: l, kind: 'lotes' as const }))
-  }, [mode, data])
-
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return source
-    return source.filter((s) => {
-      if (s.kind === 'unidades') {
-        const u = s.row as QrUnit
-        return (
-          u.codigo_interno.toLowerCase().includes(q) ||
-          u.item_nome.toLowerCase().includes(q) ||
-          (u.serial_fabrica ?? '').toLowerCase().includes(q)
-        )
-      }
-      const l = s.row as QrLote
+    if (!q) return data.units
+    return data.units.filter((unit) => {
       return (
-        l.codigo_lote.toLowerCase().includes(q) ||
-        l.item_nome.toLowerCase().includes(q)
+        unit.codigo_interno.toLowerCase().includes(q) ||
+        unit.item_nome.toLowerCase().includes(q) ||
+        (unit.serial_fabrica ?? '').toLowerCase().includes(q) ||
+        (unit.tag_rfid ?? '').toLowerCase().includes(q)
       )
     })
-  }, [source, query])
+  }, [data.units, query])
 
   const items: QrItem[] = useMemo(() => {
-    const out: QrItem[] = []
-    for (const s of source) {
-      if (!selected.has(s.id)) continue
-      if (s.kind === 'unidades') {
-        const u = s.row as QrUnit
-        out.push({
-          payload: u.codigo_interno,
-          title: u.codigo_interno,
-          subtitle: u.item_nome,
-          caption: CATEGORIA_LABEL[u.item_categoria],
-        })
-      } else {
-        const l = s.row as QrLote
-        out.push({
-          payload: l.codigo_lote,
-          title: l.codigo_lote,
-          subtitle: `${l.item_nome} · ${l.quantidade} un`,
-          caption: CATEGORIA_LABEL[l.item_categoria],
-        })
-      }
-    }
-    return out
-  }, [source, selected])
+    const origin = typeof window === 'undefined' ? '' : window.location.origin
+    const publicPayload = (code: string) => `${origin}/s/${encodeURIComponent(code)}`
+
+    return data.units
+      .filter((unit) => selected.has(unit.id))
+      .map((unit) => ({
+        payload: publicPayload(unit.codigo_interno),
+        title: unit.codigo_interno,
+        subtitle: unit.item_nome,
+        caption:
+          unit.item_categoria === 'CABO' && unit.rfid_pending
+            ? `${CATEGORIA_LABEL[unit.item_categoria]} / RFID pendente`
+            : CATEGORIA_LABEL[unit.item_categoria],
+      }))
+  }, [data.units, selected])
 
   const layout = QR_LAYOUTS[layoutKey]
   const totalSheets = items.length > 0 ? Math.ceil(items.length / layout.perSheet) : 0
@@ -83,19 +59,19 @@ export function QrCodesClient({ data }: { data: QrSources }) {
   }
 
   function toggleAllVisible() {
-    const allSelected = filtered.every((s) => selected.has(s.id))
+    const allSelected = filtered.length > 0 && filtered.every((unit) => selected.has(unit.id))
     setSelected((prev) => {
       const next = new Set(prev)
       if (allSelected) {
-        for (const s of filtered) next.delete(s.id)
+        for (const unit of filtered) next.delete(unit.id)
       } else {
-        for (const s of filtered) next.add(s.id)
+        for (const unit of filtered) next.add(unit.id)
       }
       return next
     })
   }
 
-  function clearMode() {
+  function clearSelection() {
     setSelected(new Set())
   }
 
@@ -104,12 +80,15 @@ export function QrCodesClient({ data }: { data: QrSources }) {
     setExporting(true)
     setError(null)
     try {
-      const res = await fetch('/nmd/api/qr-sheet', {
+      const res = await fetch('/api/qr-sheet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items, layout: layoutKey }),
       })
       if (!res.ok) {
+        if (res.status === 504) {
+          throw new Error('Seleção grande demais, divida em menos unidades e tente de novo.')
+        }
         const text = await res.text().catch(() => '')
         throw new Error(text || `HTTP ${res.status}`)
       }
@@ -138,61 +117,36 @@ export function QrCodesClient({ data }: { data: QrSources }) {
         alignItems: 'start',
       }}
     >
-      {/* Sidebar: seleção */}
       <GlassCard style={{ padding: 0, overflow: 'hidden' }}>
-        {/* Tabs Unidades/Lotes */}
         <div
-          role="tablist"
           style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            padding: 14,
             borderBottom: '1px solid var(--glass-border)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
           }}
         >
-          {(['unidades', 'lotes'] as Mode[]).map((m) => {
-            const active = mode === m
-            const count = m === 'unidades' ? data.units.length : data.lotes.length
-            return (
-              <button
-                key={m}
-                role="tab"
-                aria-selected={active}
-                onClick={() => {
-                  setMode(m)
-                  setSelected(new Set())
-                }}
-                style={{
-                  padding: '12px 14px',
-                  background: active ? 'var(--glass-bg-strong)' : 'transparent',
-                  color: active ? 'var(--fg-0)' : 'var(--fg-2)',
-                  border: 'none',
-                  borderBottom: active ? '2px solid var(--accent-cyan)' : '2px solid transparent',
-                  fontFamily: 'inherit',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
-              >
-                {m === 'unidades' ? 'Unidades' : 'Lotes'}
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 10,
-                    color: active ? 'var(--accent-cyan)' : 'var(--fg-3)',
-                  }}
-                >
-                  {count}
-                </span>
-              </button>
-            )
-          })}
+          <div style={{ minWidth: 0 }}>
+            <div
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: 'var(--fg-2)',
+                letterSpacing: 0.12,
+                textTransform: 'uppercase',
+              }}
+            >
+              Fonte unit-only
+            </div>
+            <div style={{ marginTop: 4, color: 'var(--fg-0)', fontSize: 15, fontWeight: 500 }}>
+              Unidades físicas
+            </div>
+          </div>
+          <Badge color="var(--accent-cyan)">Unit-only</Badge>
         </div>
 
-        {/* Search */}
         <div style={{ padding: 12, borderBottom: '1px solid var(--glass-border)' }}>
           <label
             style={{
@@ -211,7 +165,7 @@ export function QrCodesClient({ data }: { data: QrSources }) {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={mode === 'unidades' ? 'Buscar por código, item, serial...' : 'Buscar por código do lote...'}
+              placeholder="Buscar por código, item, serial ou RFID"
               style={{
                 flex: 1,
                 background: 'transparent',
@@ -246,37 +200,50 @@ export function QrCodesClient({ data }: { data: QrSources }) {
                 padding: 0,
               }}
             >
-              {filtered.every((s) => selected.has(s.id)) && filtered.length > 0
+              {filtered.length > 0 && filtered.every((unit) => selected.has(unit.id))
                 ? 'Desmarcar visíveis'
                 : 'Selecionar todos visíveis'}
             </button>
-            <span className="mono">
-              {selected.size} selecionados
-            </span>
+            <span className="mono">{selected.size} selecionados</span>
           </div>
+
+          {data.legacy_lotes > 0 && (
+            <div
+              style={{
+                marginTop: 10,
+                padding: '9px 10px',
+                borderRadius: 'var(--r-sm)',
+                border: '1px solid var(--glass-border)',
+                background: 'var(--glass-bg)',
+                color: 'var(--fg-2)',
+                fontSize: 11,
+                lineHeight: 1.35,
+              }}
+            >
+              {data.legacy_lotes} lotes ficaram fora da geração. QR novo aponta só para unidade
+              física. {data.legacy_cable_lotes} são lotes antigos de cabo.
+            </div>
+          )}
         </div>
 
-        {/* Lista */}
         <div style={{ maxHeight: 520, overflowY: 'auto' }}>
           {filtered.length === 0 ? (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--fg-3)', fontSize: 12 }}>
-              Nada encontrado.
+              Nenhuma unidade encontrada.
             </div>
           ) : (
-            filtered.map((s) => (
+            filtered.map((unit) => (
               <SourceRow
-                key={s.id}
-                selected={selected.has(s.id)}
-                onToggle={() => toggle(s.id)}
-                kind={s.kind}
-                row={s.row}
+                key={unit.id}
+                selected={selected.has(unit.id)}
+                onToggle={() => toggle(unit.id)}
+                unit={unit}
               />
             ))
           )}
         </div>
       </GlassCard>
 
-      {/* Main: layout + preview + export */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <GlassCard style={{ padding: 16 }}>
           <div
@@ -299,15 +266,15 @@ export function QrCodesClient({ data }: { data: QrSources }) {
               gap: 10,
             }}
           >
-            {(Object.keys(QR_LAYOUTS) as QrLayoutKey[]).map((k) => {
-              const l = QR_LAYOUTS[k]
-              const active = layoutKey === k
+            {(Object.keys(QR_LAYOUTS) as QrLayoutKey[]).map((key) => {
+              const qrLayout = QR_LAYOUTS[key]
+              const active = layoutKey === key
               return (
                 <button
-                  key={k}
+                  key={key}
                   role="radio"
                   aria-checked={active}
-                  onClick={() => setLayoutKey(k)}
+                  onClick={() => setLayoutKey(key)}
                   style={{
                     textAlign: 'left',
                     padding: '12px 14px',
@@ -330,10 +297,10 @@ export function QrCodesClient({ data }: { data: QrSources }) {
                       color: active ? 'var(--accent-cyan)' : 'var(--fg-0)',
                     }}
                   >
-                    {l.label}
+                    {qrLayout.label}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--fg-3)', marginTop: 2 }}>
-                    {l.description}
+                    {qrLayout.description}
                   </div>
                 </button>
               )
@@ -370,17 +337,13 @@ export function QrCodesClient({ data }: { data: QrSources }) {
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {selected.size > 0 && (
-                <GhostBtn small onClick={clearMode}>
+                <Btn variant="ghost" small onClick={clearSelection}>
                   Limpar seleção
-                </GhostBtn>
+                </Btn>
               )}
-              <PrimaryBtn
-                small
-                disabled={items.length === 0 || exporting}
-                onClick={exportPdf}
-              >
+              <Btn small disabled={items.length === 0 || exporting} onClick={exportPdf}>
                 {exporting ? 'Gerando...' : 'Exportar PDF'}
-              </PrimaryBtn>
+              </Btn>
             </div>
           </div>
 
@@ -412,45 +375,42 @@ export function QrCodesClient({ data }: { data: QrSources }) {
 function SourceRow({
   selected,
   onToggle,
-  kind,
-  row,
+  unit,
 }: {
   selected: boolean
   onToggle: () => void
-  kind: Mode
-  row: QrUnit | QrLote
+  unit: QrUnit
 }) {
-  const code = kind === 'unidades' ? (row as QrUnit).codigo_interno : (row as QrLote).codigo_lote
-  const item = row.item_nome
-  const sub =
-    kind === 'unidades'
-      ? (row as QrUnit).serial_fabrica
-      : `${(row as QrLote).quantidade} un`
-  const categoria = CATEGORIA_LABEL[row.item_categoria]
+  const sub = unit.rfid_pending ? 'RFID pendente' : unit.serial_fabrica || unit.tag_rfid
+  const categoria = CATEGORIA_LABEL[unit.item_categoria]
 
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={selected}
+    <div
       style={{
         width: '100%',
         display: 'grid',
-        gridTemplateColumns: '20px 1fr',
+        gridTemplateColumns: '20px minmax(0, 1fr) auto',
         gap: 10,
         alignItems: 'center',
         padding: '10px 14px',
-        background: selected ? 'color-mix(in oklch, var(--accent-cyan) 8%, transparent)' : 'transparent',
-        border: 'none',
+        background: selected
+          ? 'color-mix(in oklch, var(--accent-cyan) 8%, transparent)'
+          : 'transparent',
         borderBottom: '1px solid var(--glass-border)',
-        cursor: 'pointer',
         textAlign: 'left',
         color: 'inherit',
         fontFamily: 'inherit',
       }}
     >
-      <div
-        aria-hidden
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={selected}
+        aria-label={
+          selected
+            ? `Remover ${unit.codigo_interno} da folha`
+            : `Adicionar ${unit.codigo_interno} à folha`
+        }
         style={{
           width: 16,
           height: 16,
@@ -465,55 +425,122 @@ function SourceRow({
           color: '#000',
           fontSize: 12,
           lineHeight: 1,
+          cursor: 'pointer',
         }}
       >
         {selected ? '✓' : ''}
+      </button>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={
+          selected
+            ? `Remover ${unit.codigo_interno} da folha`
+            : `Adicionar ${unit.codigo_interno} à folha`
+        }
+        style={{
+          minWidth: 0,
+          border: 'none',
+          background: 'transparent',
+          padding: 0,
+          color: 'inherit',
+          fontFamily: 'inherit',
+          textAlign: 'left',
+          cursor: 'pointer',
+        }}
+      >
+        <SourceSummary
+          code={unit.codigo_interno}
+          item={unit.item_nome}
+          categoria={categoria}
+          sub={sub}
+          warn={unit.rfid_pending}
+        />
+      </button>
+      <Link
+        href={`/qrcodes/${encodeURIComponent(unit.codigo_interno)}`}
+        aria-label={`Abrir ficha interna de ${unit.codigo_interno}`}
+        style={{
+          minHeight: 30,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          padding: '0 10px',
+          borderRadius: 8,
+          border: '1px solid var(--glass-border)',
+          background: 'var(--glass-bg)',
+          color: 'var(--fg-1)',
+          textDecoration: 'none',
+          fontSize: 11,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Ficha
+        <span aria-hidden>{Icons.arrow}</span>
+      </Link>
+    </div>
+  )
+}
+
+function SourceSummary({
+  code,
+  item,
+  categoria,
+  sub,
+  warn,
+}: {
+  code: string
+  item: string
+  categoria: string
+  sub: string | null
+  warn?: boolean
+}) {
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div
+        className="mono"
+        style={{
+          fontSize: 12,
+          color: 'var(--fg-0)',
+          fontWeight: 500,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {code}
       </div>
-      <div style={{ minWidth: 0 }}>
-        <div
-          className="mono"
-          style={{
-            fontSize: 12,
-            color: 'var(--fg-0)',
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {code}
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: 'var(--fg-2)',
-            marginTop: 2,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {item}
-        </div>
-        <div
-          className="mono"
-          style={{
-            fontSize: 9,
-            color: 'var(--fg-3)',
-            marginTop: 2,
-            letterSpacing: 0.1,
-            textTransform: 'uppercase',
-          }}
-        >
-          {categoria}
-          {sub && (
-            <>
-              {' · '}
-              {sub}
-            </>
-          )}
-        </div>
+      <div
+        style={{
+          fontSize: 11,
+          color: 'var(--fg-2)',
+          marginTop: 2,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {item}
       </div>
-    </button>
+      <div
+        className="mono"
+        style={{
+          fontSize: 9,
+          color: warn ? 'var(--accent-amber)' : 'var(--fg-3)',
+          marginTop: 2,
+          letterSpacing: 0.1,
+          textTransform: 'uppercase',
+        }}
+      >
+        {categoria}
+        {sub && (
+          <>
+            {' · '}
+            {sub}
+          </>
+        )}
+      </div>
+    </div>
   )
 }

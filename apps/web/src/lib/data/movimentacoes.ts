@@ -1,4 +1,6 @@
 import 'server-only'
+import { loadDemoMovimentacoesByProject } from '@/lib/data/demo'
+import { withDemoFallback } from '@/lib/data/demo-mode'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import type { MetodoScan, TipoMovimentacao } from '@/lib/types'
 import type { MovimentacaoTimeline } from '@/lib/data/items'
@@ -26,7 +28,18 @@ type MovRow = {
 // direto no componente existente.
 export async function loadMovimentacoesByProject(
   projetoId: string,
-  limit = 200
+  limit = 200,
+): Promise<MovimentacaoTimeline[]> {
+  return withDemoFallback(
+    `movimentacoes:${projetoId}`,
+    () => loadMovimentacoesByProjectFromSupabase(projetoId, limit),
+    () => loadDemoMovimentacoesByProject(projetoId).slice(0, limit),
+  )
+}
+
+async function loadMovimentacoesByProjectFromSupabase(
+  projetoId: string,
+  limit = 200,
 ): Promise<MovimentacaoTimeline[]> {
   const { data, error } = await supabaseAdmin
     .from('movimentacoes')
@@ -34,7 +47,7 @@ export async function loadMovimentacoesByProject(
       `id, tipo, timestamp, status_anterior, status_novo, registrado_por,
        metodo_scan, notas,
        serial_numbers ( codigo_interno ),
-       projetos ( id, nome )`
+       projetos ( id, nome )`,
     )
     .eq('projeto_id', projetoId)
     .order('timestamp', { ascending: false })

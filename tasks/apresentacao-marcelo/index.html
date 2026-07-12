@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MMD Estoque Inteligente, como funciona por dentro</title>
+<style>
+  :root {
+    --bg-0: oklch(0.12 0.015 250);
+    --bg-1: oklch(0.16 0.018 250);
+    --bg-2: oklch(0.2 0.02 250);
+    --fg-0: oklch(0.98 0.005 250);
+    --fg-1: oklch(0.85 0.008 250);
+    --fg-2: oklch(0.65 0.01 250);
+    --fg-3: oklch(0.51 0.012 250);
+    --cyan: oklch(0.75 0.14 210);
+    --violet: oklch(0.7 0.17 295);
+    --amber: oklch(0.8 0.15 75);
+    --green: oklch(0.8 0.17 150);
+    --red: oklch(0.7 0.18 25);
+    --glass-bg: oklch(1 0 0 / 0.05);
+    --glass-bg-strong: oklch(1 0 0 / 0.09);
+    --glass-border: oklch(1 0 0 / 0.1);
+    --glass-border-strong: oklch(1 0 0 / 0.18);
+    --glass-shadow: 0 2px 6px oklch(0 0 0 / 0.25), 0 20px 60px oklch(0 0 0 / 0.35);
+    --r-md: 8px;
+    --r-lg: 12px;
+    --r-xl: 18px;
+    --sans: 'Inter Tight', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+    --maxw: 1100px;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg-0); color: var(--fg-0); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; line-height: 1.6; overflow-x: hidden;
+  }
+  .mono { font-family: var(--mono); font-feature-settings: 'tnum'; letter-spacing: -0.01em; }
+
+  .field { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.42; }
+  .orb.a { width: 50vw; height: 50vw; left: -14vw; top: -10vw; background: radial-gradient(circle, oklch(0.6 0.18 210) 0%, transparent 62%); }
+  .orb.b { width: 42vw; height: 42vw; right: -12vw; top: 40vh; background: radial-gradient(circle, oklch(0.55 0.2 295) 0%, transparent 62%); opacity: 0.34; }
+  .orb.c { width: 38vw; height: 38vw; left: 20vw; bottom: -14vw; background: radial-gradient(circle, oklch(0.6 0.17 150) 0%, transparent 62%); opacity: 0.26; }
+
+  main { max-width: var(--maxw); margin: 0 auto; padding: 0 24px 110px; }
+  section { padding: 56px 0; scroll-margin-top: 20px; }
+
+  .glass {
+    position: relative; background: var(--glass-bg); border: 1px solid var(--glass-border);
+    border-radius: var(--r-xl); box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(20px) saturate(1.3); -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  }
+  .glass::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(150deg, oklch(1 0 0 / 0.2), transparent 42%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cyan); margin-bottom: 14px; display: inline-flex; align-items: center; gap: 9px; }
+  .eyebrow::before { content: ''; width: 22px; height: 1px; background: var(--cyan); opacity: 0.6; }
+  .step-tag { color: var(--violet); }
+  .step-tag::before { background: var(--violet); }
+
+  h1 { font-size: clamp(32px, 5.4vw, 54px); line-height: 1.04; letter-spacing: -0.03em; font-weight: 680; max-width: 17ch; }
+  h2 { font-size: clamp(23px, 3.4vw, 33px); line-height: 1.12; letter-spacing: -0.02em; font-weight: 640; }
+  h3 { font-size: 17px; font-weight: 620; letter-spacing: -0.01em; }
+  p { color: var(--fg-1); font-size: 16px; }
+  .lead { font-size: clamp(16px, 2vw, 19px); color: var(--fg-1); max-width: 64ch; }
+  .muted { color: var(--fg-2); }
+  .sec-intro { max-width: 66ch; margin-top: 12px; color: var(--fg-2); }
+
+  /* o que é / como funciona */
+  .concept { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 26px; }
+  .concept .box { padding: 24px; }
+  .concept .box .k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); }
+  .concept .box h3 { margin: 9px 0 8px; }
+  .concept .box p { font-size: 15px; color: var(--fg-2); }
+  .analogy { margin-top: 18px; padding: 16px 20px; border-left: 2px solid var(--violet); background: oklch(0.7 0.17 295 / 0.06); border-radius: 0 var(--r-md) var(--r-md) 0; }
+  .analogy p { font-size: 15px; color: var(--fg-1); }
+  .analogy b { color: var(--violet); font-weight: 600; }
+
+  /* hero */
+  .hero { padding-top: 80px; }
+  .hero .lead { margin-top: 20px; }
+  .toc { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .toc a { font-family: var(--mono); font-size: 12.5px; color: var(--fg-1); text-decoration: none; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--glass-border-strong); background: var(--glass-bg); transition: border-color 0.2s, color 0.2s; }
+  .toc a:hover { color: var(--cyan); border-color: var(--cyan); }
+
+  .anchors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 34px; }
+  .anchor { padding: 20px 18px; }
+  .anchor .n { font-size: clamp(26px, 3.6vw, 38px); font-weight: 680; letter-spacing: -0.03em; }
+  .anchor .n .u { font-size: 17px; color: var(--cyan); margin-left: 2px; }
+  .anchor .l { font-size: 12.5px; color: var(--fg-2); margin-top: 5px; }
+
+  /* camadas */
+  .layers { margin-top: 26px; display: flex; flex-direction: column; gap: 0; }
+  .layer { padding: 22px 24px; display: grid; grid-template-columns: 150px 1fr; gap: 20px; align-items: center; }
+  .layer .lbl { display: flex; flex-direction: column; gap: 4px; }
+  .layer .lbl .ic { font-size: 26px; }
+  .layer .lbl .nm { font-size: 15px; font-weight: 620; }
+  .layer .lbl .tech { font-family: var(--mono); font-size: 11px; color: var(--fg-3); }
+  .layer p { font-size: 14.5px; color: var(--fg-2); }
+  .layer.apps { border-color: oklch(0.75 0.14 210 / 0.3); }
+  .layer.motor { border-color: oklch(0.7 0.17 295 / 0.3); }
+  .layer-link { display: flex; justify-content: center; padding: 7px 0; color: var(--fg-3); font-size: 13px; font-family: var(--mono); }
+  .layer-link span { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* tabelas do banco */
+  .tables { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; }
+  .tcard { padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 7px; }
+  .tcard .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .tcard .nm { font-size: 15px; font-weight: 620; }
+  .tcard .tech { font-family: var(--mono); font-size: 11px; color: var(--cyan); margin-top: 2px; }
+  .tcard .cnt { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--fg-0); background: var(--glass-bg-strong); border: 1px solid var(--glass-border); border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+  .tcard .cnt.zero { color: var(--fg-3); }
+  .tcard p { font-size: 13px; color: var(--fg-2); }
+  .tcard.legacy { opacity: 0.82; }
+
+  /* perguntas e respostas (como funciona) */
+  .qa { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
+  .qa-item { padding: 20px 22px; }
+  .qa-item .q { font-size: 15px; font-weight: 620; color: var(--cyan); margin-bottom: 7px; }
+  .qa-item p { font-size: 14.5px; color: var(--fg-2); }
+
+  /* item vs unidade */
+  .vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; margin-top: 24px; }
+  .vs .arrow { display: flex; align-items: center; justify-content: center; color: var(--fg-3); font-size: 20px; }
+  .card { padding: 24px; }
+  .card h3 { margin-bottom: 8px; }
+  .card p { font-size: 14.5px; color: var(--fg-2); }
+  .codechip { font-family: var(--mono); font-size: 13px; color: var(--cyan); background: oklch(0.75 0.14 210 / 0.1); border: 1px solid oklch(0.75 0.14 210 / 0.25); padding: 3px 9px; border-radius: 6px; display: inline-block; margin-top: 10px; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 12px; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--glass-border-strong); color: var(--fg-1); background: var(--glass-bg); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); }
+
+  /* barras */
+  .bars { margin-top: 6px; }
+  .bar-row { display: grid; grid-template-columns: 122px 1fr 42px; gap: 12px; align-items: center; padding: 6px 0; }
+  .bar-row .cat { font-size: 13px; color: var(--fg-1); }
+  .bar-track { height: 9px; border-radius: 999px; background: oklch(1 0 0 / 0.06); overflow: hidden; }
+  .bar-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--violet)); width: 0; transition: width 1.1s cubic-bezier(0.2,0.7,0.2,1); }
+  .bar-row .v { font-family: var(--mono); font-size: 13px; color: var(--fg-2); text-align: right; }
+
+  /* condição e valor */
+  .dim { padding: 22px; }
+  .dim .k { font-family: var(--mono); font-size: 12px; color: var(--cyan); letter-spacing: 0.08em; text-transform: uppercase; }
+  .dim h3 { margin: 9px 0 7px; }
+  .dim p { font-size: 14px; color: var(--fg-2); }
+  .factors { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+  .factor { font-family: var(--mono); font-size: 12px; padding: 4px 10px; border-radius: 7px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--fg-1); }
+  .calc { padding: 22px 24px; margin-top: 18px; }
+  .formula { font-family: var(--mono); font-size: 15px; color: var(--fg-1); line-height: 1.9; }
+  .formula b { color: var(--cyan); font-weight: 600; }
+  .calc-eg { margin-top: 16px; padding: 16px 20px; border-radius: var(--r-lg); background: var(--bg-1); border: 1px solid var(--glass-border); }
+  .calc-eg .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); }
+  .calc-eg .line { font-family: var(--mono); font-size: 14px; color: var(--fg-1); margin-top: 8px; line-height: 1.7; }
+  .calc-eg .res { color: var(--green); font-weight: 600; }
+
+  /* loop diagram */
+  .loop-wrap { padding: 28px 24px; margin-top: 22px; overflow-x: auto; }
+  svg.loop { width: 100%; height: auto; display: block; min-width: 720px; }
+
+  /* loop passo a passo */
+  .steps { display: flex; flex-direction: column; gap: 14px; margin-top: 22px; }
+  .step-card { padding: 20px 22px; }
+  .step-card .head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .step-card .num { font-family: var(--mono); font-size: 12px; color: var(--bg-0); background: var(--cyan); width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .step-card .head h3 { font-size: 16px; }
+  .step-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .step-grid .cell .role { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 5px; }
+  .step-grid .cell p { font-size: 14px; color: var(--fg-2); }
+  .step-grid .cell.bank .role { color: var(--cyan); }
+  .gate-note { margin-top: 16px; padding: 16px 20px; border-radius: var(--r-lg); border: 1px solid oklch(0.8 0.15 75 / 0.3); background: oklch(0.8 0.15 75 / 0.07); }
+  .gate-note b { color: var(--amber); }
+
+  /* web e campo */
+  .twin { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+  .twin .head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .twin .ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--glass-bg-strong); border: 1px solid var(--glass-border); }
+  .twin ul { list-style: none; }
+  .twin li { font-size: 14px; color: var(--fg-2); padding: 5px 0 5px 18px; position: relative; }
+  .twin li::before { content: ''; position: absolute; left: 0; top: 12px; width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); opacity: 0.7; }
+  .engine-note { margin-top: 18px; font-size: 14.5px; color: var(--fg-1); text-align: center; }
+  .engine-note b { color: var(--cyan); }
+
+  /* rfid */
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 6px 0 4px; }
+  .flow .node { text-align: center; padding: 18px 12px; position: relative; }
+  .flow .node .ic { font-size: 24px; }
+  .flow .node h4 { font-size: 14px; margin: 8px 0 4px; }
+  .flow .node p { font-size: 12px; color: var(--fg-3); }
+  .flow .node:not(:last-child)::after { content: '→'; position: absolute; right: -9px; top: 30px; color: var(--cyan); font-size: 20px; opacity: 0.8; }
+  .branch { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+  .branch .b { padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid var(--glass-border); }
+  .branch .b.known { background: oklch(0.8 0.17 150 / 0.07); border-color: oklch(0.8 0.17 150 / 0.28); }
+  .branch .b.unknown { background: oklch(0.8 0.15 75 / 0.07); border-color: oklch(0.8 0.15 75 / 0.28); }
+  .branch .b h4 { font-size: 14px; margin-bottom: 6px; }
+  .branch .b.known h4 { color: var(--green); }
+  .branch .b.unknown h4 { color: var(--amber); }
+  .branch .b p { font-size: 13px; color: var(--fg-2); }
+  .plan { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  .plan .s { padding: 18px; border-radius: var(--r-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); }
+  .plan .s .num { font-family: var(--mono); color: var(--cyan); font-size: 13px; }
+  .plan .s h4 { font-size: 14px; margin: 7px 0 5px; }
+  .plan .s p { font-size: 13px; color: var(--fg-2); }
+  .status-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+  .status-box { padding: 18px 20px; border-radius: var(--r-lg); }
+  .status-box.ok { background: oklch(0.8 0.17 150 / 0.08); border: 1px solid oklch(0.8 0.17 150 / 0.3); }
+  .status-box.no { background: oklch(0.7 0.18 25 / 0.07); border: 1px solid oklch(0.7 0.18 25 / 0.28); }
+  .status-box .t { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .status-box.ok .t { color: var(--green); }
+  .status-box.no .t { color: var(--red); }
+  .status-box p { font-size: 15px; color: var(--fg-0); }
+  .needs { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .needs .pill .dot { background: var(--amber); }
+
+  /* papéis */
+  .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  .role { padding: 22px; }
+  .role .r { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan); }
+  .role h3 { margin: 8px 0 6px; }
+  .role p { font-size: 14px; color: var(--fg-2); }
+  .audit { margin-top: 16px; padding: 18px 22px; }
+  .audit p { font-size: 14.5px; color: var(--fg-1); }
+
+  /* estado honesto */
+  .state { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+  .state .col h3 { margin-bottom: 14px; display: flex; align-items: center; gap: 9px; }
+  .state .col.done h3 { color: var(--green); }
+  .state .col.todo h3 { color: var(--amber); }
+  .state ul { list-style: none; }
+  .state li { font-size: 14px; color: var(--fg-2); padding: 8px 0 8px 24px; position: relative; border-bottom: 1px solid oklch(1 0 0 / 0.05); }
+  .state li:last-child { border-bottom: none; }
+  .state .done li::before { content: ''; position: absolute; left: 2px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .state .todo li::before { content: ''; position: absolute; left: 2px; top: 13px; width: 9px; height: 9px; border-radius: 2px; border: 1.5px solid var(--amber); }
+
+  /* recap */
+  .recap { padding: 30px 32px; margin-top: 22px; }
+  .recap ol { margin: 8px 0 0 0; padding-left: 22px; }
+  .recap li { font-size: 15px; color: var(--fg-1); padding: 6px 0; }
+  .recap li b { color: var(--fg-0); }
+  footer { text-align: center; color: var(--fg-3); font-size: 12px; font-family: var(--mono); margin-top: 36px; }
+
+  .reveal { opacity: 1; }
+  html.js-anim .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2,0.7,0.2,1); }
+  html.js-anim .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 900px) {
+    .anchors { grid-template-columns: repeat(2, 1fr); }
+    .concept, .qa, .tables, .twin, .vs, .branch, .plan, .status-row, .state, .roles, .step-grid { grid-template-columns: 1fr; }
+    .vs .arrow { transform: rotate(90deg); padding: 4px 0; }
+    .flow { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .flow .node:not(:last-child)::after { display: none; }
+    .layer { grid-template-columns: 1fr; gap: 10px; }
+    section { padding: 44px 0; }
+    .hero { padding-top: 60px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { transition: none; opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<script>if ('IntersectionObserver' in window) document.documentElement.classList.add('js-anim');</script>
+
+<div class="field"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero reveal">
+    <span class="eyebrow">MMD Estoque Inteligente</span>
+    <h1>Como o sistema funciona por dentro</h1>
+    <p class="lead">Um guia para entender o que está sendo construído, sem termos de programação. Vamos por partes: o que guarda os dados, o que faz o controle acontecer, e como tudo se liga no dia a dia do galpão.</p>
+    <div class="toc">
+      <a href="#camadas">As 3 partes do sistema</a>
+      <a href="#banco">O banco de dados</a>
+      <a href="#motor">O motor</a>
+      <a href="#dados">Tipo e unidade</a>
+      <a href="#valor">Cálculo de valor</a>
+      <a href="#loop">O loop passo a passo</a>
+      <a href="#rfid">RFID</a>
+      <a href="#estado">O que está pronto</a>
+    </div>
+    <div class="anchors">
+      <div class="glass anchor reveal"><div class="n mono" data-count="539">539</div><div class="l">tipos de equipamento no catálogo</div></div>
+      <div class="glass anchor reveal"><div class="n mono" data-count="1058">1058</div><div class="l">unidades físicas, uma a uma</div></div>
+      <div class="glass anchor reveal"><div class="n mono"><span data-count="100">100</span><span class="u">%</span></div><div class="l">do catálogo com código interno</div></div>
+      <div class="glass anchor reveal"><div class="n mono" data-count="11">11</div><div class="l">eventos já cadastrados</div></div>
+    </div>
+  </section>
+
+  <!-- CAMADAS -->
+  <section id="camadas" class="reveal">
+    <span class="eyebrow">As 3 partes do sistema</span>
+    <h2>Banco de dados, motor e aplicativos</h2>
+    <p class="sec-intro">O sistema tem três partes que trabalham juntas. Entender essa separação ajuda a entender todo o resto. De baixo para cima: onde os dados moram, o que decide as regras, e as telas que a equipe usa.</p>
+
+    <div class="layers">
+      <div class="glass layer apps reveal">
+        <div class="lbl"><span class="ic">🖥️📱</span><span class="nm">Aplicativos</span><span class="tech">web + iPhone</span></div>
+        <p>As telas que você e a equipe usam. No computador, a gestão. No celular, o trabalho no galpão. São a parte visível do sistema.</p>
+      </div>
+      <div class="layer-link"><span>usam ↓</span></div>
+      <div class="glass layer motor reveal">
+        <div class="lbl"><span class="ic">⚙️</span><span class="nm">O motor</span><span class="tech">regras de negócio</span></div>
+        <p>As regras que decidem o que pode e o que não pode. Confere prontidão antes de uma saída, registra quem fez cada operação, abre pendência se algo não volta.</p>
+      </div>
+      <div class="layer-link"><span>guarda em ↓</span></div>
+      <div class="glass layer reveal">
+        <div class="lbl"><span class="ic">🗄️</span><span class="nm">O banco de dados</span><span class="tech">Supabase</span></div>
+        <p>Onde toda a informação fica guardada, na nuvem. É a fonte única: computador e celular leem e escrevem no mesmo lugar, então nunca existem duas versões diferentes da verdade.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BANCO -->
+  <section id="banco" class="reveal">
+    <span class="eyebrow">O banco de dados</span>
+    <h2>O que é o Supabase</h2>
+
+    <div class="concept">
+      <div class="glass box reveal">
+        <span class="k">O que é</span>
+        <h3>O depósito de informação</h3>
+        <p>Supabase é o serviço, na nuvem, onde ficam guardados o catálogo, os eventos, as listas de separação, as movimentações e o histórico. Em vez de uma planilha que fica no computador de uma pessoa, é um banco central que todos acessam.</p>
+      </div>
+      <div class="glass box reveal">
+        <span class="k">Como funciona</span>
+        <h3>Tabelas que se conversam</h3>
+        <p>Um banco de dados é um conjunto de tabelas. Cada tabela guarda um tipo de coisa, e elas se ligam entre si: uma unidade física aponta para o seu tipo no catálogo, uma movimentação aponta para a unidade e para o evento. Assim a informação nunca fica solta.</p>
+      </div>
+    </div>
+
+    <div class="analogy reveal">
+      <p><b>Uma analogia:</b> pense em cada tabela como uma planilha. A diferença é que aqui as planilhas se enxergam. Quando você abre uma unidade, o sistema já sabe de qual tipo ela é, em quais eventos ela esteve e qual o histórico, porque as tabelas estão ligadas.</p>
+    </div>
+
+    <h3 style="margin:36px 0 4px;">As tabelas do banco, uma a uma</h3>
+    <p class="muted" style="font-size:14px; max-width:64ch;">O número ao lado de cada tabela é quantos registros ela tem hoje, de verdade, no banco.</p>
+    <div class="tables" id="tables"></div>
+  </section>
+
+  <!-- COMO O BANCO FUNCIONA -->
+  <section class="reveal">
+    <span class="eyebrow">O banco no dia a dia</span>
+    <h2>Como o banco funciona quando alguém usa</h2>
+    <p class="sec-intro">Quatro comportamentos resumem o que o banco faz enquanto a equipe trabalha.</p>
+    <div class="qa">
+      <div class="glass qa-item reveal"><div class="q">Pergunta e resposta</div><p>O aplicativo pergunta ("quais unidades deste tipo estão disponíveis?") e o banco devolve a resposta na hora. Toda tela que você abre é uma pergunta ao banco.</p></div>
+      <div class="glass qa-item reveal"><div class="q">Tudo fica registrado</div><p>Cada mudança vira um registro com data e autor. Uma saída, um retorno, uma troca de estado: nada acontece sem deixar rastro no histórico.</p></div>
+      <div class="glass qa-item reveal"><div class="q">Atualiza sozinho</div><p>Se um operador no galpão muda algo, a tela de quem está no escritório atualiza sozinha, sem precisar recarregar. Os dois veem o mesmo estado.</p></div>
+      <div class="glass qa-item reveal"><div class="q">Segurança por papel</div><p>Cada pessoa só enxerga e altera o que o papel dela permite. O banco recusa qualquer operação fora da permissão, mesmo que alguém tente por fora.</p></div>
+    </div>
+  </section>
+
+  <!-- MOTOR -->
+  <section id="motor" class="reveal">
+    <span class="eyebrow">O motor</span>
+    <h2>O que é o motor</h2>
+
+    <div class="concept">
+      <div class="glass box reveal">
+        <span class="k">O que é</span>
+        <h3>As regras sobre o banco</h3>
+        <p>Sozinho, o banco é só um depósito de dados, igual a uma planilha mais organizada. O motor é o conjunto de regras que roda em cima dele e garante que cada operação aconteça do jeito certo, e não de qualquer jeito.</p>
+      </div>
+      <div class="glass box reveal">
+        <span class="k">Como funciona</span>
+        <h3>Operações com trava de segurança</h3>
+        <p>Quando você faz uma saída, o motor não muda uma peça de cada vez na mão. Ele executa a operação inteira como um bloco: ou todas as peças saem e ficam registradas, ou nada muda. Nunca para no meio deixando o estoque errado.</p>
+      </div>
+    </div>
+
+    <div class="qa" style="margin-top:18px;">
+      <div class="glass qa-item reveal"><div class="q">Exemplo de regra: não dar conflito</div><p>O motor não deixa a mesma unidade sair para dois eventos com datas que se cruzam. Se houver risco, ele avisa antes.</p></div>
+      <div class="glass qa-item reveal"><div class="q">Exemplo de regra: tudo ou nada</div><p>Dar baixa em 30 peças de um evento é uma operação só. Se algo falhar no meio, o motor desfaz tudo, em vez de deixar 18 fora e 12 dentro.</p></div>
+      <div class="glass qa-item reveal"><div class="q">Exemplo de regra: registro automático</div><p>Toda saída e todo retorno geram histórico sozinhos, com quem fez e quando. Ninguém precisa lembrar de anotar.</p></div>
+      <div class="glass qa-item reveal"><div class="q">Exemplo de regra: nada se perde</div><p>Se uma peça não volta do evento, o motor abre uma pendência com responsável, em vez de a peça simplesmente sumir do controle.</p></div>
+    </div>
+  </section>
+
+  <!-- TIPO vs UNIDADE -->
+  <section id="dados" class="reveal">
+    <span class="eyebrow">O modelo de dados</span>
+    <h2>A diferença entre tipo e peça real</h2>
+    <p class="sec-intro">Essa é a ideia central do controle. O sistema separa o modelo do equipamento da peça física que existe no galpão. É a diferença entre dizer "tenho refletores de LED" e saber exatamente quais 40 unidades você tem, cada uma com etiqueta e estado próprio.</p>
+
+    <div class="vs">
+      <div class="glass card">
+        <span class="pill"><span class="dot"></span> Tipo</span>
+        <h3 style="margin-top:14px;">O modelo no catálogo</h3>
+        <p>Uma linha por modelo de equipamento: nome, marca, modelo, categoria e valor de mercado. Diz o que existe no seu catálogo.</p>
+        <span class="codechip mono">539 tipos</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="glass card">
+        <span class="pill"><span class="dot"></span> Unidade física</span>
+        <h3 style="margin-top:14px;">A peça real na prateleira</h3>
+        <p>Cada exemplar que existe de verdade, com código interno único, etiqueta, estado, desgaste e localização própria.</p>
+        <span class="codechip mono">MMD-ILU-0001</span>
+      </div>
+    </div>
+
+    <div class="glass card reveal" style="margin-top:18px;">
+      <h3 style="margin-bottom:12px;">Como as 1058 unidades se dividem por categoria</h3>
+      <div class="bars" id="cat-bars"></div>
+    </div>
+  </section>
+
+  <!-- VALOR -->
+  <section id="valor" class="reveal">
+    <span class="eyebrow">Cálculo de valor</span>
+    <h2>Como o sistema sabe quanto cada peça vale hoje</h2>
+    <p class="sec-intro">O valor de cada unidade é calculado de forma automática, sem reavaliação manual, a partir de três medidas guardadas no banco.</p>
+
+    <div class="concept" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="glass dim reveal">
+        <span class="k">Medida 1</span><h3>Estado</h3>
+        <p>O ponto no ciclo de vida da peça. Cada estado tem um peso (fator) sobre o valor.</p>
+        <div class="factors"><span class="factor">NOVO 1,00</span><span class="factor">SEMI-NOVO 0,85</span><span class="factor">USADO 0,65</span><span class="factor">RECOND. 0,50</span></div>
+      </div>
+      <div class="glass dim reveal">
+        <span class="k">Medida 2</span><h3>Desgaste</h3>
+        <p>A condição física numa nota de 1 a 5, atualizada a cada retorno do campo.</p>
+        <div class="factors"><span class="factor">5 excelente</span><span class="factor">3 regular</span><span class="factor">1 crítico</span></div>
+      </div>
+      <div class="glass dim reveal">
+        <span class="k">Medida 3</span><h3>Valor atual</h3>
+        <p>Sai da conta das outras duas medidas sobre o valor original. Atualiza sozinho.</p>
+        <div class="factors"><span class="factor">automático</span></div>
+      </div>
+    </div>
+
+    <div class="glass calc reveal">
+      <div class="formula">valor atual = <b>valor original</b> &nbsp;x&nbsp; (<b>desgaste</b> / 5) &nbsp;x&nbsp; <b>fator do estado</b></div>
+      <div class="calc-eg">
+        <span class="tag">Exemplo</span>
+        <div class="line">
+          Um refletor que custou <b>R$ 1.000</b>, em estado <b>USADO</b> (fator 0,65), com desgaste <b>4 de 5</b>:<br>
+          1.000 &nbsp;x&nbsp; (4 / 5) &nbsp;x&nbsp; 0,65 &nbsp;=&nbsp; <span class="res">R$ 520 de valor atual</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOOP -->
+  <section id="loop" class="reveal">
+    <span class="eyebrow">O loop operacional</span>
+    <h2>O caminho de um equipamento, passo a passo</h2>
+    <p class="sec-intro">Todo equipamento que vai para um evento percorre o mesmo caminho. Primeiro o desenho geral, depois cada passo explicado em três partes: o que você faz, o que o motor faz e o que muda no banco.</p>
+
+    <div class="glass loop-wrap reveal">
+      <svg class="loop" viewBox="0 0 980 200" role="img" aria-label="Fluxo do loop operacional">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="oklch(0.75 0.14 210)"/><stop offset="1" stop-color="oklch(0.7 0.17 295)"/></linearGradient>
+          <marker id="arr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="oklch(0.75 0.14 210)"/></marker>
+        </defs>
+        <line x1="110" y1="100" x2="870" y2="100" stroke="oklch(1 0 0 / 0.12)" stroke-width="2"/>
+        <g>
+          <circle cx="110" cy="100" r="28" fill="oklch(0.16 0.018 250)" stroke="url(#g1)" stroke-width="2"/><text x="110" y="106" text-anchor="middle" font-size="20" fill="oklch(0.98 0 0)" font-family="ui-monospace, monospace">1</text>
+          <text x="110" y="56" text-anchor="middle" font-size="14" fill="oklch(0.98 0 0)" font-family="Inter Tight, sans-serif" font-weight="600">Alocar</text>
+          <circle cx="300" cy="100" r="28" fill="oklch(0.16 0.018 250)" stroke="url(#g1)" stroke-width="2"/><text x="300" y="106" text-anchor="middle" font-size="20" fill="oklch(0.98 0 0)" font-family="ui-monospace, monospace">2</text>
+          <text x="300" y="56" text-anchor="middle" font-size="14" fill="oklch(0.98 0 0)" font-family="Inter Tight, sans-serif" font-weight="600">Check-out</text>
+          <circle cx="490" cy="100" r="28" fill="oklch(0.16 0.018 250)" stroke="oklch(0.8 0.15 75)" stroke-width="2"/><text x="490" y="107" text-anchor="middle" font-size="18" fill="oklch(0.8 0.15 75)">★</text>
+          <text x="490" y="56" text-anchor="middle" font-size="14" fill="oklch(0.98 0 0)" font-family="Inter Tight, sans-serif" font-weight="600">Campo</text>
+          <circle cx="680" cy="100" r="28" fill="oklch(0.16 0.018 250)" stroke="url(#g1)" stroke-width="2"/><text x="680" y="106" text-anchor="middle" font-size="20" fill="oklch(0.98 0 0)" font-family="ui-monospace, monospace">4</text>
+          <text x="680" y="56" text-anchor="middle" font-size="14" fill="oklch(0.98 0 0)" font-family="Inter Tight, sans-serif" font-weight="600">Check-in</text>
+          <circle cx="870" cy="100" r="28" fill="oklch(0.16 0.018 250)" stroke="url(#g1)" stroke-width="2"/><text x="870" y="106" text-anchor="middle" font-size="20" fill="oklch(0.98 0 0)" font-family="ui-monospace, monospace">5</text>
+          <text x="870" y="56" text-anchor="middle" font-size="14" fill="oklch(0.98 0 0)" font-family="Inter Tight, sans-serif" font-weight="600">Resolver</text>
+        </g>
+        <line x1="146" y1="100" x2="264" y2="100" stroke="oklch(0.75 0.14 210)" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="336" y1="100" x2="454" y2="100" stroke="oklch(0.75 0.14 210)" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="526" y1="100" x2="644" y2="100" stroke="oklch(0.75 0.14 210)" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="716" y1="100" x2="834" y2="100" stroke="oklch(0.75 0.14 210)" stroke-width="2" marker-end="url(#arr)"/>
+      </svg>
+    </div>
+
+    <div class="steps">
+      <div class="glass step-card reveal">
+        <div class="head"><span class="num">1</span><h3>Alocar: reservar as peças do evento</h3></div>
+        <div class="step-grid">
+          <div class="cell"><div class="role">Você faz</div><p>Monta a lista do evento (item e quantidade) e escolhe quais unidades vão.</p></div>
+          <div class="cell"><div class="role">O motor faz</div><p>Sugere as peças paradas há mais tempo (uso justo) e avisa se alguma já está reservada em outro evento na mesma data.</p></div>
+          <div class="cell bank"><div class="role">No banco</div><p>Grava a lista de separação e marca as unidades como reservadas para aquele evento.</p></div>
+        </div>
+      </div>
+      <div class="glass step-card reveal">
+        <div class="head"><span class="num">2</span><h3>Check-out: a saída para o evento</h3></div>
+        <div class="step-grid">
+          <div class="cell"><div class="role">Você faz</div><p>Confirma a saída, lendo por RFID, QR Code ou na mão.</p></div>
+          <div class="cell"><div class="role">O motor faz</div><p>Confere a prontidão antes de liberar. Executa a saída como bloco único, tudo ou nada.</p></div>
+          <div class="cell bank"><div class="role">No banco</div><p>Muda as unidades para "em campo" e grava a movimentação de saída, com autor e hora.</p></div>
+        </div>
+      </div>
+      <div class="glass step-card reveal">
+        <div class="head"><span class="num">3</span><h3>Campo: o equipamento em uso</h3></div>
+        <div class="step-grid">
+          <div class="cell"><div class="role">Você faz</div><p>Usa o equipamento no evento, normalmente.</p></div>
+          <div class="cell"><div class="role">O motor faz</div><p>Mantém o controle de exatamente o que saiu e para onde.</p></div>
+          <div class="cell bank"><div class="role">No banco</div><p>As unidades ficam com estado "em campo" até o retorno.</p></div>
+        </div>
+      </div>
+      <div class="glass step-card reveal">
+        <div class="head"><span class="num">4</span><h3>Check-in: o retorno e a conferência</h3></div>
+        <div class="step-grid">
+          <div class="cell"><div class="role">Você faz</div><p>Confere peça por peça na volta: dá a nota de desgaste e o resultado (ok, problema, ou não voltou).</p></div>
+          <div class="cell"><div class="role">O motor faz</div><p>Encaminha cada peça: volta para estoque, vai para manutenção, ou abre pendência.</p></div>
+          <div class="cell bank"><div class="role">No banco</div><p>Atualiza estado e desgaste, grava a movimentação de retorno e abre pendências se preciso.</p></div>
+        </div>
+      </div>
+      <div class="glass step-card reveal">
+        <div class="head"><span class="num">5</span><h3>Resolver: o que não voltou</h3></div>
+        <div class="step-grid">
+          <div class="cell"><div class="role">Você faz</div><p>Decide o destino de cada pendência aberta.</p></div>
+          <div class="cell"><div class="role">O motor faz</div><p>Aplica a decisão: encontrado, manutenção, baixa ou cobrança do cliente.</p></div>
+          <div class="cell bank"><div class="role">No banco</div><p>Fecha a pendência e ajusta o estado final da unidade.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gate-note reveal">
+      <p><b>O porteiro de prontidão.</b> Antes de liberar uma saída, o motor confere: o evento está confirmado, a lista não está vazia, todo item tem cobertura. Se algo falta, a saída trava. O dono pode forçar com um motivo, e isso fica registrado em auditoria.</p>
+    </div>
+  </section>
+
+  <!-- WEB E CAMPO -->
+  <section class="reveal">
+    <span class="eyebrow">Web e campo</span>
+    <h2>Escritório e galpão, a mesma regra</h2>
+    <p class="sec-intro">A gestão no computador e a operação no celular usam exatamente o mesmo motor e o mesmo banco. Não existem dois sistemas que possam discordar.</p>
+    <div class="twin">
+      <div class="glass card reveal">
+        <div class="head"><div class="ic">🖥️</div><h3>Web, no escritório</h3></div>
+        <ul><li>Cadastro de eventos, ficha e parte comercial leve</li><li>Montagem da lista de equipamento e alocação</li><li>Importação de planilha</li><li>Painel com a saúde do estoque e os próximos eventos</li></ul>
+      </div>
+      <div class="glass card reveal">
+        <div class="head"><div class="ic">📱</div><h3>iPhone, no galpão</h3></div>
+        <ul><li>Leitura por RFID e por QR Code</li><li>Check-out de saída para o evento</li><li>Conferência de retorno, peça por peça</li><li>Resumo do evento na mão, em campo</li></ul>
+      </div>
+    </div>
+    <p class="engine-note reveal">Os dois falam com o <b>mesmo motor e o mesmo banco</b>. Se um operador muda algo, a tela do outro atualiza sozinha.</p>
+  </section>
+
+  <!-- RFID -->
+  <section id="rfid" class="reveal">
+    <span class="eyebrow">RFID</span>
+    <h2>O leitor sem fio, software pronto para a prova de campo</h2>
+    <p class="sec-intro">RFID é a etiqueta que o leitor lê à distância, sem precisar apontar para um código. A integração entre o leitor RFD40, o iPhone e o sistema foi feita pensando no caminho inteiro, não só no leitor. Falta a prova com o equipamento físico no galpão.</p>
+
+    <div class="glass card reveal" style="margin-top:24px;">
+      <h3 style="margin-bottom:16px;">O caminho de uma leitura, de ponta a ponta</h3>
+      <div class="flow">
+        <div class="node"><div class="ic">📡</div><h4>RFD40 lê a tag</h4><p>o leitor capta a etiqueta</p></div>
+        <div class="node"><div class="ic">📱</div><h4>iPhone recebe</h4><p>o app já está preparado</p></div>
+        <div class="node"><div class="ic">☁️</div><h4>Envia ao sistema</h4><p>a leitura sobe pro motor</p></div>
+        <div class="node"><div class="ic">🗂️</div><h4>Vira histórico</h4><p>fica registrada</p></div>
+      </div>
+      <div class="branch">
+        <div class="b known"><h4>Tag já cadastrada</h4><p>O sistema associa a leitura ao equipamento certo, na hora.</p></div>
+        <div class="b unknown"><h4>Tag ainda não cadastrada</h4><p>O sistema não descarta. Registra como tag desconhecida, para tratar depois.</p></div>
+      </div>
+    </div>
+
+    <h3 style="margin:30px 0 4px;">O próximo passo: teste controlado com 10 a 20 equipamentos</h3>
+    <p class="muted" style="font-size:14px; max-width:64ch;">O objetivo não é ligar tudo de uma vez. É confirmar que o caminho funciona de ponta a ponta e descobrir os ajustes finos antes de escalar.</p>
+    <div class="plan">
+      <div class="glass s reveal"><span class="num mono">passo 1</span><h4>Bancada</h4><p>Leitura simples e próxima, confirma o básico.</p></div>
+      <div class="glass s reveal"><span class="num mono">passo 2</span><h4>Galpão</h4><p>Equipamentos no ambiente real, distância e estabilidade.</p></div>
+      <div class="glass s reveal"><span class="num mono">passo 3</span><h4>Fluxo real pequeno</h4><p>Um inventário, uma saída ou um retorno de verdade.</p></div>
+    </div>
+    <div class="status-row">
+      <div class="glass status-box ok reveal"><div class="t">Status correto hoje</div><p>Software RFID pronto para a prova física.</p></div>
+      <div class="glass status-box no reveal"><div class="t">Ainda não dá para dizer</div><p>RFID validado em campo.</p></div>
+    </div>
+    <div class="needs">
+      <span class="pill"><span class="dot"></span> Para o teste precisamos de:</span>
+      <span class="pill">RFD40</span><span class="pill">iPhone</span><span class="pill">acesso ao app</span><span class="pill">tags RFID reais</span><span class="pill">equipamentos separados</span>
+    </div>
+  </section>
+
+  <!-- SEGURANÇA -->
+  <section class="reveal">
+    <span class="eyebrow">Segurança e auditoria</span>
+    <h2>Cada um mexe no que o papel permite</h2>
+    <p class="sec-intro">O acesso é por papel, e tudo que sai e volta fica registrado com quem fez e quando.</p>
+    <div class="roles">
+      <div class="glass role reveal"><span class="r">Viewer</span><h3>Consulta</h3><p>Enxerga o estoque e os eventos, sem alterar nada.</p></div>
+      <div class="glass role reveal"><span class="r">Editor</span><h3>Opera o dia a dia</h3><p>Aloca, faz saída e retorno, cuida da operação.</p></div>
+      <div class="glass role reveal"><span class="r">Admin</span><h3>Manda</h3><p>Força uma saída com motivo, resolve pendência, apaga.</p></div>
+    </div>
+    <div class="glass audit reveal">
+      <p>Toda saída forçada, toda movimentação e toda pendência ficam na trilha de auditoria. O QR Code público é mínimo de propósito: não mostra valor, número de série de fábrica, localização nem histórico.</p>
+    </div>
+  </section>
+
+  <!-- ESTADO -->
+  <section id="estado" class="reveal">
+    <span class="eyebrow">Estado honesto</span>
+    <h2>O que está pronto e o que falta ativar</h2>
+    <p class="sec-intro">Base sólida montada. A operação ao vivo, em volume, é o próximo capítulo.</p>
+    <div class="state">
+      <div class="glass card col done reveal">
+        <h3>Pronto</h3>
+        <ul>
+          <li>Banco completo, com inventário real e 100% catalogado</li>
+          <li>Motor implementado de ponta a ponta no banco e no web</li>
+          <li>Porteiro de prontidão, alocação justa, conferência e fila de pendências</li>
+          <li>App de campo com fluxo completo e RFID integrado no software</li>
+          <li>Metade do parque já com QR Code (530 de 1058)</li>
+        </ul>
+      </div>
+      <div class="glass card col todo reveal">
+        <h3>Por ativar</h3>
+        <ul>
+          <li>Prova de campo do RFID e início da etiquetagem física</li>
+          <li>Rodar o loop em produção com volume (2 movimentações até agora)</li>
+          <li>Cadastro de usuários e papéis em uso real</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECAP -->
+  <section class="reveal">
+    <span class="eyebrow">Resumo</span>
+    <h2>Em cinco frases</h2>
+    <div class="glass recap reveal">
+      <ol>
+        <li><b>O banco (Supabase)</b> guarda toda a informação na nuvem, em tabelas que se conversam, como fonte única da verdade.</li>
+        <li><b>O motor</b> são as regras que rodam sobre o banco e garantem que cada operação aconteça inteira e do jeito certo.</li>
+        <li><b>O modelo</b> separa o tipo de equipamento da peça física, então você controla cada unidade individualmente.</li>
+        <li><b>O loop</b> leva cada peça por alocar, sair, voltar e resolver, registrando tudo no caminho.</li>
+        <li><b>O RFID</b> está com o software pronto e espera só a prova de campo para entrar em uso.</li>
+      </ol>
+    </div>
+    <footer>MMD Estoque Inteligente · material de apresentação · números do banco em 23/06/2026</footer>
+  </section>
+
+</main>
+
+<script>
+  // tabelas do banco, com contagem real
+  var tabelas = [
+    ['Catálogo de tipos', 'items', '539', 'Cada modelo de equipamento: nome, marca, categoria e valor.'],
+    ['Unidades físicas', 'serial_numbers', '1058', 'Cada peça real, com código interno, etiqueta, estado e desgaste.'],
+    ['Eventos', 'projetos', '11', 'Cada evento ou locação, com cliente, datas e status.'],
+    ['Listas de separação', 'packing_list', '65', 'O que cada evento leva: item, quantidade e unidades designadas.'],
+    ['Histórico', 'movimentacoes', '2', 'Cada saída e cada retorno, com autor, hora e método.'],
+    ['Lotes (legado)', 'lotes', '152', 'Cabos em bloco, do modelo antigo. Sendo descontinuado.'],
+    ['Leitores RFID', 'rfid_readers', '0', 'Os leitores RFD40 registrados no sistema.'],
+    ['Leituras RFID', 'rfid_scans', '0', 'Cada etiqueta lida em campo vira um registro aqui.'],
+    ['Saídas forçadas', 'checkout_overrides', '0', 'Auditoria das saídas liberadas por exceção do admin.'],
+    ['Pendências', 'retorno_pendencias', '0', 'O que não voltou de um evento, esperando resolução.'],
+    ['Modelos de packing', 'packing_templates', '0', 'Listas salvas para reusar em eventos parecidos.'],
+    ['Usuários', 'profiles', '1', 'Quem acessa o sistema e com qual papel.']
+  ];
+  var th = document.getElementById('tables');
+  tabelas.forEach(function (t) {
+    var zero = t[2] === '0' ? ' zero' : '';
+    var legacy = t[1] === 'lotes' ? ' legacy' : '';
+    var el = document.createElement('div');
+    el.className = 'glass tcard reveal' + legacy;
+    el.innerHTML =
+      '<div class="top"><div><div class="nm">' + t[0] + '</div><div class="tech mono">' + t[1] + '</div></div>' +
+      '<div class="cnt mono' + zero + '">' + t[2] + '</div></div>' +
+      '<p>' + t[3] + '</p>';
+    th.appendChild(el);
+  });
+
+  // barras de categoria
+  var categorias = [['AUDIO', 205], ['ILUMINAÇÃO', 195], ['ACESSÓRIO', 32], ['ESTRUTURA', 26], ['EFEITO', 23], ['CABO', 20], ['ENERGIA', 20], ['VÍDEO', 18]];
+  var maxCat = 205;
+  var barsHost = document.getElementById('cat-bars');
+  categorias.forEach(function (c) {
+    var row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = '<span class="cat">' + c[0] + '</span><span class="bar-track"><span class="bar-fill" data-w="' + Math.round(c[1] / maxCat * 100) + '"></span></span><span class="v mono">' + c[1] + '</span>';
+    barsHost.appendChild(row);
+  });
+  requestAnimationFrame(function () {
+    barsHost.querySelectorAll('.bar-fill').forEach(function (b) { b.style.width = b.getAttribute('data-w') + '%'; });
+  });
+
+  // count-up
+  function countUp(el) {
+    var target = parseInt(el.getAttribute('data-count'), 10), dur = 1000, start = null;
+    function step(ts) { if (!start) start = ts; var p = Math.min((ts - start) / dur, 1); el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target); if (p < 1) requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+
+  // reveal por scroll, com count-up
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('in');
+      e.target.querySelectorAll('[data-count]').forEach(countUp);
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+
+  // rede de segurança: nada fica escondido se o observer não disparar
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      document.querySelectorAll('.reveal:not(.in)').forEach(function (el) {
+        el.classList.add('in');
+        el.querySelectorAll('[data-count]').forEach(countUp);
+      });
+    }, 1400);
+  });
+</script>
+
+</body>
+</html>

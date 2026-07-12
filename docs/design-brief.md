@@ -1,5 +1,9 @@
 # Design Brief: MMD Estoque Inteligente
 
+Estado em 2026-06-23: este brief é histórico e foi substituído pelo sistema visual Liquid Glass 2030. Para trabalho atual no PRD MAR-171, use `docs/mar-171-agent-brief.md`, `apps/web/AGENTS.md`, `apps/web/src/components/mmd/Primitives.tsx`, `apps/web/src/app/globals.css` e `apps/web/public/handoff/`.
+
+Não use este arquivo para trocar fontes, paleta ou estrutura visual do produto atual. Ele permanece aqui apenas como registro de exploração anterior.
+
 ## Referencia Visual
 
 Arquivo: `~/Desktop/analytics-dashboard.html`

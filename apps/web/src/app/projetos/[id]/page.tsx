@@ -6,11 +6,9 @@ import { ProjectDetailClient } from '@/components/projects/detail/ProjectDetailC
 import { loadProjectById } from '@/lib/data/project-detail'
 import { loadMovimentacoesByProject } from '@/lib/data/movimentacoes'
 
-export default async function ProjectDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export const dynamic = 'force-dynamic'
+
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   // Detalhe e timeline em paralelo. Se o detalhe não existir, 404.
@@ -33,11 +31,8 @@ export default async function ProjectDetailPage({
       >
         <TopBar
           kicker={
-            <Link
-              href="/projetos"
-              style={{ color: 'var(--fg-3)', textDecoration: 'none' }}
-            >
-              ← Projetos
+            <Link href="/projetos" style={{ color: 'var(--fg-3)', textDecoration: 'none' }}>
+              ← Eventos
             </Link>
           }
           title={projeto.nome}
@@ -57,7 +52,7 @@ export default async function ProjectDetailPage({
           }}
         >
           <Link href="/projetos" style={{ color: 'var(--fg-2)', textDecoration: 'none' }}>
-            Projetos
+            Eventos
           </Link>
           <span style={{ color: 'var(--fg-3)' }}>/</span>
           <span style={{ color: 'var(--fg-0)' }}>{projeto.nome}</span>

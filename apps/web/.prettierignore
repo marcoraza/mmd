@@ -1,0 +1,10 @@
+.next
+node_modules
+public/handoff
+build
+dist
+coverage
+*.log
+.DS_Store
+.env*
+package-lock.json

@@ -31,3 +31,16 @@ node_modules/
 
 # Supabase CLI temp
 supabase/.temp/
+supabase/.branches/
+.vercel
+.codex/
+claude-scripts/
+
+# Worktrees de agentes
+.worktrees/
+
+# Saídas geradas (backups, PDFs, previews)
+out/
+
+# Evidências visuais locais (88MB+ de prints, referência local)
+tasks/evidence/

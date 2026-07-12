@@ -11,6 +11,8 @@ struct LiquidConfigView: View {
 
     @State private var supabaseUrl: String = AppConfig.shared.supabaseUrl
     @State private var supabaseKey: String = AppConfig.shared.supabaseAnonKey
+    @State private var webApiUrl: String = AppConfig.shared.webApiUrl
+    @State private var webApiAuthToken: String = AppConfig.shared.webApiAuthToken
     @State private var useMockReader: Bool = AppConfig.shared.useMockRFID
     @State private var showSaved = false
     @State private var showAdvanced = false
@@ -182,6 +184,8 @@ struct LiquidConfigView: View {
                 if showAdvanced {
                     field(label: "URL do Supabase", text: $supabaseUrl, secure: false, keyboard: .URL)
                     field(label: "API key (anon)", text: $supabaseKey, secure: true, keyboard: .default)
+                    field(label: "API Web URL", text: $webApiUrl, secure: false, keyboard: .URL)
+                    field(label: "API Web token", text: $webApiAuthToken, secure: true, keyboard: .default)
                     saveButton
                 }
             }
@@ -268,12 +272,20 @@ struct LiquidConfigView: View {
     private var hasChanges: Bool {
         supabaseUrl != AppConfig.shared.supabaseUrl
             || supabaseKey != AppConfig.shared.supabaseAnonKey
+            || webApiUrl != AppConfig.shared.webApiUrl
+            || webApiAuthToken != AppConfig.shared.webApiAuthToken
     }
 
     /// Salva so o servidor (secao avancada). O modo do leitor aplica na hora
     /// pelo toggle.
     private func save() {
-        AppConfig.shared.save(supabaseUrl: supabaseUrl, anonKey: supabaseKey, useMockRFID: useMockReader)
+        AppConfig.shared.save(
+            supabaseUrl: supabaseUrl,
+            anonKey: supabaseKey,
+            webApiUrl: webApiUrl,
+            webApiAuthToken: webApiAuthToken,
+            useMockRFID: useMockReader
+        )
         rfid.configure(useMock: useMockReader)
         flashSaved()
     }
@@ -283,6 +295,8 @@ struct LiquidConfigView: View {
         AppConfig.shared.save(
             supabaseUrl: AppConfig.shared.supabaseUrl,
             anonKey: AppConfig.shared.supabaseAnonKey,
+            webApiUrl: AppConfig.shared.webApiUrl,
+            webApiAuthToken: AppConfig.shared.webApiAuthToken,
             useMockRFID: useMock
         )
         rfid.configure(useMock: useMock)

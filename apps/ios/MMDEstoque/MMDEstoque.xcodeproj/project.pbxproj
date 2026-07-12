@@ -41,17 +41,20 @@
 		614427D3028A7DDBF78D1716 /* LiquidConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3358C887ED8DEE8C8C8AF620 /* LiquidConfigView.swift */; };
 		6338427501613F2D74706522 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4122E7C0CEDDD090C54D5204 /* ProjectsListView.swift */; };
 		66FBA38D01C15D87DEDCE472 /* SpaceMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C5852437AFA7B876A30FCBAD /* SpaceMono-Bold.ttf */; };
+		6709BA0927F75FEC84F42636 /* EquipmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B17A1EAD908A55EFB844B9D /* EquipmentTests.swift */; };
 		6FD2ED1DB7F43622B0567CE7 /* LiquidReturnValidationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F031040DF7F5CBFC1BE8ECB /* LiquidReturnValidationView.swift */; };
 		71836D6C1DC40B8FF2728E20 /* LiquidProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C04051CAF01598328A91F1E /* LiquidProjectsListView.swift */; };
 		73132BD5A735EE0E8F9A9FAC /* MMDEstoqueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA8B1AC5E5ADEBDC3055D61D /* MMDEstoqueApp.swift */; };
 		743C6C4DCB98B3DCA310A10E /* LiquidHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 719EDC67268900320B934F5A /* LiquidHomeViewModel.swift */; };
 		76A043ADBA7B6DBA3A248220 /* SpaceGrotesk-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */; };
 		7C9B9D842E75998D23946F64 /* LiquidPackingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C280E45EF7DE19F6A70637 /* LiquidPackingListView.swift */; };
+		7FF4B56017FF7501FABE5AB3 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C576933F86971FB5B952BF41 /* APIClientTests.swift */; };
 		8095731D9E3391AF2659C8ED /* InterTight-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2064F95FE826DBEFC1C79CBD /* InterTight-VF.ttf */; };
 		82A35E0FBEF63FEF2F28A54E /* WearBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E2603B965BC0BCF3345FE4 /* WearBar.swift */; };
 		8490C5A23FCD11427CB1ACD9 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D783BB916661590B5F095A88 /* Theme.swift */; };
 		8D3FED5C3FF62B3C631C0572 /* TourModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789726D330C0030DADB6DC61 /* TourModels.swift */; };
 		8F9898AB605E8F464206AEF4 /* LiquidRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B517935CBFA8F9727632FE3 /* LiquidRouter.swift */; };
+		904F5DC023E69B1BC7955DFE /* SerialNumberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E519B89112FFB06F18856B1 /* SerialNumberTests.swift */; };
 		972812F070BC6553F42B3468 /* LiquidTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B80E41DB8736AC3D036C2A /* LiquidTabBar.swift */; };
 		973BF48053AF163FAC988E40 /* QRScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5106F306DE231604F7C7654F /* QRScanView.swift */; };
 		9857C64EFE0961251A12F8E7 /* LiquidHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0256BEA6E7FDE5B35BCA99DC /* LiquidHome.swift */; };
@@ -60,6 +63,7 @@
 		9B9A873DC375D16AFE902993 /* LiquidCheckoutValidationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF66AFB7AFB6B238AAE27E61 /* LiquidCheckoutValidationView.swift */; };
 		9D832587FC784D77CDC71A93 /* ScanEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A8884A51467AEC388EAB58 /* ScanEngine.swift */; };
 		9F49441C0064E2929C450897 /* TourAnchor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E099C2F904E7FD53B24549BB /* TourAnchor.swift */; };
+		AA810A2D45BDE77D512BDB50 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B303FE2F3CA8824903AA48 /* ThemeTests.swift */; };
 		B1AD92FC71BBB566690C39B9 /* SpotlightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E9C34BDA3F2F912A0B7E2A /* SpotlightView.swift */; };
 		B38C0A694D23764EB5DEC33E /* SerialNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E012404B07763AD5EDFB000 /* SerialNumber.swift */; };
 		B5CB60B005D0EF80343B60DE /* LiquidQRScannerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4522CE0EE36A98C81663B0A /* LiquidQRScannerSheet.swift */; };
@@ -74,6 +78,8 @@
 		D432285F9D7BBFC391CD7DF1 /* ConnectReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */; };
 		D4B4C2225BBC61DB65998546 /* MockRFIDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */; };
 		DE912E8CD5F8083590AF076B /* Doto[ROND,wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6A5013D1FDBEF15DDF8CFEEA /* Doto[ROND,wght].ttf */; };
+		E166C52AAC188A940261BD71 /* RFIDManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D70AB7CC90AEAE96F3AF445B /* RFIDManagerTests.swift */; };
+		E2E70318E8CBDFF9F2A2242E /* TourControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BB88419CC4DE5F2CB7230C /* TourControllerTests.swift */; };
 		E73A527AACD107A391FD56E8 /* TourOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76162D22DEDC95AC9329F414 /* TourOverlay.swift */; };
 		EC4AA9821282C23AE01B835D /* GlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33AAC2836ED72FC7A3BDEF53 /* GlassSurface.swift */; };
 		EC87BEFC3296EFF194E31241 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D4FDA78BC93DCA00DF2AA1 /* Project.swift */; };
@@ -85,6 +91,16 @@
 		FACDEB9E92DEBEBB4ED4D49E /* LiquidItemLostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95853E0984BED96A8AD15E91 /* LiquidItemLostView.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		0189D01DD3173E75377C690B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8B248B3A459F5E71C7A64F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E70DBF9CCB294761263BA41F;
+			remoteInfo = MMDEstoque;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		0256BEA6E7FDE5B35BCA99DC /* LiquidHome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidHome.swift; sourceTree = "<group>"; };
 		055631E395FA08130AE30B7B /* RFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDManager.swift; sourceTree = "<group>"; };
@@ -93,14 +109,17 @@
 		0A3190CB2AF35C21208B73BD /* LiquidComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidComponents.swift; sourceTree = "<group>"; };
 		20325B3F78AF199143EC0DD9 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		2064F95FE826DBEFC1C79CBD /* InterTight-VF.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InterTight-VF.ttf"; sourceTree = "<group>"; };
+		2E519B89112FFB06F18856B1 /* SerialNumberTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialNumberTests.swift; sourceTree = "<group>"; };
 		323EEDFB17A87E8066DC3BE4 /* PackingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListView.swift; sourceTree = "<group>"; };
 		3358C887ED8DEE8C8C8AF620 /* LiquidConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidConfigView.swift; sourceTree = "<group>"; };
 		3364F435E0AD7CAE925AFDF4 /* LiquidConnectReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidConnectReader.swift; sourceTree = "<group>"; };
 		339727BF88399EFB1848416D /* SpaceGrotesk-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Bold.ttf"; sourceTree = "<group>"; };
 		33AAC2836ED72FC7A3BDEF53 /* GlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSurface.swift; sourceTree = "<group>"; };
+		3465259172B970BF9392B6F0 /* MMDEstoqueTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MMDEstoqueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3868E82216FF16E0450A4003 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		3B517935CBFA8F9727632FE3 /* LiquidRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidRouter.swift; sourceTree = "<group>"; };
 		3E98702B08CD63F5D51C5464 /* CheckoutFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutFlowView.swift; sourceTree = "<group>"; };
+		40BB88419CC4DE5F2CB7230C /* TourControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourControllerTests.swift; sourceTree = "<group>"; };
 		40C2DAC838AD374C6FACBDBF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4122E7C0CEDDD090C54D5204 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
 		43A34A6FF45CB6009AB81661 /* TourController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourController.swift; sourceTree = "<group>"; };
@@ -120,6 +139,7 @@
 		719EDC67268900320B934F5A /* LiquidHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidHomeViewModel.swift; sourceTree = "<group>"; };
 		76162D22DEDC95AC9329F414 /* TourOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourOverlay.swift; sourceTree = "<group>"; };
 		789726D330C0030DADB6DC61 /* TourModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourModels.swift; sourceTree = "<group>"; };
+		7B17A1EAD908A55EFB844B9D /* EquipmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentTests.swift; sourceTree = "<group>"; };
 		7D69133C4625DC54D3FECAB7 /* LiquidType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidType.swift; sourceTree = "<group>"; };
 		87370481D0344955AD756252 /* LiquidCheckoutGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidCheckoutGridView.swift; sourceTree = "<group>"; };
 		8D0CDC9AEEF428686EEA2B79 /* TourDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourDefinitions.swift; sourceTree = "<group>"; };
@@ -128,6 +148,7 @@
 		95853E0984BED96A8AD15E91 /* LiquidItemLostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidItemLostView.swift; sourceTree = "<group>"; };
 		9B98976CF3DBCCC2802BC78F /* ConnectReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectReaderView.swift; sourceTree = "<group>"; };
 		9E012404B07763AD5EDFB000 /* SerialNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialNumber.swift; sourceTree = "<group>"; };
+		A4B303FE2F3CA8824903AA48 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
 		A4FF69084220E4B601EA9057 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		A847CCF6E06CA63C8477C614 /* Movement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movement.swift; sourceTree = "<group>"; };
 		A9CDAF6832A9CA3930B861E3 /* TourCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourCard.swift; sourceTree = "<group>"; };
@@ -141,6 +162,7 @@
 		C16318834D05B4D13B258F26 /* PackingListItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListItem.swift; sourceTree = "<group>"; };
 		C261ACAAFA0E12EA5E39371C /* CheckoutViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutViewModel.swift; sourceTree = "<group>"; };
 		C5117594BA29CAEEFB800B0E /* LiquidTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidTokens.swift; sourceTree = "<group>"; };
+		C576933F86971FB5B952BF41 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		C5852437AFA7B876A30FCBAD /* SpaceMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Bold.ttf"; sourceTree = "<group>"; };
 		C9D9D504B5C588341FA4F5AD /* LiquidVincularTagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidVincularTagView.swift; sourceTree = "<group>"; };
 		CA7B10C12666CE71D988CDD4 /* SpaceGrotesk-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceGrotesk-Regular.ttf"; sourceTree = "<group>"; };
@@ -150,6 +172,7 @@
 		D49B9BD8CC7C0EC37C6DEAE9 /* MockRFIDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRFIDManager.swift; sourceTree = "<group>"; };
 		D4E9C34BDA3F2F912A0B7E2A /* SpotlightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightView.swift; sourceTree = "<group>"; };
 		D5F612C81A6397B703EFB66D /* RFIDReaderProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDReaderProtocol.swift; sourceTree = "<group>"; };
+		D70AB7CC90AEAE96F3AF445B /* RFIDManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RFIDManagerTests.swift; sourceTree = "<group>"; };
 		D783BB916661590B5F095A88 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		D9898C57CE4330B27044AD28 /* LiquidPillToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidPillToggle.swift; sourceTree = "<group>"; };
 		DA6C2E3944AC480102EACFE1 /* CausticBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CausticBackground.swift; sourceTree = "<group>"; };
@@ -190,6 +213,19 @@
 				9E012404B07763AD5EDFB000 /* SerialNumber.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		46700A25FFBE1653160A1C67 /* MMDEstoqueTests */ = {
+			isa = PBXGroup;
+			children = (
+				C576933F86971FB5B952BF41 /* APIClientTests.swift */,
+				7B17A1EAD908A55EFB844B9D /* EquipmentTests.swift */,
+				D70AB7CC90AEAE96F3AF445B /* RFIDManagerTests.swift */,
+				2E519B89112FFB06F18856B1 /* SerialNumberTests.swift */,
+				A4B303FE2F3CA8824903AA48 /* ThemeTests.swift */,
+				40BB88419CC4DE5F2CB7230C /* TourControllerTests.swift */,
+			);
+			path = MMDEstoqueTests;
 			sourceTree = "<group>";
 		};
 		66B175FA9E26CE1395C4F904 /* Liquid */ = {
@@ -267,6 +303,7 @@
 			isa = PBXGroup;
 			children = (
 				CEC1B1C61CA46E5ACBEF44A2 /* MMDEstoque.app */,
+				3465259172B970BF9392B6F0 /* MMDEstoqueTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -386,6 +423,7 @@
 			isa = PBXGroup;
 			children = (
 				859180E7DC8F066DC34DB293 /* MMDEstoque */,
+				46700A25FFBE1653160A1C67 /* MMDEstoqueTests */,
 				68A8EA788B6444E5FA936405 /* Frameworks */,
 				A554FE26975DA894A371472E /* Products */,
 			);
@@ -394,6 +432,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		2AF3C31841873B56AF738950 /* MMDEstoqueTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 785968945C2ED3A0B38FE33E /* Build configuration list for PBXNativeTarget "MMDEstoqueTests" */;
+			buildPhases = (
+				0C9B35F585FB3194E8520513 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4976D775D1D9A2FC0F3197C6 /* PBXTargetDependency */,
+			);
+			name = MMDEstoqueTests;
+			packageProductDependencies = (
+			);
+			productName = MMDEstoqueTests;
+			productReference = 3465259172B970BF9392B6F0 /* MMDEstoqueTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		E70DBF9CCB294761263BA41F /* MMDEstoque */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = ACC279DDAD539F9137F17A4E /* Build configuration list for PBXNativeTarget "MMDEstoque" */;
@@ -442,6 +498,7 @@
 			projectRoot = "";
 			targets = (
 				E70DBF9CCB294761263BA41F /* MMDEstoque */,
+				2AF3C31841873B56AF738950 /* MMDEstoqueTests */,
 			);
 		};
 /* End PBXProject section */
@@ -466,6 +523,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0C9B35F585FB3194E8520513 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7FF4B56017FF7501FABE5AB3 /* APIClientTests.swift in Sources */,
+				6709BA0927F75FEC84F42636 /* EquipmentTests.swift in Sources */,
+				E166C52AAC188A940261BD71 /* RFIDManagerTests.swift in Sources */,
+				904F5DC023E69B1BC7955DFE /* SerialNumberTests.swift in Sources */,
+				AA810A2D45BDE77D512BDB50 /* ThemeTests.swift in Sources */,
+				E2E70318E8CBDFF9F2A2242E /* TourControllerTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8F32F000490AFDC4F5C2765A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -540,7 +610,34 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		4976D775D1D9A2FC0F3197C6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E70DBF9CCB294761263BA41F /* MMDEstoque */;
+			targetProxy = 0189D01DD3173E75377C690B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		1F55C3D22CFB89A470B455E0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.mmdestoque.tests;
+				PRODUCT_NAME = MMDEstoqueTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MMD Estoque.app/MMD Estoque";
+			};
+			name = Debug;
+		};
 		2D3136E15DA8488758988659 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -627,6 +724,25 @@
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
+		};
+		2DA0D314D21EB40CBC6A230D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.mmdestoque.tests;
+				PRODUCT_NAME = MMDEstoqueTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MMD Estoque.app/MMD Estoque";
+			};
+			name = Release;
 		};
 		E3EBB15FD72B8EEEC3FE067B /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -716,6 +832,15 @@
 			buildConfigurations = (
 				2D449662D3233BF9FB590266 /* Debug */,
 				E79ED483788B7561D975AC4C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		785968945C2ED3A0B38FE33E /* Build configuration list for PBXNativeTarget "MMDEstoqueTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1F55C3D22CFB89A470B455E0 /* Debug */,
+				2DA0D314D21EB40CBC6A230D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

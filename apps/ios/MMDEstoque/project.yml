@@ -38,3 +38,34 @@ targets:
     dependencies:
       - sdk: ExternalAccessory.framework
       - sdk: CoreBluetooth.framework
+
+  MMDEstoqueTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget:
+      iOS: "16.0"
+    sources:
+      - MMDEstoqueTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.emdash.mmdestoque.tests
+        PRODUCT_NAME: "MMDEstoqueTests"
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: true
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/MMD Estoque.app/MMD Estoque"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: MMDEstoque
+
+schemes:
+  MMDEstoque:
+    build:
+      targets:
+        MMDEstoque: all
+        MMDEstoqueTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - MMDEstoqueTests

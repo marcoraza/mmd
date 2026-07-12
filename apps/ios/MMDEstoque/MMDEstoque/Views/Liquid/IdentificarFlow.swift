@@ -4,8 +4,8 @@ import SwiftUI
 //
 // Trilha Identificar: scan da tag, resultado do item. O scan e o ScanEngine da
 // fundacao, gated por conexao (o leitor e pre-requisito de tudo). A acao
-// Resolver le as tags contra o banco (apiClient.resolveRfidTags) e empurra o
-// LiquidScanResultView com resolvidos e nao resolvidos.
+// Resolver grava e resolve as tags (apiClient.recordAndResolveRfidTags) e
+// empurra o LiquidScanResultView com resolvidos e nao resolvidos.
 
 struct IdentificarFlow: View {
 
@@ -52,7 +52,10 @@ struct IdentificarFlow: View {
 
         Task {
             do {
-                let result = try await apiClient.resolveRfidTags(tags)
+                let result = try await apiClient.recordAndResolveRfidTags(
+                    tags: tags,
+                    contexto: .inventario
+                )
                 isResolving = false
                 router.push(.scanResult(ScanResultPayload(
                     resolved: result.resolved,

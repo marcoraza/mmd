@@ -181,13 +181,28 @@ final class ReturnViewModel: ObservableObject {
 
     private func resolveAndMatch(tags: [String]) async {
         do {
-            let result = try await apiClient.resolveRfidTags(tags)
+            let result = try await apiClient.recordAndResolveRfidTags(
+                tags: tags,
+                contexto: .retorno,
+                projectId: project.id,
+                reader: currentReaderRequest()
+            )
             for item in result.resolved {
                 matchSerial(item.serialNumber)
             }
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    private func currentReaderRequest() -> RfidScanReaderRequest? {
+        guard let reader = rfidManager.connectedReader else { return nil }
+        return RfidScanReaderRequest(
+            nome: reader.name,
+            modelo: "Zebra RFD40",
+            serialFabrica: reader.serialNumber,
+            bateria: reader.batteryLevel
+        )
     }
 
     private func matchSerial(_ serial: SerialNumber) {
@@ -281,51 +296,88 @@ final class ReturnViewModel: ObservableObject {
         }
 
         do {
-            var returns: [(serialId: UUID, tipo: TipoMovimentacao, statusNovo: String, desgaste: Int?, metodoScan: MetodoScan, notas: String?)] = []
+            if AppConfig.shared.isWebApiConfigured {
+                let items = buildReturnProjectItems()
+                _ = try await apiClient.returnProject(
+                    projectId: project.id,
+                    metodoScan: scanMethod,
+                    items: items
+                )
+                returnComplete = true
+                logger.info("Return finalized through web API: \(items.count) items")
+            } else {
+                var returns: [(serialId: UUID, tipo: TipoMovimentacao, statusNovo: String, desgaste: Int?, metodoScan: MetodoScan, notas: String?)] = []
 
-            for item in outboundItems {
-                switch item.result {
-                case .ok:
-                    returns.append((
-                        serialId: item.id,
-                        tipo: .retorno,
-                        statusNovo: StatusSerial.disponivel.rawValue,
-                        desgaste: nil,
-                        metodoScan: scanMethod,
-                        notas: nil
-                    ))
-                case .defeito(let notas, let desgaste):
-                    returns.append((
-                        serialId: item.id,
-                        tipo: .dano,
-                        statusNovo: StatusSerial.manutencao.rawValue,
-                        desgaste: desgaste,
-                        metodoScan: scanMethod,
-                        notas: notas
-                    ))
-                case .pending:
-                    // Not returned, stays EM_CAMPO
-                    break
+                for item in outboundItems {
+                    switch item.result {
+                    case .ok:
+                        returns.append((
+                            serialId: item.id,
+                            tipo: .retorno,
+                            statusNovo: StatusSerial.disponivel.rawValue,
+                            desgaste: nil,
+                            metodoScan: scanMethod,
+                            notas: nil
+                        ))
+                    case .defeito(let notas, let desgaste):
+                        returns.append((
+                            serialId: item.id,
+                            tipo: .dano,
+                            statusNovo: StatusSerial.manutencao.rawValue,
+                            desgaste: desgaste,
+                            metodoScan: scanMethod,
+                            notas: notas
+                        ))
+                    case .pending:
+                        // Not returned, stays EM_CAMPO
+                        break
+                    }
                 }
-            }
 
-            if !returns.isEmpty {
-                try await apiClient.registerReturn(projectId: project.id, returns: returns)
-            }
+                if !returns.isEmpty {
+                    try await apiClient.registerReturn(projectId: project.id, returns: returns)
+                }
 
-            // If all items returned, mark project as finalizado
-            if missingCount == 0 {
-                try await apiClient.updateProjectStatus(projectId: project.id, status: .finalizado)
-            }
+                // If all items returned, mark project as finalizado
+                if missingCount == 0 {
+                    try await apiClient.updateProjectStatus(projectId: project.id, status: .finalizado)
+                }
 
-            returnComplete = true
-            logger.info("Return finalized: \(self.okCount) OK, \(self.defectCount) defeito, \(self.missingCount) faltando")
+                returnComplete = true
+                logger.info("Return finalized: \(self.okCount) OK, \(self.defectCount) defeito, \(self.missingCount) faltando")
+            }
         } catch {
             self.error = error.localizedDescription
             logger.error("Return failed: \(error)")
         }
 
         isProcessingReturn = false
+    }
+
+    /// Maps current return outcomes to the shared web API contract.
+    /// `.defeito` becomes `PROBLEMA`; `.pending` is omitted (stays EM_CAMPO).
+    func buildReturnProjectItems() -> [ReturnProjectItemRequest] {
+        outboundItems.compactMap { item in
+            switch item.result {
+            case .pending:
+                return nil
+            case .ok:
+                return ReturnProjectItemRequest(
+                    serialId: item.id,
+                    desgaste: item.resolved.serialNumber.desgaste,
+                    resultado: .ok,
+                    observacao: nil
+                )
+            case .defeito(let notas, let desgaste):
+                let trimmed = notas.trimmingCharacters(in: .whitespacesAndNewlines)
+                return ReturnProjectItemRequest(
+                    serialId: item.id,
+                    desgaste: desgaste,
+                    resultado: .problema,
+                    observacao: trimmed.isEmpty ? nil : trimmed
+                )
+            }
+        }
     }
 
     // MARK: - Reset

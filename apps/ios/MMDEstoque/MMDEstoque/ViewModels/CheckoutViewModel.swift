@@ -133,7 +133,12 @@ final class CheckoutViewModel: ObservableObject {
 
     private func resolveAndMatch(tags: [String]) async {
         do {
-            let result = try await apiClient.resolveRfidTags(tags)
+            let result = try await apiClient.recordAndResolveRfidTags(
+                tags: tags,
+                contexto: .checkOutEvento,
+                projectId: project.id,
+                reader: currentReaderRequest()
+            )
 
             for item in result.resolved {
                 matchResolvedItem(item)
@@ -143,6 +148,16 @@ final class CheckoutViewModel: ObservableObject {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    private func currentReaderRequest() -> RfidScanReaderRequest? {
+        guard let reader = rfidManager.connectedReader else { return nil }
+        return RfidScanReaderRequest(
+            nome: reader.name,
+            modelo: "Zebra RFD40",
+            serialFabrica: reader.serialNumber,
+            bateria: reader.batteryLevel
+        )
     }
 
     private func matchResolvedItem(_ resolved: ResolvedItem) {
@@ -231,24 +246,33 @@ final class CheckoutViewModel: ObservableObject {
         }
 
         do {
-            // Build serial list for API
-            let serials = scannedSerials.values.compactMap { resolved -> (serialId: UUID, currentStatus: String, metodoScan: MetodoScan)? in
-                // Only include items that are in the packing list
-                let isInPackingList = packingListItems.contains { $0.itemId == resolved.equipment.id }
-                guard isInPackingList else { return nil }
-
-                return (
-                    serialId: resolved.serialNumber.id,
-                    currentStatus: resolved.serialNumber.status.rawValue,
+            if AppConfig.shared.isWebApiConfigured {
+                let result = try await apiClient.checkoutProject(
+                    projectId: project.id,
                     metodoScan: scanMethod
                 )
+                checkoutComplete = true
+                logger.info("Checkout finalized through web API: \(result.count) items")
+            } else {
+                // Build serial list for API
+                let serials = scannedSerials.values.compactMap { resolved -> (serialId: UUID, currentStatus: String, metodoScan: MetodoScan)? in
+                    // Only include items that are in the packing list
+                    let isInPackingList = packingListItems.contains { $0.itemId == resolved.equipment.id }
+                    guard isInPackingList else { return nil }
+
+                    return (
+                        serialId: resolved.serialNumber.id,
+                        currentStatus: resolved.serialNumber.status.rawValue,
+                        metodoScan: scanMethod
+                    )
+                }
+
+                try await apiClient.registerCheckout(projectId: project.id, serials: serials)
+                try await apiClient.updateProjectStatus(projectId: project.id, status: .emCampo)
+
+                checkoutComplete = true
+                logger.info("Checkout finalized: \(serials.count) items")
             }
-
-            try await apiClient.registerCheckout(projectId: project.id, serials: serials)
-            try await apiClient.updateProjectStatus(projectId: project.id, status: .emCampo)
-
-            checkoutComplete = true
-            logger.info("Checkout finalized: \(serials.count) items")
         } catch {
             self.error = error.localizedDescription
             logger.error("Checkout failed: \(error)")

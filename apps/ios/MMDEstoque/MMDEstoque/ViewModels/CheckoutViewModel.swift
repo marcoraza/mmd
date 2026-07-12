@@ -20,6 +20,7 @@ final class CheckoutViewModel: ObservableObject {
     // MARK: - Published State
 
     @Published var packingListItems: [PackingListItem] = []
+    @Published var eventSummary: EventSummary?
     @Published var scannedSerials: [UUID: ResolvedItem] = [:]
     @Published var matchedCounts: [UUID: Int] = [:]
     @Published var extraItems: [ResolvedItem] = []
@@ -29,6 +30,7 @@ final class CheckoutViewModel: ObservableObject {
     @Published var isProcessingCheckout = false
     @Published var checkoutComplete = false
     @Published var error: String?
+    @Published var summaryNotice: String?
 
     // MARK: - Computed
 
@@ -45,6 +47,42 @@ final class CheckoutViewModel: ObservableObject {
         return packingListItems.allSatisfy { item in
             (matchedCounts[item.id] ?? 0) >= item.quantidade
         }
+    }
+
+    var missingCount: Int {
+        packingListItems.reduce(0) { total, item in
+            total + max(item.quantidade - (matchedCounts[item.id] ?? 0), 0)
+        }
+    }
+
+    var operationModeLabel: String {
+        AppConfig.shared.isWebApiConfigured ? "API REAL" : "MODO MOCK"
+    }
+
+    var operationModeColor: String {
+        AppConfig.shared.isWebApiConfigured ? "ndSuccess" : "ndWarning"
+    }
+
+    var checkoutWarnings: [String] {
+        var warnings: [String] = []
+
+        if missingCount > 0 {
+            warnings.append("\(missingCount) itens faltando no checklist.")
+        }
+
+        if !extraItems.isEmpty {
+            warnings.append("\(extraItems.count) itens extras fora do packing.")
+        }
+
+        if !unresolvedTags.isEmpty {
+            warnings.append("\(unresolvedTags.count) leituras nao resolvidas.")
+        }
+
+        if !AppConfig.shared.isWebApiConfigured {
+            warnings.append("Checkout real desativado. Confirmacao roda em mock.")
+        }
+
+        return warnings
     }
 
     // MARK: - Dependencies
@@ -71,6 +109,7 @@ final class CheckoutViewModel: ObservableObject {
     func loadPackingList() async {
         isLoading = true
         error = nil
+        summaryNotice = nil
 
         do {
             packingListItems = try await apiClient.fetchPackingList(projectId: project.id)
@@ -78,6 +117,14 @@ final class CheckoutViewModel: ObservableObject {
         } catch {
             self.error = error.localizedDescription
             logger.error("Failed to load packing list: \(error)")
+        }
+
+        do {
+            eventSummary = try await apiClient.fetchEventSummary(projectId: project.id)
+        } catch APIError.webApiNotConfigured {
+            summaryNotice = "Resumo avancado indisponivel em modo mock."
+        } catch {
+            summaryNotice = "Resumo avancado indisponivel: \(error.localizedDescription)"
         }
 
         isLoading = false
@@ -133,7 +180,12 @@ final class CheckoutViewModel: ObservableObject {
 
     private func resolveAndMatch(tags: [String]) async {
         do {
-            let result = try await apiClient.resolveRfidTags(tags)
+            let result = try await apiClient.recordAndResolveRfidTags(
+                tags: tags,
+                contexto: .checkOutEvento,
+                projectId: project.id,
+                reader: currentReaderRequest()
+            )
 
             for item in result.resolved {
                 matchResolvedItem(item)
@@ -143,6 +195,16 @@ final class CheckoutViewModel: ObservableObject {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    private func currentReaderRequest() -> RfidScanReaderRequest? {
+        guard let reader = rfidManager.connectedReader else { return nil }
+        return RfidScanReaderRequest(
+            nome: reader.name,
+            modelo: "Zebra RFD40",
+            serialFabrica: reader.serialNumber,
+            bateria: reader.batteryLevel
+        )
     }
 
     private func matchResolvedItem(_ resolved: ResolvedItem) {
@@ -199,24 +261,17 @@ final class CheckoutViewModel: ObservableObject {
         error = nil
 
         do {
-            // Build serial list for API
-            let serials = scannedSerials.values.compactMap { resolved -> (serialId: UUID, currentStatus: String, metodoScan: MetodoScan)? in
-                // Only include items that are in the packing list
-                let isInPackingList = packingListItems.contains { $0.itemId == resolved.equipment.id }
-                guard isInPackingList else { return nil }
-
-                return (
-                    serialId: resolved.serialNumber.id,
-                    currentStatus: resolved.serialNumber.status.rawValue,
+            if AppConfig.shared.isWebApiConfigured {
+                let result = try await apiClient.checkoutProject(
+                    projectId: project.id,
                     metodoScan: scanMethod
                 )
+                logger.info("Checkout finalized through web API: \(result.count) items")
+            } else {
+                logger.info("Checkout mock finalized locally: \(self.scannedSerials.count) scanned items")
             }
 
-            try await apiClient.registerCheckout(projectId: project.id, serials: serials)
-            try await apiClient.updateProjectStatus(projectId: project.id, status: .emCampo)
-
             checkoutComplete = true
-            logger.info("Checkout finalized: \(serials.count) items")
         } catch {
             self.error = error.localizedDescription
             logger.error("Checkout failed: \(error)")

@@ -291,7 +291,11 @@ struct ScanView: View {
         resolveError = nil
 
         do {
-            let result = try await apiClient.resolveRfidTags(tags)
+            let result = try await apiClient.recordAndResolveRfidTags(
+                tags: tags,
+                contexto: .inventario,
+                reader: currentReaderRequest()
+            )
             resolvedItems = result.resolved
             unresolvedTags = result.unresolved
             navigateToResults = true
@@ -300,6 +304,16 @@ struct ScanView: View {
         }
 
         isResolving = false
+    }
+
+    private func currentReaderRequest() -> RfidScanReaderRequest? {
+        guard let reader = rfidManager.connectedReader else { return nil }
+        return RfidScanReaderRequest(
+            nome: reader.name,
+            modelo: "Zebra RFD40",
+            serialFabrica: reader.serialNumber,
+            bateria: reader.batteryLevel
+        )
     }
 
     // MARK: - New Tag Tracking

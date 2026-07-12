@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - ProjectsListView
 
-/// List of active projects (CONFIRMADO, EM_CAMPO).
+/// List of active projects (CONFIRMADO, MONTAGEM, EM_CAMPO).
 /// Nothing Design System: dark background, Space Grotesk body, Space Mono labels.
 struct ProjectsListView: View {
 
@@ -133,7 +133,7 @@ struct ProjectsListView: View {
                 .font(.ndBody)
                 .foregroundStyle(Color.ndTextSecondary)
 
-            Text("PROJETOS CONFIRMADOS OU EM CAMPO APARECEM AQUI")
+            Text("PROJETOS CONFIRMADOS, EM MONTAGEM OU EM CAMPO APARECEM AQUI")
                 .ndLabelSmall()
                 .multilineTextAlignment(.center)
 
@@ -151,7 +151,7 @@ struct ProjectsListView: View {
 
         do {
             projects = try await apiClient.fetchProjects(
-                status: [.confirmado, .emCampo]
+                status: [.confirmado, .montagem, .emCampo]
             )
         } catch {
             self.error = error.localizedDescription

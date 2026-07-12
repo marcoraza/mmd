@@ -40,6 +40,143 @@ enum MetodoScan: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Shared Checkout API Contract
+
+struct CheckoutProjectRequest: Encodable {
+    let metodo: String
+    let overrideReason: String?
+}
+
+struct CheckoutProjectResponse: Codable, Hashable {
+    var count: Int
+    var seriais: [CheckoutProjectSerial]
+}
+
+struct CheckoutProjectSerial: Codable, Hashable {
+    var serialId: UUID
+    var codigoInterno: String
+
+    enum CodingKeys: String, CodingKey {
+        case serialId = "serial_id"
+        case codigoInterno = "codigo_interno"
+    }
+}
+
+// MARK: - Shared Return API Contract
+
+enum ReturnProjectOutcome: String, Codable, CaseIterable, Identifiable {
+    case ok = "OK"
+    case problema = "PROBLEMA"
+    case naoVoltou = "NAO_VOLTOU"
+
+    var id: String { rawValue }
+}
+
+struct ReturnProjectItemRequest: Encodable, Equatable {
+    let serialId: UUID
+    let desgaste: Int
+    let resultado: ReturnProjectOutcome
+    let observacao: String?
+
+    enum CodingKeys: String, CodingKey {
+        case serialId = "serial_id"
+        case desgaste
+        case resultado
+        case observacao
+    }
+}
+
+struct ReturnProjectRequest: Encodable {
+    let metodo: String
+    let items: [ReturnProjectItemRequest]
+}
+
+struct ReturnProjectResponse: Codable, Hashable {
+    var count: Int
+    var seriais: [ReturnProjectSerial]
+}
+
+struct ReturnProjectSerial: Codable, Hashable {
+    var serialId: UUID
+    var codigoInterno: String
+    var novoStatus: String
+
+    enum CodingKeys: String, CodingKey {
+        case serialId = "serial_id"
+        case codigoInterno = "codigo_interno"
+        case novoStatus = "novo_status"
+    }
+}
+
+// MARK: - Shared RFID Scan API Contract
+
+enum RfidScanContext: String, Codable, CaseIterable, Identifiable {
+    case packing = "PACKING"
+    case carregamento = "CARREGAMENTO"
+    case checkInEvento = "CHECK_IN_EVENTO"
+    case checkOutEvento = "CHECK_OUT_EVENTO"
+    case retorno = "RETORNO"
+    case conferencia = "CONFERENCIA"
+    case inventario = "INVENTARIO"
+    case outro = "OUTRO"
+
+    var id: String { rawValue }
+}
+
+struct RfidScanReaderRequest: Encodable, Equatable {
+    let nome: String?
+    let modelo: String?
+    let serialFabrica: String?
+    let bateria: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case nome
+        case modelo
+        case serialFabrica = "serial_fabrica"
+        case bateria
+    }
+}
+
+struct RfidScanRequest: Encodable {
+    let tags: [String]
+    let contexto: RfidScanContext
+    let projetoId: UUID?
+    let reader: RfidScanReaderRequest?
+
+    enum CodingKeys: String, CodingKey {
+        case tags
+        case contexto
+        case projetoId = "projeto_id"
+        case reader
+    }
+}
+
+struct RfidScanResponse: Codable, Hashable {
+    var resolved: [RfidResolvedScan]
+    var unresolved: [String]
+    var scanIds: [UUID]
+
+    enum CodingKeys: String, CodingKey {
+        case resolved
+        case unresolved
+        case scanIds = "scan_ids"
+    }
+}
+
+struct RfidResolvedScan: Codable, Hashable {
+    var tagRfid: String
+    var serialId: UUID
+    var codigoInterno: String
+    var itemNome: String?
+
+    enum CodingKeys: String, CodingKey {
+        case tagRfid = "tag_rfid"
+        case serialId = "serial_id"
+        case codigoInterno = "codigo_interno"
+        case itemNome = "item_nome"
+    }
+}
+
 // MARK: - Movement
 
 /// Maps to the Supabase "movimentacoes" table.

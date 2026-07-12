@@ -66,20 +66,9 @@ struct CheckoutFlowView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Operational mode
-                operationModeBanner
-                    .padding(.horizontal, NDSpacing.medium)
-                    .padding(.top, NDSpacing.medium)
-                    .padding(.bottom, NDSpacing.compact)
-
-                // Event summary
-                eventSummaryCard
-                    .padding(.horizontal, NDSpacing.medium)
-                    .padding(.bottom, NDSpacing.medium)
-
                 // Hero progress
                 heroProgress
-                    .padding(.bottom, NDSpacing.medium)
+                    .padding(.vertical, NDSpacing.section)
 
                 // Scan method toggle
                 ScanMethodToggle(method: $viewModel.scanMethod)
@@ -127,157 +116,6 @@ struct CheckoutFlowView: View {
         }
     }
 
-    // MARK: - Operational Mode
-
-    private var operationModeBanner: some View {
-        HStack(spacing: NDSpacing.base) {
-            modeChip(
-                label: AppConfig.shared.isWebApiConfigured ? "API REAL" : "MODO MOCK",
-                color: AppConfig.shared.isWebApiConfigured ? .ndSuccess : .ndWarning,
-                active: true
-            )
-
-            modeChip(
-                label: AppConfig.shared.isWebApiConfigured ? "MOCK OFF" : "API REAL OFF",
-                color: .ndTextDisabled,
-                active: false
-            )
-
-            Spacer()
-        }
-    }
-
-    private func modeChip(label: String, color: Color, active: Bool) -> some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(color)
-                .frame(width: 6, height: 6)
-
-            Text(label)
-                .font(.spaceMono(10))
-                .tracking(10 * 0.08)
-                .foregroundStyle(active ? color : Color.ndTextDisabled)
-        }
-        .padding(.horizontal, NDSpacing.compact)
-        .padding(.vertical, 7)
-        .background(Color.ndSurface)
-        .overlay(
-            Capsule()
-                .stroke(active ? color.opacity(0.55) : Color.ndBorder, lineWidth: 1)
-        )
-        .clipShape(Capsule())
-    }
-
-    // MARK: - Event Summary
-
-    private var eventSummaryCard: some View {
-        let summary = viewModel.eventSummary
-        let title = summary?.nome ?? project.nome
-        let client = summary?.cliente ?? project.cliente
-        let setup = summary?.displaySetup ?? project.dataInicio ?? "-"
-        let teardown = summary?.displayTeardown ?? project.dataFim ?? "-"
-        let local = summary?.displayLocal ?? project.local ?? "-"
-        let contact = summary?.displayContact ?? project.cliente ?? "-"
-        let readiness = summary?.packing.readinessPct ?? readinessFromLocalPacking
-
-        return HStack(alignment: .center, spacing: NDSpacing.medium) {
-            VStack(alignment: .leading, spacing: NDSpacing.compact) {
-                VStack(alignment: .leading, spacing: NDSpacing.tight) {
-                    Text(title)
-                        .font(.ndBody)
-                        .foregroundStyle(Color.ndTextDisplay)
-                        .lineLimit(2)
-
-                    if let client {
-                        Text(client)
-                            .font(.spaceMono(10))
-                            .tracking(10 * 0.08)
-                            .foregroundStyle(Color.ndTextSecondary)
-                            .lineLimit(1)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    summaryLine(icon: "calendar", label: "Setup", value: setup)
-                    summaryLine(icon: "calendar.badge.clock", label: "Desmontagem", value: teardown)
-                    summaryLine(icon: "mappin.and.ellipse", label: "Local", value: local)
-                    summaryLine(icon: "person", label: "Contato", value: contact)
-                }
-
-                if let notice = viewModel.summaryNotice {
-                    Text(notice.uppercased())
-                        .font(.spaceMono(8))
-                        .tracking(8 * 0.08)
-                        .foregroundStyle(Color.ndTextDisabled)
-                        .lineLimit(2)
-                }
-            }
-
-            Spacer(minLength: NDSpacing.compact)
-
-            readinessRing(readiness: readiness)
-        }
-        .padding(NDSpacing.medium)
-        .background(Color.ndSurface)
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.ndBorderVisible, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-    }
-
-    private func summaryLine(icon: String, label: String, value: String) -> some View {
-        HStack(spacing: 7) {
-            Image(systemName: icon)
-                .font(.system(size: 11, weight: .light))
-                .foregroundStyle(Color.ndTextDisabled)
-                .frame(width: 14)
-
-            Text(label)
-                .font(.spaceMono(9))
-                .tracking(9 * 0.08)
-                .foregroundStyle(Color.ndTextDisabled)
-
-            Text(value)
-                .font(.spaceMono(10))
-                .tracking(10 * 0.04)
-                .foregroundStyle(Color.ndTextSecondary)
-                .lineLimit(1)
-        }
-    }
-
-    private func readinessRing(readiness: Int) -> some View {
-        ZStack {
-            Circle()
-                .stroke(Color.ndBorderVisible, lineWidth: 8)
-
-            Circle()
-                .trim(from: 0, to: CGFloat(max(0, min(readiness, 100))) / 100)
-                .stroke(
-                    AppConfig.shared.isWebApiConfigured ? Color.ndSuccess : Color.ndWarning,
-                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-
-            VStack(spacing: 1) {
-                Text("\(readiness)%")
-                    .font(.spaceMono(16, weight: .bold))
-                    .foregroundStyle(Color.ndTextDisplay)
-
-                Text("READY")
-                    .font(.spaceMono(8))
-                    .tracking(8 * 0.08)
-                    .foregroundStyle(Color.ndTextDisabled)
-            }
-        }
-        .frame(width: 78, height: 78)
-    }
-
-    private var readinessFromLocalPacking: Int {
-        guard viewModel.totalExpected > 0 else { return 0 }
-        return Int((Double(viewModel.totalScanned) / Double(viewModel.totalExpected) * 100).rounded())
-    }
-
     // MARK: - Hero Progress
 
     private var heroProgress: some View {
@@ -320,8 +158,6 @@ struct CheckoutFlowView: View {
     private var packingListSection: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                preConfirmWarnings
-
                 ForEach(viewModel.packingListItems) { item in
                     packingItemRow(item)
 
@@ -352,50 +188,6 @@ struct CheckoutFlowView: View {
                 }
             }
         }
-    }
-
-    private var preConfirmWarnings: some View {
-        VStack(alignment: .leading, spacing: NDSpacing.compact) {
-            HStack {
-                Text("ATENCAO ANTES DE CONFIRMAR")
-                    .ndLabelSmall()
-                Spacer()
-            }
-
-            if viewModel.checkoutWarnings.isEmpty {
-                warningRow("Checklist batendo com o packing.", color: .ndSuccess)
-            } else {
-                ForEach(viewModel.checkoutWarnings, id: \.self) { warning in
-                    warningRow(warning, color: .ndAccent)
-                }
-            }
-        }
-        .padding(.horizontal, NDSpacing.medium)
-        .padding(.vertical, NDSpacing.compact)
-        .background(Color.ndBlack)
-    }
-
-    private func warningRow(_ text: String, color: Color) -> some View {
-        HStack(spacing: NDSpacing.base) {
-            Circle()
-                .stroke(color, lineWidth: 2)
-                .frame(width: 11, height: 11)
-
-            Text(text)
-                .font(.ndBodySm)
-                .foregroundStyle(color)
-                .lineLimit(2)
-
-            Spacer()
-        }
-        .padding(.horizontal, NDSpacing.compact)
-        .padding(.vertical, NDSpacing.base)
-        .background(Color.ndSurfaceRaised)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(color.opacity(0.45), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func packingItemRow(_ item: PackingListItem) -> some View {
@@ -537,18 +329,6 @@ struct CheckoutFlowView: View {
                     Spacer()
                 }
 
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("FALTANDO \(viewModel.missingCount)")
-                        .font(.spaceMono(9))
-                        .tracking(9 * 0.08)
-                        .foregroundStyle(viewModel.missingCount == 0 ? Color.ndSuccess : Color.ndWarning)
-
-                    Text("EXTRA \(viewModel.extraItems.count)")
-                        .font(.spaceMono(9))
-                        .tracking(9 * 0.08)
-                        .foregroundStyle(viewModel.extraItems.isEmpty ? Color.ndSuccess : Color.ndAccent)
-                }
-
                 // Finalizar button
                 if viewModel.canFinalize {
                     Button {
@@ -588,14 +368,6 @@ struct CheckoutFlowView: View {
                     .font(.ndBodySm)
                     .foregroundStyle(Color.ndTextPrimary)
                     .multilineTextAlignment(.center)
-
-                if !AppConfig.shared.isWebApiConfigured {
-                    Text("Modo mock: nenhuma alteracao real sera gravada.")
-                        .font(.spaceMono(10))
-                        .tracking(10 * 0.08)
-                        .foregroundStyle(Color.ndWarning)
-                        .multilineTextAlignment(.center)
-                }
 
                 if viewModel.isProcessingCheckout {
                     ProgressView()

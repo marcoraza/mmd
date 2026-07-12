@@ -163,8 +163,6 @@ struct ConfigView: View {
 
     @State private var supabaseUrl: String = AppConfig.shared.supabaseUrl
     @State private var supabaseKey: String = AppConfig.shared.supabaseAnonKey
-    @State private var webApiUrl: String = AppConfig.shared.webApiUrl
-    @State private var webApiAuthToken: String = AppConfig.shared.webApiAuthToken
     @State private var useMockReader: Bool = AppConfig.shared.useMockRFID
     @State private var showSaveConfirmation = false
 
@@ -180,11 +178,6 @@ struct ConfigView: View {
 
                     // --- RFID ---
                     rfidSection
-
-                    sectionDivider
-
-                    // --- Production Gate ---
-                    productionGateSection
 
                     sectionDivider
 
@@ -219,8 +212,6 @@ struct ConfigView: View {
             VStack(spacing: NDSpacing.compact) {
                 configTextField("URL", text: $supabaseUrl, contentType: .URL, keyboard: .URL)
                 configSecureField("API KEY (ANON)", text: $supabaseKey)
-                configTextField("API WEB", text: $webApiUrl, contentType: .URL, keyboard: .URL)
-                configSecureField("TOKEN API WEB", text: $webApiAuthToken)
             }
 
             // Config status
@@ -235,20 +226,6 @@ struct ConfigView: View {
                     .tracking(9 * 0.08)
                     .foregroundStyle(
                         AppConfig.shared.isSupabaseConfigured ? Color.ndSuccess : Color.ndWarning
-                    )
-            }
-
-            HStack(spacing: NDSpacing.base) {
-                Circle()
-                    .fill(AppConfig.shared.isWebApiConfigured ? Color.ndSuccess : Color.ndWarning)
-                    .frame(width: 5, height: 5)
-
-                Text(AppConfig.shared.isWebApiConfigured ? "API WEB REAL" : "CHECKOUT EM MOCK")
-                    .font(.spaceMono(9))
-                    .textCase(.uppercase)
-                    .tracking(9 * 0.08)
-                    .foregroundStyle(
-                        AppConfig.shared.isWebApiConfigured ? Color.ndSuccess : Color.ndWarning
                     )
             }
         }
@@ -312,113 +289,6 @@ struct ConfigView: View {
                     .tracking(11 * 0.08)
                     .foregroundStyle(connectionDotColor)
             }
-        }
-    }
-
-    // MARK: - Production Gate Section
-
-    private var productionGateSection: some View {
-        let snapshot = rfidManager.productionGateSnapshot
-
-        return VStack(alignment: .leading, spacing: NDSpacing.medium) {
-            HStack(spacing: NDSpacing.base) {
-                Text("GATE DE PRODUCAO")
-                    .ndLabelSmall()
-
-                Spacer()
-
-                HStack(spacing: 6) {
-                    Image(systemName: productionGateIcon(for: snapshot.status))
-                        .font(.system(size: 11, weight: .medium))
-
-                    Text(snapshot.status.label)
-                        .font(.spaceMono(10, weight: .bold))
-                        .textCase(.uppercase)
-                        .tracking(10 * 0.08)
-                }
-                .foregroundStyle(productionGateColor(for: snapshot.status))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(productionGateColor(for: snapshot.status).opacity(0.12))
-                .clipShape(Capsule())
-            }
-
-            VStack(spacing: 0) {
-                ForEach(snapshot.items) { item in
-                    productionGateRow(item)
-
-                    if item.id != snapshot.items.last?.id {
-                        Rectangle()
-                            .fill(Color.ndBorder)
-                            .frame(height: 1)
-                    }
-                }
-            }
-            .background(Color.ndSurfaceRaised)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.ndBorder, lineWidth: 1)
-            )
-
-            Text(snapshot.footer)
-                .font(.spaceMono(10))
-                .tracking(10 * 0.04)
-                .foregroundStyle(Color.ndTextSecondary)
-        }
-    }
-
-    private func productionGateRow(_ item: MobileProductionGateItem) -> some View {
-        HStack(spacing: NDSpacing.base) {
-            Image(systemName: productionGateIcon(for: item.status))
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(productionGateColor(for: item.status))
-                .frame(width: 18)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.label)
-                    .font(.spaceMono(11))
-                    .textCase(.uppercase)
-                    .tracking(11 * 0.08)
-                    .foregroundStyle(Color.ndTextPrimary)
-
-                Text(item.detail)
-                    .font(.spaceMono(9))
-                    .textCase(.uppercase)
-                    .tracking(9 * 0.08)
-                    .foregroundStyle(Color.ndTextDisabled)
-            }
-
-            Spacer()
-
-            Text(item.status.label)
-                .font(.spaceMono(10, weight: .bold))
-                .textCase(.uppercase)
-                .tracking(10 * 0.08)
-                .foregroundStyle(productionGateColor(for: item.status))
-        }
-        .padding(.horizontal, NDSpacing.medium)
-        .padding(.vertical, NDSpacing.compact)
-    }
-
-    private func productionGateColor(for status: MobileProductionGateStatus) -> Color {
-        switch status {
-        case .passed:
-            return Color.ndSuccess
-        case .pending:
-            return Color.ndWarning
-        case .blocked:
-            return Color.ndAccent
-        }
-    }
-
-    private func productionGateIcon(for status: MobileProductionGateStatus) -> String {
-        switch status {
-        case .passed:
-            return "checkmark.circle.fill"
-        case .pending:
-            return "circle.dashed"
-        case .blocked:
-            return "lock.circle.fill"
         }
     }
 
@@ -561,8 +431,6 @@ struct ConfigView: View {
     private var hasChanges: Bool {
         supabaseUrl != AppConfig.shared.supabaseUrl
             || supabaseKey != AppConfig.shared.supabaseAnonKey
-            || webApiUrl != AppConfig.shared.webApiUrl
-            || webApiAuthToken != AppConfig.shared.webApiAuthToken
             || useMockReader != AppConfig.shared.useMockRFID
     }
 
@@ -570,8 +438,6 @@ struct ConfigView: View {
         AppConfig.shared.save(
             supabaseUrl: supabaseUrl,
             anonKey: supabaseKey,
-            webApiUrl: webApiUrl,
-            webApiAuthToken: webApiAuthToken,
             useMockRFID: useMockReader
         )
         rfidManager.configure(useMock: useMockReader)

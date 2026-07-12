@@ -11,12 +11,15 @@ struct AppConfig {
     private enum Keys {
         static let supabaseUrl = "mmd_supabase_url"
         static let supabaseAnonKey = "mmd_supabase_anon_key"
-        static let webApiUrl = "mmd_web_api_url"
-        static let webApiAuthToken = "mmd_web_api_auth_token"
         static let useMockRFID = "mmd_use_mock_rfid"
+        static let tourDonePrefix = "mmd_tour_done_"
     }
 
     // MARK: - Properties
+    //
+    // Credenciais do Supabase vem do UserDefaults (Ajustes > Avancado).
+    // Sem default embutido: o repo e publico, a anon key nao e versionada.
+    // Build de dispositivo local injeta a sua.
 
     var supabaseUrl: String {
         get { UserDefaults.standard.string(forKey: Keys.supabaseUrl) ?? "" }
@@ -26,16 +29,6 @@ struct AppConfig {
     var supabaseAnonKey: String {
         get { UserDefaults.standard.string(forKey: Keys.supabaseAnonKey) ?? "" }
         set { UserDefaults.standard.set(newValue, forKey: Keys.supabaseAnonKey) }
-    }
-
-    var webApiUrl: String {
-        get { UserDefaults.standard.string(forKey: Keys.webApiUrl) ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: Keys.webApiUrl) }
-    }
-
-    var webApiAuthToken: String {
-        get { UserDefaults.standard.string(forKey: Keys.webApiAuthToken) ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: Keys.webApiAuthToken) }
     }
 
     var useMockRFID: Bool {
@@ -62,10 +55,6 @@ struct AppConfig {
         !supabaseUrl.isEmpty && !supabaseAnonKey.isEmpty
     }
 
-    var isWebApiConfigured: Bool {
-        !webApiUrl.isEmpty
-    }
-
     // MARK: - Init
 
     private init() {}
@@ -73,30 +62,8 @@ struct AppConfig {
     // MARK: - Persistence
 
     mutating func save(supabaseUrl url: String, anonKey key: String, useMockRFID: Bool) {
-        save(supabaseUrl: url, anonKey: key, webApiUrl: webApiUrl, useMockRFID: useMockRFID)
-    }
-
-    mutating func save(supabaseUrl url: String, anonKey key: String, webApiUrl apiUrl: String, useMockRFID: Bool) {
-        save(
-            supabaseUrl: url,
-            anonKey: key,
-            webApiUrl: apiUrl,
-            webApiAuthToken: webApiAuthToken,
-            useMockRFID: useMockRFID
-        )
-    }
-
-    mutating func save(
-        supabaseUrl url: String,
-        anonKey key: String,
-        webApiUrl apiUrl: String,
-        webApiAuthToken token: String,
-        useMockRFID: Bool
-    ) {
         supabaseUrl = url
         supabaseAnonKey = key
-        webApiUrl = apiUrl
-        webApiAuthToken = token
         self.useMockRFID = useMockRFID
     }
 
@@ -105,8 +72,19 @@ struct AppConfig {
         UserDefaults.standard.removeObject(forKey: Keys.supabaseAnonKey)
     }
 
-    func clearWebApiConfig() {
-        UserDefaults.standard.removeObject(forKey: Keys.webApiUrl)
-        UserDefaults.standard.removeObject(forKey: Keys.webApiAuthToken)
+    // MARK: - Onboarding Tours
+
+    func isTourDone(_ id: TourID) -> Bool {
+        UserDefaults.standard.bool(forKey: Keys.tourDonePrefix + id.rawValue)
+    }
+
+    func markTourDone(_ id: TourID) {
+        UserDefaults.standard.set(true, forKey: Keys.tourDonePrefix + id.rawValue)
+    }
+
+    func resetTours() {
+        for id in TourID.allCases {
+            UserDefaults.standard.removeObject(forKey: Keys.tourDonePrefix + id.rawValue)
+        }
     }
 }

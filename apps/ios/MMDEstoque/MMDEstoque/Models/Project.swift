@@ -5,7 +5,6 @@ import Foundation
 enum StatusProjeto: String, Codable, CaseIterable, Identifiable {
     case planejamento = "PLANEJAMENTO"
     case confirmado = "CONFIRMADO"
-    case montagem = "MONTAGEM"
     case emCampo = "EM_CAMPO"
     case finalizado = "FINALIZADO"
     case cancelado = "CANCELADO"
@@ -16,7 +15,6 @@ enum StatusProjeto: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .planejamento: return "Planejamento"
         case .confirmado: return "Confirmado"
-        case .montagem: return "Montagem"
         case .emCampo: return "Em Campo"
         case .finalizado: return "Finalizado"
         case .cancelado: return "Cancelado"
@@ -51,79 +49,6 @@ struct Project: Identifiable, Codable, Hashable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
-}
-
-// MARK: - EventSummary
-
-struct EventSummary: Identifiable, Codable, Hashable {
-    let id: UUID
-    var nome: String
-    var cliente: String?
-    var dataInicio: String
-    var dataFim: String
-    var local: String?
-    var status: StatusProjeto
-    var notas: String?
-    var fichaEvento: EventOperationalRecord?
-    var packing: EventPackingSummary
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case nome
-        case cliente
-        case dataInicio = "data_inicio"
-        case dataFim = "data_fim"
-        case local
-        case status
-        case notas
-        case fichaEvento = "ficha_evento"
-        case packing
-    }
-}
-
-struct EventPackingSummary: Codable, Hashable {
-    var linhas: Int
-    var itensTotal: Int
-    var itensAlocados: Int
-    var readinessPct: Int
-
-    enum CodingKeys: String, CodingKey {
-        case linhas
-        case itensTotal = "itens_total"
-        case itensAlocados = "itens_alocados"
-        case readinessPct = "readiness_pct"
-    }
-}
-
-struct EventOperationalRecord: Codable, Hashable {
-    var endereco: EventAddressRecord?
-    var montagem: EventStageRecord?
-    var desmontagem: EventStageRecord?
-    var responsaveis: EventResponsibleRecord?
-    var observacoes: String?
-}
-
-struct EventAddressRecord: Codable, Hashable {
-    var local: String?
-    var endereco: String?
-    var cidadeUf: String?
-    var referenciaAcesso: String?
-}
-
-struct EventStageRecord: Codable, Hashable {
-    var dia: String?
-    var inicio: String?
-    var fim: String?
-    var equipe: String?
-    var responsavel: String?
-    var telefone: String?
-}
-
-struct EventResponsibleRecord: Codable, Hashable {
-    var principal: String?
-    var principalTelefone: String?
-    var checklist: String?
-    var checklistTelefone: String?
 }
 
 // MARK: - Project + Date Helpers
@@ -168,52 +93,5 @@ extension Project {
     var dataFimFormatado: String? {
         guard let date = dataFimDate else { return nil }
         return Self.displayFormatter.string(from: date)
-    }
-}
-
-// MARK: - EventSummary + Display Helpers
-
-extension EventSummary {
-
-    var displayLocal: String? {
-        fichaEvento?.endereco?.local
-            ?? fichaEvento?.endereco?.endereco
-            ?? fichaEvento?.endereco?.cidadeUf
-            ?? local
-    }
-
-    var displaySetup: String {
-        compactSchedule(
-            day: fichaEvento?.montagem?.dia,
-            start: fichaEvento?.montagem?.inicio,
-            fallback: dataInicio
-        )
-    }
-
-    var displayTeardown: String {
-        compactSchedule(
-            day: fichaEvento?.desmontagem?.dia,
-            start: fichaEvento?.desmontagem?.inicio,
-            fallback: dataFim
-        )
-    }
-
-    var displayContact: String? {
-        fichaEvento?.responsaveis?.principal
-            ?? fichaEvento?.montagem?.responsavel
-            ?? fichaEvento?.desmontagem?.responsavel
-    }
-
-    private func compactSchedule(day: String?, start: String?, fallback: String) -> String {
-        let date = trimmed(day) ?? fallback
-        guard let start = trimmed(start) else { return date }
-        return "\(date) \(start)"
-    }
-
-    private func trimmed(_ value: String?) -> String? {
-        guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
-            return nil
-        }
-        return value
     }
 }

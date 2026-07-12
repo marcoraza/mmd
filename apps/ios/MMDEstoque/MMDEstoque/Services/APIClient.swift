@@ -6,7 +6,6 @@ import os.log
 enum APIError: LocalizedError {
     case invalidURL
     case notConfigured
-    case webApiNotConfigured
     case httpError(statusCode: Int, body: String?)
     case decodingError(Error)
     case networkError(Error)
@@ -17,10 +16,8 @@ enum APIError: LocalizedError {
             return "URL invalida para a requisicao."
         case .notConfigured:
             return "Supabase nao configurado. Acesse Ajustes para inserir URL e chave."
-        case .webApiNotConfigured:
-            return "API Web nao configurada. Acesse Ajustes para ativar operacoes reais."
         case .httpError(let code, let body):
-            let detail = body.map { " - \($0)" } ?? ""
+            let detail = body.map { ": \($0)" } ?? ""
             return "Erro HTTP \(code)\(detail)"
         case .decodingError(let error):
             return "Falha ao decodificar resposta: \(error.localizedDescription)"
@@ -52,14 +49,6 @@ final class APIClient: ObservableObject {
 
     private var baseURL: String { AppConfig.shared.supabaseUrl }
     private var apiKey: String { AppConfig.shared.supabaseAnonKey }
-    private var webApiBaseURL: String { AppConfig.shared.webApiUrl }
-    private var webApiAuthToken: String { AppConfig.shared.webApiAuthToken }
-    private var trimmedWebApiAuthToken: String {
-        webApiAuthToken.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-    private var supabaseBearerToken: String {
-        trimmedWebApiAuthToken.isEmpty ? apiKey : trimmedWebApiAuthToken
-    }
 
     // MARK: - Date Decoding
 
@@ -156,74 +145,6 @@ final class APIClient: ObservableObject {
         return (resolved: resolved, unresolved: unresolved)
     }
 
-    /// Record RFID scan rows through the shared web API, resolving known tags
-    /// and preserving unknown tags for audit/onboarding.
-    func recordRfidScans(
-        tags: [String],
-        contexto: RfidScanContext,
-        projectId: UUID? = nil,
-        reader: RfidScanReaderRequest? = nil
-    ) async throws -> RfidScanResponse {
-        guard !tags.isEmpty else {
-            return RfidScanResponse(resolved: [], unresolved: [], scanIds: [])
-        }
-
-        let body = try encoder.encode(
-            RfidScanRequest(
-                tags: tags,
-                contexto: contexto,
-                projetoId: projectId,
-                reader: reader
-            )
-        )
-        let request = try makeWebApiRequest(
-            path: "/api/rfid/scans",
-            method: "POST",
-            body: body
-        )
-        return try await perform(request)
-    }
-
-    /// Persist the scan batch in the web API, then fetch full serial/item
-    /// records for screens that need packing-list matching.
-    func recordAndResolveRfidTags(
-        tags: [String],
-        contexto: RfidScanContext,
-        projectId: UUID? = nil,
-        reader: RfidScanReaderRequest? = nil
-    ) async throws -> (resolved: [ResolvedItem], unresolved: [String]) {
-        guard AppConfig.shared.isWebApiConfigured else {
-            return try await resolveRfidTags(tags)
-        }
-
-        let scan = try await recordRfidScans(
-            tags: tags,
-            contexto: contexto,
-            projectId: projectId,
-            reader: reader
-        )
-        let serialIds = scan.resolved.map(\.serialId)
-        let serials = try await fetchSerialsByIds(serialIds)
-        let serialsById = Dictionary(uniqueKeysWithValues: serials.map { ($0.id, $0) })
-
-        var resolved: [ResolvedItem] = []
-        var unresolved = scan.unresolved
-
-        for match in scan.resolved {
-            guard
-                let serial = serialsById[match.serialId],
-                let equipment = serial.item
-            else {
-                unresolved.append(match.tagRfid)
-                continue
-            }
-
-            resolved.append(ResolvedItem(serialNumber: serial, equipment: equipment))
-        }
-
-        return (resolved: resolved, unresolved: unresolved)
-    }
-
     // MARK: - Items
 
     /// Fetch all equipment items, ordered by name ascending.
@@ -259,12 +180,6 @@ final class APIClient: ObservableObject {
             URLQueryItem(name: "order", value: "data_inicio.asc")
         ]
         let request = try makeRequest(path: "/rest/v1/projetos", queryItems: queryItems)
-        return try await perform(request)
-    }
-
-    /// Fetch operational event summary from the shared web API.
-    func fetchEventSummary(projectId: UUID) async throws -> EventSummary {
-        let request = try makeWebApiRequest(path: "/api/eventos/\(projectId.uuidString)/resumo")
         return try await perform(request)
     }
 
@@ -323,29 +238,72 @@ final class APIClient: ObservableObject {
         return try await perform(request)
     }
 
-    // MARK: - Checkout Operations
-
-    /// Execute checkout through the shared operational web boundary.
-    func checkoutProject(
-        projectId: UUID,
-        metodoScan: MetodoScan,
-        overrideReason: String? = nil
-    ) async throws -> CheckoutProjectResponse {
-        let body = try encoder.encode(
-            CheckoutProjectRequest(
-                metodo: metodoScan.rawValue,
-                overrideReason: overrideReason
-            )
-        )
-        let request = try makeWebApiRequest(
-            path: "/api/eventos/\(projectId.uuidString)/checkout",
-            method: "POST",
-            body: body
-        )
+    /// Fetch real serial numbers that belong to the given item types, with
+    /// joined equipment data, capped by `limit`.
+    func fetchSerialsByItemIds(_ itemIds: [UUID], limit: Int) async throws -> [SerialNumber] {
+        guard !itemIds.isEmpty else { return [] }
+        let quoted = itemIds.map { "\"\($0.uuidString)\"" }.joined(separator: ",")
+        let queryItems = [
+            URLQueryItem(name: "item_id", value: "in.(\(quoted))"),
+            URLQueryItem(name: "select", value: "*,item:items(*)"),
+            URLQueryItem(name: "limit", value: "\(limit)")
+        ]
+        let request = try makeRequest(path: "/rest/v1/serial_numbers", queryItems: queryItems)
         return try await perform(request)
     }
 
-    /// Legacy direct checkout path. New checkout flow uses checkoutProject(projectId:metodoScan:).
+    // MARK: - Inventory Snapshot (Home)
+
+    /// Linha enxuta de um serial pra agregacao na Home: status, desgaste e se
+    /// tem tag. Decode tolerante de proposito: status fora do enum vira nil (a
+    /// linha e ignorada na agregacao) e desgaste ausente cai pro default 3.
+    /// Assim uma unica linha suja nao derruba os contadores da tela principal.
+    struct SerialSnapshotRow: Decodable {
+        let status: StatusSerial?
+        let desgaste: Int
+        let tagRfid: String?
+
+        enum CodingKeys: String, CodingKey {
+            case status
+            case desgaste
+            case tagRfid = "tag_rfid"
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            let rawStatus = try c.decodeIfPresent(String.self, forKey: .status)
+            self.status = rawStatus.flatMap(StatusSerial.init(rawValue:))
+            self.desgaste = (try? c.decode(Int.self, forKey: .desgaste)) ?? 3
+            self.tagRfid = try c.decodeIfPresent(String.self, forKey: .tagRfid)
+        }
+    }
+
+    /// Snapshot enxuto de todos os seriais (so status, desgaste e tag) pros
+    /// contadores e alertas da Home. Pagina via Range pra furar o teto de
+    /// linhas do PostgREST (Supabase corta em 1000 por resposta): sem isso, um
+    /// estoque acima do teto faria os contadores mentirem pra menos.
+    func fetchSerialSnapshot() async throws -> [SerialSnapshotRow] {
+        let pageSize = 1000
+        var all: [SerialSnapshotRow] = []
+        var offset = 0
+
+        while true {
+            var request = try makeRequest(
+                path: "/rest/v1/serial_numbers",
+                queryItems: [URLQueryItem(name: "select", value: "status,desgaste,tag_rfid")]
+            )
+            request.setValue("\(offset)-\(offset + pageSize - 1)", forHTTPHeaderField: "Range")
+            let page: [SerialSnapshotRow] = try await perform(request)
+            all.append(contentsOf: page)
+            if page.count < pageSize { break }
+            offset += pageSize
+        }
+
+        return all
+    }
+
+    // MARK: - Checkout Operations
+
     /// Register a checkout: batch POST movements + bulk PATCH serial statuses to EM_CAMPO.
     func registerCheckout(
         projectId: UUID,
@@ -387,27 +345,6 @@ final class APIClient: ObservableObject {
 
     // MARK: - Return Operations
 
-    /// Execute return through the shared operational web boundary.
-    func returnProject(
-        projectId: UUID,
-        metodoScan: MetodoScan,
-        items: [ReturnProjectItemRequest]
-    ) async throws -> ReturnProjectResponse {
-        let body = try encoder.encode(
-            ReturnProjectRequest(
-                metodo: metodoScan.rawValue,
-                items: items
-            )
-        )
-        let request = try makeWebApiRequest(
-            path: "/api/eventos/\(projectId.uuidString)/retorno",
-            method: "POST",
-            body: body
-        )
-        return try await perform(request)
-    }
-
-    /// Legacy direct return path. New return flow uses returnProject(projectId:metodoScan:items:).
     /// Register returns: batch POST movements + PATCH serials by outcome.
     func registerReturn(
         projectId: UUID,
@@ -487,6 +424,22 @@ final class APIClient: ObservableObject {
         logger.info("Project \(projectId) status updated to \(status.rawValue)")
     }
 
+    /// Vincula uma tag RFID a um serial: PATCH em `serial_numbers` gravando
+    /// `tag_rfid`. Espelha `updateProjectStatus`. Backend da trilha Etiquetar.
+    func linkTag(serialId: UUID, tagRfid: String) async throws {
+        let body = try encoder.encode(["tag_rfid": tagRfid])
+        let request = try makeRequest(
+            path: "/rest/v1/serial_numbers",
+            method: "PATCH",
+            queryItems: [URLQueryItem(name: "id", value: "eq.\(serialId.uuidString)")],
+            body: body,
+            additionalHeaders: ["Prefer": "return=minimal"]
+        )
+        try await performVoid(request)
+
+        logger.info("Serial \(serialId) linked to tag \(tagRfid)")
+    }
+
     // MARK: - Private Helpers
 
     /// Build an authenticated URLRequest for the Supabase REST API.
@@ -511,7 +464,7 @@ final class APIClient: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseBearerToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         #if DEBUG
@@ -550,7 +503,7 @@ final class APIClient: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseBearerToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let body = body {
@@ -563,43 +516,6 @@ final class APIClient: ObservableObject {
 
         #if DEBUG
         logger.debug("Request: \(method) \(url.absoluteString)")
-        #endif
-
-        return request
-    }
-
-    /// Build a request for the shared web API used by mobile-only operational boundaries.
-    private func makeWebApiRequest(
-        path: String,
-        method: String = "GET",
-        body: Data? = nil
-    ) throws -> URLRequest {
-        guard !webApiBaseURL.isEmpty else {
-            throw APIError.webApiNotConfigured
-        }
-
-        let sanitizedBase = webApiBaseURL.hasSuffix("/") ? String(webApiBaseURL.dropLast()) : webApiBaseURL
-
-        guard let url = URL(string: sanitizedBase + path) else {
-            throw APIError.invalidURL
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        let token = trimmedWebApiAuthToken
-        if !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-
-        if let body = body {
-            request.httpBody = body
-        }
-
-        #if DEBUG
-        logger.debug("Web API Request: \(method) \(url.absoluteString)")
         #endif
 
         return request

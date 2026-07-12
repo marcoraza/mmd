@@ -1,0 +1,7 @@
+# Xcode build artifacts e estado por usuario (nunca versionar)
+build/
+DerivedData/
+*.xcuserstate
+**/xcuserdata/
+**/*.xcodeproj/project.xcworkspace/xcuserdata/
+.DS_Store

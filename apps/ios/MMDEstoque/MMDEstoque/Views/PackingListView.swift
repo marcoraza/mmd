@@ -144,7 +144,7 @@ struct PackingListView: View {
 
     private var actionButton: some View {
         Group {
-            if project.status == .confirmado || project.status == .montagem {
+            if project.status == .confirmado {
                 NavigationLink(value: ProjectNavDestination.checkout(project)) {
                     actionButtonLabel("INICIAR CHECKOUT")
                 }

@@ -77,12 +77,6 @@ final class MockRFIDManager: RFIDReaderProtocol {
         "E28011702000020A5C41BD57",
     ]
 
-    private let shouldFailConnection: () -> Bool
-
-    init(shouldFailConnection: @escaping () -> Bool = { Int.random(in: 1...10) == 1 }) {
-        self.shouldFailConnection = shouldFailConnection
-    }
-
     // MARK: - RFIDReaderProtocol (actions)
 
     func discoverReaders() {
@@ -112,8 +106,8 @@ final class MockRFIDManager: RFIDReaderProtocol {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
             guard let self else { return }
 
-            // 10% chance of connection failure for realism in demo mode.
-            if self.shouldFailConnection() {
+            // 10% chance of connection failure for realism
+            if Int.random(in: 1...10) == 1 {
                 self.connectionStateSubject.send(.error("Timeout ao conectar: tente novamente"))
                 return
             }

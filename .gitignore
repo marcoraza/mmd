@@ -44,3 +44,6 @@ out/
 
 # Evidências visuais locais (88MB+ de prints, referência local)
 tasks/evidence/
+
+# QA/preview temporario (local, nao commitar)
+**/__*.swift

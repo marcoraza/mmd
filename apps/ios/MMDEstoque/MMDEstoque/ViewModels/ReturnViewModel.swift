@@ -4,11 +4,10 @@ import os.log
 
 // MARK: - ReturnResult
 
-enum ReturnResult: Equatable {
+enum ReturnResult {
     case pending
     case ok
-    case problema(notas: String, desgaste: Int)
-    case naoVoltou(notas: String?)
+    case defeito(notas: String, desgaste: Int)
 }
 
 // MARK: - ReturnItemState
@@ -21,42 +20,7 @@ struct ReturnItemState: Identifiable {
     var isScanned: Bool {
         switch result {
         case .pending: return false
-        case .ok, .problema: return true
-        case .naoVoltou: return false
-        }
-    }
-}
-
-// MARK: - ReturnConferenceSummary
-
-struct ReturnConferenceSummary: Equatable {
-    var ok: Int
-    var problem: Int
-    var notReturned: Int
-    var pending: Int
-    var total: Int
-
-    var scanned: Int { ok + problem }
-    var resolved: Int { ok + problem + notReturned }
-    var canFinalize: Bool { total > 0 && pending == 0 }
-}
-
-extension Array where Element == ReturnItemState {
-    var returnConferenceSummary: ReturnConferenceSummary {
-        reduce(ReturnConferenceSummary(ok: 0, problem: 0, notReturned: 0, pending: 0, total: 0)) { partial, item in
-            var next = partial
-            switch item.result {
-            case .pending:
-                next.pending += 1
-            case .ok:
-                next.ok += 1
-            case .problema:
-                next.problem += 1
-            case .naoVoltou:
-                next.notReturned += 1
-            }
-            next.total += 1
-            return next
+        case .ok, .defeito: return true
         }
     }
 }
@@ -82,50 +46,33 @@ final class ReturnViewModel: ObservableObject {
 
     // MARK: - Computed
 
-    private var conferenceSummary: ReturnConferenceSummary {
-        outboundItems.returnConferenceSummary
-    }
-
     var okCount: Int {
-        conferenceSummary.ok
-    }
-
-    var problemCount: Int {
-        conferenceSummary.problem
+        outboundItems.filter {
+            if case .ok = $0.result { return true }
+            return false
+        }.count
     }
 
     var defectCount: Int {
-        problemCount
-    }
-
-    var notReturnedCount: Int {
-        conferenceSummary.notReturned
+        outboundItems.filter {
+            if case .defeito = $0.result { return true }
+            return false
+        }.count
     }
 
     var missingCount: Int {
-        notReturnedCount
+        outboundItems.filter {
+            if case .pending = $0.result { return true }
+            return false
+        }.count
     }
 
-    var pendingCount: Int {
-        conferenceSummary.pending
-    }
+    var totalItems: Int { outboundItems.count }
 
-    var totalItems: Int { conferenceSummary.total }
-
-    var scannedCount: Int { conferenceSummary.scanned }
-
-    var resolvedCount: Int { conferenceSummary.resolved }
+    var scannedCount: Int { okCount + defectCount }
 
     var canFinalize: Bool {
-        conferenceSummary.canFinalize
-    }
-
-    var operationModeLabel: String {
-        AppConfig.shared.isWebApiConfigured ? "API REAL" : "MODO MOCK"
-    }
-
-    var operationModeColor: String {
-        AppConfig.shared.isWebApiConfigured ? "success" : "warning"
+        !outboundItems.isEmpty && scannedCount > 0
     }
 
     // MARK: - Dependencies
@@ -179,7 +126,11 @@ final class ReturnViewModel: ObservableObject {
             }
 
             outboundItems = items
-            rebuildSerialIndex()
+
+            // Build index for fast lookup
+            for (index, item) in outboundItems.enumerated() {
+                serialIdToIndex[item.id] = index
+            }
 
             logger.info("Loaded \(items.count) outbound items for return")
         } catch {
@@ -230,28 +181,13 @@ final class ReturnViewModel: ObservableObject {
 
     private func resolveAndMatch(tags: [String]) async {
         do {
-            let result = try await apiClient.recordAndResolveRfidTags(
-                tags: tags,
-                contexto: .retorno,
-                projectId: project.id,
-                reader: currentReaderRequest()
-            )
+            let result = try await apiClient.resolveRfidTags(tags)
             for item in result.resolved {
                 matchSerial(item.serialNumber)
             }
         } catch {
             self.error = error.localizedDescription
         }
-    }
-
-    private func currentReaderRequest() -> RfidScanReaderRequest? {
-        guard let reader = rfidManager.connectedReader else { return nil }
-        return RfidScanReaderRequest(
-            nome: reader.name,
-            modelo: "Zebra RFD40",
-            serialFabrica: reader.serialNumber,
-            bateria: reader.batteryLevel
-        )
     }
 
     private func matchSerial(_ serial: SerialNumber) {
@@ -270,16 +206,64 @@ final class ReturnViewModel: ObservableObject {
         pendingAssessmentId = nil
     }
 
-    func markAsProblem(serialId: UUID, notas: String, desgaste: Int) {
+    func markAsDefect(serialId: UUID, notas: String, desgaste: Int) {
         guard let index = serialIdToIndex[serialId] else { return }
-        outboundItems[index].result = .problema(notas: notas.trimmingCharacters(in: .whitespacesAndNewlines), desgaste: desgaste)
+        outboundItems[index].result = .defeito(notas: notas, desgaste: desgaste)
         pendingAssessmentId = nil
     }
 
-    func markAsNotReturned(serialId: UUID, notas: String?) {
-        guard let index = serialIdToIndex[serialId] else { return }
-        outboundItems[index].result = .naoVoltou(notas: normalizeNote(notas))
-        pendingAssessmentId = nil
+    // MARK: - Demo Scan (video capture only)
+    //
+    // Encena a volta pra gravação do tour em vídeo: marca os itens reais em
+    // campo como OK, um a um, pro efeito de conferência. Não toca hardware nem
+    // banco. Só roda com o launch arg -demoScan.
+
+    var isDemoMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("-demoScan")
+    }
+
+    func runDemoScanIfNeeded() {
+        guard isDemoMode, scannedCount == 0 else { return }
+        Task { @MainActor in
+            // No seed atual nenhum evento tem movimentação de saída, então o
+            // fluxo real não acha itens em campo. Pra encenar, monto a volta a
+            // partir da packing real do evento (serials de verdade, sem tocar
+            // o banco).
+            if outboundItems.isEmpty {
+                await loadDemoOutboundFromPacking()
+            }
+            for item in outboundItems {
+                try? await Task.sleep(nanoseconds: 550_000_000)
+                markAsOK(serialId: item.id)
+            }
+        }
+    }
+
+    private func loadDemoOutboundFromPacking() async {
+        do {
+            let packing = try await apiClient.fetchPackingList(projectId: project.id)
+            // Os seriais designados do seed são órfãos (não existem em
+            // serial_numbers), então busco seriais reais pelos tipos de item da
+            // packing. Limita pra o efeito de conferência não ficar longo no vídeo.
+            let itemIds = Array(Set(packing.map { $0.itemId }))
+            guard !itemIds.isEmpty else { return }
+
+            let serials = try await apiClient.fetchSerialsByItemIds(itemIds, limit: 6)
+            var items: [ReturnItemState] = []
+            for serial in serials {
+                guard let equipment = serial.item else { continue }
+                let resolved = ResolvedItem(serialNumber: serial, equipment: equipment)
+                items.append(ReturnItemState(id: serial.id, resolved: resolved))
+            }
+
+            outboundItems = items
+            serialIdToIndex.removeAll()
+            for (index, item) in outboundItems.enumerated() {
+                serialIdToIndex[item.id] = index
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 
     // MARK: - Finalize Return
@@ -287,33 +271,61 @@ final class ReturnViewModel: ObservableObject {
     func finalizeReturn() async {
         isProcessingReturn = true
         error = nil
-        defer { isProcessingReturn = false }
 
-        guard canFinalize else {
-            error = pendingCount > 0
-                ? "Ainda existem unidades sem conferência."
-                : "Nada para receber de volta."
+        // Encenação: mostra a volta registrada sem gravar nada no Supabase.
+        if isDemoMode {
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            returnComplete = true
+            isProcessingReturn = false
             return
         }
 
         do {
-            let items = buildReturnProjectItems()
-            if AppConfig.shared.isWebApiConfigured {
-                _ = try await apiClient.returnProject(
-                    projectId: project.id,
-                    metodoScan: scanMethod,
-                    items: items
-                )
-            } else {
-                logger.notice("Return finalized in mock mode with \(items.count) items")
+            var returns: [(serialId: UUID, tipo: TipoMovimentacao, statusNovo: String, desgaste: Int?, metodoScan: MetodoScan, notas: String?)] = []
+
+            for item in outboundItems {
+                switch item.result {
+                case .ok:
+                    returns.append((
+                        serialId: item.id,
+                        tipo: .retorno,
+                        statusNovo: StatusSerial.disponivel.rawValue,
+                        desgaste: nil,
+                        metodoScan: scanMethod,
+                        notas: nil
+                    ))
+                case .defeito(let notas, let desgaste):
+                    returns.append((
+                        serialId: item.id,
+                        tipo: .dano,
+                        statusNovo: StatusSerial.manutencao.rawValue,
+                        desgaste: desgaste,
+                        metodoScan: scanMethod,
+                        notas: notas
+                    ))
+                case .pending:
+                    // Not returned, stays EM_CAMPO
+                    break
+                }
+            }
+
+            if !returns.isEmpty {
+                try await apiClient.registerReturn(projectId: project.id, returns: returns)
+            }
+
+            // If all items returned, mark project as finalizado
+            if missingCount == 0 {
+                try await apiClient.updateProjectStatus(projectId: project.id, status: .finalizado)
             }
 
             returnComplete = true
-            logger.info("Return finalized: \(self.okCount) OK, \(self.problemCount) problema, \(self.notReturnedCount) nao voltou")
+            logger.info("Return finalized: \(self.okCount) OK, \(self.defectCount) defeito, \(self.missingCount) faltando")
         } catch {
             self.error = error.localizedDescription
             logger.error("Return failed: \(error)")
         }
+
+        isProcessingReturn = false
     }
 
     // MARK: - Reset
@@ -326,53 +338,5 @@ final class ReturnViewModel: ObservableObject {
         returnComplete = false
         error = nil
         rfidManager.clearTags()
-    }
-
-    func openAssessment(serialId: UUID) {
-        guard serialIdToIndex[serialId] != nil else { return }
-        pendingAssessmentId = serialId
-    }
-
-    func buildReturnProjectItems() -> [ReturnProjectItemRequest] {
-        outboundItems.compactMap { item in
-            switch item.result {
-            case .pending:
-                return nil
-            case .ok:
-                return ReturnProjectItemRequest(
-                    serialId: item.id,
-                    desgaste: item.resolved.serialNumber.desgaste,
-                    resultado: .ok,
-                    observacao: nil
-                )
-            case .problema(let notas, let desgaste):
-                return ReturnProjectItemRequest(
-                    serialId: item.id,
-                    desgaste: desgaste,
-                    resultado: .problema,
-                    observacao: normalizeNote(notas)
-                )
-            case .naoVoltou(let notas):
-                return ReturnProjectItemRequest(
-                    serialId: item.id,
-                    desgaste: item.resolved.serialNumber.desgaste,
-                    resultado: .naoVoltou,
-                    observacao: normalizeNote(notas)
-                )
-            }
-        }
-    }
-
-    private func rebuildSerialIndex() {
-        serialIdToIndex.removeAll()
-        for (index, item) in outboundItems.enumerated() {
-            serialIdToIndex[item.id] = index
-        }
-    }
-
-    private func normalizeNote(_ value: String?) -> String? {
-        guard let value else { return nil }
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
     }
 }

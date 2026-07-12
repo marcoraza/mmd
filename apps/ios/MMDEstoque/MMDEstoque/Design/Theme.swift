@@ -140,7 +140,6 @@ extension StatusProjeto {
         switch self {
         case .planejamento: return .ndTextSecondary
         case .confirmado:   return .ndSuccess
-        case .montagem:     return .ndWarning
         case .emCampo:      return .ndWarning
         case .finalizado:   return .ndTextDisabled
         case .cancelado:    return .ndAccent

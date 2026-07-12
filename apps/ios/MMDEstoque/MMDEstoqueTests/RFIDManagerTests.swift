@@ -100,7 +100,7 @@ final class RFIDManagerTests: XCTestCase {
     // MARK: - Scanning
 
     func testStartStopInventoryTogglesScanning() {
-        let mock = MockRFIDManager(shouldFailConnection: { false })
+        let mock = MockRFIDManager()
         let manager = RFIDManager(implementation: mock)
 
         // First connect
@@ -176,7 +176,7 @@ final class RFIDManagerTests: XCTestCase {
     // MARK: - Disconnect
 
     func testDisconnectResetsState() {
-        let mock = MockRFIDManager(shouldFailConnection: { false })
+        let mock = MockRFIDManager()
         let manager = RFIDManager(implementation: mock)
 
         let reader = RFIDReaderInfo(
@@ -257,92 +257,6 @@ final class RFIDManagerTests: XCTestCase {
         XCTAssertTrue(mockImplementation.disconnectCalled)
         XCTAssertTrue(mockImplementation.clearTagsCalled)
         XCTAssertTrue(mockImplementation.stopInventoryCalled)
-    }
-
-    // MARK: - Production Gate
-
-    func testProductionGateBlocksMockModeFromFieldReadiness() {
-        let snapshot = MobileProductionGateSnapshot.evaluate(
-            runtimeMode: .mock,
-            connectionState: .disconnected,
-            tagCount: 8,
-            isWebApiConfigured: true,
-            isSimulator: false,
-            evidence: MobileProductionGateEvidence(
-                signedBuildOnDevice: true,
-                qrFallbackValidated: true,
-                checkoutValidated: true,
-                returnValidated: true
-            )
-        )
-
-        XCTAssertEqual(snapshot.status, .blocked)
-        XCTAssertEqual(snapshot.footer, "Mock serve para demo, nao para campo")
-        XCTAssertEqual(
-            snapshot.items.first(where: { $0.label == "RFD40 PAREADO" })?.status,
-            .blocked
-        )
-        XCTAssertEqual(
-            snapshot.items.first(where: { $0.label == "5 TAGS REAIS" })?.status,
-            .blocked
-        )
-    }
-
-    func testProductionGateKeepsZebraDevicePendingUntilPhysicalEvidenceIsRecorded() {
-        let reader = RFIDReaderInfo(
-            id: "42",
-            name: "Zebra RFD40",
-            serialNumber: "RFD40-42",
-            batteryLevel: 90
-        )
-
-        let snapshot = MobileProductionGateSnapshot.evaluate(
-            runtimeMode: .zebra,
-            connectionState: .connected(reader),
-            tagCount: 5,
-            isWebApiConfigured: true,
-            isSimulator: false
-        )
-
-        XCTAssertEqual(snapshot.status, .pending)
-        XCTAssertEqual(
-            snapshot.items.first(where: { $0.label == "RFD40 PAREADO" })?.status,
-            .passed
-        )
-        XCTAssertEqual(
-            snapshot.items.first(where: { $0.label == "5 TAGS REAIS" })?.status,
-            .passed
-        )
-        XCTAssertEqual(
-            snapshot.items.first(where: { $0.label == "QR FALLBACK" })?.status,
-            .pending
-        )
-    }
-
-    func testProductionGatePassesOnlyWhenAllFieldEvidenceIsPresent() {
-        let reader = RFIDReaderInfo(
-            id: "42",
-            name: "Zebra RFD40",
-            serialNumber: "RFD40-42",
-            batteryLevel: 90
-        )
-
-        let snapshot = MobileProductionGateSnapshot.evaluate(
-            runtimeMode: .zebra,
-            connectionState: .connected(reader),
-            tagCount: 5,
-            isWebApiConfigured: true,
-            isSimulator: false,
-            evidence: MobileProductionGateEvidence(
-                signedBuildOnDevice: true,
-                qrFallbackValidated: true,
-                checkoutValidated: true,
-                returnValidated: true
-            )
-        )
-
-        XCTAssertEqual(snapshot.status, .passed)
-        XCTAssertTrue(snapshot.items.allSatisfy { $0.status == .passed })
     }
 }
 

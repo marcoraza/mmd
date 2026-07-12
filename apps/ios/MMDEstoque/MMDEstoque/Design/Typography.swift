@@ -6,49 +6,64 @@ extension Font {
 
     // MARK: Font Families
 
-    /// Sans role: body text, titles, item names.
-    /// Uses the system font because bundled TTF files are not present.
+    /// Space Grotesk: body text, titles, item names.
+    ///
+    /// Available static weights: Regular, Medium, Bold (no SemiBold TTF).
+    /// SemiBold maps to Bold as the closest available weight.
     static func spaceGrotesk(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .default)
+        let name: String
+        switch weight {
+        case .bold, .semibold:  name = "SpaceGrotesk-Bold"
+        case .medium:           name = "SpaceGrotesk-Medium"
+        default:                name = "SpaceGrotesk-Regular"
+        }
+        return .custom(name, size: size, relativeTo: .body)
     }
 
-    /// Mono role: labels ALL CAPS, codes MMD-XXX-NNNN, counters, badges, numbers.
+    /// Space Mono: labels ALL CAPS, codes MMD-XXX-NNNN, counters, badges, numbers.
+    ///
+    /// Falls back to `.system(size:design:.monospaced)` if the font isn't loaded.
     static func spaceMono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
+        let name = weight == .bold ? "SpaceMono-Bold" : "SpaceMono-Regular"
+        return .custom(name, size: size, relativeTo: .caption)
     }
 
-    /// Display role: hero numbers (scan count, progress, KPIs). 36px and above.
+    /// Doto: hero numbers (scan count, progress, KPIs). 36px and above.
+    ///
+    /// Uses the variable font Doto[ROND,wght] registered via UIAppFonts.
+    /// PostScript name is "Doto-Black" (default instance, Black weight — ideal
+    /// for large display numbers).
     static func doto(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        .system(size: size, weight: weight, design: .rounded)
+        .custom("Doto-Black", size: size, relativeTo: .largeTitle)
     }
 
     // MARK: Semantic Scale
 
-    /// 72px display. Hero numbers on dashboard (scan count, total value).
+    /// 72px Doto. Hero numbers on dashboard (scan count, total value).
     static let displayXL  = Font.doto(72)
 
-    /// 48px display. Secondary KPIs.
+    /// 48px Doto. Secondary KPIs.
     static let displayLG  = Font.doto(48)
 
-    /// 36px display. Page titles with numeric emphasis.
+    /// 36px Doto. Page titles with numeric emphasis.
     static let displayMD  = Font.doto(36)
 
-    /// 24px semibold. Section titles.
+    /// 24px Space Grotesk semibold. Section titles.
     static let ndHeading  = Font.spaceGrotesk(24, weight: .semibold)
 
-    /// 18px medium. Subtitles.
+    /// 18px Space Grotesk medium. Subtitles.
     static let ndSubheading = Font.spaceGrotesk(18, weight: .medium)
 
-    /// 16px regular. Body text, item names.
+    /// 16px Space Grotesk regular. Body text, item names.
     static let ndBody     = Font.spaceGrotesk(16)
 
-    /// 14px regular. Secondary text.
+    /// 14px Space Grotesk regular. Secondary text.
     static let ndBodySm   = Font.spaceGrotesk(14)
 
-    /// 12px mono. Timestamps, metadata.
+    /// 12px Space Mono. Timestamps, metadata.
     static let ndCaption  = Font.spaceMono(12)
 
-    /// 11px mono. ALL CAPS labels (use with `.ndLabel()` modifier).
+    /// 11px Space Mono. ALL CAPS labels (use with `.ndLabel()` modifier).
     static let ndLabel    = Font.spaceMono(11)
 
     /// 9px Space Mono. Smallest label size (badges, micro-labels).

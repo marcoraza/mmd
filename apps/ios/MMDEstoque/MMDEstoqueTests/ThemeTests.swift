@@ -77,10 +77,6 @@ final class ThemeTests: XCTestCase {
         XCTAssertEqual(StatusProjeto.confirmado.color, .ndSuccess)
     }
 
-    func testStatusProjetoMontagem() {
-        XCTAssertEqual(StatusProjeto.montagem.color, .ndWarning)
-    }
-
     func testStatusProjetoEmCampo() {
         XCTAssertEqual(StatusProjeto.emCampo.color, .ndWarning)
     }

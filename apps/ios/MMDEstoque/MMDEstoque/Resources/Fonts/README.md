@@ -1,4 +1,4 @@
-# Fontes - MMD Estoque
+# Fontes — MMD Estoque
 
 Baixe os TTFs e coloque neste diretorio. Ja estao registradas no Info.plist (UIAppFonts).
 

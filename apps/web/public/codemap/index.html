@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MMD Estoque Inteligente · codemap</title>
+<style>
+  @property --ba { syntax:'<angle>'; initial-value:0deg; inherits:false; }
+  :root{
+    --bg:#0b0b0b; --card:#131313; --muted:#232323; --mfg:#a3a3a3; --fg:#f5f5f5;
+    --edge:#3d3d40;
+    --shadow: inset 0 1px 0 0 #ffffff08, inset 0 0 0 1px #ffffff08,
+              0 0 0 1px #0000001a, 0 2px 2px 0 #0000001a,
+              0 4px 4px 0 #0000001a, 0 8px 8px 0 #0000001a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--fg);overflow:hidden;
+    font-family:Inter,-apple-system,"SF Pro Text",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(1400px 800px at 50% 30%, transparent 60%, rgba(0,0,0,.5));}
+
+  header{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;align-items:center;
+    justify-content:space-between;padding:18px 24px;pointer-events:none}
+  header>*{pointer-events:auto}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .mark{width:34px;height:34px;border-radius:12px;background:var(--card);
+    box-shadow:var(--shadow);display:grid;place-items:center;overflow:hidden}
+  .brand .mark img{width:20px;height:20px}
+  .brand h1{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .hstats{display:flex;align-items:center;gap:10px}
+  .compo-wrap{display:flex;align-items:center;gap:11px;height:34px;padding:0 15px;border-radius:999px;
+    background:var(--card);box-shadow:var(--shadow)}
+  .compo-total{font-size:12px;color:var(--mfg);white-space:nowrap}
+  .compo-total b{color:var(--fg);font-weight:600;font-size:13px}
+  .compo{display:flex;width:230px;height:9px;border-radius:99px;overflow:hidden;gap:2px}
+  .seg{height:100%;min-width:5px;cursor:pointer;border-radius:2px;transition:opacity .2s}
+  .hstats.filtering .seg:not(.on){opacity:.25}
+  .hpill{display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;
+    background:var(--card);box-shadow:var(--shadow);font-size:12px;color:var(--mfg);white-space:nowrap}
+  .hpill .dotlocal{width:7px;height:7px;border-radius:99px;background:#34d399}
+
+  #stage{position:absolute;inset:0;cursor:grab;overflow:hidden}
+  #stage.panning{cursor:grabbing}
+  #world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+  #edges{position:absolute;inset:0;overflow:visible;pointer-events:none}
+  #edges path{fill:none;stroke:var(--edge);stroke-width:1.4;transition:stroke .2s,opacity .25s}
+  #edges path.hl{stroke:#fb923c}
+  #edges path.dim{opacity:.1}
+
+  .area{position:absolute;border-radius:30px;background:rgba(255,255,255,.035);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+  .area .alabel{position:absolute;top:18px;left:24px;display:flex;align-items:center;gap:7px;
+    font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#8d8d8d}
+  .area .alabel i{width:6px;height:6px;border-radius:99px;background:#5b5b5b}
+
+  .pill{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;border-radius:999px;
+    background:var(--bg);box-shadow:0 0 0 5px var(--bg);padding:2px 8px;font-size:11px;
+    color:rgba(163,163,163,.85);transition:opacity .25s,color .2s;pointer-events:none;z-index:4}
+  .pill.hl{color:#fdba74}
+  .pill.dim{opacity:.08}
+
+  .node{position:absolute;transition:opacity .3s;cursor:pointer;z-index:3}
+  .node.dim{opacity:.25}
+  .beam{position:absolute;inset:-1px;border-radius:23px;pointer-events:none}
+  .beam::before,.beam::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;
+    background:conic-gradient(from var(--ba),transparent 0turn,transparent .58turn,
+      rgba(249,115,22,.9) .68turn,#fdba74 .73turn,rgba(96,165,250,.8) .78turn,transparent .88turn);
+    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+    animation:beamspin 7s linear infinite}
+  .beam::after{filter:blur(8px) brightness(1.3) saturate(1.5);opacity:.3}
+  @keyframes beamspin{to{--ba:360deg}}
+
+  .card{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:22px;
+    background:var(--card);box-shadow:var(--shadow);height:100%;transition:box-shadow .2s}
+  .node:hover .card,.node.sel .card{box-shadow:var(--shadow),0 0 0 1px rgba(251,146,60,.55)}
+  .hdr{display:flex;flex:none;align-items:center;gap:10px;height:56px;padding:0 14px}
+  .chip{display:flex;flex:none;width:28px;height:28px;align-items:center;justify-content:center;
+    border-radius:10px;overflow:hidden}
+  .chip img{width:16px;height:16px}
+  .chip svg{width:16px;height:16px}
+  .tcol{display:flex;flex-direction:column;min-width:0}
+  .t{font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s{font-size:11px;line-height:1.3;color:var(--mfg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rows{display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+    margin:0 16px;border-top:1px solid var(--muted);padding:10px 0 12px}
+  .row{display:flex;max-width:100%;align-items:center;gap:6px;font-size:11px;color:var(--mfg);height:20px}
+  .row img,.row svg{width:12px;height:12px;flex:none}
+
+  #pop{position:fixed;z-index:40;width:290px;border-radius:22px;background:var(--card);
+    box-shadow:var(--shadow),0 24px 60px rgba(0,0,0,.6);padding:16px;display:none}
+  #pop.open{display:block}
+  #pop .pk{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+  #pop .ph{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  #pop .ph .chip{width:30px;height:30px}
+  #pop .pt{font-size:14px;font-weight:600}
+  #pop .ps{font-size:11.5px;color:var(--mfg)}
+  #pop .pd{font-size:12px;line-height:1.55;color:var(--mfg);margin:10px 0}
+  #pop code{display:block;font:10.5px ui-monospace,SFMono-Regular,monospace;color:#fdba74;
+    background:var(--bg);border-radius:10px;padding:8px 10px;word-break:break-all;margin-bottom:10px}
+  #pop .pc{border-top:1px solid var(--muted);padding-top:9px}
+  #pop .pc .cl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#6b6b6b;margin-bottom:6px}
+  #pop .pc .ci{display:flex;gap:6px;font-size:11.5px;color:var(--mfg);line-height:1.7}
+  #pop .pc .ci b{color:#d4d4d4;font-weight:500}
+  #pop .x{position:absolute;top:12px;right:14px;width:24px;height:24px;border-radius:8px;
+    display:grid;place-items:center;color:#6b6b6b;cursor:pointer}
+  #pop .x:hover{background:var(--muted);color:var(--fg)}
+
+  .legend{position:fixed;left:24px;bottom:18px;z-index:30;display:flex;gap:3px;align-items:center;
+    height:40px;padding:0 6px;border-radius:999px;background:var(--card);box-shadow:var(--shadow)}
+  .legf{display:flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:999px;
+    font-size:11px;color:var(--mfg);cursor:pointer;border:0;background:none;font-family:inherit;
+    white-space:nowrap;transition:background .15s,color .15s,opacity .15s}
+  .legf:hover{background:var(--muted)}
+  .legf i{width:8px;height:8px;border-radius:3px}
+  .legf .cnt{font-size:10px;color:#6b6b6b}
+  .legf.on{background:var(--muted);color:var(--fg)}
+  .legf.on .cnt{color:var(--mfg)}
+  .legend.filtering .legf[data-kind]:not(.on){opacity:.4}
+  .hint{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:29;
+    font-size:11px;color:#6b6b6b}
+  .zoom{position:fixed;right:24px;bottom:18px;z-index:30;display:flex;border-radius:999px;
+    background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+  .zoom button{width:38px;height:34px;border:0;background:none;color:var(--mfg);font-size:15px;
+    cursor:pointer;font-family:inherit}
+  .zoom button:hover{background:var(--muted);color:var(--fg)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="mark"><img id="brandicon" src="" onerror="this.remove()"></div>
+    <div><h1 id="title"></h1></div>
+  </div>
+  <div class="hstats">
+    <div class="compo-wrap">
+      <span class="compo-total"><b id="ntotal">0</b> nós</span>
+      <div class="compo" id="compo"></div>
+    </div>
+    <div class="hpill"><span class="dotlocal"></span> 100% local</div>
+  </div>
+</header>
+
+<div id="stage"><div id="world"><svg id="edges"></svg></div></div>
+
+<div id="pop"></div>
+<div class="legend" id="legend"></div>
+<div class="hint">arraste para navegar · scroll para zoom · clique num card</div>
+<div class="zoom">
+  <button id="zo">−</button><button id="zf" style="font-size:12px">⤢</button><button id="zi">+</button>
+</div>
+
+<script>
+/* ============================ DADOS: MMD ============================ */
+
+const META = {
+  title: 'MMD Estoque Inteligente · codemap',
+  iconDomain: '',
+};
+
+const AREAS = [
+  {id:'ios',  label:'Campo · iOS + RFID',              x:340, y:90,  cols:1},
+  {id:'web',  label:'Gestão de Eventos · Web',         x:900, y:40,  cols:2},
+  {id:'op',   label:'Operação · Check-out e Retorno',  x:900, y:420, cols:2},
+  {id:'auth', label:'Auth e Acesso',                   x:900, y:800, cols:2},
+  {id:'qr',   label:'QR e Treinamento',                x:340, y:800, cols:1},
+];
+
+const NODES = [
+  /* Campo iOS */
+  {id:'liquidroot', area:'ios', col:0, kind:'entry', t:'App iOS Liquid', s:'LiquidRoot · AppRoute',
+   d:'Raiz de navegação do app de campo: gate de auth, tour guiado e todas as rotas (conectar leitor, packing, checkout, retorno, scan, etiquetar).',
+   ref:'apps/ios/MMDEstoque/MMDEstoque/Views/Liquid/LiquidRoot.swift:48'},
+  {id:'rfidmgr', area:'ios', col:0, kind:'service', t:'RFIDManager', s:'fachada Combine',
+   rows:[['tool','ZebraRFIDManager · BLE'],['tool','MockRFIDManager · simulador']],
+   d:'Fachada ObservableObject que escolhe leitor real (Zebra SDK) ou mock via RFIDReaderProtocol e publica tags por Combine.',
+   ref:'apps/ios/MMDEstoque/MMDEstoque/Services/RFIDManager.swift:30'},
+  {id:'apiclient', area:'ios', col:0, kind:'service', t:'APIClient', s:'REST Supabase + Web API',
+   d:'Cliente HTTP do app: lê REST do Supabase direto (items, packing, seriais) e envia toda mutação (checkout, retorno, scans, vínculo de tag) pra fronteira operacional web. Mobile não cria regra paralela.',
+   ref:'apps/ios/MMDEstoque/MMDEstoque/Services/APIClient.swift:44'},
+  {id:'authstore', area:'ios', col:0, kind:'service', t:'AuthSessionStore', s:'sessão Supabase no iOS',
+   rows:[['tool','KeychainStore · sessão segura']],
+   d:'Login por senha no Supabase Auth, persistência da sessão no Keychain e refresh single-flight do access token.',
+   ref:'apps/ios/MMDEstoque/MMDEstoque/Services/AuthSessionStore.swift:36'},
+  {id:'zebra', x:40, y:258, kind:'external', t:'Zebra RFD40', s:'leitor RFID físico',
+   d:'Leitor RFID conectado ao iPhone via Bluetooth (ZebraRfidSdkFramework).',
+   ref:'apps/ios/MMDEstoque/MMDEstoque/Services/ZebraRFIDManager.swift:14'},
+
+  /* Gestão Web */
+  {id:'webpages', area:'web', col:0, kind:'entry', t:'Web app · páginas', s:'/projetos · /items · /ficha',
+   d:'Gestão no navegador: dashboard, eventos, catálogo, ficha de evento, packing, lotes (legado), QR e admin RFID.',
+   ref:'apps/web/src/app'},
+  {id:'projetosact', area:'web', col:0, kind:'service', t:'Actions de evento', s:'criar · ficha · comercial',
+   d:'Server actions do evento: cria projeto, salva ficha operacional e bloco comercial leve, bloqueia delete de evento EM_CAMPO.',
+   ref:'apps/web/src/lib/actions/projetos.ts:74'},
+  {id:'fichacore', area:'web', col:0, kind:'service', t:'Ficha e comercial', s:'cores puros do evento',
+   d:'Regras puras da ficha operacional e do bloco comercial do evento (orçamento e contrato ficam leves, sem virar financeiro).',
+   ref:'apps/web/src/lib/evento-ficha-core.ts'},
+  {id:'eventpro', area:'web', col:1, kind:'service', t:'Import Event Pro', s:'planilhas → eventos',
+   d:'Importador oficial: classifica linhas da planilha, gera código EVT-AAMMDD-NN, cria batches, candidatos de catálogo e issues de revisão. Nunca cria item de catálogo automaticamente.',
+   ref:'apps/web/src/lib/event-pro-import-core.ts:169'},
+  {id:'packimport', area:'web', col:1, kind:'service', t:'Import packing', s:'exceljs · match',
+   d:'Parse de XLSX e match contra o catálogo por codigo_mmd ou texto: matched, ambiguous ou invalid antes de qualquer escrita.',
+   ref:'apps/web/src/lib/packing-import-core.ts'},
+  {id:'alloc', area:'web', col:1, kind:'service', t:'Alocação', s:'unidades + conflitos',
+   d:'Alocação por unidade física e detecção de conflitos de agenda entre eventos. Cobertura por aluguel externo em external-rental-core.',
+   ref:'apps/web/src/lib/allocation-core.ts'},
+
+  /* Operação */
+  {id:'apieventos', area:'op', col:0, kind:'entry', t:'API /eventos/[id]', s:'checkout · retorno · resumo',
+   d:'Fronteira operacional que o mobile consome: check-out validado, retorno com pendências (OK, manutenção, pendência) e resumo do evento. Toda rota exige auth.',
+   ref:'apps/web/src/app/api/eventos/[id]/checkout/route.ts:21'},
+  {id:'apirfid', area:'op', col:0, kind:'entry', t:'API /rfid/scans', s:'leituras RFID',
+   d:'Registra leituras RFID e resolve tag → serial via rfid-scan-core (parse e dedupe).',
+   ref:'apps/web/src/app/api/rfid/scans/route.ts:9'},
+  {id:'movact', area:'op', col:1, kind:'service', t:'Movimentações', s:'checkout · checkin actions',
+   d:'Server actions de movimentação: check-out com gate, check-in e resolução de pendência de retorno, tudo via RPC atômica.',
+   ref:'apps/web/src/lib/actions/movimentacoes.ts:35'},
+  {id:'checkoutcore', area:'op', col:1, kind:'service', t:'Checkout core', s:'gate + plano atômico',
+   d:'Gate de saída e plano de execução do check-out, com simulação atômica antes de gravar.',
+   ref:'apps/web/src/lib/checkout-execution-core.ts:81'},
+  {id:'returncore', area:'op', col:1, kind:'service', t:'Retorno core', s:'OK · manutenção · pendência',
+   d:'Resolução de retorno por unidade com pendências rastreadas em retorno_pendencias.',
+   ref:'apps/web/src/lib/return-resolution-core.ts'},
+
+  /* Auth */
+  {id:'proxy', area:'auth', col:0, kind:'entry', t:'proxy.ts', s:'middleware · gate de rota',
+   d:'Gate de auth por rota: redireciona pro login e faz refresh da sessão Supabase SSR em cada request.',
+   ref:'apps/web/src/proxy.ts:5'},
+  {id:'authactions', area:'auth', col:0, kind:'service', t:'Auth actions', s:'signIn · signOut',
+   d:'Server actions de login por senha e logout no Supabase Auth.',
+   ref:'apps/web/src/lib/auth-actions.ts:11'},
+  {id:'actionauth', area:'auth', col:1, kind:'service', t:'action-auth', s:'viewer · editor · admin',
+   d:'Resolve usuário e papel (profiles) pra toda server action e rota de API antes de executar.',
+   ref:'apps/web/src/lib/action-auth.ts:79'},
+  {id:'demomode', area:'auth', col:1, kind:'service', t:'demo-mode', s:'read-only gate',
+   d:'Alterna dados reais vs demo e bloqueia escrita quando MMD_READONLY está ativo (deploy público mmd-zeta.vercel.app).',
+   ref:'apps/web/src/lib/data/demo-mode.ts:7'},
+
+  /* QR e Treinamento */
+  {id:'qrpublic', area:'qr', col:0, kind:'entry', t:'/s/[codigo]', s:'QR público mínimo',
+   d:'Página pública do QR físico: payload mínimo, sem valor, serial de fábrica, RFID, localização ou histórico. Ficha completa só autenticada em /qrcodes/[codigo].',
+   ref:'apps/web/src/lib/public-qr.ts'},
+  {id:'qrsheet', area:'qr', col:0, kind:'entry', t:'API /qr-sheet', s:'folha PDF de etiquetas',
+   d:'Gera folha PDF de QR codes unit-only com @react-pdf/renderer e a lib qrcode.',
+   ref:'apps/web/src/app/api/qr-sheet/route.ts:22'},
+  {id:'training', area:'qr', col:0, kind:'service', t:'Treinamento', s:'trilhas web/ios + progresso',
+   d:'Trilhas de treinamento do Marcelo em /treinamento, evento sandbox TRN-MARCELO-01 provisionado por script e progresso por capítulo gravado no banco.',
+   ref:'apps/web/src/lib/training-content.ts:33'},
+
+  /* Hub Supabase (direita) */
+  {id:'supadb', x:1700, y:140, kind:'store', domain:'supabase.com', t:'Postgres · Supabase', s:'fonte de verdade única',
+   rows:[['db','items · serial_numbers'],['db','projetos · packing_list'],['db','movimentacoes · rfid_scans'],['db','imports · training_progress']],
+   d:'Banco central com RLS por papel: catálogo, eventos, packing, movimentações, RFID, importação Event Pro e treinamento.',
+   ref:'supabase/migrations'},
+  {id:'suparpc', x:1700, y:380, kind:'tool', t:'RPCs Postgres', s:'transações atômicas',
+   d:'checkout_projeto (com override), checkin_projeto, resolver_retorno_pendencia e trigger de transição de status do evento no banco.',
+   ref:'supabase/migrations'},
+  {id:'supaauth', x:1700, y:500, kind:'external', domain:'supabase.com', t:'Supabase Auth', s:'profiles + RLS',
+   d:'Login web e iOS, perfis com papel e RLS endurecida. Trigger handle_new_user cria o profile no signup.',
+   ref:'supabase/migrations/20260623050458_harden_auth_rls.sql'},
+  {id:'storage', x:1700, y:620, kind:'store', domain:'supabase.com', t:'Storage', s:'planilhas Event Pro',
+   d:'Guarda os arquivos XLSX originais das importações de evento.',
+   ref:'apps/web/scripts/import-event-pro-events.ts'},
+];
+
+const EDGES = [
+  /* iOS interno */
+  ['liquidroot','rfidmgr', [[478,192],[478,224]]],
+  ['rfidmgr','apiclient', [[478,348],[478,380]]],
+  ['zebra','rfidmgr', [[276,286],[360,286]], 'BLE',[318,286]],
+  /* iOS → fronteira web */
+  ['apiclient','apieventos', [[596,392],[780,392],[780,486],[920,486]], 'mutações',[690,392]],
+  ['apiclient','apirfid', [[596,432],[740,432],[740,582],[920,582]], 'scans',[880,582]],
+  ['apiclient','supadb', [[596,412],[760,412],[760,20],[1660,20],[1660,190],[1700,190]], 'REST read-only',[1200,20]],
+  ['authstore','supaauth', [[596,517],[660,517],[660,775],[1680,775],[1680,512],[1700,512]], 'refresh single-flight',[1100,775]],
+  /* Gestão web */
+  ['webpages','projetosact', [[1038,142],[1038,174]]],
+  ['projetosact','fichacore', [[1038,230],[1038,262]]],
+  ['fichacore','supadb', [[1038,318],[1038,380],[1600,380],[1600,300],[1700,300]], 'ficha do evento',[1350,380]],
+  ['eventpro','supadb', [[1412,100],[1620,100],[1620,170],[1700,170]], 'EVT + candidatos',[1590,100]],
+  ['eventpro','storage', [[1412,128],[1560,128],[1560,648],[1700,648]], 'originais XLSX',[1490,128]],
+  ['packimport','supadb', [[1412,210],[1700,210]], 'match catálogo',[1470,210]],
+  /* Operação */
+  ['apieventos','movact', [[1156,494],[1176,494]]],
+  ['movact','checkoutcore', [[1294,522],[1294,554]]],
+  ['checkoutcore','returncore', [[1294,610],[1294,642]]],
+  ['movact','suparpc', [[1412,480],[1520,480],[1520,408],[1700,408]], 'checkout_projeto',[1640,408]],
+  ['returncore','suparpc', [[1412,670],[1480,670],[1480,430],[1700,430]]],
+  ['apirfid','supadb', [[1038,610],[1038,745],[1445,745],[1445,240],[1700,240]], 'grava rfid_scans',[1250,745]],
+  /* Auth */
+  ['proxy','actionauth', [[1156,874],[1176,874]]],
+  ['actionauth','demomode', [[1294,902],[1294,934]]],
+  ['actionauth','supaauth', [[1412,874],[1660,874],[1660,528],[1700,528]]],
+  ['authactions','supaauth', [[1038,990],[1038,1040],[1640,1040],[1640,544],[1700,544]], 'login por senha',[1150,1040]],
+  /* QR e treinamento */
+  ['webpages','qrsheet', [[920,114],[840,114],[840,962],[596,962]], 'imprime etiquetas',[840,540]],
+  ['qrpublic','supadb', [[596,874],[652,874],[652,1085],[1500,1085],[1500,360],[1780,360],[1780,316]], 'payload mínimo',[1300,1085]],
+  ['training','supadb', [[596,1050],[680,1050],[680,1105],[1540,1105],[1540,340],[1818,340],[1818,316]], 'progresso capítulos',[1000,1105]],
+];
+
+/* ========================= renderer (não mexer) ========================= */
+
+const ICO = {
+  openai:'<svg viewBox="0 0 256 260" fill="currentColor"><path d="M239.184 106.203a64.716 64.716 0 0 0-5.576-53.103C219.452 28.459 191 15.784 163.213 21.74A65.586 65.586 0 0 0 52.096 45.22a64.716 64.716 0 0 0-43.23 31.36c-14.31 24.602-11.061 55.634 8.033 76.74a64.665 64.665 0 0 0 5.525 53.102c14.174 24.65 42.644 37.324 70.446 31.36a64.72 64.72 0 0 0 48.754 21.744c28.481.025 53.714-18.361 62.414-45.481a64.767 64.767 0 0 0 43.229-31.36c14.137-24.558 10.875-55.423-8.083-76.483Zm-97.56 136.338a48.397 48.397 0 0 1-31.105-11.255l1.535-.87 51.67-29.825a8.595 8.595 0 0 0 4.247-7.367v-72.85l21.845 12.636c.218.111.37.32.409.563v60.367c-.056 26.818-21.783 48.545-48.601 48.601Zm-104.466-44.61a48.345 48.345 0 0 1-5.781-32.589l1.534.921 51.722 29.826a8.339 8.339 0 0 0 8.441 0l63.181-36.425v25.221a.87.87 0 0 1-.358.665l-52.335 30.184c-23.257 13.398-52.97 5.431-66.404-17.803ZM23.549 85.38a48.499 48.499 0 0 1 25.58-21.333v61.39a8.288 8.288 0 0 0 4.195 7.316l62.874 36.272-21.845 12.636a.819.819 0 0 1-.767 0L41.353 151.53c-23.211-13.454-31.171-43.144-17.804-66.405v.256Zm179.466 41.695-63.08-36.63L161.73 77.86a.819.819 0 0 1 .768 0l52.233 30.184a48.6 48.6 0 0 1-7.316 87.635v-61.391a8.544 8.544 0 0 0-4.4-7.213Zm21.742-32.69-1.535-.922-51.619-30.081a8.39 8.39 0 0 0-8.492 0L99.98 99.808V74.587a.716.716 0 0 1 .307-.665l52.233-30.133a48.652 48.652 0 0 1 72.236 50.391v.205ZM88.061 139.097l-21.845-12.585a.87.87 0 0 1-.41-.614V65.685a48.652 48.652 0 0 1 79.757-37.346l-1.535.87-51.67 29.825a8.595 8.595 0 0 0-4.246 7.367l-.051 72.697Zm11.868-25.58 28.138-16.217 28.188 16.218v32.434l-28.086 16.218-28.188-16.218-.052-32.434Z"/></svg>',
+  gemini:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1c.55 5.35 4.1 8.9 11 10-6.9 1.1-10.45 4.65-11 10-.55-5.35-4.1-8.9-11-10 6.9-1.1 10.45-4.65 11-10z"/></svg>',
+  ghost:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a8 8 0 0 1 7.996 7.75l.004.25-.001 6.954.01.103a2.78 2.78 0 0 1-1.468 2.618l-.163.08c-1.053.475-2.283.248-3.129-.593l-.137-.146a.65.65 0 0 0-1.024 0 2.65 2.65 0 0 1-4.176 0 .65.65 0 0 0-.512-.25c-.2 0-.389.092-.55.296a2.78 2.78 0 0 1-4.859-2.005l.008-.091.001-6.966.004-.25A8 8 0 0 1 12 3zm2.82 10.429a1 1 0 0 0-1.391-.25 2.5 2.5 0 0 1-2.858 0 1 1 0 0 0-1.142 1.642 4.5 4.5 0 0 0 5.142 0 1 1 0 0 0 .25-1.392zM10.01 9l-.127.007a1 1 0 0 0 .117 1.993l.127-.007A1 1 0 0 0 10.01 9zm4 0-.127.007a1 1 0 0 0 .117 1.993l.127-.007A1 1 0 0 0 14.01 9z"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 4a1 1 0 0 0-1 1v5l.007.117a1 1 0 0 0 .493.746l3.5 2a1 1 0 1 0 1-1.732L13 11.42V7a1 1 0 0 0-1-1z"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.874 1.31a1 1 0 0 1 .992.216l.093.095a1 1 0 0 1 .186 1.056L12.98 8H17a1 1 0 0 1 .76 1.65l-9 10.5a1 1 0 0 1-1.72-.938L9.02 14H5a1 1 0 0 1-.76-1.65l9-10.5a1 1 0 0 1 .634-.54z"/></svg>',
+  hex:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.425 1.414a3.33 3.33 0 0 1 3.026 0l6.25 3.423a3.33 3.33 0 0 1 1.799 2.915v8.496a3.33 3.33 0 0 1-1.799 2.915l-6.25 3.423a3.33 3.33 0 0 1-3.026 0l-6.25-3.423A3.33 3.33 0 0 1 2.376 16.248V7.752a3.33 3.33 0 0 1 1.799-2.915z"/></svg>',
+  db:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c4.97 0 9 1.567 9 3.5v13c0 1.933-4.03 3.5-9 3.5s-9-1.567-9-3.5v-13C3 3.567 7.03 2 12 2zm7 12.168c-1.65 1.1-4.267 1.732-7 1.732s-5.35-.632-7-1.732V18.5c0 .5 2.5 1.5 7 1.5s7-1 7-1.5v-4.332zm0-5.5C17.35 9.768 14.733 10.4 12 10.4s-5.35-.632-7-1.732V13c0 .5 2.5 1.5 7 1.5s7-1 7-1.5V8.668zM12 4C7.5 4 5 5 5 5.5S7.5 7 12 7s7-1 7-1.5S16.5 4 12 4z"/></svg>',
+  tool:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h3v-3l-3.5-3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1-3 3l-6-6a6 6 0 0 1-8-8l3.5 3.5"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="10" r="7"/><path d="m21 21-6-6"/></svg>'
+};
+const fav = d => `<img src="https://www.google.com/s2/favicons?domain=${d}&sz=64" onerror="this.style.display='none'">`;
+
+const KIND = {
+  entry:   ['rgba(255,255,255,.06)','#d4d4d4', ICO.bolt,  'entrada'],
+  cron:    ['rgba(245,158,11,.1)',  '#fbbf24', ICO.clock, 'worker'],
+  agent:   ['rgba(249,115,22,.1)',  '#fb923c', ICO.ghost, 'agente'],
+  service: ['rgba(236,72,153,.1)',  '#f472b6', ICO.hex,   'serviço'],
+  store:   ['rgba(16,185,129,.1)',  '#34d399', ICO.db,    'dados'],
+  external:['rgba(14,165,233,.1)',  '#38bdf8', ICO.bolt,  'externo'],
+  tool:    ['rgba(139,92,246,.1)',  '#a78bfa', ICO.tool,  'tools']
+};
+
+/* ---------- posicionamento semi-auto ---------- */
+const CW=236, CGX=20, CGY=32, APAD=20, AHEAD=46;
+const byId={};
+NODES.forEach(n=>{
+  n.w=CW;
+  n.h = 56 + (n.rows ? 10 + n.rows.length*20 + (n.rows.length-1)*6 + 12 : 0);
+  byId[n.id]=n;
+});
+AREAS.forEach(a=>{
+  const colsN=a.cols||1;
+  const colY=Array(colsN).fill(a.y+AHEAD);
+  NODES.filter(n=>n.area===a.id).forEach(n=>{
+    const c=Math.min(n.col||0,colsN-1);
+    if(n.dy)colY[c]+=n.dy;
+    n.x=a.x+APAD+c*(CW+CGX);
+    n.y=colY[c];
+    colY[c]+=n.h+CGY;
+  });
+  a.w=APAD*2+colsN*CW+(colsN-1)*CGX;
+  a.h=Math.max(...colY)-CGY-a.y+APAD;
+});
+NODES.forEach(n=>{
+  if(n.x===undefined||n.y===undefined)
+    console.warn(`codemap: nó "${n.id}" sem posição (area inexistente ou sem x/y)`);
+});
+
+/* âncoras para roteamento: rode anchors() no console */
+window.anchors = () => {
+  const out={};
+  NODES.forEach(n=>{
+    out[n.id]={x:n.x,y:n.y,w:n.w,h:n.h,cx:n.x+n.w/2,cy:n.y+n.h/2,
+      L:[n.x,n.y+n.h/2],R:[n.x+n.w,n.y+n.h/2],T:[n.x+n.w/2,n.y],B:[n.x+n.w/2,n.y+n.h]};
+  });
+  console.table(Object.fromEntries(Object.entries(out).map(([k,v])=>
+    [k,{x:v.x,y:v.y,w:v.w,h:v.h,cy:Math.round(v.cy)}])));
+  return JSON.stringify(out);
+};
+
+/* ---------- mundo ---------- */
+const maxX=Math.max(...AREAS.map(a=>a.x+a.w),...NODES.map(n=>(n.x||0)+n.w));
+const maxY=Math.max(...AREAS.map(a=>a.y+a.h),...NODES.map(n=>(n.y||0)+n.h),
+  ...EDGES.flatMap(e=>e[2].map(p=>p[1])));
+const WORLD_W=maxX+60, WORLD_H=maxY+60;
+const world=document.getElementById('world');
+world.style.width=WORLD_W+'px'; world.style.height=WORLD_H+'px';
+const svg=document.getElementById('edges');
+svg.setAttribute('width',WORLD_W); svg.setAttribute('height',WORLD_H);
+
+document.getElementById('title').textContent=META.title;
+document.title=META.title;
+if(META.iconDomain)document.getElementById('brandicon').src=
+  `https://www.google.com/s2/favicons?domain=${META.iconDomain}&sz=64`;
+else document.getElementById('brandicon').remove();
+
+AREAS.forEach(a=>{
+  const d=document.createElement('div');
+  d.className='area';
+  d.style.cssText=`left:${a.x}px;top:${a.y}px;width:${a.w}px;height:${a.h}px`;
+  d.innerHTML=`<span class="alabel"><i></i>${a.label}</span>`;
+  world.appendChild(d);
+});
+
+function roundPath(pts,r=13){
+  let d=`M ${pts[0][0]} ${pts[0][1]}`;
+  for(let i=1;i<pts.length-1;i++){
+    const [x0,y0]=pts[i-1],[x1,y1]=pts[i],[x2,y2]=pts[i+1];
+    const l1=Math.hypot(x1-x0,y1-y0), l2=Math.hypot(x2-x1,y2-y1);
+    const rr=Math.min(r,l1/2,l2/2);
+    const ax=x1-(x1-x0)/l1*rr, ay=y1-(y1-y0)/l1*rr;
+    const bx=x1+(x2-x1)/l2*rr, by=y1+(y2-y1)/l2*rr;
+    d+=` L ${ax} ${ay} Q ${x1} ${y1} ${bx} ${by}`;
+  }
+  const e=pts[pts.length-1];
+  d+=` L ${e[0]} ${e[1]}`;
+  return d;
+}
+function arrow(pts){
+  const [x1,y1]=pts[pts.length-2],[x2,y2]=pts[pts.length-1];
+  const l=Math.hypot(x2-x1,y2-y1)||1, ux=(x2-x1)/l, uy=(y2-y1)/l;
+  const bx=x2-ux*6.3, by=y2-uy*6.3, px=-uy*3.1, py=ux*3.1;
+  return `M ${bx+px} ${by+py} L ${x2} ${y2} L ${bx-px} ${by-py}`;
+}
+const edgeEls=[];
+EDGES.forEach(e=>{
+  const [from,to,pts,label,lp]=e;
+  if(!byId[from]||!byId[to]){console.warn(`codemap: edge ${from}->${to} com nó inexistente`);return}
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d', roundPath(pts)+' '+arrow(pts));
+  svg.appendChild(p);
+  let pill=null;
+  if(label){
+    pill=document.createElement('div');
+    pill.className='pill'; pill.textContent=label;
+    pill.style.cssText=`left:${lp[0]}px;top:${lp[1]}px`;
+    world.appendChild(pill);
+  }
+  edgeEls.push({from,to,p,pill});
+});
+
+function chipHtml(n){
+  const k=KIND[n.kind];
+  const inner = n.domain ? fav(n.domain) : k[2];
+  return `<span class="chip" style="background:${n.domain?'rgba(255,255,255,.06)':k[0]};color:${k[1]}">${inner}</span>`;
+}
+function rowIcon(ic){
+  if(Array.isArray(ic)) return fav(ic[1]);
+  if(ICO[ic]) return `<span style="display:flex;color:#a3a3a3">${ICO[ic]}</span>`;
+  return fav(ic);
+}
+const nodeEls={};
+NODES.forEach(n=>{
+  const d=document.createElement('div');
+  d.className='node';
+  d.style.cssText=`left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px`;
+  const rows = n.rows ? `<div class="rows">${n.rows.map(r=>
+    `<span class="row">${rowIcon(r[0])}<span>${r[1]}</span></span>`).join('')}</div>` : '';
+  d.innerHTML = `${n.kind==='agent'?'<div class="beam"></div>':''}
+    <div class="card"><div class="hdr">${chipHtml(n)}
+      <span class="tcol"><span class="t">${n.t}</span><span class="s">${n.s||''}</span></span>
+    </div>${rows}</div>`;
+  d.addEventListener('mouseenter',()=>focus(n.id));
+  d.addEventListener('mouseleave',unfocus);
+  d.addEventListener('click',ev=>{ev.stopPropagation();openPop(n)});
+  world.appendChild(d);
+  nodeEls[n.id]=d;
+});
+
+/* ---------- composição + filtros ---------- */
+const ORDER=['entry','cron','agent','service','tool','store','external'];
+const COUNT={}; NODES.forEach(n=>COUNT[n.kind]=(COUNT[n.kind]||0)+1);
+document.getElementById('ntotal').textContent=NODES.length;
+
+document.getElementById('compo').innerHTML =
+  ORDER.filter(k=>COUNT[k]).map(k=>
+    `<span class="seg" data-kind="${k}" title="${COUNT[k]} ${KIND[k][3]}" style="flex:${COUNT[k]} 0 0;background:${KIND[k][1]}"></span>`).join('');
+
+document.getElementById('legend').innerHTML =
+  ORDER.filter(k=>COUNT[k]).map(k=>
+    `<button class="legf" data-kind="${k}"><i style="background:${KIND[k][1]}"></i>${KIND[k][3]}<span class="cnt">${COUNT[k]}</span></button>`).join('')
+  + `<button class="legf" id="legreset" style="display:none;color:#fb923c">⊘ limpar</button>`;
+
+const filterKinds=new Set();
+function passes(n){return filterKinds.size===0||filterKinds.has(n.kind)}
+function toggleKind(k){filterKinds.has(k)?filterKinds.delete(k):filterKinds.add(k);applyFilter()}
+function applyFilter(){
+  const on=filterKinds.size>0;
+  document.querySelector('.hstats').classList.toggle('filtering',on);
+  document.getElementById('legend').classList.toggle('filtering',on);
+  document.querySelectorAll('.seg').forEach(s=>s.classList.toggle('on',filterKinds.has(s.dataset.kind)));
+  document.querySelectorAll('.legf[data-kind]').forEach(b=>b.classList.toggle('on',filterKinds.has(b.dataset.kind)));
+  NODES.forEach(n=>nodeEls[n.id].classList.toggle('dim',on&&!passes(n)));
+  edgeEls.forEach(({from,to,p,pill})=>{
+    const vis=passes(byId[from])&&passes(byId[to]);
+    p.classList.toggle('dim',on&&!vis);
+    if(pill)pill.classList.toggle('dim',on&&!vis);
+  });
+  document.getElementById('legreset').style.display=on?'':'none';
+}
+document.querySelectorAll('.seg,.legf[data-kind]').forEach(el=>
+  el.addEventListener('click',e=>{e.stopPropagation();toggleKind(el.dataset.kind)}));
+document.getElementById('legreset').addEventListener('click',e=>{e.stopPropagation();filterKinds.clear();applyFilter()});
+
+function focus(id){
+  const near=new Set([id]);
+  edgeEls.forEach(({from,to})=>{if(from===id)near.add(to);if(to===id)near.add(from)});
+  NODES.forEach(n=>nodeEls[n.id].classList.toggle('dim',!near.has(n.id)));
+  edgeEls.forEach(({from,to,p,pill})=>{
+    const on=from===id||to===id;
+    p.classList.toggle('hl',on); p.classList.toggle('dim',!on);
+    if(pill){pill.classList.toggle('hl',on);pill.classList.toggle('dim',!on)}
+  });
+}
+function unfocus(){
+  document.querySelectorAll('.hl').forEach(x=>x.classList.remove('hl'));
+  applyFilter();
+}
+
+const pop=document.getElementById('pop');
+function openPop(n){
+  document.querySelectorAll('.node.sel').forEach(x=>x.classList.remove('sel'));
+  nodeEls[n.id].classList.add('sel');
+  const k=KIND[n.kind];
+  const conns=[];
+  edgeEls.forEach(({from,to},i)=>{
+    const lbl=EDGES[i][3];
+    if(from===n.id) conns.push(`<div class="ci">→ <b>${byId[to].t}</b>${lbl?' · '+lbl:''}</div>`);
+    if(to===n.id) conns.push(`<div class="ci">← <b>${byId[from].t}</b>${lbl?' · '+lbl:''}</div>`);
+  });
+  const areaLabel=n.area?(AREAS.find(a=>a.id===n.area)||{}).label:'';
+  pop.innerHTML=`<div class="x" onclick="closePop()">✕</div>
+    <div class="pk" style="color:${k[1]}">${(areaLabel?areaLabel+' · ':'')+k[3]}</div>
+    <div class="ph">${chipHtml(n)}<div><div class="pt">${n.t}</div><div class="ps">${n.s||''}</div></div></div>
+    ${n.d?`<div class="pd">${n.d}</div>`:''}
+    ${n.ref?`<code>${n.ref}</code>`:''}
+    ${conns.length?`<div class="pc"><div class="cl">Conexões</div>${conns.join('')}</div>`:''}`;
+  const r=nodeEls[n.id].getBoundingClientRect();
+  let px=r.right+14, py=r.top;
+  if(px+300>innerWidth) px=r.left-304;
+  if(px<8) px=8;
+  py=Math.min(Math.max(py,80),innerHeight-380);
+  pop.style.left=px+'px'; pop.style.top=py+'px';
+  pop.classList.add('open');
+}
+function closePop(){pop.classList.remove('open');document.querySelectorAll('.node.sel').forEach(x=>x.classList.remove('sel'))}
+
+let tx=0,ty=0,sc=1;
+const stage=document.getElementById('stage');
+function apply(){world.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`}
+function fit(){
+  sc=Math.min(1,(innerWidth-60)/WORLD_W,(innerHeight-150)/WORLD_H);
+  tx=(innerWidth-WORLD_W*sc)/2; ty=84+(innerHeight-160-WORLD_H*sc)/2;
+  apply();
+}
+fit(); addEventListener('resize',fit);
+let pan=false,px0,py0;
+stage.addEventListener('mousedown',e=>{pan=true;px0=e.clientX;py0=e.clientY;stage.classList.add('panning');closePop()});
+addEventListener('mousemove',e=>{if(!pan)return;tx+=e.clientX-px0;ty+=e.clientY-py0;px0=e.clientX;py0=e.clientY;apply()});
+addEventListener('mouseup',()=>{pan=false;stage.classList.remove('panning')});
+stage.addEventListener('click',closePop);
+stage.addEventListener('wheel',e=>{
+  e.preventDefault(); closePop();
+  const f=e.deltaY<0?1.1:0.9, ns=Math.min(2.5,Math.max(.25,sc*f));
+  tx=e.clientX-(e.clientX-tx)*(ns/sc); ty=e.clientY-(e.clientY-ty)*(ns/sc);
+  sc=ns; apply();
+},{passive:false});
+document.getElementById('zi').onclick=()=>{sc=Math.min(2.5,sc*1.2);apply()};
+document.getElementById('zo').onclick=()=>{sc=Math.max(.25,sc/1.2);apply()};
+document.getElementById('zf').onclick=fit;
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@
 		3290442AC88A77B0B3C7BAB7 /* JetBrainsMono-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CE379953BE5426649ABD0051 /* JetBrainsMono-VF.ttf */; };
 		3824AC3AD629A78B7070E9A3 /* Movement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D0D5EA076BE5E09E6F4DC /* Movement.swift */; };
 		3F5138483346A6D201595370 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0181F0F6077DDACC633D1055 /* Project.swift */; };
+		6D80A2367FD8AC74E6E21101 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E437804C16B79BCDD4342CC /* HomeViewModel.swift */; };
 		78B559986B94F9B4434F488E /* EventsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B581BC5242B691FA3EEAF3 /* EventsListView.swift */; };
 		8B3326A3A8886F7849CFBDFC /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 621864D4F091F0097D2241EA /* HomeView.swift */; };
 		91D99BBCF3BF67672825B5AF /* InterTight-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A286F1A99B5838765B8EFFE9 /* InterTight-VF.ttf */; };
@@ -34,6 +35,7 @@
 		4A7CF82140860AF56D61B4D4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		621864D4F091F0097D2241EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		6C9E2F0C74501FD3A7CF30AA /* ResolvedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedItem.swift; sourceTree = "<group>"; };
+		6E437804C16B79BCDD4342CC /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		81057443EDC088E6B6CD9D81 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		905B910AD5B5BC9F1C3EE840 /* EventPro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = EventPro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A286F1A99B5838765B8EFFE9 /* InterTight-VF.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InterTight-VF.ttf"; sourceTree = "<group>"; };
@@ -100,6 +102,14 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		954994A06018AEF6CB085191 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				6E437804C16B79BCDD4342CC /* HomeViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
 		BB7E4D809EE37B491985F582 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -144,6 +154,7 @@
 				4B01DD1A8C7274A2D1763832 /* Models */,
 				2768A65C01C86E7236FB47AD /* Resources */,
 				BC5F15F2B581308059BEC631 /* Services */,
+				954994A06018AEF6CB085191 /* ViewModels */,
 				39D4C3B7B2253C75F506D7E5 /* Views */,
 			);
 			path = EventPro;
@@ -236,6 +247,7 @@
 				DF27C38D461132E323B16002 /* EventProApp.swift in Sources */,
 				78B559986B94F9B4434F488E /* EventsListView.swift in Sources */,
 				8B3326A3A8886F7849CFBDFC /* HomeView.swift in Sources */,
+				6D80A2367FD8AC74E6E21101 /* HomeViewModel.swift in Sources */,
 				D8A4CE822B645805D5DDE183 /* KeychainStore.swift in Sources */,
 				0E6D4DC09F0CCD6CA81741F0 /* LoginView.swift in Sources */,
 				3824AC3AD629A78B7070E9A3 /* Movement.swift in Sources */,

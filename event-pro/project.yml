@@ -1,0 +1,29 @@
+name: EventPro
+options:
+  bundleIdPrefix: com.emdash
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  EventPro:
+    type: application
+    platform: iOS
+    sources:
+      - EventPro
+    resources:
+      - path: EventPro/Resources/Fonts
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.emdash.eventpro
+        PRODUCT_NAME: "Event Pro"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.9"
+        DEVELOPMENT_TEAM: ""
+        INFOPLIST_FILE: EventPro/Resources/Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        SUPPORTS_MACCATALYST: false
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"

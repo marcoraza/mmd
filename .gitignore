@@ -47,3 +47,4 @@ tasks/evidence/
 
 # QA/preview temporario (local, nao commitar)
 **/__*.swift
+event-pro/EventPro.xcodeproj/xcuserdata/

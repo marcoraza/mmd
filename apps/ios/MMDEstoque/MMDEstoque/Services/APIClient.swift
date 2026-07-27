@@ -77,13 +77,14 @@ final class APIClient: ObservableObject {
 
     /// Supabase/Postgres returns timestamps as ISO 8601 with fractional seconds
     /// and timezone, e.g. "2026-03-20T14:30:00.000000+00:00".
-    private static let supabaseDateFormatter: ISO8601DateFormatter = {
+    // ISO8601DateFormatter é thread-safe, pode viver fora do main actor.
+    nonisolated(unsafe) private static let supabaseDateFormatter: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f
     }()
 
-    private static let supabaseDateFormatterFallback: ISO8601DateFormatter = {
+    nonisolated(unsafe) private static let supabaseDateFormatterFallback: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime]
         return f

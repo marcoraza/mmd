@@ -1,5 +1,16 @@
 # Lessons
 
+## 2026-07-27
+
+- `AuthSessionStoreTests` chama `AppConfig.shared.save(supabaseUrl: "https://example.supabase.co", anonKey: "test-anon-key", ...)`, que grava em `UserDefaults.standard` do app host e nao restaura no tearDown. Rodar a suite no simulador deixa o app instalado apontando para um host inexistente, e o sintoma aparece depois como "Erro de rede: nao foi possivel encontrar um servidor" na tela de login. Teste que toca config global precisa de suite isolada ou restore no tearDown.
+- Ao diagnosticar config de app no simulador, o arquivo em `Containers/Data/.../Library/Preferences/<bundle>.plist` nao e fonte de verdade com o device ligado: o `cfprefsd` do simulador serve cache proprio e faz flush por cima de edicoes externas. Para escrever config confiavel: `simctl shutdown`, editar com `plutil` com o device parado, depois `boot`. `simctl spawn <udid> defaults write` escreve fora do container do app e nao tem efeito.
+- Projeto Supabase do MMD hiberna no free tier. Sintoma: `execute_sql` do MCP da timeout e o host nem resolve em DNS. Despausar via `POST https://api.supabase.com/v1/projects/<ref>/restore` com o token `sbp_` do CLI (keychain, entry "Supabase CLI", formato `go-keyring-base64:`). Restore leva 3 a 4 minutos.
+
+## 2026-07-17
+
+- Quando Marco pedir uma entrega usando uma skill, usar o protocolo existente sem editar a skill compartilhada. Neste projeto, o hub reúne as trilhas e os tutoriais Web/iOS aplicam o formato `raza-showcase` com capturas e anéis numerados.
+- Em tutorial visual, screenshots soltos não são fonte de verdade da interface. Para Web, renderizar a codebase atual e ancorar marcações no DOM. Para iOS, seguir `MMDEstoqueApp -> LiquidRoot` e os `TourAnchor` do SwiftUI. Nunca usar `ContentView` ou frames legados só porque ainda existem no target.
+
 ## 2026-04-03
 
 - Em tarefas de saneamento de planilha, nao assumir que o prompt descreve a versao atual do arquivo. Ler a estrutura real primeiro e tratar o prompt como contexto historico.

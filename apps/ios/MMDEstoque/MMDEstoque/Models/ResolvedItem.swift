@@ -34,17 +34,7 @@ struct ResolvedItem: Identifiable {
 
     /// Human-readable condition (estado + desgaste).
     var condicaoLabel: String {
-        "\(serialNumber.estado.displayName) — \(serialNumber.desgasteLabel)"
-    }
-
-    /// Color associated with the equipment category (from Nothing Design System).
-    var categoryColor: Color {
-        equipment.categoria.color
-    }
-
-    /// Color representing the current status (from Nothing Design System).
-    var statusColor: Color {
-        serialNumber.status.color
+        "\(serialNumber.estado.displayName), \(serialNumber.desgasteLabel)"
     }
 
     /// Formatted current value, if available.

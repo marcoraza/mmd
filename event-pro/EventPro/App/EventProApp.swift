@@ -4,11 +4,13 @@ import SwiftUI
 struct EventProApp: App {
 
     @StateObject private var auth = AuthState()
+    @StateObject private var api = APIClient()
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(auth)
+                .environmentObject(api)
                 .preferredColorScheme(.dark)
         }
     }

@@ -144,7 +144,7 @@ private struct EventosContent: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView(showsIndicators: false) {
+            ScrollView(showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 0) {
                     topo
                         .padding(.horizontal, EP.padTela)
@@ -203,8 +203,6 @@ private struct EventosContent: View {
                     .lineSpacing(34 * 0.04)
                     .padding(.top, 7)
             }
-            .id(vm.selecionado?.id)
-
             Spacer(minLength: 0)
 
             Button {
@@ -221,7 +219,6 @@ private struct EventosContent: View {
             .buttonStyle(EPPressStyle())
             .accessibilityLabel("Ajustes")
         }
-        .animation(EP.trocaConteudo, value: vm.selecionadoIndex)
     }
 
     private var avatarLetra: String {
@@ -264,8 +261,6 @@ private struct EventosContent: View {
     private var frase: some View {
         if let evento = vm.selecionado {
             fraseTexto(evento)
-                .id(evento.id)
-                .animation(EP.trocaConteudo, value: vm.selecionadoIndex)
         }
     }
 
@@ -303,7 +298,6 @@ private struct EventosContent: View {
                     agendaRow(index, evento)
                 }
             }
-            .animation(EP.linhaAgenda, value: vm.selecionadoIndex)
         }
     }
 
@@ -341,10 +335,14 @@ private struct EventosContent: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 13)
             .frame(minHeight: EP.touchMin)
-            .background(
-                aberto ? EP.paper2 : Color.clear,
-                in: RoundedRectangle(cornerRadius: EP.r14, style: .continuous)
-            )
+            // So o fundo anima (220ms, como no prototipo); texto e hairline
+            // trocam secos. Animar a lista inteira deixava a troca pesada.
+            .background {
+                RoundedRectangle(cornerRadius: EP.r14, style: .continuous)
+                    .fill(EP.paper2)
+                    .opacity(aberto ? 1 : 0)
+                    .animation(EP.linhaAgenda, value: aberto)
+            }
             .overlay(alignment: .top) {
                 if mostraHairline {
                     Rectangle().fill(EP.linha).frame(height: 1)

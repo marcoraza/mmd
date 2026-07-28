@@ -53,6 +53,9 @@ struct MapaHome: View {
     @State private var passoInterno = false
     @State private var rotaOpacity: Double = 1
     @State private var destinoFrac: CGPoint = .zero
+    /// Geracao da viagem: invalida o callback atrasado de uma viagem antiga
+    /// quando uma troca mais nova ja aconteceu.
+    @State private var viagem = 0
 
     var body: some View {
         GeometryReader { geo in
@@ -88,6 +91,16 @@ struct MapaHome: View {
                 passoInterno = false
                 return
             }
+            // Rajada de toques: com uma viagem em andamento, encaixa seco no
+            // destino novo em vez de empilhar animacoes.
+            if busy {
+                viagem += 1
+                shownSeed = novo
+                destinoFrac = destino(novo)
+                rotaOpacity = 1
+                busy = false
+                return
+            }
             viajarPin(para: novo)
         }
         .accessibilityElement(children: .ignore)
@@ -103,9 +116,12 @@ struct MapaHome: View {
 
     private func viajarPin(para novo: Int) {
         busy = true
+        viagem += 1
+        let atual = viagem
         withAnimation(EP.rotaFade) { rotaOpacity = 0 }
         withAnimation(EP.pinViaja) { destinoFrac = destino(novo) }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) {
+            guard viagem == atual else { return }
             shownSeed = novo
             withAnimation(EP.rotaFade) { rotaOpacity = 1 }
             busy = false

@@ -4,7 +4,9 @@ import SwiftUI
 /// Ler tag) na barra de tinta cheia (opção 1). Ajustes saiu da barra e vive
 /// no avatar do topo do Início.
 struct HomeView: View {
-    @State private var tab: Tab = .inicio
+    // Abre em Eventos: e a tela do grill; a Home propria ainda nao foi
+    // desenhada (proxima fatia).
+    @State private var tab: Tab = .eventos
 
     enum Tab: Int {
         case inicio, eventos, catalogo, lerTag
@@ -15,9 +17,13 @@ struct HomeView: View {
             Group {
                 switch tab {
                 case .inicio:
-                    InicioView()
+                    AbaEmConstrucao(
+                        icone: "house",
+                        titulo: "Início",
+                        texto: "A Home do Event Pro chega numa próxima fatia. Por enquanto a operação vive em Eventos."
+                    )
                 case .eventos:
-                    EventsListView()
+                    EventosView()
                 case .catalogo:
                     AbaEmConstrucao(
                         icone: "shippingbox",
@@ -110,22 +116,23 @@ private struct TabBar: View {
     }
 }
 
-// MARK: - InicioView
+// MARK: - EventosView
 //
-// A Home 2.0 do protótipo: topo tipográfico com avatar, frase única de
-// dados, mapa full bleed com rota por evento e agenda de ordem fixa.
-// Dados reais do HomeViewModel; o mapa é ilustrativo (pendência 9.2) e a
-// distância em km fica de fora até existir dado real.
+// A tela do grill (o protótipo abre com a aba Eventos ativa): topo
+// tipográfico com avatar, frase única de dados, mapa full bleed com rota
+// por evento e agenda de ordem fixa. Dados reais do HomeViewModel; o mapa
+// é ilustrativo (pendência 9.2) e a distância em km fica de fora até
+// existir dado real.
 
-struct InicioView: View {
+struct EventosView: View {
     @EnvironmentObject private var api: APIClient
 
     var body: some View {
-        InicioContent(apiClient: api)
+        EventosContent(apiClient: api)
     }
 }
 
-private struct InicioContent: View {
+private struct EventosContent: View {
 
     @StateObject private var vm: HomeViewModel
     @EnvironmentObject private var auth: AuthState

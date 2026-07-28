@@ -2,16 +2,13 @@ import SwiftUI
 
 // MARK: - Event Pro: Design Tokens
 //
-// Fundacao nova, derivada de dois estudos medidos:
-// - Gramatica ClickUp (raza-design-universes/clickup-sistema-espaco-estado-motion.md):
-//   escala de espaco base 4, elevacao com teto de alpha, estados como degraus
-//   de rampa (nunca opacity), duas curvas de motion, hairline como definicao.
-// - Identidade Liquid Glass do MMD: acentos oklch proprios, dark-first.
+// Lei visual "Ponte de cinza" (handoff event-pro-2, secao 2), medida no
+// prototipo da Home 2.0: papel quente, mapa frio, cinzas neutros de ponte.
+// Regra dura: paleta clara, ZERO cor de acento. Estado e codificado por
+// posicao, peso, rotulo, forma ou densidade, nunca por cor.
 //
-// Adaptacoes de contexto (galpao, luva, pressa):
-// - alvo de toque minimo 44pt (ClickUp usa 42)
-// - piso de contraste de texto 4.5:1 (ClickUp desce a 4.2)
-// - elevacao no dark e CLAREAMENTO de superficie + hairline, nao sombra preta.
+// Sobrevive da fundacao anterior: escala de espaco base 4, raios, alvo de
+// toque 44pt, fontes Inter Tight e JetBrains Mono, EPPressStyle.
 
 enum EP {}
 
@@ -37,6 +34,10 @@ extension EP {
     static let rowHeight: CGFloat = 48
     /// Altura de linha de dois andares (titulo + subtitulo).
     static let rowHeightTall: CGFloat = 60
+    /// Padding lateral do conteudo da Home (medido no prototipo).
+    static let padTela: CGFloat = 22
+    /// Folga inferior de scroll para a barra flutuante.
+    static let padBarra: CGFloat = 116
 }
 
 // MARK: - Raio (granular na faixa baixa, onde erro e visivel)
@@ -48,132 +49,130 @@ extension EP {
     static let r8: CGFloat = 8
     static let r10: CGFloat = 10
     static let r12: CGFloat = 12
+    static let r14: CGFloat = 14
     static let r16: CGFloat = 16
     static let r20: CGFloat = 20
     /// Pilula: metade da altura do componente, calculada no uso.
 }
 
-// MARK: - Cor: superficies (elevacao por clareamento, quatro niveis)
+// MARK: - Papel e tinta (familia unica; estados futuros usam degraus da
+// escada, nunca cor nova: F6F4F1 ECEBE9 E2E1DE DCDBD8 CBCAC6 B6B5B2
+// 7B7B7E 4A4A4C 171718)
 
 extension EP {
-    // Rampa de fundo dark, do chao ao flutuante. Cada nivel e um degrau
-    // perceptual em oklch; a separacao entre camadas vem do tom, e a
-    // definicao vem da hairline, nunca de sombra preta pesada.
-    static let bg0 = Color(oklch: 0.12, 0.015, 250)   // chao do app
-    static let bg1 = Color(oklch: 0.155, 0.017, 250)  // card em repouso
-    static let bg2 = Color(oklch: 0.19, 0.019, 250)   // card elevado / input
-    static let bg3 = Color(oklch: 0.23, 0.021, 250)   // flutuante (barra, sheet)
-
-    // Estados de superficie interativa: degrau acima, nunca opacity.
-    static let bg1Hover = Color(oklch: 0.175, 0.018, 250)
-    static let bg1Pressed = Color(oklch: 0.20, 0.019, 250)
-    static let bg3Pressed = Color(oklch: 0.27, 0.022, 250)
-
-    // Hairlines: a definicao de borda que a sombra nao da no dark.
-    static let hairline = Color.white.opacity(0.08)
-    static let hairlineStrong = Color.white.opacity(0.14)
+    /// Fundo do app, papel quente.
+    static let paper = Color(hexRGB: 0xF6F4F1)
+    /// Superficie selecionada (evento aberto na agenda), 1,09:1 sobre papel.
+    static let paper2 = Color(hexRGB: 0xECEBE9)
+    /// Hairline 1px entre linhas de lista.
+    static let linha = Color(hexRGB: 0xE2E1DE)
+    /// Tinta: titulos, valores fortes. 16,32:1.
+    static let ink = Color(hexRGB: 0x171718)
+    /// Corpo. 8,05:1.
+    static let ink2 = Color(hexRGB: 0x4A4A4C)
+    /// Terciario: estrutura, kicker, texto grande apagado. 3,84:1.
+    /// Nunca em texto pequeno (piso 4,5:1): para isso existe `sub`.
+    static let ink3 = Color(hexRGB: 0x7B7B7E)
+    /// Texto secundario pequeno, calculado para o piso 4,5:1 (4,56:1).
+    static let sub = Color(hexRGB: 0x6F6F72)
+    /// Icone de aba apagada na barra sem capsula (3,34:1, piso 3:1).
+    static let tabApagado = Color(hexRGB: 0x85858A)
+    /// Balao de distancia no mapa (blur 14 saturate 1.4 no uso).
+    static let balao = Color(hexRGB: 0x12151A).opacity(0.5)
 }
 
-// MARK: - Cor: texto (piso 4.5:1 sobre bg0; terciario nunca vira informacao)
+// MARK: - Mapa (paleta fria; a unica area densa da tela)
 
 extension EP {
-    static let fg0 = Color(oklch: 0.97, 0.005, 250)   // primario
-    static let fg1 = Color(oklch: 0.82, 0.008, 250)   // corpo
-    static let fg2 = Color(oklch: 0.64, 0.010, 250)   // secundario / labels
-    static let fg3 = Color(oklch: 0.46, 0.012, 250)   // estrutura, nunca dado
+    static let mapBase = Color(hexRGB: 0x14161A)
+    static let mapAgua = Color(hexRGB: 0x171A20)
+    static let mapParque = Color(hexRGB: 0x161920)
+    static let mapQuarteirao = Color(hexRGB: 0x1B1F25)
+    static let mapViaPrincipal = Color(hexRGB: 0x232830)
+    static let mapViaSecundaria = Color(hexRGB: 0x1E222A)
 }
 
-// MARK: - Cor: significado (a lei: cor so em estado, identidade ou selecao)
+// MARK: - Tipografia (Inter Tight; numeros sempre tabulares no uso)
 
 extension EP {
-    // Estado operacional (badge de fundo cheio, texto escuro do chao).
-    static let stateReady = Color(oklch: 0.80, 0.17, 150)    // pronto / ok
-    static let stateField = Color(oklch: 0.80, 0.15, 75)     // em campo / atencao
-    static let stateCritical = Color(oklch: 0.70, 0.18, 25)  // falta / dano
-    static let stateInfo = Color(oklch: 0.75, 0.14, 210)     // acao primaria / foco
+    /// Nome do evento no topo: 34 semibold, tracking -0.045em (aplicar
+    /// `.tracking(EP.displayTracking)` junto).
+    static func display() -> Font { .custom("InterTight", size: 34).weight(.semibold) }
+    static let displayTracking: CGFloat = 34 * -0.045
 
-    // Identidade de categoria (pilula, cor fixa por categoria, sempre a mesma).
-    static let catIluminacao = Color(oklch: 0.80, 0.15, 75)
-    static let catAudio = Color(oklch: 0.70, 0.17, 295)
-    static let catVideo = Color(oklch: 0.75, 0.14, 210)
-    static let catCabo = Color(oklch: 0.72, 0.12, 180)
-    static let catEnergia = Color(oklch: 0.70, 0.18, 25)
-    static let catEstrutura = Color(oklch: 0.68, 0.10, 250)
-    static let catEfeito = Color(oklch: 0.78, 0.16, 330)
-    static let catAcessorio = Color(oklch: 0.75, 0.08, 130)
-
-    /// Selecao (halo tonal de baixa saturacao, nunca bloco de cor cheio).
-    static func selectionHalo(_ accent: Color) -> Color {
-        accent.opacity(0.16)
-    }
-}
-
-// MARK: - Motion (duas curvas; alta frequencia nao ganha transicao)
-
-extension EP {
-    /// Curva de UI: sai devagar, corre, trava seco. Derivada da familia
-    /// snappy, valores proprios.
-    static let snappy = Animation.timingCurve(0.55, 0, 0.1, 0.95, duration: 0.22)
-    /// Curva neutra para fades e mudancas de estado nao espaciais.
-    static let ease = Animation.timingCurve(0.42, 0, 0.58, 1, duration: 0.18)
-    /// Spring de chegada para elementos que entram na tela.
-    static let arrive = Animation.spring(response: 0.38, dampingFraction: 0.86)
-}
-
-// MARK: - Tipografia (dois regimes: escala so no titulo de tela; dentro de
-// lista, hierarquia por peso e cor, nunca por tamanho)
-
-extension EP {
-    static func screenTitle() -> Font { .custom("InterTight", size: 28).weight(.bold) }
-    static func itemTitle() -> Font { .custom("InterTight", size: 16).weight(.semibold) }
+    /// Linha de contexto acima do display.
+    static func kicker() -> Font { .custom("InterTight", size: 12).weight(.medium) }
+    /// Frase unica de dados; valores fortes em `dadosForte()`.
+    static func dados() -> Font { .custom("InterTight", size: 14) }
+    static func dadosForte() -> Font { .custom("InterTight", size: 14).weight(.semibold) }
+    /// Section header ("Agenda") e contagem a direita.
+    static func secao() -> Font { .custom("InterTight", size: 12).weight(.medium) }
+    /// Agenda: coluna de data.
+    static func agendaData() -> Font { .custom("InterTight", size: 13).weight(.medium) }
+    /// Agenda: nome do evento (aberto vira semibold, nao confirmado regular).
+    static func agendaNome() -> Font { .custom("InterTight", size: 15).weight(.medium) }
+    static func agendaNomeAberto() -> Font { .custom("InterTight", size: 15).weight(.semibold) }
+    static func agendaNomeSoft() -> Font { .custom("InterTight", size: 15) }
+    /// Agenda: local, encostado a direita.
+    static func agendaLocal() -> Font { .custom("InterTight", size: 13) }
+    /// Balao de distancia no mapa.
+    static func balaoTexto() -> Font { .custom("InterTight", size: 11).weight(.semibold) }
+    /// Rotulo da aba ativa.
+    static func abaRotulo() -> Font { .custom("InterTight", size: 14).weight(.semibold) }
+    /// Titulo de tela secundaria (Eventos, Ajustes, Login).
+    static func screenTitle() -> Font { .custom("InterTight", size: 28).weight(.semibold) }
+    /// Corpo e apoio fora da Home.
     static func body() -> Font { .custom("InterTight", size: 15) }
+    static func itemTitle() -> Font { .custom("InterTight", size: 16).weight(.semibold) }
     static func secondary() -> Font { .custom("InterTight", size: 13) }
-    static func sectionLabel() -> Font { .custom("JetBrains Mono", size: 12).weight(.medium) }
+    /// Mono para serial, timestamp e dado tecnico.
     static func mono(_ size: CGFloat = 13) -> Font { .custom("JetBrains Mono", size: size) }
-    static func heroNumber() -> Font { .custom("InterTight", size: 44).weight(.semibold) }
 }
 
-// MARK: - Superficie padrao (card com hairline; elevacao = bg + hairline)
+// MARK: - Motion (duracoes medidas no prototipo)
 
-struct EPSurface: ViewModifier {
-    var level: Int = 1
-    var radius: CGFloat = EP.r12
+extension EP {
+    /// Snap do carrossel do mapa. Gatilho: deslocamento > 90pt ou
+    /// velocidade > 0,55pt/ms.
+    static let snapCarrossel = Animation.timingCurve(0.25, 0.9, 0.25, 1, duration: 0.34)
+    /// Pin viaja dentro do mapa (toque na agenda).
+    static let pinViaja = Animation.timingCurve(0.4, 0.05, 0.2, 1, duration: 0.5)
+    /// Cross-fade da rota.
+    static let rotaFade = Animation.easeInOut(duration: 0.34)
+    /// Capsula da aba: largura.
+    static let abaCapsula = Animation.timingCurve(0.3, 0.9, 0.25, 1, duration: 0.34)
+    /// Capsula da aba: fundo e cor.
+    static let abaCor = Animation.easeInOut(duration: 0.28)
+    /// Rotulo da aba: opacity.
+    static let abaRotuloFade = Animation.easeInOut(duration: 0.22)
+    /// Fundo da linha da agenda.
+    static let linhaAgenda = Animation.easeInOut(duration: 0.22)
+    /// Troca de conteudo pos-animacao.
+    static let trocaConteudo = Animation.easeInOut(duration: 0.32)
+    /// Curva neutra para feedback e fades curtos.
+    static let ease = Animation.easeInOut(duration: 0.18)
+}
 
-    private var fill: Color {
-        switch level {
-        case 0: return EP.bg0
-        case 1: return EP.bg1
-        case 2: return EP.bg2
-        default: return EP.bg3
-        }
-    }
+// MARK: - Cor por hex sRGB (a lei nova e medida em hex, nao em oklch)
 
-    func body(content: Content) -> some View {
-        content
-            .background(fill, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(EP.hairline, lineWidth: 1)
-            )
+extension Color {
+    init(hexRGB: UInt32) {
+        self.init(
+            .sRGB,
+            red: Double((hexRGB >> 16) & 0xFF) / 255.0,
+            green: Double((hexRGB >> 8) & 0xFF) / 255.0,
+            blue: Double(hexRGB & 0xFF) / 255.0,
+            opacity: 1.0
+        )
     }
 }
 
-extension View {
-    func epSurface(_ level: Int = 1, radius: CGFloat = EP.r12) -> some View {
-        modifier(EPSurface(level: level, radius: radius))
-    }
-}
-
-// MARK: - Press feedback (todo alvo tocavel responde; degrau de rampa + escala)
+// MARK: - Press feedback (todo alvo tocavel responde; escala + haptic)
 
 struct EPPressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
-            .overlay(
-                RoundedRectangle(cornerRadius: EP.r12, style: .continuous)
-                    .fill(Color.white.opacity(configuration.isPressed ? 0.06 : 0))
-            )
             .animation(EP.ease, value: configuration.isPressed)
             .sensoryFeedback(.impact(weight: .light), trigger: configuration.isPressed) { old, new in
                 new && !old

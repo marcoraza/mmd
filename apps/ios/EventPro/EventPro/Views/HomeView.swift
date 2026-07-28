@@ -1,39 +1,121 @@
 import SwiftUI
 
-/// Raiz autenticada: troca de aba real na barra flutuante. O Início e o
-/// cockpit do MMD reembalado na gramática EP e abre por padrão.
+/// Raiz autenticada da Home 2.0: quatro abas (Início, Eventos, Catálogo,
+/// Ler tag) na barra de tinta cheia (opção 1). Ajustes saiu da barra e vive
+/// no avatar do topo do Início.
 struct HomeView: View {
     @State private var tab: Tab = .inicio
 
     enum Tab: Int {
-        case inicio, eventos, ajustes
+        case inicio, eventos, catalogo, lerTag
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
                 switch tab {
-                case .inicio: InicioView()
-                case .eventos: EventsListView()
-                case .ajustes: SettingsView()
+                case .inicio:
+                    InicioView()
+                case .eventos:
+                    EventsListView()
+                case .catalogo:
+                    AbaEmConstrucao(
+                        icone: "shippingbox",
+                        titulo: "Catálogo",
+                        texto: "O catálogo de equipamentos chega numa próxima fatia desta frente."
+                    )
+                case .lerTag:
+                    AbaEmConstrucao(
+                        icone: "viewfinder",
+                        titulo: "Ler tag",
+                        texto: "A leitura de tag chega junto com a frente RFID e o leitor RFD40."
+                    )
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            FloatingBar(active: $tab)
+            // Fade de 104pt do transparente ao papel, atras da barra.
+            LinearGradient(
+                stops: [
+                    .init(color: EP.paper.opacity(0), location: 0),
+                    .init(color: EP.paper, location: 0.62),
+                ],
+                startPoint: .top, endPoint: .bottom
+            )
+            .frame(height: 104)
+            .allowsHitTesting(false)
+
+            TabBar(active: $tab)
+                .padding(.bottom, 26)
         }
-        .background(EP.bg0)
+        .ignoresSafeArea(edges: .bottom)
+        .background(EP.paper)
+    }
+}
+
+// MARK: - Barra inferior (opção 1: sem cápsula, ativo em tinta cheia)
+//
+// A aba ativa expande mostrando ícone mais nome; as apagadas são só glifo.
+// Estado por peso: a pílula de tinta é o elemento mais pesado da tela.
+
+private struct TabBar: View {
+    @Binding var active: HomeView.Tab
+
+    private let items: [(tab: HomeView.Tab, icon: String, label: String)] = [
+        (.inicio, "house", "Início"),
+        (.eventos, "calendar", "Eventos"),
+        (.catalogo, "shippingbox", "Catálogo"),
+        (.lerTag, "viewfinder", "Ler tag"),
+    ]
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ForEach(items, id: \.tab) { item in
+                aba(item)
+            }
+        }
+    }
+
+    private func aba(_ item: (tab: HomeView.Tab, icon: String, label: String)) -> some View {
+        let ativa = active == item.tab
+        return Button {
+            withAnimation(EP.abaCapsula) { active = item.tab }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: item.icon)
+                    .font(.system(size: 18, weight: .regular))
+                if ativa {
+                    Text(item.label)
+                        .font(EP.abaRotulo())
+                        .fixedSize()
+                        .transition(.opacity)
+                }
+            }
+            .foregroundStyle(ativa ? EP.paper : EP.tabApagado)
+            .padding(.leading, ativa ? 14 : 13)
+            .padding(.trailing, ativa ? 17 : 13)
+            .frame(height: 46)
+            .background {
+                if ativa {
+                    Capsule()
+                        .fill(EP.ink)
+                        .shadow(color: Color(hexRGB: 0x14161A).opacity(0.22), radius: 10, y: 8)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(item.label)
+        .accessibilityAddTraits(ativa ? .isSelected : [])
     }
 }
 
 // MARK: - InicioView
 //
-// Cockpit operacional do MMD (LiquidHome) reembalado: hero do proximo evento
-// com prontidao como numero heroi, regua de KPIs do estoque, agenda dos
-// proximos confirmados e pendencia de atencao. Mesmos dados, mesma logica
-// (HomeViewModel e port do LiquidHomeViewModel); muda so a lei visual.
-// Sem scroll: tudo cabe na tela, como no MMD. Sem interacao fake: hero e
-// agenda viram botao quando os destinos existirem no Event Pro.
+// A Home 2.0 do protótipo: topo tipográfico com avatar, frase única de
+// dados, mapa full bleed com rota por evento e agenda de ordem fixa.
+// Dados reais do HomeViewModel; o mapa é ilustrativo (pendência 9.2) e a
+// distância em km fica de fora até existir dado real.
 
 struct InicioView: View {
     @EnvironmentObject private var api: APIClient
@@ -46,436 +128,330 @@ struct InicioView: View {
 private struct InicioContent: View {
 
     @StateObject private var vm: HomeViewModel
+    @EnvironmentObject private var auth: AuthState
+    @State private var mostraAjustes = false
 
     init(apiClient: APIClient) {
         _vm = StateObject(wrappedValue: HomeViewModel(apiClient: apiClient))
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: EP.s5) {
-            heroCard
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) {
+                topo
+                    .padding(.horizontal, EP.padTela)
+                    .padding(.top, EP.s1)
 
-            kpiCard
+                frase
+                    .padding(.horizontal, EP.padTela)
+                    .padding(.top, EP.s3)
 
-            if let erro = vm.errorMessage {
-                errorNote(erro)
-            }
+                if let erro = vm.errorMessage {
+                    errorNote(erro)
+                        .padding(.horizontal, EP.padTela)
+                        .padding(.top, EP.s4)
+                }
 
-            if !vm.proximosEventos.isEmpty {
+                MapaHome(
+                    count: vm.agenda.count,
+                    selecionado: vm.selecionadoIndex,
+                    aoArrastar: { passo in vm.selecionar(vm.selecionadoIndex + passo) }
+                )
+                .padding(.top, EP.s4)
+
                 agendaSection
+                    .padding(.horizontal, EP.padTela - 12)
             }
+            .padding(.bottom, EP.padBarra)
+        }
+        .background(EP.paper)
+        .task { if !vm.carregou { await vm.load() } }
+        .sheet(isPresented: $mostraAjustes) { SettingsView() }
+    }
 
-            if vm.carregou, vm.counts.semTag > 0 {
-                atencaoSection
+    // MARK: Topo tipográfico
+
+    private var topo: some View {
+        HStack(alignment: .top, spacing: EP.s4) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(kicker)
+                    .font(EP.kicker())
+                    .foregroundStyle(EP.ink3)
+
+                (Text(tituloDisplay).foregroundColor(EP.ink)
+                    + Text(localDisplay).foregroundColor(EP.ink3))
+                    .font(EP.display())
+                    .tracking(EP.displayTracking)
+                    .lineSpacing(34 * 0.04)
+                    .padding(.top, 7)
             }
+            .id(vm.selecionado?.id)
 
             Spacer(minLength: 0)
-        }
-        .padding(.horizontal, EP.s5)
-        .padding(.top, EP.s4)
-        .padding(.bottom, 96)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(EP.bg0)
-        .task { if !vm.carregou { await vm.load() } }
-    }
 
-    // MARK: Hero
-    //
-    // O unico lugar da tela com escala grande: o numero heroi de prontidao.
-    // Identidade do evento por peso e cor, como dentro de lista.
-
-    private var heroCard: some View {
-        VStack(alignment: .leading, spacing: EP.s4) {
-            Text("PRÓXIMO EVENTO")
-                .font(EP.sectionLabel())
-                .foregroundStyle(EP.fg2)
-
-            if let evento = vm.proximoEvento {
-                HStack(alignment: .center, spacing: EP.s4) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(evento.nome)
-                            .font(EP.itemTitle())
-                            .foregroundStyle(EP.fg0)
-                            .lineLimit(2)
-                        if let cliente = evento.cliente {
-                            Text(cliente)
-                                .font(EP.secondary())
-                                .foregroundStyle(EP.fg2)
-                                .lineLimit(1)
-                        }
-                    }
-
-                    Spacer(minLength: EP.s3)
-
-                    VStack(alignment: .trailing, spacing: 0) {
-                        Text(prontidaoLabel)
-                            .font(EP.heroNumber())
-                            .foregroundStyle(prontidaoColor)
-                        Text("PRONTIDÃO")
-                            .font(EP.sectionLabel())
-                            .foregroundStyle(EP.fg2)
-                    }
-                }
-
-                Rectangle()
-                    .fill(EP.hairline)
-                    .frame(height: 1)
-
-                HStack(spacing: EP.s4) {
-                    if let data = evento.dataInicioFormatado {
-                        Label(data, systemImage: "calendar")
-                            .font(EP.mono(11))
-                            .foregroundStyle(EP.fg1)
-                            .lineLimit(1)
-                            .layoutPriority(1)
-                    }
-                    if let local = evento.local {
-                        Label(local, systemImage: "mappin.and.ellipse")
-                            .font(EP.mono(11))
-                            .foregroundStyle(EP.fg2)
-                            .lineLimit(1)
-                    }
-                    Spacer(minLength: 0)
-                }
-            } else {
-                HStack(spacing: EP.s3) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(EP.fg2)
-                        .frame(width: EP.s11, height: EP.s11)
-                        .background(EP.bg2, in: RoundedRectangle(cornerRadius: EP.r10, style: .continuous))
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(vm.isLoading ? "Buscando eventos" : "Nenhum evento na fila")
-                            .font(EP.itemTitle())
-                            .foregroundStyle(EP.fg0)
-                        Text(vm.isLoading ? "Um instante" : "Eventos confirmados aparecem aqui pra despacho")
-                            .font(EP.secondary())
-                            .foregroundStyle(EP.fg2)
-                    }
-                }
+            Button {
+                mostraAjustes = true
+            } label: {
+                Text(avatarLetra)
+                    .font(.custom("InterTight", size: 13).weight(.semibold))
+                    .foregroundStyle(EP.paper)
+                    .frame(width: 34, height: 34)
+                    .background(EP.ink, in: Circle())
+                    .padding(.top, 3)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(EPPressStyle())
+            .accessibilityLabel("Ajustes")
         }
-        .padding(EP.s5)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .epSurface(1, radius: EP.r16)
+        .animation(EP.trocaConteudo, value: vm.selecionadoIndex)
     }
 
-    private var prontidaoLabel: String {
-        guard vm.carregou else { return "–" }
-        return "\(Int((vm.prontidaoEvento * 100).rounded()))%"
+    private var avatarLetra: String {
+        auth.email?.first.map { String($0).uppercased() } ?? "•"
     }
 
-    /// Cor com significado: garantido e verde, parcial e atencao, nada
-    /// designado e critico. Sem dado ainda, sem cor.
-    private var prontidaoColor: Color {
-        guard vm.carregou else { return EP.fg3 }
-        if vm.prontidaoEvento >= 1 { return EP.stateReady }
-        if vm.prontidaoEvento > 0 { return EP.stateField }
-        return EP.stateCritical
+    private var kicker: String {
+        guard vm.carregou else { return vm.isLoading ? "Carregando agenda" : "Agenda" }
+        guard let evento = vm.selecionado else { return "Agenda vazia" }
+        guard let dias = diasAte(evento) else { return "Sem data definida" }
+        if dias < 0 { return "Evento passado" }
+        if dias == 0 { return "Sai hoje" }
+        if dias == 1 { return "Sai amanhã" }
+        if dias == 2 { return "Sai em 2 dias" }
+        return "Próximo evento, em \(dias) dias"
     }
 
-    // MARK: KPIs do estoque
+    private var tituloDisplay: String {
+        guard vm.carregou else { return vm.isLoading ? "Um instante" : "Event Pro" }
+        return vm.selecionado?.nome ?? "Nenhum evento na fila"
+    }
 
-    private var kpiCard: some View {
-        HStack(spacing: 0) {
-            kpiStat(vm.carregou ? vm.counts.disponivel : nil, "disponível", EP.stateReady)
-            kpiDivider
-            kpiStat(vm.carregou ? vm.counts.emCampo : nil, "em campo", EP.stateField)
-            kpiDivider
-            kpiStat(vm.carregou ? vm.counts.manutencao : nil, "manutenção", EP.stateCritical)
+    private var localDisplay: String {
+        guard let local = vm.selecionado?.local, !local.isEmpty else { return "" }
+        return "\n" + local
+    }
+
+    private func diasAte(_ evento: Project) -> Int? {
+        guard let data = evento.dataInicioDate else { return nil }
+        let cal = Calendar.current
+        return cal.dateComponents([.day],
+                                  from: cal.startOfDay(for: Date()),
+                                  to: cal.startOfDay(for: data)).day
+    }
+
+    // MARK: Frase única de dados (sem rótulos; a distância NÃO fica aqui)
+
+    @ViewBuilder
+    private var frase: some View {
+        if let evento = vm.selecionado {
+            fraseTexto(evento)
+                .id(evento.id)
+                .animation(EP.trocaConteudo, value: vm.selecionadoIndex)
         }
-        .padding(.horizontal, EP.s5)
-        .padding(.vertical, EP.s4)
-        .frame(maxWidth: .infinity)
-        .epSurface(1)
     }
 
-    private var kpiDivider: some View {
-        Rectangle()
-            .fill(EP.hairline)
-            .frame(width: 1, height: EP.s7)
-            .padding(.trailing, EP.s4)
-    }
-
-    /// Milhar no formato brasileiro: 1.049, nunca 1049.
-    static func formatted(_ value: Int) -> String {
-        Self.milharFormatter.string(from: NSNumber(value: value)) ?? "\(value)"
-    }
-
-    private static let milharFormatter: NumberFormatter = {
-        let f = NumberFormatter()
-        f.numberStyle = .decimal
-        f.locale = Locale(identifier: "pt_BR")
-        return f
-    }()
-
-    private func kpiStat(_ value: Int?, _ label: String, _ dot: Color) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(value.map(Self.formatted) ?? "–")
-                .font(EP.mono(18).weight(.medium))
-                .foregroundStyle(value == nil ? EP.fg3 : EP.fg0)
-
-            HStack(spacing: EP.s1) {
-                Circle()
-                    .fill((value ?? 0) > 0 ? dot : EP.fg3)
-                    .frame(width: 5, height: 5)
-                Text(label)
-                    .font(EP.secondary())
-                    .foregroundStyle(EP.fg2)
-            }
+    private func fraseTexto(_ evento: Project) -> Text {
+        let data = dataCurta(evento)
+        // Sem packing list ainda (total 0), a frase nao inventa "0 de 0":
+        // fica so a data.
+        guard let p = vm.prontidoes[evento.id], p.total > 0 else {
+            return Text(data).font(EP.dados()).foregroundColor(EP.ink2)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(value.map(String.init) ?? "sem dado") \(label)")
+        return Text("\(data) · ").font(EP.dados()).foregroundColor(EP.ink2)
+            + Text("\(p.prontos) de \(p.total)").font(EP.dadosForte().monospacedDigit()).foregroundColor(EP.ink)
+            + Text(" itens prontos").font(EP.dados()).foregroundColor(EP.ink2)
     }
 
-    // MARK: Erro
-
-    private func errorNote(_ message: String) -> some View {
-        HStack(alignment: .top, spacing: EP.s3) {
-            Image(systemName: "wifi.exclamationmark")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(EP.stateField)
-                .padding(.top, 1)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Sem conexão com o servidor")
-                    .font(EP.body())
-                    .foregroundStyle(EP.fg1)
-                Text(message)
-                    .font(EP.secondary())
-                    .foregroundStyle(EP.fg3)
-                    .lineLimit(1)
-            }
-        }
-        .padding(EP.s4)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .epSurface(1)
-    }
-
-    // MARK: Agenda
+    // MARK: Agenda (ordem fixa; só muda quem está em destaque)
 
     private var agendaSection: some View {
-        VStack(alignment: .leading, spacing: EP.s2) {
-            Text("AGENDA")
-                .font(EP.sectionLabel())
-                .foregroundStyle(EP.fg2)
-                .padding(.horizontal, EP.s1)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Agenda")
+                    .font(EP.secao())
+                    .foregroundStyle(EP.ink3)
+                Spacer()
+                Text(vm.agenda.count == 1 ? "1 evento" : "\(vm.agenda.count) eventos")
+                    .font(EP.secao())
+                    .foregroundStyle(EP.sub)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, EP.s5)
+            .padding(.bottom, 2)
 
             VStack(spacing: 0) {
-                ForEach(Array(vm.proximosEventos.enumerated()), id: \.element.id) { index, evento in
-                    agendaRow(evento)
-                    if index < vm.proximosEventos.count - 1 {
-                        Rectangle()
-                            .fill(EP.hairline)
-                            .frame(height: 1)
-                            .padding(.leading, EP.s4)
-                    }
+                ForEach(Array(vm.agenda.enumerated()), id: \.element.id) { index, evento in
+                    agendaRow(index, evento)
                 }
             }
-            .epSurface(1)
+            .animation(EP.linhaAgenda, value: vm.selecionadoIndex)
         }
     }
 
-    private func agendaRow(_ evento: Project) -> some View {
-        HStack(spacing: EP.s3) {
-            dateBlock(evento)
+    private func agendaRow(_ index: Int, _ evento: Project) -> some View {
+        let aberto = index == vm.selecionadoIndex
+        // A hairline superior some na linha aberta e na seguinte.
+        let mostraHairline = index > 0 && !aberto && index != vm.selecionadoIndex + 1
+        return Button {
+            vm.selecionar(index)
+        } label: {
+            HStack(spacing: 15) {
+                Text(dataCurta(evento))
+                    .font(EP.agendaData().monospacedDigit())
+                    .foregroundStyle(EP.ink3)
+                    .frame(width: 50, alignment: .leading)
 
-            VStack(alignment: .leading, spacing: 1) {
                 Text(evento.nome)
-                    .font(EP.itemTitle())
-                    .foregroundStyle(EP.fg0)
+                    .font(nomeFont(evento, aberto: aberto))
+                    .foregroundStyle(nomeCor(evento, aberto: aberto))
                     .lineLimit(1)
-                if let sub = evento.cliente ?? evento.local {
-                    Text(sub)
-                        .font(EP.secondary())
-                        .foregroundStyle(EP.fg2)
-                        .lineLimit(1)
-                }
-            }
-
-            Spacer(minLength: EP.s2)
-        }
-        .padding(.horizontal, EP.s4)
-        .padding(.vertical, EP.s2)
-        .frame(minHeight: EP.rowHeightTall)
-    }
-
-    /// Dia (mono) sobre mes abreviado, num chip: calendario de instrumento.
-    private func dateBlock(_ evento: Project) -> some View {
-        VStack(spacing: 0) {
-            Text(evento.dataInicioDate.map { Self.diaFormatter.string(from: $0) } ?? "–")
-                .font(EP.mono(15).weight(.medium))
-                .foregroundStyle(EP.fg0)
-            Text(evento.dataInicioDate.map { Self.mesFormatter.string(from: $0).uppercased() } ?? "")
-                .font(.custom("InterTight", size: 9).weight(.semibold))
-                .tracking(0.5)
-                .foregroundStyle(EP.fg2)
-        }
-        .frame(width: EP.s10, height: EP.s10)
-        .background(EP.bg2, in: RoundedRectangle(cornerRadius: EP.r10, style: .continuous))
-    }
-
-    private static let diaFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "pt_BR")
-        f.dateFormat = "d"
-        return f
-    }()
-
-    private static let mesFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "pt_BR")
-        f.dateFormat = "MMM"
-        return f
-    }()
-
-    // MARK: Atencao
-    //
-    // Pendencia real do estoque: itens sem tag. Vira botao quando a trilha
-    // Etiquetar existir no Event Pro.
-
-    private var atencaoSection: some View {
-        VStack(alignment: .leading, spacing: EP.s2) {
-            Text("ATENÇÃO")
-                .font(EP.sectionLabel())
-                .foregroundStyle(EP.fg2)
-                .padding(.horizontal, EP.s1)
-
-            HStack(spacing: EP.s3) {
-                Image(systemName: "tag")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(EP.fg0)
-                    .frame(width: EP.s9, height: EP.s9)
-                    .background(EP.bg2, in: RoundedRectangle(cornerRadius: EP.r10, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Itens sem tag")
-                        .font(EP.itemTitle())
-                        .foregroundStyle(EP.fg0)
-                    Text("Etiquetar pra rastrear")
-                        .font(EP.secondary())
-                        .foregroundStyle(EP.fg2)
-                }
 
                 Spacer(minLength: EP.s2)
 
-                HStack(spacing: EP.s1) {
-                    Circle().fill(EP.stateField).frame(width: 5, height: 5)
-                    Text(InicioContent.formatted(vm.counts.semTag))
-                        .font(EP.mono(11).weight(.medium))
-                        .foregroundStyle(EP.fg1)
+                Text(evento.local ?? "")
+                    .font(EP.agendaLocal())
+                    .foregroundStyle(EP.sub)
+                    .lineLimit(1)
+
+                if aberto {
+                    Image(systemName: "mappin")
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundStyle(EP.ink2)
                 }
-                .padding(.horizontal, EP.s2)
-                .padding(.vertical, 4)
-                .background(EP.bg2, in: Capsule())
             }
-            .padding(.horizontal, EP.s4)
-            .padding(.vertical, EP.s2)
-            .frame(maxWidth: .infinity, minHeight: EP.rowHeightTall, alignment: .leading)
-            .epSurface(1)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 13)
+            .frame(minHeight: EP.touchMin)
+            .background(
+                aberto ? EP.paper2 : Color.clear,
+                in: RoundedRectangle(cornerRadius: EP.r14, style: .continuous)
+            )
+            .overlay(alignment: .top) {
+                if mostraHairline {
+                    Rectangle().fill(EP.linha).frame(height: 1)
+                }
+            }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(aberto ? .isSelected : [])
+    }
+
+    private func nomeFont(_ evento: Project, aberto: Bool) -> Font {
+        if aberto { return EP.agendaNomeAberto() }
+        return evento.status == .confirmado ? EP.agendaNome() : EP.agendaNomeSoft()
+    }
+
+    private func nomeCor(_ evento: Project, aberto: Bool) -> Color {
+        if aberto { return EP.ink }
+        return evento.status == .confirmado ? EP.ink : EP.ink2
+    }
+
+    /// "11 ago", sem ponto e minúsculo, como no protótipo.
+    private func dataCurta(_ evento: Project) -> String {
+        guard let data = evento.dataInicioDate else { return "–" }
+        return Self.dataFormatter.string(from: data)
+            .replacingOccurrences(of: ".", with: "")
+            .lowercased()
+    }
+
+    private static let dataFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "pt_BR")
+        f.dateFormat = "d MMM"
+        return f
+    }()
+
+    // MARK: Erro (sem cor de alerta: peso e rótulo carregam o estado)
+
+    private func errorNote(_ message: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Sem conexão com o servidor")
+                .font(EP.dadosForte())
+                .foregroundStyle(EP.ink)
+            Text(message)
+                .font(EP.secondary())
+                .foregroundStyle(EP.sub)
+                .lineLimit(2)
+        }
+        .padding(EP.s4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(EP.paper2, in: RoundedRectangle(cornerRadius: EP.r14, style: .continuous))
     }
 }
 
-/// Ajustes: sessao ativa e saida.
+// MARK: - Abas ainda sem tela (empty state honesto, sem interação fake)
+
+private struct AbaEmConstrucao: View {
+    let icone: String
+    let titulo: String
+    let texto: String
+
+    var body: some View {
+        VStack(spacing: EP.s4) {
+            Image(systemName: icone)
+                .font(.system(size: 24, weight: .regular))
+                .foregroundStyle(EP.ink3)
+                .frame(width: 56, height: 56)
+                .background(EP.paper2, in: Circle())
+
+            VStack(spacing: EP.s1) {
+                Text(titulo)
+                    .font(EP.itemTitle())
+                    .foregroundStyle(EP.ink)
+                Text(texto)
+                    .font(EP.secondary())
+                    .foregroundStyle(EP.sub)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.horizontal, EP.s10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(EP.paper)
+    }
+}
+
+// MARK: - Ajustes (vive no avatar do topo; saiu da barra)
+
 struct SettingsView: View {
     @EnvironmentObject private var auth: AuthState
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: EP.s6) {
-                VStack(alignment: .leading, spacing: EP.s1) {
-                    Text("Ajustes")
-                        .font(EP.screenTitle())
-                        .foregroundStyle(EP.fg0)
-                }
-                .padding(.top, EP.s4)
+        VStack(alignment: .leading, spacing: EP.s6) {
+            Text("Ajustes")
+                .font(EP.screenTitle())
+                .foregroundStyle(EP.ink)
+                .padding(.top, EP.s6)
 
-                VStack(alignment: .leading, spacing: EP.s2) {
-                    Text("SESSÃO")
-                        .font(EP.sectionLabel())
-                        .foregroundStyle(EP.fg2)
-                    Text(auth.email ?? "sem e-mail")
-                        .font(EP.mono(14))
-                        .foregroundStyle(EP.fg1)
-                }
-                .padding(EP.s5)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .epSurface(1)
-
-                Button {
-                    auth.signOut()
-                } label: {
-                    Text("Sair")
-                        .font(EP.itemTitle())
-                        .foregroundStyle(EP.fg1)
-                        .frame(maxWidth: .infinity, minHeight: EP.touchMin)
-                        .epSurface(2, radius: EP.r10)
-                }
-                .buttonStyle(EPPressStyle())
+            VStack(alignment: .leading, spacing: EP.s2) {
+                Text("Sessão")
+                    .font(EP.secao())
+                    .foregroundStyle(EP.ink3)
+                Text(auth.email ?? "sem e-mail")
+                    .font(EP.mono(14))
+                    .foregroundStyle(EP.ink2)
             }
-            .padding(.horizontal, EP.s5)
-            .padding(.bottom, 96)
-        }
-        .background(EP.bg0)
-    }
-}
-
-/// Barra flutuante: pilula que se separa por forma e hairline, nao por cor.
-/// Item ativo marcado por halo tonal de baixa saturacao.
-struct FloatingBar: View {
-    @Binding var active: HomeView.Tab
-
-    private let items: [(tab: HomeView.Tab, icon: String, label: String)] = [
-        (.inicio, "house.fill", "Início"),
-        (.eventos, "calendar", "Eventos"),
-        (.ajustes, "gearshape", "Ajustes"),
-    ]
-
-    var body: some View {
-        HStack(spacing: EP.s3) {
-            HStack(spacing: 0) {
-                ForEach(items, id: \.tab) { item in
-                    Button {
-                        withAnimation(EP.snappy) { active = item.tab }
-                    } label: {
-                        VStack(spacing: 2) {
-                            Image(systemName: item.icon)
-                                .font(.system(size: 17, weight: .medium))
-                            Text(item.label)
-                                .font(EP.secondary())
-                        }
-                        .foregroundStyle(active == item.tab ? EP.fg0 : EP.fg2)
-                        .frame(maxWidth: .infinity, minHeight: EP.touchMin + 8)
-                        .background {
-                            if active == item.tab {
-                                RoundedRectangle(cornerRadius: EP.r16, style: .continuous)
-                                    .fill(EP.selectionHalo(EP.stateInfo))
-                                    .matchedGeometryEffect(id: "bar-halo", in: halo)
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(EP.s1)
-            .epSurface(3, radius: EP.r20 + 8)
+            .padding(EP.s5)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(EP.paper2, in: RoundedRectangle(cornerRadius: EP.r14, style: .continuous))
 
             Button {
+                auth.signOut()
             } label: {
-                Image(systemName: "plus")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundStyle(EP.bg0)
-                    .frame(width: EP.touchMin + 12, height: EP.touchMin + 12)
-                    .background(EP.stateInfo, in: Circle())
+                Text("Sair")
+                    .font(EP.itemTitle())
+                    .foregroundStyle(EP.paper)
+                    .frame(maxWidth: .infinity, minHeight: EP.touchMin + 4)
+                    .background(EP.ink, in: RoundedRectangle(cornerRadius: EP.r12, style: .continuous))
             }
             .buttonStyle(EPPressStyle())
-        }
-        .padding(.horizontal, EP.s5)
-        .padding(.bottom, EP.s2)
-    }
 
-    @Namespace private var halo
+            Spacer()
+        }
+        .padding(.horizontal, EP.padTela)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(EP.paper)
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
+    }
 }

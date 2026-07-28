@@ -1,29 +1,11 @@
 import SwiftUI
 
-// MARK: - Status -> gramatica de badge
-//
-// Cor so com significado: estado operacional ganha badge de fundo cheio com
-// texto escuro do chao. Planejamento e neutro de proposito: ainda nao e
-// operacao, entao nao ganha cor de alerta, ganha superficie.
-
-extension StatusProjeto {
-    /// Cor do badge cheio. `nil` = badge neutro de superficie.
-    var epBadgeFill: Color? {
-        switch self {
-        case .planejamento: return nil
-        case .confirmado: return EP.stateInfo
-        case .emCampo: return EP.stateField
-        case .finalizado: return EP.stateReady
-        case .cancelado: return EP.stateCritical
-        }
-    }
-}
-
 // MARK: - EventsListView
 //
-// Primeira tela real de operacao. A hierarquia dentro da lista e por peso e
-// cor, nunca por tamanho: nome semibold fg0, subtitulo fg2, data em mono a
-// direita. Quatro estados de dados: carregando, erro, vazio e com dados.
+// Lista de eventos na lei clara: linhas sobre o papel separadas por
+// hairline, hierarquia por peso e cor, nunca por tamanho. Estado do evento
+// sem cor de acento: rótulo com peso (em campo pesa mais que planejamento).
+// Quatro estados de dados: carregando, erro, vazio e com dados.
 
 struct EventsListView: View {
 
@@ -45,15 +27,15 @@ struct EventsListView: View {
     private static let activeStatuses: [StatusProjeto] = [.planejamento, .confirmado, .emCampo]
 
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: EP.s6) {
                 header
                 content
             }
-            .padding(.horizontal, EP.s5)
-            .padding(.bottom, 96)
+            .padding(.horizontal, EP.padTela)
+            .padding(.bottom, EP.padBarra)
         }
-        .background(EP.bg0)
+        .background(EP.paper)
         .task { await load() }
         .refreshable { await load() }
     }
@@ -64,11 +46,11 @@ struct EventsListView: View {
         VStack(alignment: .leading, spacing: EP.s1) {
             Text("Eventos")
                 .font(EP.screenTitle())
-                .foregroundStyle(EP.fg0)
+                .foregroundStyle(EP.ink)
             if phase == .loaded {
                 Text(events.count == 1 ? "1 evento ativo" : "\(events.count) eventos ativos")
                     .font(EP.secondary())
-                    .foregroundStyle(EP.fg2)
+                    .foregroundStyle(EP.sub)
             }
         }
         .padding(.top, EP.s4)
@@ -95,27 +77,19 @@ struct EventsListView: View {
     // MARK: Lista
 
     private var eventList: some View {
-        VStack(alignment: .leading, spacing: EP.s2) {
-            Text("ATIVOS")
-                .font(EP.sectionLabel())
-                .foregroundStyle(EP.fg2)
-                .padding(.horizontal, EP.s1)
+        VStack(spacing: 0) {
+            ForEach(Array(events.enumerated()), id: \.element.id) { index, event in
+                Button {
+                    onSelect(event)
+                } label: {
+                    row(event)
+                }
+                .buttonStyle(EPPressStyle())
 
-            VStack(spacing: 0) {
-                ForEach(Array(events.enumerated()), id: \.element.id) { index, event in
-                    Button {
-                        onSelect(event)
-                    } label: {
-                        row(event)
-                    }
-                    .buttonStyle(EPPressStyle())
-
-                    if index < events.count - 1 {
-                        rowDivider
-                    }
+                if index < events.count - 1 {
+                    rowDivider
                 }
             }
-            .epSurface(1)
         }
     }
 
@@ -125,13 +99,13 @@ struct EventsListView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(event.nome)
                     .font(EP.itemTitle())
-                    .foregroundStyle(EP.fg0)
+                    .foregroundStyle(EP.ink)
                     .lineLimit(1)
 
                 if let subtitle = subtitle(for: event) {
                     Text(subtitle)
                         .font(EP.secondary())
-                        .foregroundStyle(EP.fg2)
+                        .foregroundStyle(EP.sub)
                         .lineLimit(1)
                 }
             }
@@ -142,39 +116,28 @@ struct EventsListView: View {
                 if let date = compactDate(for: event) {
                     Text(date)
                         .font(EP.mono(13))
-                        .foregroundStyle(EP.fg1)
+                        .foregroundStyle(EP.ink2)
                 }
-                statusBadge(event.status)
+                statusLabel(event.status)
             }
         }
-        .padding(.horizontal, EP.s4)
         .padding(.vertical, EP.s2)
         .frame(minHeight: EP.rowHeightTall)
         .contentShape(Rectangle())
     }
 
-    /// Badge de estado: fundo cheio com texto escuro do chao. O neutro
-    /// (planejamento) e superficie com hairline, sem cor de alerta.
-    private func statusBadge(_ status: StatusProjeto) -> some View {
-        Text(status.displayName.uppercased())
-            .font(EP.mono(10).weight(.medium))
-            .tracking(0.5)
-            .foregroundStyle(status.epBadgeFill == nil ? EP.fg1 : EP.bg0)
-            .padding(.horizontal, EP.s2)
-            .frame(height: 20)
-            .background(status.epBadgeFill ?? EP.bg2, in: Capsule())
-            .overlay {
-                if status.epBadgeFill == nil {
-                    Capsule().strokeBorder(EP.hairline, lineWidth: 1)
-                }
-            }
+    /// Estado sem cor: rótulo com peso. Em campo é operação viva e pesa
+    /// mais; planejamento é o mais leve.
+    private func statusLabel(_ status: StatusProjeto) -> some View {
+        Text(status.displayName)
+            .font(status == .emCampo ? EP.secao() : EP.secondary())
+            .foregroundStyle(status == .emCampo ? EP.ink : (status == .confirmado ? EP.ink2 : EP.sub))
     }
 
     private var rowDivider: some View {
         Rectangle()
-            .fill(EP.hairline)
+            .fill(EP.linha)
             .frame(height: 1)
-            .padding(.leading, EP.s4)
     }
 
     // MARK: Carregando
@@ -184,16 +147,15 @@ struct EventsListView: View {
             ForEach(0..<5, id: \.self) { index in
                 HStack(spacing: EP.s3) {
                     VStack(alignment: .leading, spacing: EP.s2) {
-                        RoundedRectangle(cornerRadius: EP.r4).fill(EP.bg2)
+                        RoundedRectangle(cornerRadius: EP.r4).fill(EP.paper2)
                             .frame(width: 168, height: 12)
-                        RoundedRectangle(cornerRadius: EP.r4).fill(EP.bg2)
+                        RoundedRectangle(cornerRadius: EP.r4).fill(EP.paper2)
                             .frame(width: 104, height: 10)
                     }
                     Spacer()
-                    RoundedRectangle(cornerRadius: EP.r4).fill(EP.bg2)
+                    RoundedRectangle(cornerRadius: EP.r4).fill(EP.paper2)
                         .frame(width: 56, height: 10)
                 }
-                .padding(.horizontal, EP.s4)
                 .frame(height: EP.rowHeightTall)
 
                 if index < 4 {
@@ -201,7 +163,6 @@ struct EventsListView: View {
                 }
             }
         }
-        .epSurface(1)
         .accessibilityLabel("Carregando eventos")
     }
 
@@ -210,18 +171,18 @@ struct EventsListView: View {
     private var emptyState: some View {
         VStack(spacing: EP.s4) {
             Image(systemName: "calendar")
-                .font(.system(size: 24, weight: .medium))
-                .foregroundStyle(EP.fg2)
+                .font(.system(size: 24, weight: .regular))
+                .foregroundStyle(EP.ink3)
                 .frame(width: 56, height: 56)
-                .epSurface(1, radius: EP.r16)
+                .background(EP.paper2, in: Circle())
 
             VStack(spacing: EP.s1) {
                 Text("Nenhum evento ativo")
                     .font(EP.itemTitle())
-                    .foregroundStyle(EP.fg0)
+                    .foregroundStyle(EP.ink)
                 Text("Eventos em planejamento, confirmados ou em campo aparecem aqui.")
                     .font(EP.secondary())
-                    .foregroundStyle(EP.fg2)
+                    .foregroundStyle(EP.sub)
                     .multilineTextAlignment(.center)
             }
         }
@@ -233,19 +194,19 @@ struct EventsListView: View {
 
     private func errorState(_ message: String) -> some View {
         VStack(spacing: EP.s4) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 24, weight: .medium))
-                .foregroundStyle(EP.stateCritical)
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 24, weight: .regular))
+                .foregroundStyle(EP.ink3)
                 .frame(width: 56, height: 56)
-                .epSurface(1, radius: EP.r16)
+                .background(EP.paper2, in: Circle())
 
             VStack(spacing: EP.s1) {
                 Text("Falha ao carregar")
                     .font(EP.itemTitle())
-                    .foregroundStyle(EP.fg0)
+                    .foregroundStyle(EP.ink)
                 Text(message)
                     .font(EP.secondary())
-                    .foregroundStyle(EP.fg2)
+                    .foregroundStyle(EP.sub)
                     .multilineTextAlignment(.center)
             }
 
@@ -254,9 +215,9 @@ struct EventsListView: View {
             } label: {
                 Text("Tentar de novo")
                     .font(EP.itemTitle())
-                    .foregroundStyle(EP.fg1)
+                    .foregroundStyle(EP.paper)
                     .frame(maxWidth: .infinity, minHeight: EP.touchMin)
-                    .epSurface(2, radius: EP.r10)
+                    .background(EP.ink, in: RoundedRectangle(cornerRadius: EP.r12, style: .continuous))
             }
             .buttonStyle(EPPressStyle())
         }

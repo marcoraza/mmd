@@ -18,11 +18,12 @@ struct LoginView: View {
             Spacer()
 
             Text("Event Pro")
-                .font(EP.screenTitle())
-                .foregroundStyle(EP.fg0)
+                .font(EP.display())
+                .tracking(EP.displayTracking)
+                .foregroundStyle(EP.ink)
             Text("Operação de campo MMD")
                 .font(EP.body())
-                .foregroundStyle(EP.fg2)
+                .foregroundStyle(EP.sub)
                 .padding(.top, EP.s1)
 
             VStack(spacing: EP.s4) {
@@ -38,22 +39,23 @@ struct LoginView: View {
                 }
 
                 if let error {
+                    // Sem cor de alerta: o erro é rótulo com peso.
                     Text(error)
-                        .font(EP.secondary())
-                        .foregroundStyle(EP.stateCritical)
+                        .font(EP.dadosForte())
+                        .foregroundStyle(EP.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 Button(action: submit) {
                     HStack {
-                        if busy { ProgressView().tint(EP.bg0) }
+                        if busy { ProgressView().tint(EP.paper) }
                         Text(busy ? "Entrando" : "Entrar")
                             .font(EP.itemTitle())
                     }
-                    .foregroundStyle(canSubmit ? EP.bg0 : EP.fg3)
+                    .foregroundStyle(canSubmit ? EP.paper : EP.ink3)
                     .frame(maxWidth: .infinity, minHeight: EP.touchMin)
                     .background(
-                        canSubmit ? EP.stateInfo : EP.bg2,
+                        canSubmit ? EP.ink : EP.paper2,
                         in: RoundedRectangle(cornerRadius: EP.r12, style: .continuous)
                     )
                 }
@@ -65,20 +67,21 @@ struct LoginView: View {
             Spacer()
             Spacer()
         }
-        .padding(.horizontal, EP.s6)
+        .padding(.horizontal, EP.padTela)
+        .background(EP.paper)
     }
 
     private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: EP.s2) {
-            Text(label.uppercased())
-                .font(EP.sectionLabel())
-                .foregroundStyle(EP.fg2)
+            Text(label)
+                .font(EP.secao())
+                .foregroundStyle(EP.ink3)
             content()
                 .font(EP.mono(15))
-                .foregroundStyle(EP.fg0)
+                .foregroundStyle(EP.ink)
                 .padding(.horizontal, EP.s4)
                 .frame(height: EP.touchMin + 4)
-                .epSurface(2, radius: EP.r10)
+                .background(EP.paper2, in: RoundedRectangle(cornerRadius: EP.r10, style: .continuous))
         }
     }
 

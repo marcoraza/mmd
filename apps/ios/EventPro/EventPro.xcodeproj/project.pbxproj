@@ -22,6 +22,7 @@
 		C0115A15727A16BDFD279AF6 /* ResolvedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C9E2F0C74501FD3A7CF30AA /* ResolvedItem.swift */; };
 		C57C8C05A7C9FC7BF6428934 /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2FFE2A442F7986345E469F /* Tokens.swift */; };
 		CD201B1DA4E4AA3978140E48 /* ColorOKLCH.swift in Sources */ = {isa = PBXBuildFile; fileRef = C151C8B6B80F596D01D34672 /* ColorOKLCH.swift */; };
+		D006948C25124C562D600F18 /* EventMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86568BD8CC7DD4EAAFBF6126 /* EventMapView.swift */; };
 		D8A4CE822B645805D5DDE183 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E406073599E4026CC404D6 /* KeychainStore.swift */; };
 		DB4D60A27BF115755E564E58 /* SerialNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CA6A435FE11639C26EC2A6 /* SerialNumber.swift */; };
 		DF27C38D461132E323B16002 /* EventProApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23CAB96F6A558A32CBC4C9E0 /* EventProApp.swift */; };
@@ -37,6 +38,7 @@
 		6C9E2F0C74501FD3A7CF30AA /* ResolvedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedItem.swift; sourceTree = "<group>"; };
 		6E437804C16B79BCDD4342CC /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		81057443EDC088E6B6CD9D81 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		86568BD8CC7DD4EAAFBF6126 /* EventMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventMapView.swift; sourceTree = "<group>"; };
 		905B910AD5B5BC9F1C3EE840 /* EventPro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = EventPro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A286F1A99B5838765B8EFFE9 /* InterTight-VF.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InterTight-VF.ttf"; sourceTree = "<group>"; };
 		A3E86B6B2C9AA0F81EEA7F2D /* AuthSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSessionStore.swift; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 		39D4C3B7B2253C75F506D7E5 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				86568BD8CC7DD4EAAFBF6126 /* EventMapView.swift */,
 				D1B581BC5242B691FA3EEAF3 /* EventsListView.swift */,
 				621864D4F091F0097D2241EA /* HomeView.swift */,
 				B34B624C262D0FAE1F7769E0 /* LoginView.swift */,
@@ -244,6 +247,7 @@
 				178E95735388919328580592 /* AuthSessionStore.swift in Sources */,
 				CD201B1DA4E4AA3978140E48 /* ColorOKLCH.swift in Sources */,
 				E60C5D157E6C147703BB1FA3 /* Equipment.swift in Sources */,
+				D006948C25124C562D600F18 /* EventMapView.swift in Sources */,
 				DF27C38D461132E323B16002 /* EventProApp.swift in Sources */,
 				78B559986B94F9B4434F488E /* EventsListView.swift in Sources */,
 				8B3326A3A8886F7849CFBDFC /* HomeView.swift in Sources */,

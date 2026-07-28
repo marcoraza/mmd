@@ -11,7 +11,7 @@ struct EventProApp: App {
             RootView()
                 .environmentObject(auth)
                 .environmentObject(api)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
         }
     }
 }
@@ -51,7 +51,7 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            EP.bg0.ignoresSafeArea()
+            EP.paper.ignoresSafeArea()
             if auth.isSignedIn {
                 HomeView()
                     .transition(.opacity)

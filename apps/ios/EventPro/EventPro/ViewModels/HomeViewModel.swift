@@ -1,35 +1,31 @@
 import SwiftUI
 
-// MARK: - StatusCounts
+// MARK: - Prontidao
 //
-// Port do LiquidHomeViewModel do MMD: mesma agregacao, mesma semantica.
-// "total" e operacional: exclui so vendido e baixa. "critico" (desgaste <= 2)
-// e ortogonal aos contadores de status. A prontidao do hero NAO vem daqui:
-// e calculada por evento (match de packing vs disponibilidade real).
+// A frase de dados da Home fala "X de Y itens prontos", nao percentual:
+// contagem de quantidade esperada do packing coberta por unidades designadas
+// disponiveis agora. Nada designado = 0 de Y: prontidao e garantia, nao
+// esperanca.
 
-struct StatusCounts {
-    var disponivel = 0
-    var emCampo = 0
-    var manutencao = 0
-    var critico = 0     // desgaste <= 2, dentro de operacao
-    var semTag = 0      // sem tag_rfid, dentro de operacao
-    var total = 0       // operacional (exclui vendido/baixa)
-
-    static let zero = StatusCounts()
+struct Prontidao: Equatable {
+    var prontos = 0
+    var total = 0
 }
 
 // MARK: - HomeViewModel
 //
-// Alimenta o cockpit com dado real do Supabase: proximo evento a despachar,
-// prontidao desse evento e contadores do estoque.
+// Alimenta a Home 2.0 com dado real do Supabase: agenda fixa dos proximos
+// eventos (ate 7), evento destacado e prontidao por evento sob demanda.
+// A agenda inclui planejamento (nao confirmado, marcado por peso na UI) e
+// confirmado; a selecao inicial e o proximo confirmado a despachar.
+// Os KPIs de estoque sairam da Home no redesenho 2.0.
 
 @MainActor
 final class HomeViewModel: ObservableObject {
 
-    @Published private(set) var proximoEvento: Project?
-    @Published private(set) var proximosEventos: [Project] = []
-    @Published private(set) var counts = StatusCounts.zero
-    @Published private(set) var prontidaoEvento: Double = 0
+    @Published private(set) var agenda: [Project] = []
+    @Published private(set) var selecionadoIndex = 0
+    @Published private(set) var prontidoes: [UUID: Prontidao] = [:]
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var carregou = false
@@ -40,47 +36,62 @@ final class HomeViewModel: ObservableObject {
         self.apiClient = apiClient
     }
 
+    var selecionado: Project? {
+        guard agenda.indices.contains(selecionadoIndex) else { return nil }
+        return agenda[selecionadoIndex]
+    }
+
     func load() async {
         guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
         do {
-            async let confirmados = apiClient.fetchProjects(status: [.confirmado])
-            async let snapshot = apiClient.fetchSerialSnapshot()
+            let proj = try await apiClient.fetchProjects(status: [.planejamento, .confirmado])
 
-            let (conf, snap) = try await (confirmados, snapshot)
-
-            let proximo = pickProximo(conf)
-            proximoEvento = proximo
-            // Fila da agenda: os confirmados seguintes (a lista ja vem
-            // ordenada por data_inicio.asc), sem repetir o hero.
-            proximosEventos = Array(conf.filter { $0.id != proximo?.id }.prefix(3))
-            counts = aggregate(snap)
-            // Prontidao do EVENTO, nao do estoque: falha aqui nao derruba a
-            // home, so zera o numero (estado honesto de "nada garantido").
-            prontidaoEvento = (try? await prontidaoDoEvento(proximo)) ?? 0
+            // A lista ja vem ordenada por data_inicio.asc. A agenda olha pra
+            // frente: os proximos 7 a partir de hoje; sem futuro nenhum
+            // (dado de seed), cai pros 7 mais recentes. A ordem e fixa e
+            // nunca se reorganiza, so muda quem esta em destaque.
+            let hoje = Calendar.current.startOfDay(for: Date())
+            let futuros = proj.filter { ($0.dataInicioDate ?? .distantPast) >= hoje }
+            agenda = futuros.isEmpty ? proj.suffix(7).map { $0 } : Array(futuros.prefix(7))
+            let proximo = pickProximo(agenda.filter { $0.status == .confirmado })
+            selecionadoIndex = agenda.firstIndex { $0.id == proximo?.id } ?? 0
             carregou = true
+            await carregarProntidao(selecionado)
         } catch {
             errorMessage = (error as? APIError)?.errorDescription ?? error.localizedDescription
         }
         isLoading = false
     }
 
-    // MARK: - Prontidao do evento
-    //
-    // Fracao da quantidade esperada do packing coberta por unidades
-    // designadas que estao disponiveis AGORA (disponivel ou packed). Nada
-    // designado = 0%: prontidao e garantia, nao esperanca.
+    /// Troca o destaque (toque na agenda ou arrasto do carrossel), com wrap.
+    /// A prontidao do evento novo carrega sob demanda e fica em cache.
+    func selecionar(_ index: Int) {
+        guard !agenda.isEmpty else { return }
+        let n = agenda.count
+        selecionadoIndex = ((index % n) + n) % n
+        let evento = selecionado
+        Task { await carregarProntidao(evento) }
+    }
 
-    private func prontidaoDoEvento(_ evento: Project?) async throws -> Double {
-        guard let evento else { return 0 }
+    // MARK: - Prontidao por evento
 
+    private func carregarProntidao(_ evento: Project?) async {
+        guard let evento, prontidoes[evento.id] == nil else { return }
+        // Falha aqui nao derruba a home: sem resposta, a frase fica em
+        // "0 de 0" honesto ate a proxima tentativa.
+        let prontidao = (try? await prontidaoDoEvento(evento)) ?? Prontidao()
+        prontidoes[evento.id] = prontidao
+    }
+
+    private func prontidaoDoEvento(_ evento: Project) async throws -> Prontidao {
         let packing = try await apiClient.fetchPackingList(projectId: evento.id)
         let totalEsperado = packing.reduce(0) { $0 + $1.quantidade }
-        guard totalEsperado > 0 else { return 0 }
+        guard totalEsperado > 0 else { return Prontidao() }
 
         let designados = Array(Set(packing.flatMap { $0.serialNumbersDesignados ?? [] }))
-        guard !designados.isEmpty else { return 0 }
+        guard !designados.isEmpty else { return Prontidao(prontos: 0, total: totalEsperado) }
 
         let serials = try await apiClient.fetchSerialsByIds(designados)
         let statusPorId = Dictionary(serials.map { ($0.id, $0.status) },
@@ -94,7 +105,7 @@ final class HomeViewModel: ObservableObject {
             }.count
             return acc + min(disponiveis, item.quantidade)
         }
-        return Double(prontos) / Double(totalEsperado)
+        return Prontidao(prontos: prontos, total: totalEsperado)
     }
 
     // MARK: - Derivacao
@@ -107,26 +118,5 @@ final class HomeViewModel: ObservableObject {
             return futuro
         }
         return confirmados.first { $0.dataInicioDate != nil } ?? confirmados.first
-    }
-
-    private func operacional(_ status: StatusSerial) -> Bool {
-        status != .vendido && status != .baixa
-    }
-
-    private func aggregate(_ rows: [APIClient.SerialSnapshotRow]) -> StatusCounts {
-        var c = StatusCounts()
-        for r in rows {
-            guard let status = r.status, operacional(status) else { continue }
-            c.total += 1
-            switch status {
-            case .disponivel, .packed: c.disponivel += 1
-            case .emCampo, .retornando: c.emCampo += 1
-            case .manutencao: c.manutencao += 1
-            default: break
-            }
-            if r.desgaste <= 2 { c.critico += 1 }
-            if r.tagRfid?.isEmpty ?? true { c.semTag += 1 }
-        }
-        return c
     }
 }

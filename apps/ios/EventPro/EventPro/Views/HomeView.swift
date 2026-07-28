@@ -143,37 +143,48 @@ private struct EventosContent: View {
     }
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 0) {
-                topo
-                    .padding(.horizontal, EP.padTela)
-                    .padding(.top, EP.s1)
-
-                frase
-                    .padding(.horizontal, EP.padTela)
-                    .padding(.top, EP.s3)
-
-                if let erro = vm.errorMessage {
-                    errorNote(erro)
+        ScrollViewReader { proxy in
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    topo
                         .padding(.horizontal, EP.padTela)
-                        .padding(.top, EP.s4)
+                        .padding(.top, EP.s1)
+
+                    frase
+                        .padding(.horizontal, EP.padTela)
+                        .padding(.top, EP.s3)
+
+                    if let erro = vm.errorMessage {
+                        errorNote(erro)
+                            .padding(.horizontal, EP.padTela)
+                            .padding(.top, EP.s4)
+                    }
+
+                    MapaHome(
+                        count: vm.agenda.count,
+                        selecionado: vm.selecionadoIndex,
+                        aoArrastar: { passo in vm.selecionar(vm.selecionadoIndex + passo) }
+                    )
+                    .padding(.top, EP.s4)
+
+                    agendaSection
+                        .padding(.horizontal, EP.padTela - 12)
                 }
-
-                MapaHome(
-                    count: vm.agenda.count,
-                    selecionado: vm.selecionadoIndex,
-                    aoArrastar: { passo in vm.selecionar(vm.selecionadoIndex + passo) }
-                )
-                .padding(.top, EP.s4)
-
-                agendaSection
-                    .padding(.horizontal, EP.padTela - 12)
+                .padding(.bottom, EP.padBarra)
             }
-            .padding(.bottom, EP.padBarra)
+            .background(EP.paper)
+            .task {
+                guard !vm.carregou else { return }
+                await vm.load()
+                // Ao abrir, a linha destacada entra na dobra (a agenda
+                // completa pode deixar o proximo confirmado la embaixo).
+                if let id = vm.selecionado?.id {
+                    try? await Task.sleep(nanoseconds: 80_000_000)
+                    proxy.scrollTo("agenda-\(id)", anchor: .center)
+                }
+            }
+            .sheet(isPresented: $mostraAjustes) { SettingsView() }
         }
-        .background(EP.paper)
-        .task { if !vm.carregou { await vm.load() } }
-        .sheet(isPresented: $mostraAjustes) { SettingsView() }
     }
 
     // MARK: Topo tipográfico
@@ -342,6 +353,9 @@ private struct EventosContent: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // Namespace proprio: topo e frase ja usam evento.id pro crossfade,
+        // e o scrollTo acharia o primeiro (o topo) em vez da linha.
+        .id("agenda-\(evento.id)")
         .accessibilityAddTraits(aberto ? .isSelected : [])
     }
 

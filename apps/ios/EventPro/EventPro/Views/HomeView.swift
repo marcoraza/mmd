@@ -196,12 +196,26 @@ private struct EventosContent: View {
                     .font(EP.kicker())
                     .foregroundStyle(EP.ink3)
 
-                (Text(tituloDisplay).foregroundColor(EP.ink)
-                    + Text(localDisplay).foregroundColor(EP.ink3))
-                    .font(EP.display())
-                    .tracking(EP.displayTracking)
-                    .lineSpacing(34 * 0.04)
-                    .padding(.top, 7)
+                // Altura reservada pra 3 linhas de display (nome ate 2 +
+                // local 1): nome curto e nome longo ocupam o mesmo bloco e
+                // o mapa nao pula quando a selecao troca.
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(tituloDisplay)
+                        .font(EP.display())
+                        .tracking(EP.displayTracking)
+                        .lineSpacing(34 * 0.04)
+                        .foregroundStyle(EP.ink)
+                        .lineLimit(2)
+                    if !localDisplay.isEmpty {
+                        Text(localDisplay)
+                            .font(EP.display())
+                            .tracking(EP.displayTracking)
+                            .foregroundStyle(EP.ink3)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(height: 120, alignment: .topLeading)
+                .padding(.top, 7)
             }
             Spacer(minLength: 0)
 
@@ -243,8 +257,7 @@ private struct EventosContent: View {
     }
 
     private var localDisplay: String {
-        guard let local = vm.selecionado?.local, !local.isEmpty else { return "" }
-        return "\n" + local
+        vm.selecionado?.local ?? ""
     }
 
     private func diasAte(_ evento: Project) -> Int? {

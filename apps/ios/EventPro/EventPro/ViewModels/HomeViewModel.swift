@@ -14,11 +14,11 @@ struct Prontidao: Equatable {
 
 // MARK: - HomeViewModel
 //
-// Alimenta a Home 2.0 com dado real do Supabase: agenda fixa dos proximos
-// eventos (ate 7), evento destacado e prontidao por evento sob demanda.
-// A agenda inclui planejamento (nao confirmado, marcado por peso na UI) e
-// confirmado; a selecao inicial e o proximo confirmado a despachar.
-// Os KPIs de estoque sairam da Home no redesenho 2.0.
+// Alimenta a aba Eventos (a tela do grill) com dado real do Supabase:
+// todos os eventos cadastrados no horizonte operacional, evento destacado
+// e prontidao por evento sob demanda. Nao confirmado e marcado por peso na
+// UI; a selecao inicial e o proximo confirmado a despachar. Os KPIs de
+// estoque sairam desta tela no redesenho 2.0.
 
 @MainActor
 final class HomeViewModel: ObservableObject {
@@ -46,15 +46,14 @@ final class HomeViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            let proj = try await apiClient.fetchProjects(status: [.planejamento, .confirmado])
-
-            // A lista ja vem ordenada por data_inicio.asc. A agenda olha pra
-            // frente: os proximos 7 a partir de hoje; sem futuro nenhum
-            // (dado de seed), cai pros 7 mais recentes. A ordem e fixa e
-            // nunca se reorganiza, so muda quem esta em destaque.
-            let hoje = Calendar.current.startOfDay(for: Date())
-            let futuros = proj.filter { ($0.dataInicioDate ?? .distantPast) >= hoje }
-            agenda = futuros.isEmpty ? proj.suffix(7).map { $0 } : Array(futuros.prefix(7))
+            // Todos os eventos ja cadastrados no horizonte operacional
+            // (planejamento, confirmado, em campo), ordenados por
+            // data_inicio.asc. Finalizado e cancelado sao historico e ficam
+            // fora. A ordem e fixa e nunca se reorganiza, so muda quem esta
+            // em destaque; o destaque inicial e o proximo confirmado.
+            agenda = try await apiClient.fetchProjects(
+                status: [.planejamento, .confirmado, .emCampo]
+            )
             let proximo = pickProximo(agenda.filter { $0.status == .confirmado })
             selecionadoIndex = agenda.firstIndex { $0.id == proximo?.id } ?? 0
             carregou = true

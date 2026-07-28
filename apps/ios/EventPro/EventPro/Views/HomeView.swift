@@ -220,6 +220,7 @@ private struct EventosContent: View {
     private var kicker: String {
         guard vm.carregou else { return vm.isLoading ? "Carregando agenda" : "Agenda" }
         guard let evento = vm.selecionado else { return "Agenda vazia" }
+        if evento.status == .emCampo { return "Em campo agora" }
         guard let dias = diasAte(evento) else { return "Sem data definida" }
         if dias < 0 { return "Evento passado" }
         if dias == 0 { return "Sai hoje" }
@@ -344,14 +345,15 @@ private struct EventosContent: View {
         .accessibilityAddTraits(aberto ? .isSelected : [])
     }
 
+    // Peso carrega o estado: planejamento (nao confirmado) e o unico leve.
     private func nomeFont(_ evento: Project, aberto: Bool) -> Font {
         if aberto { return EP.agendaNomeAberto() }
-        return evento.status == .confirmado ? EP.agendaNome() : EP.agendaNomeSoft()
+        return evento.status == .planejamento ? EP.agendaNomeSoft() : EP.agendaNome()
     }
 
     private func nomeCor(_ evento: Project, aberto: Bool) -> Color {
         if aberto { return EP.ink }
-        return evento.status == .confirmado ? EP.ink : EP.ink2
+        return evento.status == .planejamento ? EP.ink2 : EP.ink
     }
 
     /// "11 ago", sem ponto e minúsculo, como no protótipo.

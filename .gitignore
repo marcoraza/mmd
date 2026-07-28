@@ -35,6 +35,7 @@ supabase/.branches/
 .vercel
 .codex/
 claude-scripts/
+.scratch/
 
 # Worktrees de agentes
 .worktrees/

@@ -45,6 +45,7 @@ type IconKey =
   | 'scan'
   | 'checkout'
   | 'checkin'
+  | 'training'
 
 export const Icons: Record<IconKey, ReactElement> = {
   search: (
@@ -222,6 +223,22 @@ export const Icons: Record<IconKey, ReactElement> = {
       <rect x="10" y="2" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
       <rect x="2" y="10" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
       <rect x="10" y="10" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  ),
+  training: (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path
+        d="M2.5 3.5h4.25A2.25 2.25 0 0 1 9 5.75v8.75a2.25 2.25 0 0 0-2.25-2.25H2.5V3.5z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.5 3.5h-4.25A2.25 2.25 0 0 0 9 5.75v8.75a2.25 2.25 0 0 1 2.25-2.25h4.25V3.5z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
     </svg>
   ),
   chart: (

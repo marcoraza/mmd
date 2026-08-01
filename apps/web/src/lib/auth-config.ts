@@ -30,6 +30,7 @@ const protectedPrefixes = [
   '/projetos',
   '/qrcodes',
   '/rfid',
+  '/treinamento',
 ]
 
 export function isPublicRoute(pathname: string) {
@@ -58,7 +59,9 @@ export function sanitizeNextPath(raw: string | null | undefined) {
 }
 
 export function normalizeLoginIdentifier(raw: string | null | undefined) {
-  const identifier = String(raw ?? '').trim().toLowerCase()
+  const identifier = String(raw ?? '')
+    .trim()
+    .toLowerCase()
   if (!identifier) return ''
   if (identifier.includes('@')) return identifier
   if (!/^[a-z0-9._-]+$/.test(identifier)) return identifier

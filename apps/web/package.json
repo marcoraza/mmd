@@ -6,6 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --import tsx --test src/lib/*.test.ts src/lib/data/*.test.ts",
+    "test:training": "node --import tsx --test src/lib/training-event-core.test.ts",
+    "training:prepare": "tsx scripts/prepare-training-event.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -37,6 +40,7 @@
     "eslint-scope": "8.4.0",
     "prettier": "^3.8.3",
     "tailwindcss": "^4",
+    "tsx": "^4.23.1",
     "typescript": "^5"
   }
 }

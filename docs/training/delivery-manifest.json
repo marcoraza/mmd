@@ -1,0 +1,36 @@
+{
+  "version": "0.1.0",
+  "eventName": "Treinamento · Marcelo",
+  "captures": [
+    { "scene": "INS-03", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "" },
+    { "scene": "INS-04", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "" },
+    { "scene": "INS-05", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "" },
+    { "scene": "IOS-01", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "" },
+    { "scene": "IOS-01", "source": "CAM", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "hardware": "pending" },
+    { "scene": "IOS-02", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "" },
+    { "scene": "IOS-03", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" },
+    { "scene": "IOS-04", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" },
+    { "scene": "IOS-05", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "", "tagCount": 0, "knownTag": false, "unknownTag": false },
+    { "scene": "IOS-06", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "", "persisted": false },
+    { "scene": "IOS-07", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "", "persisted": false },
+    { "scene": "IOS-08", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "", "persisted": false },
+    { "scene": "IOS-09", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "", "persisted": false },
+    { "scene": "IOS-10", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "", "qrFallback": false },
+    { "scene": "IOS-11", "source": "IOS", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "" },
+    { "scene": "WEB-01", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "" },
+    { "scene": "WEB-02", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "" },
+    { "scene": "WEB-03", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" },
+    { "scene": "WEB-04", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" },
+    { "scene": "WEB-05", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" },
+    { "scene": "WEB-06", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" },
+    { "scene": "WEB-07", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" },
+    { "scene": "WEB-08", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" },
+    { "scene": "WEB-09", "source": "WEB", "path": "", "status": "pending", "provenance": "pending", "privacy": "pending", "sha256": "", "eventCode": "" }
+  ],
+  "outputs": [
+    { "name": "master", "path": "final/mmd-treinamento-master.mp4", "width": 1920, "height": 1080, "minDurationSeconds": 1500, "maxDurationSeconds": 2100, "subtitles": "final/mmd-treinamento-master.vtt", "transcript": "final/mmd-treinamento-master.transcript.md", "timecodes": "final/mmd-treinamento-master.timecodes.md", "thumbnail": "final/mmd-treinamento-master.thumbnail.jpg", "privacy": "pending" },
+    { "name": "web", "path": "final/mmd-showcase-web.mp4", "width": 1920, "height": 1080, "minDurationSeconds": 600, "maxDurationSeconds": 900, "subtitles": "final/mmd-showcase-web.vtt", "transcript": "final/mmd-showcase-web.transcript.md", "timecodes": "final/mmd-showcase-web.timecodes.md", "thumbnail": "final/mmd-showcase-web.thumbnail.jpg", "privacy": "pending" },
+    { "name": "ios", "path": "final/mmd-showcase-ios.mp4", "width": 1920, "height": 1080, "minDurationSeconds": 720, "maxDurationSeconds": 1080, "subtitles": "final/mmd-showcase-ios.vtt", "transcript": "final/mmd-showcase-ios.transcript.md", "timecodes": "final/mmd-showcase-ios.timecodes.md", "thumbnail": "final/mmd-showcase-ios.thumbnail.jpg", "privacy": "pending" },
+    { "name": "ios-vertical", "path": "final/mmd-showcase-ios-vertical.mp4", "width": 1080, "height": 1920, "minDurationSeconds": 720, "maxDurationSeconds": 1080, "subtitles": "final/mmd-showcase-ios-vertical.vtt", "transcript": "final/mmd-showcase-ios-vertical.transcript.md", "timecodes": "final/mmd-showcase-ios-vertical.timecodes.md", "thumbnail": "final/mmd-showcase-ios-vertical.thumbnail.jpg", "privacy": "pending" }
+  ]
+}

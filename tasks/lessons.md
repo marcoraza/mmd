@@ -57,3 +57,10 @@
 - Evento real criado a partir de planilha não pode expor rastro técnico no produto. Backup fica em `tasks/evidence`, tela mostra nome humano, status, data, percentual e resumo curto da ficha.
 - Card de evento não deve renderizar a ficha inteira em `notas`. Cabeçalho mostra no máximo endereço, montagem e desmontagem; detalhe completo fica no fluxo da ficha.
 - Criar evento pela ficha não popula packing list. Quando a origem real for planilha, fazer backfill explícito da packing list e filtrar serviço, equipe, buffet, mobiliário solto e financeiro antes de criar item pendente no catálogo.
+
+- Event Pro nao e produto novo: e o MMD Estoque reembalado na gramatica medida do ClickUp. Antes de desenhar qualquer tela nova, ler a tela equivalente do MMD (Views/Liquid/ + ViewModels/) e portar conteudo, dados e logica; muda so a lei visual (Tokens.swift). A ordem combinada comecava pela Home (LiquidHome -> InicioView), nao por tela inventada. Handoff dizia "lista de eventos" e eu li como licenca pra criar do zero; o certo era perguntar qual tela do MMD estava sendo reembalada.
+
+## 2026-07-28
+
+- No protótipo da Home 2.0 (`tasks/evidence/home-2.0/prototipo-home.html`), a variável `aba` inicia em `"eventos"`: a tela do grill (topo tipográfico, mapa, agenda) é a aba EVENTOS, não o Início. Eu a implementei como Home e o Marco corrigiu. Ao portar protótipo com barra de abas, conferir qual aba o protótipo marca como ativa antes de mapear a tela pro destino; o apelido do documento ("Home 2.0") não define o slot na navegação.
+- A agenda da tela de Eventos carrega TODOS os eventos cadastrados do horizonte operacional (planejamento, confirmado, em campo), não um recorte dos próximos 7. Recorte de "próximos" foi invenção minha por causa do layout do protótipo com 7 fixtures.

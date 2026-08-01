@@ -140,6 +140,16 @@ struct LiquidConfigView: View {
                     connectionButton
                 }
 
+                HStack {
+                    Text("Modo ativo")
+                        .font(.liquidSans(12, weight: .regular))
+                        .foregroundStyle(Liquid.fg2)
+                    Spacer()
+                    Text(rfid.runtimeModeText.uppercased())
+                        .font(.liquidMono(11, weight: .semibold))
+                        .foregroundStyle(readerModeColor)
+                }
+
                 Rectangle()
                     .fill(Liquid.hairline)
                     .frame(height: 1)
@@ -205,7 +215,10 @@ struct LiquidConfigView: View {
             LiquidSectionHeader(title: "Sobre")
 
             VStack(spacing: Liquid.Space.md) {
-                row(label: "Versão", value: "1.1.0 (Wave 1)")
+                row(
+                    label: "Versão",
+                    value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
+                )
                 Rectangle().fill(Liquid.hairline).frame(height: 1)
                 row(label: "Build", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-")
             }
@@ -424,6 +437,14 @@ struct LiquidConfigView: View {
         case .discovering, .connecting: return Liquid.accentAmber
         case .disconnected:             return Liquid.fg3
         case .error:                    return Liquid.accentRed
+        }
+    }
+
+    private var readerModeColor: Color {
+        switch rfid.runtimeMode {
+        case .zebra: return Liquid.accentGreen
+        case .mock: return Liquid.accentAmber
+        case .zebraUnavailable: return Liquid.accentRed
         }
     }
 }

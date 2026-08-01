@@ -15,6 +15,8 @@ test('isProtectedInternalPath protects internal surfaces and leaves public QR/lo
   assert.equal(isProtectedInternalPath('/items'), true)
   assert.equal(isProtectedInternalPath('/items/abc'), true)
   assert.equal(isProtectedInternalPath('/qrcodes'), true)
+  assert.equal(isProtectedInternalPath('/treinamento'), true)
+  assert.equal(isProtectedInternalPath('/treinamento/ios'), true)
   assert.equal(isProtectedInternalPath('/s/MMD-ILU-0001'), false)
   assert.equal(isProtectedInternalPath('/login'), false)
 })

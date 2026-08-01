@@ -56,5 +56,6 @@ export const config = {
     '/projetos/:path*',
     '/qrcodes/:path*',
     '/rfid/:path*',
+    '/treinamento/:path*',
   ],
 }

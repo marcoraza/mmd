@@ -45,8 +45,6 @@ final class ZebraRFIDManager: NSObject, RFIDReaderProtocol {
     // MARK: - SDK References
 
     /// Strong reference to the Zebra SDK API singleton.
-    /// TODO: Verify initialization method against SDK docs — may be
-    /// `srfidSdkFactory.createRfidSdkApiInstance()` or similar.
     private var sdkApi: srfidISdkApi?
 
     /// Reader ID returned by the SDK after connection. Needed for
@@ -61,23 +59,22 @@ final class ZebraRFIDManager: NSObject, RFIDReaderProtocol {
     override init() {
         super.init()
 
-        // TODO: Verify exact factory method from SDK headers.
-        // The SDK typically provides a shared instance or factory.
         sdkApi = srfidSdkFactory.createRfidSdkApiInstance()
         sdkApi?.srfidSetDelegate(self)
 
         // Subscribe to all event groups we care about.
-        // TODO: Verify bitmask values against SDK headers.
-        let notifications: Int32 = CYCLOPSEVENT_READER_APPEARED
-            | CYCLOPSEVENT_READER_DISAPPEARED
-            | CYCLOPSEVENT_SESSION_ESTABLISHMENT
-            | CYCLOPSEVENT_SESSION_TERMINATION
-            | CYCLOPSEVENT_READ_NOTIFY
-            | CYCLOPSEVENT_STATUS_NOTIFY
-            | CYCLOPSEVENT_PROXIMITY_NOTIFY
+        let notifications = SRFID_EVENT_READER_APPEARANCE
+            | SRFID_EVENT_READER_DISAPPEARANCE
+            | SRFID_EVENT_SESSION_ESTABLISHMENT
+            | SRFID_EVENT_SESSION_TERMINATION
+            | SRFID_EVENT_MASK_READ
+            | SRFID_EVENT_MASK_STATUS
+            | SRFID_EVENT_MASK_PROXIMITY
+            | SRFID_EVENT_MASK_TRIGGER
+            | SRFID_EVENT_MASK_BATTERY
 
-        sdkApi?.srfidSubsribeForEvents(notifications)
-        sdkApi?.srfidSetOperationalMode(Int32(CYCLOPSEVENT_MODE_MFI))
+        sdkApi?.srfidSubsribe(forEvents: Int32(notifications))
+        sdkApi?.srfidSetOperationalMode(Int32(SRFID_OPMODE_MFI))
     }
 
     // MARK: - RFIDReaderProtocol (actions)
@@ -86,9 +83,6 @@ final class ZebraRFIDManager: NSObject, RFIDReaderProtocol {
         discoveredReadersSubject.send([])
         connectionStateSubject.send(.discovering)
 
-        // SDK auto-detection should surface readers via delegate.
-        // TODO: Verify if explicit call is needed or if subscribing
-        // to CYCLOPSEVENT_READER_APPEARED is sufficient.
         sdkApi?.srfidEnableAvailableReadersDetection(true)
     }
 
@@ -100,11 +94,10 @@ final class ZebraRFIDManager: NSObject, RFIDReaderProtocol {
 
         connectionStateSubject.send(.connecting)
 
-        // TODO: Verify parameter list — some SDK versions take a password.
         let result = sdkApi?.srfidEstablishCommunicationSession(readerId)
 
-        if result != CYCLOPSEVENT_STATUS_SUCCESS {
-            connectionStateSubject.send(.error("Falha ao conectar ao leitor (codigo: \(result ?? -1))"))
+        if result != SRFID_RESULT_SUCCESS {
+            connectionStateSubject.send(.error("Falha ao conectar ao leitor"))
         }
         // On success the delegate callback handles the state transition.
     }
@@ -125,23 +118,36 @@ final class ZebraRFIDManager: NSObject, RFIDReaderProtocol {
         guard connectedReaderId >= 0 else { return }
         guard !isScanning else { return }
 
-        // TODO: Verify method name — could be srfidStartRapidRead or
-        // srfidStartInventory depending on SDK version.
-        let result = sdkApi?.srfidStartRapidRead(connectedReaderId, aStatusMessage: nil)
+        let reportConfig = srfidReportConfig()
+        let accessConfig = srfidAccessConfig()
+        var statusMessage: NSString?
+        let result = sdkApi?.srfidStartRapidRead(
+            connectedReaderId,
+            aReportConfig: reportConfig,
+            aAccessConfig: accessConfig,
+            aStatusMessage: &statusMessage
+        )
 
-        if result == CYCLOPSEVENT_STATUS_SUCCESS {
+        if result == SRFID_RESULT_SUCCESS {
             isScanningSubject.send(true)
         } else {
-            connectionStateSubject.send(.error("Falha ao iniciar leitura (codigo: \(result ?? -1))"))
+            let detail = statusMessage.map(String.init) ?? "sem detalhe do leitor"
+            connectionStateSubject.send(.error("Falha ao iniciar leitura: \(detail)"))
         }
     }
 
     func stopInventory() {
         guard connectedReaderId >= 0 else { return }
 
-        // TODO: Match start method — srfidStopRapidRead or srfidStopInventory.
-        sdkApi?.srfidStopRapidRead(connectedReaderId, aStatusMessage: nil)
-        isScanningSubject.send(false)
+        var statusMessage: NSString?
+        let result = sdkApi?.srfidStopRapidRead(connectedReaderId, aStatusMessage: &statusMessage)
+
+        if result == SRFID_RESULT_SUCCESS {
+            isScanningSubject.send(false)
+        } else {
+            let detail = statusMessage.map(String.init) ?? "sem detalhe do leitor"
+            connectionStateSubject.send(.error("Falha ao parar leitura: \(detail)"))
+        }
     }
 
     func clearTags() {
@@ -173,7 +179,7 @@ extension ZebraRFIDManager: srfidISdkApiDelegate {
         let info = RFIDReaderInfo(
             id: String(reader.getReaderID()),
             name: reader.getReaderName() ?? "Zebra RFD40",
-            serialNumber: nil,  // TODO: Fetch via srfidGetReaderInfo after connection
+            serialNumber: nil,
             batteryLevel: nil
         )
 
@@ -203,7 +209,6 @@ extension ZebraRFIDManager: srfidISdkApiDelegate {
 
         connectedReaderId = reader.getReaderID()
 
-        // TODO: Query battery level via srfidGetReaderInfo / srfidGetBatteryStats
         let info = RFIDReaderInfo(
             id: String(reader.getReaderID()),
             name: reader.getReaderName() ?? "Zebra RFD40",
@@ -212,6 +217,7 @@ extension ZebraRFIDManager: srfidISdkApiDelegate {
         )
 
         connectionStateSubject.send(.connected(info))
+        sdkApi?.srfidRequestBatteryStatus(connectedReaderId)
     }
 
     // Connection terminated
@@ -227,16 +233,17 @@ extension ZebraRFIDManager: srfidISdkApiDelegate {
     func srfidEventReadNotify(_ readerID: Int32, aTagData tagData: srfidTagData!) {
         guard let tag = tagData else { return }
 
-        // TODO: Verify method name — could be getTagId, getEPC, etc.
         if let epc = tag.getTagId() {
             addTagIfNew(epc)
         }
     }
 
     // Status notification (battery, temperature, etc.)
-    func srfidEventStatusNotify(_ readerID: Int32, aEvent event: CYCLOPSEVENT_TYPE, aNotification notification: Any!) {
-        // TODO: Handle battery updates and reader status changes.
-        // Parse notification based on event type to update reader info.
+    func srfidEventStatusNotify(_ readerID: Int32, aEvent event: SRFID_EVENT_STATUS, aNotification notification: Any!) {
+        if event == SRFID_EVENT_STATUS_OPERATION_FAILED {
+            isScanningSubject.send(false)
+            connectionStateSubject.send(.error("O leitor interrompeu a operação RFID"))
+        }
     }
 
     // Proximity notification (locate mode)
@@ -245,16 +252,46 @@ extension ZebraRFIDManager: srfidISdkApiDelegate {
     }
 
     // Trigger event (gun trigger on sled readers)
-    func srfidEventTriggerNotify(_ readerID: Int32, aTriggerEvent triggerEvent: CYCLOPSEVENT_TYPE) {
+    func srfidEventTriggerNotify(_ readerID: Int32, aTriggerEvent triggerEvent: SRFID_TRIGGEREVENT) {
         // Map trigger press to start/stop inventory for hands-free operation.
         switch triggerEvent {
-        case CYCLOPSEVENT_TRIGGER_PRESSED:
+        case SRFID_TRIGGEREVENT_PRESSED:
             if !isScanning { startInventory() }
-        case CYCLOPSEVENT_TRIGGER_RELEASED:
+        case SRFID_TRIGGEREVENT_RELEASED:
             if isScanning { stopInventory() }
         default:
             break
         }
+    }
+
+    func srfidEventMultiProximityNotify(_ readerID: Int32, aTagData tagData: srfidTagData!) {
+        // Multi-tag location is outside the inventory workflow.
+    }
+
+    func srfidEventBatteryNotity(_ readerID: Int32, aBatteryEvent batteryEvent: srfidBatteryEvent!) {
+        guard let batteryEvent else { return }
+
+        let batteryLevel = Int(batteryEvent.getPowerLevel())
+        var readers = discoveredReadersSubject.value
+        guard let index = readers.firstIndex(where: { $0.id == String(readerID) }) else { return }
+
+        let current = readers[index]
+        let updated = RFIDReaderInfo(
+            id: current.id,
+            name: current.name,
+            serialNumber: current.serialNumber,
+            batteryLevel: batteryLevel
+        )
+        readers[index] = updated
+        discoveredReadersSubject.send(readers)
+
+        if connectedReaderId == readerID {
+            connectionStateSubject.send(.connected(updated))
+        }
+    }
+
+    func srfidEventWifiScan(_ readerID: Int32, wlanSCanObject wlanScanObject: srfidWlanScanList!) {
+        // Wi-Fi provisioning is outside the inventory workflow.
     }
 }
 

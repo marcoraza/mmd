@@ -32,6 +32,22 @@ final class RFIDManagerTests: XCTestCase {
         XCTAssertEqual(manager.tagCount, 0)
     }
 
+    func testProductionBuildLinksOfficialZebraSDK() {
+        XCTAssertTrue(RFIDSDKAvailability.isZebraLinked)
+    }
+
+    func testUnavailableZebraCannotEmitSimulatedReadersOrTags() {
+        let manager = UnavailableRFIDManager()
+
+        manager.discoverReaders()
+        manager.startInventory()
+
+        XCTAssertEqual(manager.connectionState, .error("SDK Zebra indisponível neste build"))
+        XCTAssertTrue(manager.discoveredReaders.isEmpty)
+        XCTAssertTrue(manager.scannedTags.isEmpty)
+        XCTAssertFalse(manager.isScanning)
+    }
+
     // MARK: - Discovery
 
     func testDiscoverReadersTransitionsToDiscovering() {
@@ -100,7 +116,7 @@ final class RFIDManagerTests: XCTestCase {
     // MARK: - Scanning
 
     func testStartStopInventoryTogglesScanning() {
-        let mock = MockRFIDManager()
+        let mock = MockRFIDManager(shouldFailConnection: { false })
         let manager = RFIDManager(implementation: mock)
 
         // First connect
@@ -137,8 +153,6 @@ final class RFIDManagerTests: XCTestCase {
         XCTAssertTrue(manager.isScanning)
 
         // Stop scanning
-        manager.stopInventory()
-
         let stopped = expectation(description: "Scanning stopped")
 
         manager.$isScanning
@@ -147,6 +161,7 @@ final class RFIDManagerTests: XCTestCase {
             .sink { _ in stopped.fulfill() }
             .store(in: &cancellables)
 
+        manager.stopInventory()
         wait(for: [stopped], timeout: 2.0)
         XCTAssertFalse(manager.isScanning)
     }
@@ -176,7 +191,7 @@ final class RFIDManagerTests: XCTestCase {
     // MARK: - Disconnect
 
     func testDisconnectResetsState() {
-        let mock = MockRFIDManager()
+        let mock = MockRFIDManager(shouldFailConnection: { false })
         let manager = RFIDManager(implementation: mock)
 
         let reader = RFIDReaderInfo(

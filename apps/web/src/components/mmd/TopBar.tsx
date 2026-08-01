@@ -7,11 +7,15 @@ export function TopBar({
   title,
   actions,
   notifications = 0,
+  showSearch = true,
+  showNotifications = true,
 }: {
   kicker?: ReactNode
   title: ReactNode
   actions?: ReactNode
   notifications?: number
+  showSearch?: boolean
+  showNotifications?: boolean
 }) {
   return (
     <header
@@ -57,57 +61,61 @@ export function TopBar({
 
       {actions}
 
-      <label
-        className="glass topbar-search"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '0 14px',
-          height: 36,
-          borderRadius: 999,
-          color: 'var(--fg-2)',
-          fontSize: 13,
-          minWidth: 260,
-          cursor: 'text',
-        }}
-      >
-        <span aria-hidden>{Icons.search}</span>
-        <input
-          type="search"
-          placeholder="Buscar item, serial, tag…"
-          aria-label="Buscar no inventário"
+      {showSearch && (
+        <label
+          className="glass topbar-search"
           style={{
-            flex: 1,
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            color: 'var(--fg-0)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '0 14px',
+            height: 36,
+            borderRadius: 999,
+            color: 'var(--fg-2)',
             fontSize: 13,
-            fontFamily: 'var(--font-sans-raw)',
-            minWidth: 0,
-          }}
-        />
-        <kbd
-          className="mono"
-          style={{
-            fontSize: 10,
-            opacity: 0.6,
-            padding: '2px 6px',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 4,
+            minWidth: 260,
+            cursor: 'text',
           }}
         >
-          ⌘K
-        </kbd>
-      </label>
+          <span aria-hidden>{Icons.search}</span>
+          <input
+            type="search"
+            placeholder="Buscar item, serial, tag…"
+            aria-label="Buscar no inventário"
+            style={{
+              flex: 1,
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              color: 'var(--fg-0)',
+              fontSize: 13,
+              fontFamily: 'var(--font-sans-raw)',
+              minWidth: 0,
+            }}
+          />
+          <kbd
+            className="mono"
+            style={{
+              fontSize: 10,
+              opacity: 0.6,
+              padding: '2px 6px',
+              border: '1px solid var(--glass-border)',
+              borderRadius: 4,
+            }}
+          >
+            ⌘K
+          </kbd>
+        </label>
+      )}
 
-      <GlassPill>
-        <span style={{ color: 'var(--fg-1)' }}>{Icons.bell}</span>
-        <span className="mono" style={{ fontSize: 11, color: 'var(--accent-cyan)' }}>
-          {notifications}
-        </span>
-      </GlassPill>
+      {showNotifications && (
+        <GlassPill>
+          <span style={{ color: 'var(--fg-1)' }}>{Icons.bell}</span>
+          <span className="mono" style={{ fontSize: 11, color: 'var(--accent-cyan)' }}>
+            {notifications}
+          </span>
+        </GlassPill>
+      )}
       <style>{`
         .topbar-search:focus-within {
           outline: 2px solid var(--accent-cyan);

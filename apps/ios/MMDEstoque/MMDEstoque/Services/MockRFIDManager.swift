@@ -8,6 +8,12 @@ import Combine
 /// chosen to feel plausible without slowing down dev workflows.
 final class MockRFIDManager: RFIDReaderProtocol {
 
+    private let shouldFailConnection: () -> Bool
+
+    init(shouldFailConnection: @escaping () -> Bool = { Int.random(in: 1...10) == 1 }) {
+        self.shouldFailConnection = shouldFailConnection
+    }
+
     // MARK: - Combine Subjects
 
     private let connectionStateSubject = CurrentValueSubject<RFIDConnectionState, Never>(.disconnected)
@@ -107,7 +113,7 @@ final class MockRFIDManager: RFIDReaderProtocol {
             guard let self else { return }
 
             // 10% chance of connection failure for realism
-            if Int.random(in: 1...10) == 1 {
+            if self.shouldFailConnection() {
                 self.connectionStateSubject.send(.error("Timeout ao conectar: tente novamente"))
                 return
             }
@@ -135,7 +141,7 @@ final class MockRFIDManager: RFIDReaderProtocol {
         let selectedTags = Array(fakeTags.shuffled().prefix(count))
 
         // Emit tags one or two at a time over 2-3 seconds
-        var delay: Double = 0.3
+        let delay: Double = 0.3
         var pending = selectedTags
 
         emitNextBatch(&pending, delay: delay)

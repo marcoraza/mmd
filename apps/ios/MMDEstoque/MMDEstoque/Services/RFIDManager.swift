@@ -4,13 +4,23 @@ import Combine
 enum RFIDRuntimeMode: Equatable {
     case mock
     case zebra
-    case zebraFallbackMock
+    case zebraUnavailable
+}
+
+enum RFIDSDKAvailability {
+    static var isZebraLinked: Bool {
+        #if canImport(ZebraRfidSdkFramework)
+        true
+        #else
+        false
+        #endif
+    }
 }
 
 /// Observable facade that SwiftUI views bind to.
 ///
 /// Wraps either `ZebraRFIDManager` (when the SDK is available and not
-/// running in mock mode) or `MockRFIDManager` for development.
+/// running in mock mode) or `MockRFIDManager` for explicit development use.
 /// Views never interact with the underlying implementation directly.
 ///
 /// Usage:
@@ -49,8 +59,8 @@ final class RFIDManager: ObservableObject {
     /// Creates the RFID manager.
     ///
     /// - Parameter useMock: When `true`, uses `MockRFIDManager` regardless
-    ///   of SDK availability. When `false`, uses the real Zebra SDK if
-    ///   available, falling back to mock with a warning.
+    ///   of SDK availability. When `false`, uses the real Zebra SDK or an
+    ///   unavailable implementation that cannot emit simulated tags.
     init(useMock: Bool = false, implementationFactory: @escaping ImplementationFactory = RFIDManager.resolveImplementation) {
         self.implementationFactory = implementationFactory
         self.requestedUseMock = useMock
@@ -110,8 +120,8 @@ final class RFIDManager: ObservableObject {
         #if canImport(ZebraRfidSdkFramework)
         return (ZebraRFIDManager(), .zebra)
         #else
-        print("[RFIDManager] ZebraRfidSdkFramework not available, falling back to MockRFIDManager")
-        return (MockRFIDManager(), .zebraFallbackMock)
+        print("[RFIDManager] ZebraRfidSdkFramework not available")
+        return (UnavailableRFIDManager(), .zebraUnavailable)
         #endif
     }
 
@@ -207,8 +217,54 @@ extension RFIDManager {
             return "Simulado"
         case .zebra:
             return "Zebra SDK"
-        case .zebraFallbackMock:
-            return "Simulado (fallback)"
+        case .zebraUnavailable:
+            return "Zebra indisponível"
         }
+    }
+}
+
+final class UnavailableRFIDManager: RFIDReaderProtocol {
+    private let unavailableMessage = "SDK Zebra indisponível neste build"
+    private let connectionStateSubject: CurrentValueSubject<RFIDConnectionState, Never>
+    private let discoveredReadersSubject = CurrentValueSubject<[RFIDReaderInfo], Never>([])
+    private let scannedTagsSubject = CurrentValueSubject<[String], Never>([])
+    private let isScanningSubject = CurrentValueSubject<Bool, Never>(false)
+
+    init() {
+        connectionStateSubject = CurrentValueSubject(.error(unavailableMessage))
+    }
+
+    var connectionState: RFIDConnectionState { connectionStateSubject.value }
+    var connectionStatePublisher: AnyPublisher<RFIDConnectionState, Never> {
+        connectionStateSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+    }
+
+    var discoveredReaders: [RFIDReaderInfo] { discoveredReadersSubject.value }
+    var discoveredReadersPublisher: AnyPublisher<[RFIDReaderInfo], Never> {
+        discoveredReadersSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+    }
+
+    var scannedTags: [String] { scannedTagsSubject.value }
+    var scannedTagsPublisher: AnyPublisher<[String], Never> {
+        scannedTagsSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+    }
+
+    var isScanning: Bool { isScanningSubject.value }
+    var isScanningPublisher: AnyPublisher<Bool, Never> {
+        isScanningSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+    }
+
+    func discoverReaders() { publishUnavailable() }
+    func connect(to reader: RFIDReaderInfo) { publishUnavailable() }
+    func disconnect() { publishUnavailable() }
+    func startInventory() { publishUnavailable() }
+    func stopInventory() { isScanningSubject.send(false) }
+    func clearTags() { scannedTagsSubject.send([]) }
+
+    private func publishUnavailable() {
+        discoveredReadersSubject.send([])
+        scannedTagsSubject.send([])
+        isScanningSubject.send(false)
+        connectionStateSubject.send(.error(unavailableMessage))
     }
 }

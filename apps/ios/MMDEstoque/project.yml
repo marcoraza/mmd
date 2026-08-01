@@ -7,6 +7,11 @@ options:
   xcodeVersion: "15.0"
   createIntermediateGroups: true
 
+packages:
+  ZebraRFID:
+    url: https://github.com/ZebraDevs/alt-rfid-ios-sdk
+    revision: 0d450520eb700a96e10e0dbd8d1c3e13eed5f111
+
 targets:
   MMDEstoque:
     type: application
@@ -36,6 +41,8 @@ targets:
         Release:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: ""
     dependencies:
+      - package: ZebraRFID
+        product: Zebra123RFIDsdkSPM
       - sdk: ExternalAccessory.framework
       - sdk: CoreBluetooth.framework
 

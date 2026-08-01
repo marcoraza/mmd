@@ -87,7 +87,7 @@ struct AppConfig {
         #if DEBUG
         return
         #else
-        applyLegacyManualAuthTokenMigration(
+        Self.applyLegacyManualAuthTokenMigration(
             isRelease: true,
             defaults: .standard
         )

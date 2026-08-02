@@ -183,15 +183,7 @@ private struct CompactDestinoMap: View {
         Map(initialPosition: .region(region)) {
             MapPolyline(coordinates: route)
                 .stroke(
-                    .linearGradient(
-                        colors: [
-                            .white.opacity(0.18),
-                            .white.opacity(0.80),
-                            .white,
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
+                    Color.white.opacity(0.92),
                     style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
                 )
 
@@ -203,9 +195,11 @@ private struct CompactDestinoMap: View {
                 DestinoPinComBalao(km: km)
             }
         }
-        .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+        .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll, showsTraffic: false))
         .mapControls { }
+        .preferredColorScheme(.dark)
         .colorScheme(.dark)
+        .background(EP.mapBase)
         .allowsHitTesting(false)
         // id força recarregar câmera/rota ao trocar de evento no carrossel
         .id("\(pin.latitude)-\(pin.longitude)")
@@ -301,15 +295,7 @@ struct ExpandedDestinoMap: View {
                         )
                     )
                     .stroke(
-                        .linearGradient(
-                            colors: [
-                                .white.opacity(0.18),
-                                .white.opacity(0.80),
-                                .white,
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
+                        Color.white.opacity(0.92),
                         style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
                     )
                     Annotation("", coordinate: pin.coordinate, anchor: .center) {
@@ -322,8 +308,10 @@ struct ExpandedDestinoMap: View {
                     }
                 }
             }
-            .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+            .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll, showsTraffic: false))
+            .preferredColorScheme(.dark)
             .colorScheme(.dark)
+            .background(EP.mapBase)
             .onMapCameraChange(frequency: .continuous) { _ in
                 if isEditing { isDragging = true }
             }

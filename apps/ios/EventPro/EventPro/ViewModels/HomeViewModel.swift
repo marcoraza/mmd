@@ -29,6 +29,7 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var carregou = false
+    @Published private(set) var canEditDestino = false
 
     private let apiClient: APIClient
 
@@ -51,9 +52,13 @@ final class HomeViewModel: ObservableObject {
             // data_inicio.asc. Finalizado e cancelado sao historico e ficam
             // fora. A ordem e fixa e nunca se reorganiza, so muda quem esta
             // em destaque; o destaque inicial e o proximo confirmado.
-            agenda = try await apiClient.fetchProjects(
+            async let projects = apiClient.fetchProjects(
                 status: [.planejamento, .confirmado, .emCampo]
             )
+            async let role = apiClient.fetchMyRole()
+            agenda = try await projects
+            // Falha de role não derruba a agenda: default viewer (sem edição).
+            canEditDestino = ((try? await role) ?? .viewer).canEditDestino
             let proximo = pickProximo(agenda.filter { $0.status == .confirmado })
             selecionadoIndex = agenda.firstIndex { $0.id == proximo?.id } ?? 0
             carregou = true
@@ -62,6 +67,12 @@ final class HomeViewModel: ObservableObject {
             errorMessage = (error as? APIError)?.errorDescription ?? error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Atualiza o pin na agenda local após gravação (ou restauração).
+    func applyDestino(projectId: UUID, pin: DestinoPin?) {
+        guard let index = agenda.firstIndex(where: { $0.id == projectId }) else { return }
+        agenda[index].apply(pin: pin)
     }
 
     /// Troca o destaque (toque na agenda ou arrasto do carrossel), com wrap.

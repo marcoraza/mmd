@@ -282,6 +282,20 @@ final class APIClient: ObservableObject {
         return try await perform(request)
     }
 
+    /// Role do perfil autenticado (self-read em `profiles`).
+    func fetchMyRole() async throws -> UserRole {
+        let queryItems = [
+            URLQueryItem(name: "select", value: "role"),
+            URLQueryItem(name: "limit", value: "1")
+        ]
+        struct ProfileRoleRow: Decodable {
+            let role: UserRole
+        }
+        let request = try await makeRequest(path: "/rest/v1/profiles", queryItems: queryItems)
+        let rows: [ProfileRoleRow] = try await perform(request)
+        return rows.first?.role ?? .viewer
+    }
+
     // MARK: - Packing List
 
     /// Fetch packing list items for a project, with joined equipment data.

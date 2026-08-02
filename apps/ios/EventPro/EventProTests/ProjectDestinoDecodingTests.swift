@@ -92,5 +92,31 @@ final class ProjectDestinoDecodingTests: XCTestCase {
         XCTAssertEqual(Project.CodingKeys.destinoLatitude.stringValue, "destino_latitude")
         XCTAssertEqual(Project.CodingKeys.destinoLongitude.stringValue, "destino_longitude")
         XCTAssertEqual(Project.CodingKeys.destinoConfirmadoEm.stringValue, "destino_confirmado_em")
+        XCTAssertEqual(Project.CodingKeys.fichaEvento.stringValue, "ficha_evento")
+    }
+
+    func testDecodesFichaEnderecoSubset() throws {
+        let json = """
+        {
+          "id": "44444444-4444-4444-4444-444444444444",
+          "nome": "Corporativo",
+          "status": "CONFIRMADO",
+          "local": "Texto livre",
+          "ficha_evento": {
+            "endereco": {
+              "local": "Rosewood São Paulo",
+              "endereco": "Alameda Santos 2222",
+              "cidadeUf": "São Paulo, SP"
+            }
+          }
+        }
+        """.data(using: .utf8)!
+
+        let project = try decoder.decode(Project.self, from: json)
+
+        XCTAssertEqual(project.fichaEvento?.endereco?.local, "Rosewood São Paulo")
+        XCTAssertEqual(project.localDisplayName, "Rosewood São Paulo")
+        XCTAssertEqual(project.enderecoDisplayLine, "Alameda Santos 2222, São Paulo, SP")
+        XCTAssertTrue(project.prefillSearchQuery.contains("Rosewood"))
     }
 }

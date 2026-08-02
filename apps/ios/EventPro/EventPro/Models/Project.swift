@@ -40,6 +40,8 @@ struct Project: Identifiable, Codable, Hashable {
     var destinoLongitude: Double? = nil
     /// Momento da última gravação do pin. Null quando o Evento ainda não tem destino.
     var destinoConfirmadoEm: Date? = nil
+    /// Subconjunto da ficha com endereço humano (não reescreve o pin).
+    var fichaEvento: EventoFichaDestino? = nil
     var createdAt: Date? = nil
     var updatedAt: Date? = nil
 
@@ -55,6 +57,7 @@ struct Project: Identifiable, Codable, Hashable {
         case destinoLatitude = "destino_latitude"
         case destinoLongitude = "destino_longitude"
         case destinoConfirmadoEm = "destino_confirmado_em"
+        case fichaEvento = "ficha_evento"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
@@ -62,6 +65,47 @@ struct Project: Identifiable, Codable, Hashable {
     /// True quando o Evento tem pin de destino (par lat/lng).
     var hasDestino: Bool {
         destinoLatitude != nil && destinoLongitude != nil
+    }
+
+    /// Pin operacional, se completo.
+    var destinoPin: DestinoPin? {
+        guard let lat = destinoLatitude, let lng = destinoLongitude else { return nil }
+        return DestinoPin(latitude: lat, longitude: lng, confirmadoEm: destinoConfirmadoEm)
+    }
+
+    /// Nome comercial do local: ficha.local → coluna local → nome do Evento.
+    var localDisplayName: String {
+        let fichaLocal = fichaEvento?.endereco?.local?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let fichaLocal, !fichaLocal.isEmpty { return fichaLocal }
+        if let local, !local.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return local
+        }
+        return nome
+    }
+
+    /// Endereço humano legível (não é o pin).
+    var enderecoDisplayLine: String {
+        let end = fichaEvento?.endereco
+        let parts = [end?.endereco, end?.cidadeUf]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return parts.joined(separator: ", ")
+    }
+
+    /// Texto de partida da busca no Apple Maps.
+    var prefillSearchQuery: String {
+        let end = fichaEvento?.endereco
+        let parts = [end?.local ?? local, end?.endereco, end?.cidadeUf]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        if !parts.isEmpty { return parts.joined(separator: ", ") }
+        return nome
+    }
+
+    mutating func apply(pin: DestinoPin?) {
+        destinoLatitude = pin?.latitude
+        destinoLongitude = pin?.longitude
+        destinoConfirmadoEm = pin?.confirmadoEm
     }
 }
 

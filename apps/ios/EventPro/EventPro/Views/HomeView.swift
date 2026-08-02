@@ -119,10 +119,8 @@ private struct TabBar: View {
 // MARK: - EventosView
 //
 // A tela do grill (o protótipo abre com a aba Eventos ativa): topo
-// tipográfico com avatar, frase única de dados, mapa full bleed com rota
-// por evento e agenda de ordem fixa. Dados reais do HomeViewModel; o mapa
-// é ilustrativo (pendência 9.2) e a distância em km fica de fora até
-// existir dado real.
+// tipográfico com avatar, frase única de dados, mapa real do destino e
+// agenda de ordem fixa. Distância em km fica de fora até existir rota.
 
 struct EventosView: View {
     @EnvironmentObject private var api: APIClient
@@ -135,11 +133,20 @@ struct EventosView: View {
 private struct EventosContent: View {
 
     @StateObject private var vm: HomeViewModel
+    @StateObject private var location: EventLocationViewModel
     @EnvironmentObject private var auth: AuthState
     @State private var mostraAjustes = false
+    @State private var mostraDestino = false
 
     init(apiClient: APIClient) {
         _vm = StateObject(wrappedValue: HomeViewModel(apiClient: apiClient))
+        _location = StateObject(
+            wrappedValue: EventLocationViewModel(
+                searcher: MapKitPlaceSearcher(),
+                store: APIClientDestinoStore(client: apiClient),
+                canEdit: false
+            )
+        )
     }
 
     var body: some View {
@@ -161,9 +168,10 @@ private struct EventosContent: View {
                     }
 
                     MapaHome(
-                        count: vm.agenda.count,
+                        eventos: vm.agenda,
                         selecionado: vm.selecionadoIndex,
-                        aoArrastar: { passo in vm.selecionar(vm.selecionadoIndex + passo) }
+                        aoArrastar: { passo in vm.selecionar(vm.selecionadoIndex + passo) },
+                        aoTocar: { abrirDestino() }
                     )
                     .padding(.top, EP.s4)
 
@@ -184,7 +192,33 @@ private struct EventosContent: View {
                 }
             }
             .sheet(isPresented: $mostraAjustes) { SettingsView() }
+            .sheet(isPresented: $mostraDestino) {
+                EventoDestinoSheet(location: location) {
+                    mostraDestino = false
+                }
+            }
+            .onAppear {
+                location.onPinPersisted = { projectId, pin in
+                    vm.applyDestino(projectId: projectId, pin: pin)
+                }
+            }
+            .onChange(of: vm.selecionadoIndex) { _, _ in
+                rebindLocation()
+            }
+            .onChange(of: vm.carregou) { _, ready in
+                if ready { rebindLocation() }
+            }
         }
+    }
+
+    private func abrirDestino() {
+        rebindLocation()
+        mostraDestino = true
+    }
+
+    private func rebindLocation() {
+        guard let projeto = vm.selecionado else { return }
+        location.bind(project: projeto, canEdit: vm.canEditDestino)
     }
 
     // MARK: Topo tipográfico
@@ -257,7 +291,11 @@ private struct EventosContent: View {
     }
 
     private var localDisplay: String {
-        vm.selecionado?.local ?? ""
+        guard let evento = vm.selecionado else { return "" }
+        if !evento.enderecoDisplayLine.isEmpty {
+            return evento.enderecoDisplayLine
+        }
+        return evento.localDisplayName == evento.nome ? (evento.local ?? "") : evento.localDisplayName
     }
 
     private func diasAte(_ evento: Project) -> Int? {

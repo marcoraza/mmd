@@ -7,6 +7,8 @@ struct EventoDestinoSheet: View {
     @ObservedObject var location: EventLocationViewModel
     let onClose: () -> Void
 
+    @State private var mostraNavegacao = false
+
     var body: some View {
         VStack(spacing: 0) {
             handle
@@ -16,11 +18,33 @@ struct EventoDestinoSheet: View {
                 suggestionsList
             }
             mapBlock
+            navigationActions
             footerStatus
         }
         .background(EP.paper)
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
+        .confirmationDialog(
+            "Como chegar",
+            isPresented: $mostraNavegacao,
+            titleVisibility: .visible
+        ) {
+            Button("Apple Maps") { openNav(.appleMaps) }
+            Button("Google Maps") { openNav(.googleMaps) }
+            Button("Waze") { openNav(.waze) }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Rota do \(GalpaoOrigem.nome) até o pin do evento.")
+        }
+    }
+
+    private func openNav(_ app: MapNavigationApp) {
+        guard let pin = location.pin else { return }
+        MapNavigationLinks.open(
+            app,
+            to: pin.coordinate,
+            destinationName: location.displayName
+        )
     }
 
     private var handle: some View {
@@ -183,6 +207,40 @@ struct EventoDestinoSheet: View {
             .background(EP.ink, in: Capsule())
             .buttonStyle(EPPressStyle())
             .accessibilityLabel("Editar pin do local")
+        }
+    }
+
+    private var navigationActions: some View {
+        Group {
+            if location.pin != nil, !location.isEditingMap {
+                Button {
+                    mostraNavegacao = true
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                            .font(.system(size: 15, weight: .regular))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Como chegar")
+                                .font(EP.dadosForte())
+                            Text("Abrir no Waze, Google Maps ou Apple Maps")
+                                .font(EP.secondary())
+                                .foregroundStyle(EP.sub)
+                        }
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(EP.ink3)
+                    }
+                    .foregroundStyle(EP.ink)
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(EP.paper2, in: RoundedRectangle(cornerRadius: EP.r12, style: .continuous))
+                }
+                .buttonStyle(EPPressStyle())
+                .padding(.horizontal, EP.padTela)
+                .padding(.bottom, EP.s3)
+                .accessibilityLabel("Como chegar, abrir no Waze, Google Maps ou Apple Maps")
+            }
         }
     }
 

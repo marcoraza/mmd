@@ -21,6 +21,7 @@
 		3F5138483346A6D201595370 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0181F0F6077DDACC633D1055 /* Project.swift */; };
 		6AF70299E081B2DF7BDFFEF0 /* EventLocationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F080E9044054364F2F81CEC /* EventLocationViewModelTests.swift */; };
 		6D80A2367FD8AC74E6E21101 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E437804C16B79BCDD4342CC /* HomeViewModel.swift */; };
+		72D646B75382222FD6962C4D /* MapNavigationLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F270E87F980E85EF557C86 /* MapNavigationLinks.swift */; };
 		7ABBF0D809151EA4E1F343D6 /* PlaceSearching.swift in Sources */ = {isa = PBXBuildFile; fileRef = F529A930C4437331361A8664 /* PlaceSearching.swift */; };
 		7CC83FB46C749FA1B7D1871C /* EventLocationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53F9F1BEA62896DA1A0F193E /* EventLocationViewModel.swift */; };
 		8B3326A3A8886F7849CFBDFC /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 621864D4F091F0097D2241EA /* HomeView.swift */; };
@@ -34,6 +35,8 @@
 		DBD568AFF3DE4D65862BCDFE /* EventoDestino.swift in Sources */ = {isa = PBXBuildFile; fileRef = 400AE1F508DB6707F34B6D8F /* EventoDestino.swift */; };
 		DF27C38D461132E323B16002 /* EventProApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23CAB96F6A558A32CBC4C9E0 /* EventProApp.swift */; };
 		E60C5D157E6C147703BB1FA3 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12456D002A738AC825E850 /* Equipment.swift */; };
+		EA13AABF8DA44C7CD5A84715 /* GalpaoOrigem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3F0AE25479BA606100F915 /* GalpaoOrigem.swift */; };
+		F306B5FD3ABED8CEEB950CD5 /* MapNavigationLinksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789FEC6107A65B6C0FE0D185 /* MapNavigationLinksTests.swift */; };
 		F564026287A4D33388BF7E6C /* DestinoPersisting.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4162C5021760A6DF48E3BEC /* DestinoPersisting.swift */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +54,7 @@
 		0181F0F6077DDACC633D1055 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		0B2FFE2A442F7986345E469F /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokens.swift; sourceTree = "<group>"; };
 		1011F4DB53340F931C3C97F2 /* EventoDestinoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventoDestinoSheet.swift; sourceTree = "<group>"; };
+		18F270E87F980E85EF557C86 /* MapNavigationLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapNavigationLinks.swift; sourceTree = "<group>"; };
 		23CAB96F6A558A32CBC4C9E0 /* EventProApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProApp.swift; sourceTree = "<group>"; };
 		2D40940F2287218D777F5EB0 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
 		400AE1F508DB6707F34B6D8F /* EventoDestino.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventoDestino.swift; sourceTree = "<group>"; };
@@ -61,6 +65,7 @@
 		621864D4F091F0097D2241EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		6C9E2F0C74501FD3A7CF30AA /* ResolvedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedItem.swift; sourceTree = "<group>"; };
 		6E437804C16B79BCDD4342CC /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		789FEC6107A65B6C0FE0D185 /* MapNavigationLinksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapNavigationLinksTests.swift; sourceTree = "<group>"; };
 		81057443EDC088E6B6CD9D81 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		86568BD8CC7DD4EAAFBF6126 /* EventMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventMapView.swift; sourceTree = "<group>"; };
 		8F080E9044054364F2F81CEC /* EventLocationViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLocationViewModelTests.swift; sourceTree = "<group>"; };
@@ -70,6 +75,7 @@
 		AD59C6B96F694D6520DC1452 /* UpdateEventoDestinoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateEventoDestinoTests.swift; sourceTree = "<group>"; };
 		B34B624C262D0FAE1F7769E0 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		BB12456D002A738AC825E850 /* Equipment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
+		BC3F0AE25479BA606100F915 /* GalpaoOrigem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalpaoOrigem.swift; sourceTree = "<group>"; };
 		C151C8B6B80F596D01D34672 /* ColorOKLCH.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorOKLCH.swift; sourceTree = "<group>"; };
 		C3E406073599E4026CC404D6 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		CE379953BE5426649ABD0051 /* JetBrainsMono-VF.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMono-VF.ttf"; sourceTree = "<group>"; };
@@ -146,6 +152,7 @@
 			isa = PBXGroup;
 			children = (
 				8F080E9044054364F2F81CEC /* EventLocationViewModelTests.swift */,
+				789FEC6107A65B6C0FE0D185 /* MapNavigationLinksTests.swift */,
 				2D40940F2287218D777F5EB0 /* MockURLProtocol.swift */,
 				572CB447A1FA5F0CD62E0B6A /* ProjectDestinoDecodingTests.swift */,
 				AD59C6B96F694D6520DC1452 /* UpdateEventoDestinoTests.swift */,
@@ -169,6 +176,7 @@
 				A3E86B6B2C9AA0F81EEA7F2D /* AuthSessionStore.swift */,
 				F4162C5021760A6DF48E3BEC /* DestinoPersisting.swift */,
 				C3E406073599E4026CC404D6 /* KeychainStore.swift */,
+				18F270E87F980E85EF557C86 /* MapNavigationLinks.swift */,
 				F529A930C4437331361A8664 /* PlaceSearching.swift */,
 			);
 			path = Services;
@@ -211,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				81057443EDC088E6B6CD9D81 /* AppConfig.swift */,
+				BC3F0AE25479BA606100F915 /* GalpaoOrigem.swift */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -316,10 +325,12 @@
 				DF27C38D461132E323B16002 /* EventProApp.swift in Sources */,
 				DBD568AFF3DE4D65862BCDFE /* EventoDestino.swift in Sources */,
 				1EA58A9ECDB12071142F2616 /* EventoDestinoSheet.swift in Sources */,
+				EA13AABF8DA44C7CD5A84715 /* GalpaoOrigem.swift in Sources */,
 				8B3326A3A8886F7849CFBDFC /* HomeView.swift in Sources */,
 				6D80A2367FD8AC74E6E21101 /* HomeViewModel.swift in Sources */,
 				D8A4CE822B645805D5DDE183 /* KeychainStore.swift in Sources */,
 				0E6D4DC09F0CCD6CA81741F0 /* LoginView.swift in Sources */,
+				72D646B75382222FD6962C4D /* MapNavigationLinks.swift in Sources */,
 				3824AC3AD629A78B7070E9A3 /* Movement.swift in Sources */,
 				1DC7ACE150EF3CD3571DB7A7 /* PackingListItem.swift in Sources */,
 				7ABBF0D809151EA4E1F343D6 /* PlaceSearching.swift in Sources */,
@@ -335,6 +346,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6AF70299E081B2DF7BDFFEF0 /* EventLocationViewModelTests.swift in Sources */,
+				F306B5FD3ABED8CEEB950CD5 /* MapNavigationLinksTests.swift in Sources */,
 				1B47ACC9581D63D6D719843F /* MockURLProtocol.swift in Sources */,
 				125EF64AF5AFB6F174FE1F53 /* ProjectDestinoDecodingTests.swift in Sources */,
 				1F71CD94B93AD130DC603121 /* UpdateEventoDestinoTests.swift in Sources */,

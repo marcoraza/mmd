@@ -5,7 +5,8 @@ import SwiftUI
 //
 // Card compacto full bleed com cartografia MapKit. Passivo: o arrasto
 // horizontal troca Eventos; pan/zoom do mapa ficam na superfície expandida.
-// Sem rota, sem km e sem permissão de localização.
+// Origem fixa no galpão + linha até o pin. Sem km/ETA e sem localização do
+// funcionário.
 
 private func wrapIndex(_ i: Int, _ n: Int) -> Int {
     guard n > 0 else { return 0 }
@@ -155,8 +156,30 @@ struct DestinoMapSlot: View {
 private struct CompactDestinoMap: View {
     let pin: DestinoPin
 
+    private var route: [CLLocationCoordinate2D] {
+        GalpaoOrigem.routeCoordinates(to: pin.coordinate)
+    }
+
     var body: some View {
         Map(initialPosition: .region(region)) {
+            MapPolyline(coordinates: route)
+                .stroke(
+                    .linearGradient(
+                        colors: [
+                            .white.opacity(0.22),
+                            .white.opacity(0.75),
+                            .white,
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                )
+
+            Annotation(GalpaoOrigem.nome, coordinate: GalpaoOrigem.coordinate) {
+                GalpaoOrigemDot()
+            }
+
             Annotation("", coordinate: pin.coordinate) {
                 DestinoPinDot()
             }
@@ -165,18 +188,10 @@ private struct CompactDestinoMap: View {
         .mapControls { }
         .colorScheme(.dark)
         .allowsHitTesting(false)
-        .overlay(alignment: .bottomLeading) {
-            // Fallback textual se a cartografia falhar visualmente: o endereço
-            // fica no topo da tela; aqui só o pin carrega o estado.
-            EmptyView()
-        }
     }
 
     private var region: MKCoordinateRegion {
-        MKCoordinateRegion(
-            center: pin.coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012)
-        )
+        GalpaoOrigem.region(containing: pin.coordinate)
     }
 }
 
@@ -232,7 +247,21 @@ struct DestinoPinDot: View {
     }
 }
 
-// MARK: - Mapa expandido (edição estilo Uber)
+// MARK: - Origem no galpão (círculo base + aro branco do design)
+
+struct GalpaoOrigemDot: View {
+    var body: some View {
+        Circle()
+            .fill(EP.mapBase)
+            .frame(width: 11, height: 11)
+            .overlay(
+                Circle()
+                    .strokeBorder(.white, lineWidth: 2.5)
+            )
+    }
+}
+
+// MARK: - Mapa expandido (edição estilo Uber + linha do galpão)
 
 struct ExpandedDestinoMap: View {
     let pin: DestinoPin?
@@ -251,21 +280,30 @@ struct ExpandedDestinoMap: View {
         self.isEditing = isEditing
         self.onCameraIdle = onCameraIdle
         if let pin {
+            _position = State(initialValue: .region(GalpaoOrigem.region(containing: pin.coordinate)))
+        } else {
             _position = State(initialValue: .region(
                 MKCoordinateRegion(
-                    center: pin.coordinate,
-                    span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008)
+                    center: GalpaoOrigem.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.04, longitudeDelta: 0.04)
                 )
             ))
-        } else {
-            _position = State(initialValue: .automatic)
         }
     }
 
     var body: some View {
         ZStack {
             Map(position: $position) {
+                Annotation(GalpaoOrigem.nome, coordinate: GalpaoOrigem.coordinate) {
+                    GalpaoOrigemDot()
+                }
+
                 if let pin, !isEditing {
+                    MapPolyline(coordinates: GalpaoOrigem.routeCoordinates(to: pin.coordinate))
+                        .stroke(
+                            .white.opacity(0.85),
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                        )
                     Annotation("", coordinate: pin.coordinate) {
                         DestinoPinDot()
                     }
@@ -284,12 +322,7 @@ struct ExpandedDestinoMap: View {
             .allowsHitTesting(isEditing)
             .onChange(of: pin) { _, newPin in
                 guard !isEditing, let newPin else { return }
-                position = .region(
-                    MKCoordinateRegion(
-                        center: newPin.coordinate,
-                        span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008)
-                    )
-                )
+                position = .region(GalpaoOrigem.region(containing: newPin.coordinate))
             }
 
             if isEditing {

@@ -8,9 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		0E6D4DC09F0CCD6CA81741F0 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34B624C262D0FAE1F7769E0 /* LoginView.swift */; };
+		125EF64AF5AFB6F174FE1F53 /* ProjectDestinoDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572CB447A1FA5F0CD62E0B6A /* ProjectDestinoDecodingTests.swift */; };
 		178E95735388919328580592 /* AuthSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E86B6B2C9AA0F81EEA7F2D /* AuthSessionStore.swift */; };
 		18469BA620CE16DE2E84711B /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81057443EDC088E6B6CD9D81 /* AppConfig.swift */; };
+		1B47ACC9581D63D6D719843F /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40940F2287218D777F5EB0 /* MockURLProtocol.swift */; };
 		1DC7ACE150EF3CD3571DB7A7 /* PackingListItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F69E1855CA3162E6B1A573FC /* PackingListItem.swift */; };
+		1F71CD94B93AD130DC603121 /* UpdateEventoDestinoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD59C6B96F694D6520DC1452 /* UpdateEventoDestinoTests.swift */; };
 		2DA9E1E351F97B77F7AE1DE2 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF3C317344D5857FF8457E0 /* APIClient.swift */; };
 		3290442AC88A77B0B3C7BAB7 /* JetBrainsMono-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CE379953BE5426649ABD0051 /* JetBrainsMono-VF.ttf */; };
 		3824AC3AD629A78B7070E9A3 /* Movement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D0D5EA076BE5E09E6F4DC /* Movement.swift */; };
@@ -28,11 +31,24 @@
 		E60C5D157E6C147703BB1FA3 /* Equipment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12456D002A738AC825E850 /* Equipment.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		00CD3BCCC27B8A299F5B482B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0DAEBF886642D064303F5343 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9539FEDE27D9312B6026C304;
+			remoteInfo = EventPro;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		0181F0F6077DDACC633D1055 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		0B2FFE2A442F7986345E469F /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokens.swift; sourceTree = "<group>"; };
 		23CAB96F6A558A32CBC4C9E0 /* EventProApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProApp.swift; sourceTree = "<group>"; };
+		2D40940F2287218D777F5EB0 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
 		4A7CF82140860AF56D61B4D4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4B8F2376E2FE466BB55B9A9F /* EventProTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = EventProTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		572CB447A1FA5F0CD62E0B6A /* ProjectDestinoDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDestinoDecodingTests.swift; sourceTree = "<group>"; };
 		621864D4F091F0097D2241EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		6C9E2F0C74501FD3A7CF30AA /* ResolvedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedItem.swift; sourceTree = "<group>"; };
 		6E437804C16B79BCDD4342CC /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
@@ -41,6 +57,7 @@
 		905B910AD5B5BC9F1C3EE840 /* EventPro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = EventPro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A286F1A99B5838765B8EFFE9 /* InterTight-VF.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InterTight-VF.ttf"; sourceTree = "<group>"; };
 		A3E86B6B2C9AA0F81EEA7F2D /* AuthSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSessionStore.swift; sourceTree = "<group>"; };
+		AD59C6B96F694D6520DC1452 /* UpdateEventoDestinoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateEventoDestinoTests.swift; sourceTree = "<group>"; };
 		B34B624C262D0FAE1F7769E0 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		BB12456D002A738AC825E850 /* Equipment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Equipment.swift; sourceTree = "<group>"; };
 		C151C8B6B80F596D01D34672 /* ColorOKLCH.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorOKLCH.swift; sourceTree = "<group>"; };
@@ -110,10 +127,21 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
+		A7E4AE664D556BFF5936F81B /* EventProTests */ = {
+			isa = PBXGroup;
+			children = (
+				2D40940F2287218D777F5EB0 /* MockURLProtocol.swift */,
+				572CB447A1FA5F0CD62E0B6A /* ProjectDestinoDecodingTests.swift */,
+				AD59C6B96F694D6520DC1452 /* UpdateEventoDestinoTests.swift */,
+			);
+			path = EventProTests;
+			sourceTree = "<group>";
+		};
 		BB7E4D809EE37B491985F582 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				905B910AD5B5BC9F1C3EE840 /* EventPro.app */,
+				4B8F2376E2FE466BB55B9A9F /* EventProTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -141,6 +169,7 @@
 			isa = PBXGroup;
 			children = (
 				FA4D59D3462458D0419F2A95 /* EventPro */,
+				A7E4AE664D556BFF5936F81B /* EventProTests */,
 				BB7E4D809EE37B491985F582 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -171,6 +200,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0447082F0050E424A3F9CA41 /* EventProTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C38E0F7E8B2CB20B1C7F7BBE /* Build configuration list for PBXNativeTarget "EventProTests" */;
+			buildPhases = (
+				7C2C4DFE2EEEDF4E61CB9563 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				62C77B9938071D0894978CD9 /* PBXTargetDependency */,
+			);
+			name = EventProTests;
+			packageProductDependencies = (
+			);
+			productName = EventProTests;
+			productReference = 4B8F2376E2FE466BB55B9A9F /* EventProTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		9539FEDE27D9312B6026C304 /* EventPro */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5282135E1051681CCC019886 /* Build configuration list for PBXNativeTarget "EventPro" */;
@@ -218,6 +265,7 @@
 			projectRoot = "";
 			targets = (
 				9539FEDE27D9312B6026C304 /* EventPro */,
+				0447082F0050E424A3F9CA41 /* EventProTests */,
 			);
 		};
 /* End PBXProject section */
@@ -259,7 +307,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7C2C4DFE2EEEDF4E61CB9563 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1B47ACC9581D63D6D719843F /* MockURLProtocol.swift in Sources */,
+				125EF64AF5AFB6F174FE1F53 /* ProjectDestinoDecodingTests.swift in Sources */,
+				1F71CD94B93AD130DC603121 /* UpdateEventoDestinoTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		62C77B9938071D0894978CD9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9539FEDE27D9312B6026C304 /* EventPro */;
+			targetProxy = 00CD3BCCC27B8A299F5B482B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		105A09028BF7AE80F77713AB /* Debug */ = {
@@ -332,6 +398,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = EventPro/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -339,6 +406,7 @@
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.eventpro;
+				PRODUCT_MODULE_NAME = EventPro;
 				PRODUCT_NAME = "Event Pro";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -348,6 +416,25 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
+		};
+		34915E355B430263DB158EF2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.eventpro.tests;
+				PRODUCT_NAME = EventProTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Event Pro.app/Event Pro";
+			};
+			name = Release;
 		};
 		8E64F448734EAD4EE3CCB24C /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -412,6 +499,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = EventPro/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -419,6 +507,7 @@
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.eventpro;
+				PRODUCT_MODULE_NAME = EventPro;
 				PRODUCT_NAME = "Event Pro";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -427,6 +516,25 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
+		};
+		C9ED29F2D71DB33D952C4E41 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.emdash.eventpro.tests;
+				PRODUCT_NAME = EventProTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Event Pro.app/Event Pro";
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -445,6 +553,15 @@
 			buildConfigurations = (
 				105A09028BF7AE80F77713AB /* Debug */,
 				8E64F448734EAD4EE3CCB24C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C38E0F7E8B2CB20B1C7F7BBE /* Build configuration list for PBXNativeTarget "EventProTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C9ED29F2D71DB33D952C4E41 /* Debug */,
+				34915E355B430263DB158EF2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

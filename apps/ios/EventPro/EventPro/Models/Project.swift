@@ -34,6 +34,12 @@ struct Project: Identifiable, Codable, Hashable {
     var local: String? = nil
     var status: StatusProjeto
     var notas: String? = nil
+    /// Latitude WGS84 do pin de destino. Opcional; existe em par com longitude.
+    var destinoLatitude: Double? = nil
+    /// Longitude WGS84 do pin de destino. Opcional; existe em par com latitude.
+    var destinoLongitude: Double? = nil
+    /// Momento da última gravação do pin. Null quando o Evento ainda não tem destino.
+    var destinoConfirmadoEm: Date? = nil
     var createdAt: Date? = nil
     var updatedAt: Date? = nil
 
@@ -46,8 +52,16 @@ struct Project: Identifiable, Codable, Hashable {
         case local
         case status
         case notas
+        case destinoLatitude = "destino_latitude"
+        case destinoLongitude = "destino_longitude"
+        case destinoConfirmadoEm = "destino_confirmado_em"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+
+    /// True quando o Evento tem pin de destino (par lat/lng).
+    var hasDestino: Bool {
+        destinoLatitude != nil && destinoLongitude != nil
     }
 }
 

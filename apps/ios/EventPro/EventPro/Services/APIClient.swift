@@ -8,6 +8,7 @@ enum APIError: LocalizedError {
     case notConfigured
     case webApiNotConfigured
     case sessionExpired
+    case invalidRequest(String)
     case httpError(statusCode: Int, body: String?)
     case decodingError(Error)
     case networkError(Error)
@@ -22,6 +23,8 @@ enum APIError: LocalizedError {
             return "API Web nao configurada. Acesse Ajustes para ativar operacoes reais."
         case .sessionExpired:
             return "Sessão expirada. Faça login novamente."
+        case .invalidRequest(let message):
+            return message
         case .httpError(let code, let body):
             let detail = body.map { ": \($0)" } ?? ""
             return "Erro HTTP \(code)\(detail)"
@@ -560,6 +563,66 @@ final class APIClient: ObservableObject {
         try await performVoid(request)
 
         logger.info("Project \(projectId) status updated to \(status.rawValue)")
+    }
+
+    // MARK: - Evento destino (pin)
+
+    /// Atualiza somente os campos do pin de destino do Evento.
+    ///
+    /// - Parameters:
+    ///   - projectId: ID do Evento (`projetos.id`).
+    ///   - latitude: Latitude WGS84, ou `nil` para limpar o pin (junto com longitude).
+    ///   - longitude: Longitude WGS84, ou `nil` para limpar o pin (junto com latitude).
+    ///   - confirmadoEm: Timestamp da gravação; ignorado na limpeza. Default: agora.
+    ///
+    /// Par incompleto (só lat ou só lng) é rejeitado no cliente antes da rede.
+    /// Payload mínimo: apenas `destino_latitude`, `destino_longitude`, `destino_confirmado_em`.
+    /// nulls explícitos limpam o pin no PostgREST (campo omitido não apaga).
+    func updateEventoDestino(
+        projectId: UUID,
+        latitude: Double?,
+        longitude: Double?,
+        confirmadoEm: Date = Date()
+    ) async throws {
+        switch (latitude, longitude) {
+        case (nil, nil):
+            break
+        case (.some(let lat), .some(let lng)):
+            guard (-90...90).contains(lat), (-180...180).contains(lng) else {
+                throw APIError.invalidRequest("Coordenadas do destino fora da faixa válida")
+            }
+        default:
+            throw APIError.invalidRequest(
+                "Destino exige latitude e longitude juntas, ou ambas nulas"
+            )
+        }
+
+        let payload: [String: Any]
+        if let latitude, let longitude {
+            payload = [
+                "destino_latitude": latitude,
+                "destino_longitude": longitude,
+                "destino_confirmado_em": Self.supabaseDateFormatter.string(from: confirmadoEm)
+            ]
+        } else {
+            payload = [
+                "destino_latitude": NSNull(),
+                "destino_longitude": NSNull(),
+                "destino_confirmado_em": NSNull()
+            ]
+        }
+
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        let request = try await makeRequest(
+            path: "/rest/v1/projetos",
+            method: "PATCH",
+            queryItems: [URLQueryItem(name: "id", value: "eq.\(projectId.uuidString)")],
+            body: body,
+            additionalHeaders: ["Prefer": "return=minimal"]
+        )
+        try await performVoid(request)
+
+        logger.info("Project \(projectId) destino atualizado")
     }
 
     /// Vincula uma tag RFID a um serial: PATCH em `serial_numbers` gravando

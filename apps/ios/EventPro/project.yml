@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.emdash
   deploymentTarget:
     iOS: "17.0"
+  createIntermediateGroups: true
 targets:
   EventPro:
     type: application
@@ -16,6 +17,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.emdash.eventpro
         PRODUCT_NAME: "Event Pro"
+        PRODUCT_MODULE_NAME: EventPro
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.9"
@@ -24,6 +26,36 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
         SUPPORTS_MACCATALYST: false
+        ENABLE_TESTABILITY: YES
       configs:
         Debug:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+
+  EventProTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - EventProTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.emdash.eventpro.tests
+        PRODUCT_NAME: EventProTests
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: true
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Event Pro.app/Event Pro"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: EventPro
+
+schemes:
+  EventPro:
+    build:
+      targets:
+        EventPro: all
+        EventProTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - EventProTests

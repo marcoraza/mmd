@@ -14,17 +14,17 @@ enum GalpaoOrigem {
     static let nome = "Galpão MMD"
     /// Endereço operacional informado pela MMD.
     static let endereco = "Rua Doutor Mário Freire, 165"
-    static let cidadeUf = "São Paulo, SP"
+    static let cidadeUf = "Morumbi, São Paulo, SP"
 
     private enum Keys {
         static let latitude = "mmd_galpao_latitude"
         static let longitude = "mmd_galpao_longitude"
     }
 
-    /// Geocode OSM da via em Vila Andrade / SP (número 165 sem pin de prédio no OSM).
-    /// Latitude/longitude padrão: -23.6184428, -46.7058853.
-    private static let defaultLatitude = -23.6184428
-    private static let defaultLongitude = -46.7058853
+    /// Geocode da via em Morumbi / Vila Andrade (SP). Número 165 sem pin de
+    /// prédio no OSM; ponto = centroide da Rua Doutor Mário Freire (CEP 05690-050).
+    private static let defaultLatitude = -23.6177585
+    private static let defaultLongitude = -46.7069985
 
     static var latitude: Double {
         get {

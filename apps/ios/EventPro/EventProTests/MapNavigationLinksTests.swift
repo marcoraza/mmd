@@ -4,7 +4,7 @@ import XCTest
 
 final class MapNavigationLinksTests: XCTestCase {
 
-    private let origin = CLLocationCoordinate2D(latitude: -23.6184428, longitude: -46.7058853)
+    private let origin = CLLocationCoordinate2D(latitude: -23.6177585, longitude: -46.7069985)
     private let dest = CLLocationCoordinate2D(latitude: -23.5614, longitude: -46.6559)
 
     func testUrlTemplatesIncludeAllThreeApps() {
@@ -17,20 +17,21 @@ final class MapNavigationLinksTests: XCTestCase {
 
     func testAppleMapsUsesOriginAndDestination() {
         let url = MapNavigationLinks.urlTemplates(from: origin, to: dest)[.appleMaps]!
-        XCTAssertTrue(url.contains("saddr=-23.6184428"))
+        XCTAssertTrue(url.contains("saddr=-23.6177585"))
         XCTAssertTrue(url.contains("daddr=-23.5614"))
     }
 
     func testGoogleMapsDirUsesOriginAndDestination() {
         let url = MapNavigationLinks.urlTemplates(from: origin, to: dest)[.googleMaps]!
-        XCTAssertTrue(url.contains("origin=-23.6184428"))
+        XCTAssertTrue(url.contains("origin=-23.6177585"))
         XCTAssertTrue(url.contains("destination=-23.5614"))
     }
 
     func testGalpaoAddressIsRealMMDPoint() {
         XCTAssertEqual(GalpaoOrigem.endereco, "Rua Doutor Mário Freire, 165")
-        XCTAssertEqual(GalpaoOrigem.latitude, -23.6184428, accuracy: 0.0000001)
-        XCTAssertEqual(GalpaoOrigem.longitude, -46.7058853, accuracy: 0.0000001)
+        XCTAssertEqual(GalpaoOrigem.cidadeUf, "Morumbi, São Paulo, SP")
+        XCTAssertEqual(GalpaoOrigem.latitude, -23.6177585, accuracy: 0.0000001)
+        XCTAssertEqual(GalpaoOrigem.longitude, -46.7069985, accuracy: 0.0000001)
     }
 
     func testWazeNavigatesToDestination() {

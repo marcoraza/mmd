@@ -1,8 +1,34 @@
 # Handoff: MMD Estoque Inteligente
 
-Data: 2026-06-23
+Data: 2026-06-23 (atualização operacional Event Pro mapa/pin: 2026-08-02)
 
 Fonte operacional atual para agentes: `docs/mar-171-agent-brief.md`
+
+## Atualização 2026-08-02 · Event Pro mapa e pin de destino
+
+**Branch:** `cc/sprint-auth-ios` (push em `origin/cc/sprint-auth-ios`, HEAD `427aeea`).  
+**Não mergeada em `main`.**
+
+**Supabase remoto (projeto MMD `bphmxticdyuctovfumcj`):**
+- Migration `20260802120000_evento_destino_coordenadas.sql` aplicada **manualmente** em 2026-08-02 via `supabase db query --linked -f ...` (não via `db push` completo, por drift de histórico com outras migrations).
+- Colunas em `projetos`: `destino_latitude`, `destino_longitude`, `destino_confirmado_em` (nullable, par completo ou todos nulos).
+- Constraints: `projetos_destino_par_completo`, `projetos_destino_latitude_range`, `projetos_destino_longitude_range`.
+- RLS de update segue `projetos_update` (editor/admin).
+- Versão registrada em `supabase_migrations.schema_migrations` como `20260802120000`.
+
+**iOS Event Pro (nesta branch):**
+- Spec: `docs/specs/eventos-01-mapa-real-e-pin.md`
+- Card da Home: visual mockup Home 2.0 (canvas, 7 rotas, pin, balão de km) alimentado por pin real e km real.
+- Backend: `EventLocationViewModel`, busca MapKit, autosave, edição Uber na sheet, Waze/Google/Apple Maps.
+- Galpão fixo: Rua Doutor Mário Freire, 165 · Morumbi, São Paulo, SP.
+- Target `EventProTests` com suíte da costura.
+
+**Preview HTML local (gitignored):** `tasks/evidence/eventos-mapa-pin/prototipo-mapa-pin.html`
+
+**Ainda aberto:**
+- Smoke no simulador/iPhone com sessão real no Supabase remoto.
+- Drift de migrations: local tem `20260712191500` e `20260717004500` sem remote; remote tem `20260712220716` sem local.
+- Merge em `main` / PR quando a fatia estiver validada.
 
 ## Estado da entrega
 

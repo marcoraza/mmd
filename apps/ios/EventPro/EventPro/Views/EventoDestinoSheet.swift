@@ -34,7 +34,7 @@ struct EventoDestinoSheet: View {
             Button("Waze") { openNav(.waze) }
             Button("Cancelar", role: .cancel) {}
         } message: {
-            Text("Rota do \(GalpaoOrigem.nome) até o pin do evento.")
+            Text("Do \(GalpaoOrigem.nome) (\(GalpaoOrigem.endereco)) até o pin do evento.")
         }
     }
 
@@ -222,7 +222,7 @@ struct EventoDestinoSheet: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Como chegar")
                                 .font(EP.dadosForte())
-                            Text("Abrir no Waze, Google Maps ou Apple Maps")
+                            Text("\(GalpaoOrigem.endereco) → pin · Waze, Google, Apple")
                                 .font(EP.secondary())
                                 .foregroundStyle(EP.sub)
                         }

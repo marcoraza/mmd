@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01517C5EAF561C65AB58F268 /* MapMarkers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5266149FD4464955E1F70D0D /* MapMarkers.swift */; };
 		0E6D4DC09F0CCD6CA81741F0 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34B624C262D0FAE1F7769E0 /* LoginView.swift */; };
 		125EF64AF5AFB6F174FE1F53 /* ProjectDestinoDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572CB447A1FA5F0CD62E0B6A /* ProjectDestinoDecodingTests.swift */; };
 		178E95735388919328580592 /* AuthSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E86B6B2C9AA0F81EEA7F2D /* AuthSessionStore.swift */; };
@@ -62,6 +63,7 @@
 		400AE1F508DB6707F34B6D8F /* EventoDestino.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventoDestino.swift; sourceTree = "<group>"; };
 		4A7CF82140860AF56D61B4D4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4B8F2376E2FE466BB55B9A9F /* EventProTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = EventProTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5266149FD4464955E1F70D0D /* MapMarkers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapMarkers.swift; sourceTree = "<group>"; };
 		53F9F1BEA62896DA1A0F193E /* EventLocationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLocationViewModel.swift; sourceTree = "<group>"; };
 		572CB447A1FA5F0CD62E0B6A /* ProjectDestinoDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDestinoDecodingTests.swift; sourceTree = "<group>"; };
 		5CC8AC2D06EE8394B5D7F583 /* MapRouteCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapRouteCompositionTests.swift; sourceTree = "<group>"; };
@@ -117,6 +119,7 @@
 				1011F4DB53340F931C3C97F2 /* EventoDestinoSheet.swift */,
 				621864D4F091F0097D2241EA /* HomeView.swift */,
 				B34B624C262D0FAE1F7769E0 /* LoginView.swift */,
+				5266149FD4464955E1F70D0D /* MapMarkers.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -336,6 +339,7 @@
 				6D80A2367FD8AC74E6E21101 /* HomeViewModel.swift in Sources */,
 				D8A4CE822B645805D5DDE183 /* KeychainStore.swift in Sources */,
 				0E6D4DC09F0CCD6CA81741F0 /* LoginView.swift in Sources */,
+				01517C5EAF561C65AB58F268 /* MapMarkers.swift in Sources */,
 				72D646B75382222FD6962C4D /* MapNavigationLinks.swift in Sources */,
 				9DAEB7D7A9A2E2B3D7BF4D07 /* MapRouteComposition.swift in Sources */,
 				3824AC3AD629A78B7070E9A3 /* Movement.swift in Sources */,

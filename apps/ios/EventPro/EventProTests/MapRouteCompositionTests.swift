@@ -6,58 +6,63 @@ import XCTest
 final class MapRouteCompositionTests: XCTestCase {
 
     private let galpao = CLLocationCoordinate2D(latitude: -23.6177585, longitude: -46.7069985)
-    /// NE do galpão (Rosewood-ish).
-    private let destNE = CLLocationCoordinate2D(latitude: -23.5614, longitude: -46.6559)
-    /// SW do galpão.
-    private let destSW = CLLocationCoordinate2D(latitude: -23.6500, longitude: -46.7400)
+    private let rosewood = CLLocationCoordinate2D(latitude: -23.5614, longitude: -46.6559)
+    private let allianz = CLLocationCoordinate2D(latitude: -23.5275, longitude: -46.6785)
+    private let ibirapuera = CLLocationCoordinate2D(latitude: -23.5874, longitude: -46.6576)
 
-    func testAnchorsPreferBottomLeftToTopRightWhenDestIsNE() {
-        let a = MapRouteComposition.screenAnchors(from: galpao, to: destNE)
-        // origem embaixo-esquerda, destino em cima-direita
-        XCTAssertLessThan(a.origin.x, a.destination.x)
-        XCTAssertGreaterThan(a.origin.y, a.destination.y)
-        XCTAssertEqual(a.origin.x, MapRouteComposition.margin, accuracy: 0.001)
-        XCTAssertEqual(a.destination.x, 1 - MapRouteComposition.margin, accuracy: 0.001)
+    func testDifferentDestinationsProduceDifferentVariants() {
+        let a = MapRouteComposition.variantIndex(for: rosewood)
+        let b = MapRouteComposition.variantIndex(for: allianz)
+        let c = MapRouteComposition.variantIndex(for: ibirapuera)
+        // Pelo menos dois dos três destinos típicos devem divergir.
+        let unique = Set([a, b, c])
+        XCTAssertGreaterThanOrEqual(unique.count, 2)
     }
 
-    func testAnchorsFlipWhenDestIsSW() {
-        let a = MapRouteComposition.screenAnchors(from: galpao, to: destSW)
-        XCTAssertGreaterThan(a.origin.x, a.destination.x)
-        XCTAssertLessThan(a.origin.y, a.destination.y)
+    func testRouteShapesDifferByDestination() {
+        let r1 = MapRouteComposition.routeCoordinates(from: galpao, to: rosewood)
+        let r2 = MapRouteComposition.routeCoordinates(from: galpao, to: allianz)
+        XCTAssertEqual(r1.first!.latitude, galpao.latitude, accuracy: 0.0000001)
+        XCTAssertEqual(r2.first!.latitude, galpao.latitude, accuracy: 0.0000001)
+        XCTAssertEqual(r1.last!.latitude, rosewood.latitude, accuracy: 0.0000001)
+        XCTAssertEqual(r2.last!.latitude, allianz.latitude, accuracy: 0.0000001)
+
+        // Ponto médio das curvas não coincide (variação natural).
+        let m1 = r1[r1.count / 2]
+        let m2 = r2[r2.count / 2]
+        let sameMid = abs(m1.latitude - m2.latitude) < 0.0003
+            && abs(m1.longitude - m2.longitude) < 0.0003
+        XCTAssertFalse(sameMid, "curvas de destinos diferentes não devem coincidir no meio")
     }
 
-    func testRegionKeepsBothPointsInsideWithMargin() {
-        let region = MapRouteComposition.region(origin: galpao, destination: destNE)
-        assertInside(galpao, region: region)
-        assertInside(destNE, region: region)
-
-        // Pontos não colados no centro: ocupam boa parte do card (como mockup).
-        let latSpan = region.span.latitudeDelta
-        let dLat = abs(destNE.latitude - galpao.latitude)
-        XCTAssertGreaterThan(latSpan, dLat * 1.15)
-        XCTAssertLessThan(latSpan, dLat * 4.5)
-    }
-
-    func testRouteHasArcSamplesFromOriginToDest() {
-        let points = MapRouteComposition.routeCoordinates(from: galpao, to: destNE, samples: 20)
-        XCTAssertEqual(points.count, 21)
-        XCTAssertEqual(points.first!.latitude, galpao.latitude, accuracy: 0.0000001)
-        XCTAssertEqual(points.last!.latitude, destNE.latitude, accuracy: 0.0000001)
-
-        // Ponto do meio desvia da reta (arco).
+    func testRouteHasVisibleArcNotStraightLine() {
+        let points = MapRouteComposition.routeCoordinates(from: galpao, to: rosewood)
         let mid = points[points.count / 2]
-        let straightLat = (galpao.latitude + destNE.latitude) / 2
-        let straightLng = (galpao.longitude + destNE.longitude) / 2
+        let straightLat = (galpao.latitude + rosewood.latitude) / 2
+        let straightLng = (galpao.longitude + rosewood.longitude) / 2
         let deviation = hypot(mid.latitude - straightLat, mid.longitude - straightLng)
-        XCTAssertGreaterThan(deviation, 0.0005)
+        XCTAssertGreaterThan(deviation, 0.0004)
     }
 
-    func testGalpaoHelpersDelegateToComposition() {
-        let region = GalpaoOrigem.region(containing: destNE)
-        assertInside(GalpaoOrigem.coordinate, region: region)
-        assertInside(destNE, region: region)
-        let route = GalpaoOrigem.routeCoordinates(to: destNE)
-        XCTAssertGreaterThan(route.count, 3)
+    func testDistanceKmIsPositiveAndRounded() {
+        let km = MapRouteComposition.displayKilometers(from: galpao, to: rosewood)
+        XCTAssertGreaterThanOrEqual(km, 1)
+        // Morumbi → Rosewood: ordem de ~8–12 km
+        XCTAssertLessThan(km, 40)
+    }
+
+    func testRegionContainsBothPoints() {
+        let region = MapRouteComposition.region(origin: galpao, destination: rosewood)
+        assertInside(galpao, region: region)
+        assertInside(rosewood, region: region)
+    }
+
+    func testRegionsDifferByDestination() {
+        let r1 = MapRouteComposition.region(origin: galpao, destination: rosewood)
+        let r2 = MapRouteComposition.region(origin: galpao, destination: allianz)
+        let sameCenter = abs(r1.center.latitude - r2.center.latitude) < 0.0002
+            && abs(r1.center.longitude - r2.center.longitude) < 0.0002
+        XCTAssertFalse(sameCenter, "enquadramentos de destinos diferentes devem divergir")
     }
 
     private func assertInside(_ point: CLLocationCoordinate2D, region: MKCoordinateRegion) {

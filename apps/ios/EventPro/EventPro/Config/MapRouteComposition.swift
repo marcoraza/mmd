@@ -1,193 +1,175 @@
-import CoreGraphics
 import CoreLocation
 import Foundation
 import MapKit
 
-// MARK: - Composição da rota no card (mockup Event Pro)
+// MARK: - Rota galpão → pin (visual do mockup, geografia real)
 //
-// Design ilustrativo (RotaVariante + HTML):
-// - origem no canto inferior esquerdo (~12–18% x, ~78–88% y)
-// - pin no canto superior direito (~78–86% x, ~16–30% y)
-// - curva diagonal com arco, gradiente branco origem→destino
-//
-// Com mapa real (norte para cima) escolhemos a diagonal natural da geografia
-// (mesmo espírito: pontos nos cantos com margem 16%, linha atravessando o card).
+// Mockup: 7 RotaVariante com curvas diferentes por evento + balão de km no pin.
+// Aqui a linha muda de verdade com o destino (direção, distância e variante
+// estável derivada das coords). O enquadramento é geográfico com padding,
+// não força todos os destinos no mesmo canto do card.
 
 enum MapRouteComposition {
-
-    /// Margem do card (mockup: pontos longe da borda).
-    static let margin: Double = 0.16
 
     /// Aspecto do card compacto (largura / altura 212).
     static let compactAspect: Double = 390.0 / 212.0
 
-    // MARK: - Região
+    /// Offsets de controle no espírito das 7 RotaVariante do mockup.
+    /// (along1, perp1, along2, perp2) em fração do vetor origem→destino.
+    private static let variantes: [(Double, Double, Double, Double)] = [
+        (0.28, 0.20, 0.72, -0.14),
+        (0.32, 0.12, 0.68, -0.20),
+        (0.24, 0.26, 0.76, -0.08),
+        (0.36, 0.10, 0.64, -0.22),
+        (0.30, 0.16, 0.70, -0.16),
+        (0.22, 0.28, 0.78, -0.06),
+        (0.27, 0.22, 0.73, -0.12),
+    ]
+
+    // MARK: - Distância
+
+    static func distanceMeters(
+        from origin: CLLocationCoordinate2D,
+        to destination: CLLocationCoordinate2D
+    ) -> CLLocationDistance {
+        CLLocation(latitude: origin.latitude, longitude: origin.longitude)
+            .distance(
+                from: CLLocation(
+                    latitude: destination.latitude,
+                    longitude: destination.longitude
+                )
+            )
+    }
+
+    static func distanceKilometers(
+        from origin: CLLocationCoordinate2D,
+        to destination: CLLocationCoordinate2D
+    ) -> Double {
+        distanceMeters(from: origin, to: destination) / 1000.0
+    }
+
+    /// Km exibido no balão (inteiro, mínimo 1 se houver pin distinto).
+    static func displayKilometers(
+        from origin: CLLocationCoordinate2D,
+        to destination: CLLocationCoordinate2D
+    ) -> Int {
+        let km = distanceKilometers(from: origin, to: destination)
+        if km < 0.5 { return 1 }
+        return max(1, Int(km.rounded()))
+    }
+
+    // MARK: - Região (geografia natural)
 
     static func region(
         origin: CLLocationCoordinate2D,
         destination: CLLocationCoordinate2D,
         aspectWidthOverHeight: Double = compactAspect
     ) -> MKCoordinateRegion {
-        let anchors = screenAnchors(from: origin, to: destination)
-        let oS = anchors.origin
-        let dS = anchors.destination
+        let minLat = min(origin.latitude, destination.latitude)
+        let maxLat = max(origin.latitude, destination.latitude)
+        let minLng = min(origin.longitude, destination.longitude)
+        let maxLng = max(origin.longitude, destination.longitude)
 
-        let dy = dS.y - oS.y
-        let dx = dS.x - oS.x
-
-        // Mapeamento MapKit (norte no topo):
-        // lat(y) = center.lat + latDelta/2 - y * latDelta
-        // lng(x) = center.lng - lngDelta/2 + x * lngDelta
-        var latDelta: Double
-        var lngDelta: Double
-
-        if abs(dy) > 0.001 {
-            latDelta = (origin.latitude - destination.latitude) / dy
-        } else {
-            latDelta = max(abs(origin.latitude - destination.latitude) * 2.6, 0.014)
-        }
-
-        if abs(dx) > 0.001 {
-            lngDelta = (destination.longitude - origin.longitude) / dx
-        } else {
-            lngDelta = max(abs(origin.longitude - destination.longitude) * 2.6, 0.014)
-        }
-
-        latDelta = max(abs(latDelta), 0.014)
-        lngDelta = max(abs(lngDelta), 0.014)
-
-        // Centro a partir da âncora da origem.
-        let centerLat = origin.latitude - latDelta / 2 + oS.y * latDelta
-        let centerLng = origin.longitude + lngDelta / 2 - oS.x * lngDelta
-        var region = MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: centerLat, longitude: centerLng),
-            span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
+        // Centro levemente puxado pro destino (pin é o herói, como no mockup).
+        let center = CLLocationCoordinate2D(
+            latitude: origin.latitude * 0.42 + destination.latitude * 0.58,
+            longitude: origin.longitude * 0.42 + destination.longitude * 0.58
         )
 
-        // Se o destino caiu fora (sinal/float), expande o span mantendo o centro.
-        region = expandSpanIfNeeded(region, points: [origin, destination], edgePadding: 0.04)
+        let rawLat = max(maxLat - minLat, 0.008)
+        let rawLng = max(maxLng - minLng, 0.008)
+        // Padding generoso: linha e balão não colam na borda.
+        var latDelta = rawLat * 2.15
+        var lngDelta = rawLng * 2.15
 
-        // Aspecto do card (evita linha esmagada).
-        region = applyAspect(region, widthOverHeight: aspectWidthOverHeight)
-        region = expandSpanIfNeeded(region, points: [origin, destination], edgePadding: 0.04)
+        let aspect = max(aspectWidthOverHeight, 0.5)
+        let cosLat = max(cos(center.latitude * .pi / 180), 0.2)
+        let visualW = lngDelta * cosLat
+        let visualH = latDelta
+        if visualW / visualH < aspect {
+            lngDelta = (aspect * visualH) / cosLat
+        } else {
+            latDelta = visualW / aspect
+        }
 
-        return region
+        // Garante que os dois pontos cabem com folga.
+        latDelta = max(latDelta, abs(destination.latitude - origin.latitude) * 2.0 + 0.01)
+        lngDelta = max(lngDelta, abs(destination.longitude - origin.longitude) * 2.0 + 0.01)
+        latDelta = max(latDelta, 0.018)
+        lngDelta = max(lngDelta, 0.018)
+
+        return MKCoordinateRegion(
+            center: center,
+            span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: lngDelta)
+        )
     }
 
-    // MARK: - Curva da linha
+    // MARK: - Curva (varia com o destino)
 
-    /// Polyline em arco (Bezier amostrado), no espírito do path Q do mockup.
+    /// Índice estável 0..<7 a partir do destino (cada local tem “sua” curva).
+    static func variantIndex(for destination: CLLocationCoordinate2D) -> Int {
+        let h = abs(destination.latitude * 7919.13 + destination.longitude * 104_729.17)
+        let scaled = Int((h * 10_000).rounded(.towardZero))
+        return abs(scaled) % variantes.count
+    }
+
+    /// Polyline cúbica amostrada; forma muda com direção, distância e variante.
     static func routeCoordinates(
         from origin: CLLocationCoordinate2D,
         to destination: CLLocationCoordinate2D,
-        samples: Int = 28
+        samples: Int = 32
     ) -> [CLLocationCoordinate2D] {
-        let count = max(samples, 8)
-        let midLat = (origin.latitude + destination.latitude) / 2
-        let midLng = (origin.longitude + destination.longitude) / 2
+        let count = max(samples, 12)
         let vLat = destination.latitude - origin.latitude
         let vLng = destination.longitude - origin.longitude
         let len = max(sqrt(vLat * vLat + vLng * vLng), 0.00001)
-        // Arco ~22% do comprimento (mockup midX+8 / midY-10 em card 100).
-        let bow = 0.22
-        let control = CLLocationCoordinate2D(
-            latitude: midLat + (-vLng / len) * len * bow,
-            longitude: midLng + (vLat / len) * len * bow
+        let nLat = -vLng / len
+        let nLng = vLat / len
+
+        let variant = variantes[variantIndex(for: destination)]
+        let km = distanceKilometers(from: origin, to: destination)
+        // Distâncias longas: arco um pouco mais aberto; curtas: mais contido.
+        let distanceScale = min(max(km / 28.0, 0.55), 1.65)
+
+        let (a1, p1, a2, p2) = variant
+        let c1 = CLLocationCoordinate2D(
+            latitude: origin.latitude + vLat * a1 + nLat * len * p1 * distanceScale,
+            longitude: origin.longitude + vLng * a1 + nLng * len * p1 * distanceScale
+        )
+        let c2 = CLLocationCoordinate2D(
+            latitude: origin.latitude + vLat * a2 + nLat * len * p2 * distanceScale,
+            longitude: origin.longitude + vLng * a2 + nLng * len * p2 * distanceScale
         )
 
         var points: [CLLocationCoordinate2D] = []
         points.reserveCapacity(count + 1)
         for i in 0...count {
             let t = Double(i) / Double(count)
-            let u = 1 - t
-            let lat = u * u * origin.latitude
-                + 2 * u * t * control.latitude
-                + t * t * destination.latitude
-            let lng = u * u * origin.longitude
-                + 2 * u * t * control.longitude
-                + t * t * destination.longitude
-            points.append(CLLocationCoordinate2D(latitude: lat, longitude: lng))
+            points.append(cubic(t: t, p0: origin, p1: c1, p2: c2, p3: destination))
         }
         return points
     }
 
-    // MARK: - Âncoras de tela
+    // MARK: - Bezier cúbico
 
-    /// Cantos com margem 16% na diagonal natural origem→destino.
-    static func screenAnchors(
-        from origin: CLLocationCoordinate2D,
-        to destination: CLLocationCoordinate2D
-    ) -> (origin: (x: Double, y: Double), destination: (x: Double, y: Double)) {
-        let m = margin
-        let f = 1 - margin
-        let dLat = destination.latitude - origin.latitude
-        let dLng = destination.longitude - origin.longitude
-
-        // x cresce a leste; y de tela cresce ao sul.
-        let originX = dLng >= 0 ? m : f
-        let destX = dLng >= 0 ? f : m
-        // Destino ao norte → origem embaixo (y alto), destino em cima (y baixo).
-        let originY = dLat >= 0 ? f : m
-        let destY = dLat >= 0 ? m : f
-
-        return (
-            origin: (originX, originY),
-            destination: (destX, destY)
-        )
-    }
-
-    // MARK: - Helpers
-
-    /// Expande o span se algum ponto estiver perto demais da borda; mantém o centro.
-    private static func expandSpanIfNeeded(
-        _ region: MKCoordinateRegion,
-        points: [CLLocationCoordinate2D],
-        edgePadding: Double
-    ) -> MKCoordinateRegion {
-        let c = region.center
-        var latHalf = region.span.latitudeDelta / 2
-        var lngHalf = region.span.longitudeDelta / 2
-        let padLat = max(region.span.latitudeDelta * edgePadding, 0.001)
-        let padLng = max(region.span.longitudeDelta * edgePadding, 0.001)
-
-        for p in points {
-            latHalf = max(latHalf, abs(p.latitude - c.latitude) + padLat)
-            lngHalf = max(lngHalf, abs(p.longitude - c.longitude) + padLng)
-        }
-
-        return MKCoordinateRegion(
-            center: c,
-            span: MKCoordinateSpan(
-                latitudeDelta: max(latHalf * 2, 0.014),
-                longitudeDelta: max(lngHalf * 2, 0.014)
-            )
-        )
-    }
-
-    private static func applyAspect(
-        _ region: MKCoordinateRegion,
-        widthOverHeight: Double
-    ) -> MKCoordinateRegion {
-        let aspect = max(widthOverHeight, 0.5)
-        let cosLat = max(cos(region.center.latitude * .pi / 180), 0.2)
-        var latDelta = region.span.latitudeDelta
-        var lngDelta = region.span.longitudeDelta
-        let visualWidth = lngDelta * cosLat
-        let visualHeight = max(latDelta, 0.00001)
-        let currentAspect = visualWidth / visualHeight
-
-        if currentAspect < aspect {
-            lngDelta = (aspect * visualHeight) / cosLat
-        } else {
-            latDelta = visualWidth / aspect
-        }
-
-        return MKCoordinateRegion(
-            center: region.center,
-            span: MKCoordinateSpan(
-                latitudeDelta: max(latDelta, 0.014),
-                longitudeDelta: max(lngDelta, 0.014)
-            )
-        )
+    private static func cubic(
+        t: Double,
+        p0: CLLocationCoordinate2D,
+        p1: CLLocationCoordinate2D,
+        p2: CLLocationCoordinate2D,
+        p3: CLLocationCoordinate2D
+    ) -> CLLocationCoordinate2D {
+        let u = 1 - t
+        let uu = u * u
+        let tt = t * t
+        let lat = uu * u * p0.latitude
+            + 3 * uu * t * p1.latitude
+            + 3 * u * tt * p2.latitude
+            + tt * t * p3.latitude
+        let lng = uu * u * p0.longitude
+            + 3 * uu * t * p1.longitude
+            + 3 * u * tt * p2.longitude
+            + tt * t * p3.longitude
+        return CLLocationCoordinate2D(latitude: lat, longitude: lng)
     }
 }

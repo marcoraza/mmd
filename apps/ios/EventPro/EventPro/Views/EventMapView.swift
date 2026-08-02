@@ -3,10 +3,8 @@ import SwiftUI
 
 // MARK: - Mapa real da aba Eventos
 //
-// Card compacto full bleed com cartografia MapKit. Passivo: o arrasto
-// horizontal troca Eventos; pan/zoom do mapa ficam na superfície expandida.
-// Origem fixa no galpão + linha até o pin. Sem km/ETA e sem localização do
-// funcionário.
+// Card 212pt full bleed, MapKit passivo (carrossel horizontal).
+// Galpão → pin com curva que varia por destino, pin + balão de km do mockup.
 
 private func wrapIndex(_ i: Int, _ n: Int) -> Int {
     guard n > 0 else { return 0 }
@@ -34,11 +32,11 @@ struct MapaHome: View {
         GeometryReader { geo in
             let w = geo.size.width
             HStack(spacing: 0) {
-                slot(for: wrapIndex(shownSeed - 1, count))
+                slot(for: wrapIndex(shownSeed - 1, count), width: w)
                     .frame(width: w)
-                slot(for: shownSeed)
+                slot(for: shownSeed, width: w)
                     .frame(width: w)
-                slot(for: wrapIndex(shownSeed + 1, count))
+                slot(for: wrapIndex(shownSeed + 1, count), width: w)
                     .frame(width: w)
             }
             .offset(x: -w + dragX)
@@ -76,20 +74,24 @@ struct MapaHome: View {
             return "Mapa do evento"
         }
         let evento = eventos[shownSeed]
-        if evento.hasDestino {
-            return "Mapa real, \(evento.localDisplayName), pin definido"
+        if let pin = evento.destinoPin {
+            let km = MapRouteComposition.displayKilometers(
+                from: GalpaoOrigem.coordinate,
+                to: pin.coordinate
+            )
+            return "Mapa real, \(evento.localDisplayName), \(km) quilômetros do galpão"
         }
         return "Mapa, \(evento.localDisplayName), local ainda não definido"
     }
 
     @ViewBuilder
-    private func slot(for index: Int) -> some View {
+    private func slot(for index: Int, width: CGFloat) -> some View {
         if count == 0 {
-            DestinoMapSlot(evento: nil)
+            DestinoMapSlot(evento: nil, cardWidth: width)
         } else if eventos.indices.contains(index) {
-            DestinoMapSlot(evento: eventos[index])
+            DestinoMapSlot(evento: eventos[index], cardWidth: width)
         } else {
-            DestinoMapSlot(evento: nil)
+            DestinoMapSlot(evento: nil, cardWidth: width)
         }
     }
 
@@ -124,15 +126,16 @@ struct MapaHome: View {
     }
 }
 
-// MARK: - Slot de mapa (real ou vazio)
+// MARK: - Slot
 
 struct DestinoMapSlot: View {
     let evento: Project?
+    var cardWidth: CGFloat = 390
 
     var body: some View {
         ZStack {
             if let evento, let pin = evento.destinoPin {
-                CompactDestinoMap(pin: pin)
+                CompactDestinoMap(pin: pin, cardWidth: cardWidth)
             } else {
                 EmptyDestinoMap(
                     title: evento?.localDisplayName ?? "Agenda",
@@ -151,50 +154,61 @@ struct DestinoMapSlot: View {
     }
 }
 
-// MARK: - Mapa compacto MapKit (passivo)
+// MARK: - Mapa compacto MapKit
 
 private struct CompactDestinoMap: View {
     let pin: DestinoPin
+    var cardWidth: CGFloat = 390
+
+    private var origin: CLLocationCoordinate2D { GalpaoOrigem.coordinate }
 
     private var route: [CLLocationCoordinate2D] {
-        GalpaoOrigem.routeCoordinates(to: pin.coordinate)
+        MapRouteComposition.routeCoordinates(from: origin, to: pin.coordinate)
+    }
+
+    private var km: Int {
+        MapRouteComposition.displayKilometers(from: origin, to: pin.coordinate)
+    }
+
+    private var region: MKCoordinateRegion {
+        let aspect = max(cardWidth / MapaHome.altura, 0.5)
+        return MapRouteComposition.region(
+            origin: origin,
+            destination: pin.coordinate,
+            aspectWidthOverHeight: aspect
+        )
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let aspect = max(geo.size.width / max(geo.size.height, 1), 0.5)
-            let camera = GalpaoOrigem.region(
-                containing: pin.coordinate,
-                aspectWidthOverHeight: aspect
-            )
-            Map(initialPosition: .region(camera)) {
-                MapPolyline(coordinates: route)
-                    .stroke(
-                        .linearGradient(
-                            colors: [
-                                .white.opacity(0.18),
-                                .white.opacity(0.80),
-                                .white,
-                            ],
-                            startPoint: .bottomLeading,
-                            endPoint: .topTrailing
-                        ),
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
-                    )
+        Map(initialPosition: .region(region)) {
+            MapPolyline(coordinates: route)
+                .stroke(
+                    .linearGradient(
+                        colors: [
+                            .white.opacity(0.18),
+                            .white.opacity(0.80),
+                            .white,
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                )
 
-                Annotation(GalpaoOrigem.nome, coordinate: GalpaoOrigem.coordinate) {
-                    GalpaoOrigemDot()
-                }
-
-                Annotation("", coordinate: pin.coordinate) {
-                    DestinoPinDot()
-                }
+            Annotation(GalpaoOrigem.nome, coordinate: origin, anchor: .center) {
+                GalpaoOrigemDot()
             }
-            .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
-            .mapControls { }
-            .colorScheme(.dark)
-            .allowsHitTesting(false)
+
+            Annotation("", coordinate: pin.coordinate, anchor: .center) {
+                DestinoPinComBalao(km: km)
+            }
         }
+        .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+        .mapControls { }
+        .colorScheme(.dark)
+        .allowsHitTesting(false)
+        // id força recarregar câmera/rota ao trocar de evento no carrossel
+        .id("\(pin.latitude)-\(pin.longitude)")
     }
 }
 
@@ -207,7 +221,6 @@ private struct EmptyDestinoMap: View {
     var body: some View {
         ZStack {
             EP.mapBase
-            // Textura sutil no lugar da cartografia inventada.
             LinearGradient(
                 colors: [
                     Color.white.opacity(0.04),
@@ -235,36 +248,7 @@ private struct EmptyDestinoMap: View {
     }
 }
 
-// MARK: - Pin branco com halo (composição preservada)
-
-struct DestinoPinDot: View {
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(.white.opacity(0.14))
-                .frame(width: 22, height: 22)
-            Circle()
-                .fill(.white)
-                .frame(width: 10, height: 10)
-        }
-    }
-}
-
-// MARK: - Origem no galpão (círculo base + aro branco do design)
-
-struct GalpaoOrigemDot: View {
-    var body: some View {
-        Circle()
-            .fill(EP.mapBase)
-            .frame(width: 11, height: 11)
-            .overlay(
-                Circle()
-                    .strokeBorder(.white, lineWidth: 2.5)
-            )
-    }
-}
-
-// MARK: - Mapa expandido (edição estilo Uber + linha do galpão)
+// MARK: - Mapa expandido (edição Uber + linha + km)
 
 struct ExpandedDestinoMap: View {
     let pin: DestinoPin?
@@ -285,8 +269,9 @@ struct ExpandedDestinoMap: View {
         if let pin {
             _position = State(
                 initialValue: .region(
-                    GalpaoOrigem.region(
-                        containing: pin.coordinate,
+                    MapRouteComposition.region(
+                        origin: GalpaoOrigem.coordinate,
+                        destination: pin.coordinate,
                         aspectWidthOverHeight: 1.15
                     )
                 )
@@ -304,26 +289,36 @@ struct ExpandedDestinoMap: View {
     var body: some View {
         ZStack {
             Map(position: $position) {
-                Annotation(GalpaoOrigem.nome, coordinate: GalpaoOrigem.coordinate) {
+                Annotation(GalpaoOrigem.nome, coordinate: GalpaoOrigem.coordinate, anchor: .center) {
                     GalpaoOrigemDot()
                 }
 
                 if let pin, !isEditing {
-                    MapPolyline(coordinates: GalpaoOrigem.routeCoordinates(to: pin.coordinate))
-                        .stroke(
-                            .linearGradient(
-                                colors: [
-                                    .white.opacity(0.18),
-                                    .white.opacity(0.80),
-                                    .white,
-                                ],
-                                startPoint: .bottomLeading,
-                                endPoint: .topTrailing
-                            ),
-                            style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                    MapPolyline(
+                        coordinates: MapRouteComposition.routeCoordinates(
+                            from: GalpaoOrigem.coordinate,
+                            to: pin.coordinate
                         )
-                    Annotation("", coordinate: pin.coordinate) {
-                        DestinoPinDot()
+                    )
+                    .stroke(
+                        .linearGradient(
+                            colors: [
+                                .white.opacity(0.18),
+                                .white.opacity(0.80),
+                                .white,
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                    )
+                    Annotation("", coordinate: pin.coordinate, anchor: .center) {
+                        DestinoPinComBalao(
+                            km: MapRouteComposition.displayKilometers(
+                                from: GalpaoOrigem.coordinate,
+                                to: pin.coordinate
+                            )
+                        )
                     }
                 }
             }
@@ -342,8 +337,9 @@ struct ExpandedDestinoMap: View {
                 guard !isEditing, let newPin else { return }
                 withAnimation(EP.pinViaja) {
                     position = .region(
-                        GalpaoOrigem.region(
-                            containing: newPin.coordinate,
+                        MapRouteComposition.region(
+                            origin: GalpaoOrigem.coordinate,
+                            destination: newPin.coordinate,
                             aspectWidthOverHeight: 1.15
                         )
                     )

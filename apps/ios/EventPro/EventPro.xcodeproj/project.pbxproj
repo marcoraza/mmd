@@ -26,6 +26,7 @@
 		7CC83FB46C749FA1B7D1871C /* EventLocationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53F9F1BEA62896DA1A0F193E /* EventLocationViewModel.swift */; };
 		8B3326A3A8886F7849CFBDFC /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 621864D4F091F0097D2241EA /* HomeView.swift */; };
 		91D99BBCF3BF67672825B5AF /* InterTight-VF.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A286F1A99B5838765B8EFFE9 /* InterTight-VF.ttf */; };
+		9DAEB7D7A9A2E2B3D7BF4D07 /* MapRouteComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D8315DD8843DB094984EDE /* MapRouteComposition.swift */; };
 		C0115A15727A16BDFD279AF6 /* ResolvedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C9E2F0C74501FD3A7CF30AA /* ResolvedItem.swift */; };
 		C57C8C05A7C9FC7BF6428934 /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2FFE2A442F7986345E469F /* Tokens.swift */; };
 		CD201B1DA4E4AA3978140E48 /* ColorOKLCH.swift in Sources */ = {isa = PBXBuildFile; fileRef = C151C8B6B80F596D01D34672 /* ColorOKLCH.swift */; };
@@ -38,6 +39,7 @@
 		EA13AABF8DA44C7CD5A84715 /* GalpaoOrigem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3F0AE25479BA606100F915 /* GalpaoOrigem.swift */; };
 		F306B5FD3ABED8CEEB950CD5 /* MapNavigationLinksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789FEC6107A65B6C0FE0D185 /* MapNavigationLinksTests.swift */; };
 		F564026287A4D33388BF7E6C /* DestinoPersisting.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4162C5021760A6DF48E3BEC /* DestinoPersisting.swift */; };
+		FBC1F7C6A09C4C4CB9932DC8 /* MapRouteCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC8AC2D06EE8394B5D7F583 /* MapRouteCompositionTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +64,7 @@
 		4B8F2376E2FE466BB55B9A9F /* EventProTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = EventProTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		53F9F1BEA62896DA1A0F193E /* EventLocationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLocationViewModel.swift; sourceTree = "<group>"; };
 		572CB447A1FA5F0CD62E0B6A /* ProjectDestinoDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDestinoDecodingTests.swift; sourceTree = "<group>"; };
+		5CC8AC2D06EE8394B5D7F583 /* MapRouteCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapRouteCompositionTests.swift; sourceTree = "<group>"; };
 		621864D4F091F0097D2241EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		6C9E2F0C74501FD3A7CF30AA /* ResolvedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolvedItem.swift; sourceTree = "<group>"; };
 		6E437804C16B79BCDD4342CC /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
@@ -70,6 +73,7 @@
 		86568BD8CC7DD4EAAFBF6126 /* EventMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventMapView.swift; sourceTree = "<group>"; };
 		8F080E9044054364F2F81CEC /* EventLocationViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLocationViewModelTests.swift; sourceTree = "<group>"; };
 		905B910AD5B5BC9F1C3EE840 /* EventPro.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = EventPro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		92D8315DD8843DB094984EDE /* MapRouteComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapRouteComposition.swift; sourceTree = "<group>"; };
 		A286F1A99B5838765B8EFFE9 /* InterTight-VF.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InterTight-VF.ttf"; sourceTree = "<group>"; };
 		A3E86B6B2C9AA0F81EEA7F2D /* AuthSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSessionStore.swift; sourceTree = "<group>"; };
 		AD59C6B96F694D6520DC1452 /* UpdateEventoDestinoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateEventoDestinoTests.swift; sourceTree = "<group>"; };
@@ -153,6 +157,7 @@
 			children = (
 				8F080E9044054364F2F81CEC /* EventLocationViewModelTests.swift */,
 				789FEC6107A65B6C0FE0D185 /* MapNavigationLinksTests.swift */,
+				5CC8AC2D06EE8394B5D7F583 /* MapRouteCompositionTests.swift */,
 				2D40940F2287218D777F5EB0 /* MockURLProtocol.swift */,
 				572CB447A1FA5F0CD62E0B6A /* ProjectDestinoDecodingTests.swift */,
 				AD59C6B96F694D6520DC1452 /* UpdateEventoDestinoTests.swift */,
@@ -220,6 +225,7 @@
 			children = (
 				81057443EDC088E6B6CD9D81 /* AppConfig.swift */,
 				BC3F0AE25479BA606100F915 /* GalpaoOrigem.swift */,
+				92D8315DD8843DB094984EDE /* MapRouteComposition.swift */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -331,6 +337,7 @@
 				D8A4CE822B645805D5DDE183 /* KeychainStore.swift in Sources */,
 				0E6D4DC09F0CCD6CA81741F0 /* LoginView.swift in Sources */,
 				72D646B75382222FD6962C4D /* MapNavigationLinks.swift in Sources */,
+				9DAEB7D7A9A2E2B3D7BF4D07 /* MapRouteComposition.swift in Sources */,
 				3824AC3AD629A78B7070E9A3 /* Movement.swift in Sources */,
 				1DC7ACE150EF3CD3571DB7A7 /* PackingListItem.swift in Sources */,
 				7ABBF0D809151EA4E1F343D6 /* PlaceSearching.swift in Sources */,
@@ -347,6 +354,7 @@
 			files = (
 				6AF70299E081B2DF7BDFFEF0 /* EventLocationViewModelTests.swift in Sources */,
 				F306B5FD3ABED8CEEB950CD5 /* MapNavigationLinksTests.swift in Sources */,
+				FBC1F7C6A09C4C4CB9932DC8 /* MapRouteCompositionTests.swift in Sources */,
 				1B47ACC9581D63D6D719843F /* MockURLProtocol.swift in Sources */,
 				125EF64AF5AFB6F174FE1F53 /* ProjectDestinoDecodingTests.swift in Sources */,
 				1F71CD94B93AD130DC603121 /* UpdateEventoDestinoTests.swift in Sources */,

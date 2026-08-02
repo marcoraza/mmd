@@ -161,37 +161,40 @@ private struct CompactDestinoMap: View {
     }
 
     var body: some View {
-        Map(initialPosition: .region(region)) {
-            MapPolyline(coordinates: route)
-                .stroke(
-                    .linearGradient(
-                        colors: [
-                            .white.opacity(0.22),
-                            .white.opacity(0.75),
-                            .white,
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
-                    style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
-                )
+        GeometryReader { geo in
+            let aspect = max(geo.size.width / max(geo.size.height, 1), 0.5)
+            let camera = GalpaoOrigem.region(
+                containing: pin.coordinate,
+                aspectWidthOverHeight: aspect
+            )
+            Map(initialPosition: .region(camera)) {
+                MapPolyline(coordinates: route)
+                    .stroke(
+                        .linearGradient(
+                            colors: [
+                                .white.opacity(0.18),
+                                .white.opacity(0.80),
+                                .white,
+                            ],
+                            startPoint: .bottomLeading,
+                            endPoint: .topTrailing
+                        ),
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+                    )
 
-            Annotation(GalpaoOrigem.nome, coordinate: GalpaoOrigem.coordinate) {
-                GalpaoOrigemDot()
-            }
+                Annotation(GalpaoOrigem.nome, coordinate: GalpaoOrigem.coordinate) {
+                    GalpaoOrigemDot()
+                }
 
-            Annotation("", coordinate: pin.coordinate) {
-                DestinoPinDot()
+                Annotation("", coordinate: pin.coordinate) {
+                    DestinoPinDot()
+                }
             }
+            .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+            .mapControls { }
+            .colorScheme(.dark)
+            .allowsHitTesting(false)
         }
-        .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
-        .mapControls { }
-        .colorScheme(.dark)
-        .allowsHitTesting(false)
-    }
-
-    private var region: MKCoordinateRegion {
-        GalpaoOrigem.region(containing: pin.coordinate)
     }
 }
 
@@ -280,7 +283,14 @@ struct ExpandedDestinoMap: View {
         self.isEditing = isEditing
         self.onCameraIdle = onCameraIdle
         if let pin {
-            _position = State(initialValue: .region(GalpaoOrigem.region(containing: pin.coordinate)))
+            _position = State(
+                initialValue: .region(
+                    GalpaoOrigem.region(
+                        containing: pin.coordinate,
+                        aspectWidthOverHeight: 1.15
+                    )
+                )
+            )
         } else {
             _position = State(initialValue: .region(
                 MKCoordinateRegion(
@@ -301,7 +311,15 @@ struct ExpandedDestinoMap: View {
                 if let pin, !isEditing {
                     MapPolyline(coordinates: GalpaoOrigem.routeCoordinates(to: pin.coordinate))
                         .stroke(
-                            .white.opacity(0.85),
+                            .linearGradient(
+                                colors: [
+                                    .white.opacity(0.18),
+                                    .white.opacity(0.80),
+                                    .white,
+                                ],
+                                startPoint: .bottomLeading,
+                                endPoint: .topTrailing
+                            ),
                             style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
                         )
                     Annotation("", coordinate: pin.coordinate) {
@@ -322,7 +340,14 @@ struct ExpandedDestinoMap: View {
             .allowsHitTesting(isEditing)
             .onChange(of: pin) { _, newPin in
                 guard !isEditing, let newPin else { return }
-                position = .region(GalpaoOrigem.region(containing: newPin.coordinate))
+                withAnimation(EP.pinViaja) {
+                    position = .region(
+                        GalpaoOrigem.region(
+                            containing: newPin.coordinate,
+                            aspectWidthOverHeight: 1.15
+                        )
+                    )
+                }
             }
 
             if isEditing {

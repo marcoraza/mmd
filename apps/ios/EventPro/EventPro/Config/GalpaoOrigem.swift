@@ -52,33 +52,20 @@ enum GalpaoOrigem {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
-    /// Pontos da linha galpão → destino (curva leve, sem MKDirections).
+    /// Linha galpão → destino com curva de composição (mockup).
     static func routeCoordinates(to destination: CLLocationCoordinate2D) -> [CLLocationCoordinate2D] {
-        let origin = coordinate
-        let mid = CLLocationCoordinate2D(
-            latitude: (origin.latitude + destination.latitude) / 2
-                + (destination.longitude - origin.longitude) * 0.06,
-            longitude: (origin.longitude + destination.longitude) / 2
-                - (destination.latitude - origin.latitude) * 0.06
-        )
-        return [origin, mid, destination]
+        MapRouteComposition.routeCoordinates(from: coordinate, to: destination)
     }
 
-    /// Região que enquadra origem e destino com margem.
-    static func region(containing destination: CLLocationCoordinate2D) -> MKCoordinateRegion {
-        let origin = coordinate
-        let minLat = min(origin.latitude, destination.latitude)
-        let maxLat = max(origin.latitude, destination.latitude)
-        let minLng = min(origin.longitude, destination.longitude)
-        let maxLng = max(origin.longitude, destination.longitude)
-        let center = CLLocationCoordinate2D(
-            latitude: (minLat + maxLat) / 2,
-            longitude: (minLng + maxLng) / 2
+    /// Região do card: origem e pin nos cantos com margem, como no mockup.
+    static func region(
+        containing destination: CLLocationCoordinate2D,
+        aspectWidthOverHeight: Double = MapRouteComposition.compactAspect
+    ) -> MKCoordinateRegion {
+        MapRouteComposition.region(
+            origin: coordinate,
+            destination: destination,
+            aspectWidthOverHeight: aspectWidthOverHeight
         )
-        let span = MKCoordinateSpan(
-            latitudeDelta: max((maxLat - minLat) * 1.7, 0.02),
-            longitudeDelta: max((maxLng - minLng) * 1.7, 0.02)
-        )
-        return MKCoordinateRegion(center: center, span: span)
     }
 }

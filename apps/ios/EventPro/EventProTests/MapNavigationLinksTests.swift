@@ -40,9 +40,9 @@ final class MapNavigationLinksTests: XCTestCase {
         XCTAssertTrue(url.contains("navigate=yes"))
     }
 
-    func testGalpaoRouteHasThreePoints() {
+    func testGalpaoRouteStartsAndEndsAtEndpoints() {
         let points = GalpaoOrigem.routeCoordinates(to: dest)
-        XCTAssertEqual(points.count, 3)
+        XCTAssertGreaterThan(points.count, 8)
         XCTAssertEqual(points.first!.latitude, GalpaoOrigem.latitude, accuracy: 0.00001)
         XCTAssertEqual(points.last!.latitude, dest.latitude, accuracy: 0.00001)
     }

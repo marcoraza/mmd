@@ -4,6 +4,76 @@
 > agora vive em `apps/ios/EventPro/` (commit `fa4d2b1`, build verde, app loga).
 > **Material da barra: opção 1, tinta cheia** (pílula `#171718`, texto em `paper`,
 > ícone apagado `#85858A`), escolhida pelo Marco. Seção 4 resolvida.
+> **Decisão reaberta e substituída em 2026-08-01:** `9A · Paridade`. O dock separa
+> três destinos de navegação de um gatilho físico do leitor. Navegação renderizada
+> com `236,8 × 58 pt`, ação `58 × 58 pt`, gap de `8 pt`. O gatilho não expande
+> "Ler tag" nem abre menu. Ele entra direto na superfície dedicada `Identificar`,
+> com conexão e bateria do RFD40, contagem ao vivo e leitura acionada pelo gatilho
+> físico ou pelo controle na tela. A superfície reembala, sem descartar, a anatomia
+> já construída no legado: contador hero, feed de EPCs, Limpar, Resolver, resultados
+> identificados e tag sem cadastro com `Vincular`. `Etiquetar` pertence ao Catálogo
+> ou ao resultado de tag desconhecida; `Conferir` pertence ao fluxo do Evento.
+> **Round 37 mantém travada a lista 4, `Compact`, junto do scanner `Halo`.** O fluxo
+> final
+> abre um half-sheet de 72% da altura, preservando parte do Halo em contexto. A lista
+> fecha apenas pelo arrasto da pega, sem botão ou seta. O título usa hierarquia leve:
+> `Itens identificados` em medium e a contagem como apoio discreto. Cada linha mantém
+> nome, área, código MMD e número da tag, organizados em três zonas: estado, identidade
+> e tag. Pesos regular/medium, metadados em mono pequeno, separadores finos e espaço
+> substituem cards e negrito excessivo.
+> **Round 39 trava a `Index Line` da Round 38 como base do gatilho.** Superfície
+> plana, duas hairlines e estrutura horizontal não mudam. `Quantity`, `Sentence`,
+> `Review`, `Live State` e `Technical Index` exploram somente a hierarquia e a copy
+> interna. O sheet agora abre por toque ou arrasto para cima a partir do gatilho. No
+> arrasto, a posição acompanha o dedo em relação 1:1, inclusive quando o gesto inverte
+> antes de soltar. Distância e velocidade decidem se completa a abertura ou retorna.
+> O fechamento mantém a pega como único controle e aplica a mesma manipulação direta
+> para baixo, com retorno reversível.
+> **Round 40 trava a opção 4, `Live State`, como conteúdo final do gatilho.** O estado
+> `Leitura ativa` e o apoio `RFID em andamento` ficam à esquerda. O glifo do ledger
+> ocupa uma zona curta de ação e o contador `36` termina a margem direita, sem o
+> rótulo redundante `itens`, em SF Pro Display com peso 390. O sheet não usa mais
+> fade durante o deslocamento: mantém massa opaca, anima apenas por `translate3d` e
+> transfere a profundidade para um backdrop progressivo. A curva de chegada usa
+> `cubic-bezier(.22,.78,.18,1)` e a duração considera distância restante e velocidade.
+> **Round 41 mantém `Live State` e o motion travados, e explora apenas affordance.**
+> `Terminal`, `Count First`, `Direct Open`, `Ledger Key` e `Edge Stack` variam a
+> posição do `36`, o glifo de lista e a explicitude do comando. `Ledger Key` é a
+> recomendação atual: um endcap fosco reúne glifo e contador como tecla discreta sem
+> transformar a Index Line numa cápsula. Nenhuma das cinco foi escolhida ainda. O
+> protótipo abre em `Terminal`, com a lista fechada.
+> **Round 42 remove todo o texto operacional do gatilho e explora elevação.** As cinco
+> opções mantêm apenas chevron para cima, glifo de lista e contador `36`: `Lift Card`,
+> `Pull Tab`, `Drawer Lip`, `Split Rise` e `Floating Index`. Sombra em camadas,
+> highlight superior e compressão no toque separam o controle do scanner e comunicam
+> que a lista sobe. O motion de toque e arrasto continua compartilhado com o
+> half-sheet travado. Nenhuma opção foi escolhida ainda; o protótipo abre em
+> `Lift Card`, com a lista fechada.
+> **Round 43 trava a opção 5 da rodada anterior, `Floating Index`.** O contador sai
+> da tecla, que passa a ter `88 × 58 pt` e duas zonas simétricas para chevron e
+> glifo de lista. As cinco alternativas agora exploram somente a posição do `36`:
+> `Ring Index` no aro do Halo, `Core Footer` dentro do círculo, `Ledger Header` no
+> cabeçalho das leituras anteriores, `Ledger Footer` abaixo da lista curta e
+> `Margin Index` na margem entre Halo e ledger. Marco travou a opção 3,
+> `Ledger Header`: o contador passa a pertencer ao cabeçalho da lista curta, sem
+> ocupar o Halo nem voltar para a tecla. O protótipo abre nessa opção, com a lista
+> fechada.
+> **Round 44 mantém `Ledger Header` travado e retira a abertura do canto.** As cinco
+> opções centralizam a área de toque e arrasto na base da tela: `Grabber`, somente
+> uma barra com hit area invisível; `Chevron Key`, tecla circular; `Lift Pill`,
+> chevron e grabber em cápsula curta; `Lift Notch`, borda elevada; e `Soft Dock`,
+> handle sobre material translúcido. Marco travou a opção 1, `Grabber`. A pega do
+> half-sheet agora recolhe a lista por arrasto para baixo ou duplo clique. O scanner
+> deixa de fechar por wipe circular e desce como uma folha inteira em 520 ms. O
+> fechamento limpa `list-open`, estilos de gesto e backdrop antes da transição.
+> Também foi removido um `</div>` extra que deixava o dock fora de `.app` e impedia
+> as regras `v9a` de definir cápsula, espaçamento e botão RFID quadrado.
+> O primeiro duplo clique ainda criava três settles concorrentes: cada clique
+> agendava retorno para `0` e o `dblclick` agendava a descida. Um timer antigo
+> limpava o `transform` no meio, fazendo o sheet descer, voltar e cair de novo.
+> `ligarDrawerDrag()` agora mantém um único `settleTimer`, cancela o anterior no
+> novo gesto e preserva o frame corrente. A trajetória medida ficou monotônica até
+> os 652 px de saída.
 > **Plano da seção 8 executado até o passo 5** (commits `c4c08b4`, `7fcdc77`,
 > `8512360`): Tokens.swift na lei clara e a tela do grill implementada (mapa
 > ilustrativo com carrossel e pin viajando, agenda, barra opção 1, Ajustes no

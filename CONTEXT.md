@@ -18,6 +18,26 @@ _Avoid_: dados demo, fixtures
 Leitura de tags reais em equipamentos ou lotes usando leitor Zebra em campo.
 _Avoid_: tela RFID, RFID simulado
 
+**Etiquetar**:
+Gestão da associação entre uma tag RFID com EPC já gravado e uma unidade rastreável. Inclui vincular, substituir, desvincular, impedir duplicidade e registrar autoria da alteração.
+_Avoid_: programar EPC, gravar tag virgem, bloquear memória da tag
+
+**Operação RFID**:
+Conjunto completo de ações de estoque feitas no app com o RFD40: conectar, reconectar e desconectar o leitor; exibir bateria, gatilho, falhas e estado real; identificar unidades; etiquetar; conferir saída e retorno; localizar uma unidade por proximidade; resolver tags desconhecidas ou duplicadas.
+_Avoid_: manutenção do leitor, atualização de firmware, configuração de Wi-Fi, ajuste manual de antena
+
+**Identificar**:
+Operação RFID global para ler várias tags, resolver unidades progressivamente e abrir a ficha de qualquer resultado, sem movimentar estoque.
+_Avoid_: check-out implícito, tela de gestão do leitor, leitura simulada
+
+**Localizar**:
+Operação RFID de proximidade para encontrar uma unidade etiquetada. Pode partir de qualquer ficha de unidade ou de uma pendência, sem alterar o estado da unidade. Quando existir pendência, a resolução exige confirmação humana e registro da localização.
+_Avoid_: radar simulado, marcar como encontrado apenas por receber sinal, tela autônoma de item perdido
+
+**Workspace Localizar**:
+Experiência focada em tela cheia para procurar uma unidade enquanto a pessoa se movimenta pelo galpão. Mostra unidade, última localização, proximidade real com resposta visual, háptica e sonora, além da confirmação humana de encontro.
+_Avoid_: sheet pequena, scanner geral, medidor apenas decorativo
+
 **MVP operacional real**:
 Versão pronta para uso com estoque verdadeiro, acesso controlado, app instalado em aparelho e leitor RFID físico validado em campo.
 _Avoid_: demo completa, protótipo, mock
@@ -102,6 +122,26 @@ _Avoid_: reserva externa, terceirizado
 Conferência de que a packing list está atendida antes do equipamento sair para o evento.
 _Avoid_: checklist do evento, checklist manual genérico
 
+**Conferência de saída**:
+Workspace único e retomável do Evento que salva as leituras automaticamente e mostra o que já foi conferido, o que falta e o que precisa de revisão.
+_Avoid_: separar por veículo, criar cargas, exigir uma sequência de recibos
+
+**Check-out físico**:
+Transação que registra a saída das unidades efetivamente conferidas por RFID, QR Code ou confirmação manual. Apenas unidades presentes na conferência mudam para EM_CAMPO.
+_Avoid_: mover toda a alocação por presunção, usar o scanner apenas como animação, marcar unidade ausente como saída
+
+**Revisar**:
+Camada única de exceções da leitura atual. Reúne itens fora da lista, tags desconhecidas, conflitos e unidades indisponíveis sem interromper o scanner.
+_Avoid_: modal por erro, tela separada para cada exceção, bloquear toda a leitura
+
+**Recibo operacional**:
+Registro persistente de uma escrita confirmada pelo backend, com unidades, método, operador, horário e motivo quando houver exceção.
+_Avoid_: overlay genérico de sucesso, confirmação antes do ACK, histórico apenas visual
+
+**Corte visual**:
+Rodada comparável de cinco opções para uma única tela, estado ou componente, mantendo função e dados constantes enquanto varia hierarquia, composição, tipografia, espaçamento, gesto e motion.
+_Avoid_: cinco produtos diferentes, implementação final sem validação, showcase desconectado do fluxo
+
 **Conferência de retorno**:
 Conferência das unidades próprias depois do evento, marcando se voltaram OK, com problema ou não voltaram.
 _Avoid_: check-in genérico, inventário completo
@@ -124,6 +164,23 @@ _Avoid_: financeiro completo, contrato jurídico gerado pelo sistema
 - **Dados reais** exigem controle de acesso antes de uso público
 - **RFID fisico** depende de tags reais, leitor real e teste em campo
 - **RFID fisico** só é aprovado quando RFD40 pareia no iPhone, lê pelo menos 5 tags reais, resolve essas tags nos **Dados reais** e muda status via check-out/check-in
+- **Etiquetar** opera EPCs já presentes nas tags e não programa nem bloqueia a memória física da tag
+- **Etiquetar** permite vincular, substituir e desvincular uma tag, rejeita associação duplicada e registra quem realizou a alteração
+- **Etiquetar** parte da ficha de uma unidade ou de uma tag desconhecida encontrada por **Identificar** ou por uma Conferência
+- Mover uma tag entre unidades ou substituir a tag atual acontece como uma única transação auditada
+- Toda **Operação RFID** da rotina da MMD acontece no app
+- **Operação RFID** não inclui manutenção técnica do RFD40, atualização de firmware, configuração de Wi-Fi nem ajuste manual de antena
+- O app tenta reconectar o último RFD40 confiável apenas quando uma **Operação RFID** começa
+- O gatilho físico só lê enquanto um workspace RFID está ativo; pressionar inicia e soltar pausa
+- Perda de conexão pausa a leitura, preserva o rascunho e oferece QR Code ou confirmação manual quando o contexto permitir
+- **Identificar** é a única entrada RFID global; **Etiquetar**, **Localizar** e as Conferências aparecem no contexto da unidade ou do Evento
+- Tags desconhecidas não interrompem **Identificar** nem a Conferência e podem abrir **Etiquetar** com o EPC já preenchido
+- **Localizar** fica disponível em qualquer unidade etiquetada e não cria, por si só, uma pendência
+- Unidade ausente na **Conferência de retorno** ou marcada manualmente como não localizada fica **Pendente de resolução**
+- **Localizar** uma unidade **Pendente de resolução** exige confirmação humana de que ela foi encontrada e registro da localização para encerrar a pendência
+- A interface de **Localizar** preserva e evolui o medidor de proximidade do app legado, agora alimentado por sinal real e adaptado ao sistema visual atual
+- **Workspace Localizar** ocupa a tela inteira, mantém a ação de encontro acessível e retorna ao perfil ou à pendência de origem ao fechar
+- **Workspace Localizar** responde à proximidade com sinais visual, háptico e sonoro progressivos
 - Um **MVP operacional real** inclui **Dados reais** e **RFID fisico**, não apenas telas demonstráveis
 - Um **MVP operacional real** exige web com auth, iOS instalado em aparelho, RFD40 pareado lendo tags reais e check-out/check-in gravando em **Dados reais**
 - O primeiro **MVP operacional real** deve rodar em **Produção real pública**
@@ -150,8 +207,29 @@ _Avoid_: financeiro completo, contrato jurídico gerado pelo sistema
 - Falta de estoque próprio pode ser resolvida com **Aluguel avulso**
 - **Aluguel avulso** entra como linha da **Packing list**, sem virar patrimônio da MMD
 - **Checklist de saída** bate quando todos os itens da **Packing list** têm quantidade atendida por unidade própria ou **Aluguel avulso** resolvido
-- **Usuário admin** pode forçar saída com **Checklist de saída** incompleto, registrando motivo
+- **Equipe operacional** pode confirmar saída incompleta, registrando um motivo curto
+- A **Conferência de saída** é única por Evento, salva progresso automaticamente, pode ser fechada e retomada
+- A **Conferência de saída** não modela veículos nem cargas separadas
+- **Check-out físico** usa a lista de unidades conferidas como fonte de verdade da saída
+- **Check-out físico** usa RFID como método principal e QR Code como fallback por unidade
+- Confirmação manual no **Check-out físico** exige selecionar a unidade exata, registrar motivo e identificar o método no recibo
+- **Check-out físico** não permite confirmar todas as unidades nem fazer inclusão manual em massa
+- Unidade alocada e não conferida não muda para EM_CAMPO
+- Unidade disponível do mesmo Item substitui automaticamente o serial alocado e registra a troca
+- Unidade de Item fora do packing entra em **Revisar** com as ações Adicionar e Ignorar
+- Unidade indisponível, em conflito ou com tag desconhecida entra em **Revisar**
+- Exceções não pausam nem cobrem a lista durante a leitura
+- Confirmação incompleta pela **Equipe operacional** fica auditada, mas não cria leitura nem registra saída de unidade ausente
+- Unidades restantes podem ser adicionadas depois pela mesma **Conferência de saída**
+- O **Recibo operacional** do **Check-out físico** registra unidades, método de conferência, operador, horário e eventual motivo
+- Toda nova superfície visual passa por um **Corte visual** com cinco opções antes de entrar na implementação final
+- Marco escolhe uma opção, a próxima rodada parte apenas da base escolhida, e a superfície é travada antes de avançar
+- Uma superfície travada só volta a variar quando Marco reabre explicitamente a decisão
+- Backend, contratos, modelos e testes podem avançar em paralelo aos **Cortes visuais**
+- Decisão técnica não pode encerrar antecipadamente uma escolha visual que ainda não foi validada
 - Na **Conferência de retorno**, cada unidade própria fica como voltou OK, voltou com problema ou não voltou
+- Unidade lida na **Conferência de retorno** começa como voltou OK; a **Equipe operacional** só toca nas exceções
+- Marcar voltou com problema exige condição e observação curta; unidade esperada não lida vira **Pendente de resolução**
 - Unidade que voltou com problema muda para manutenção e recebe observação vinculada ao evento de retorno
 - Unidade que não voltou fica **Pendente de resolução**, não baixa imediata
 - Marcelo resolve **Pendente de resolução**, decidindo se a unidade foi encontrada, virou manutenção, virou baixa ou gera cobrança
@@ -189,3 +267,10 @@ _Avoid_: financeiro completo, contrato jurídico gerado pelo sistema
 - "cadastro" foi resolvido como **Ficha de evento** quando usado sem complemento. Cadastro de equipamento deve ser chamado de **Identificação mínima da unidade** ou ficha interna, conforme o caso.
 - "lote de cabo" conflitou entre documentação antiga e código novo. Resolvido: cabos novos devem ser **Unidade rastreável**; lotes existentes são **Lote legado**.
 - "apagar lote" foi resolvido como **Remoção de lotes**, não apenas esconder da operação ou arquivar.
+- "etiquetar" foi resolvido como **Etiquetar**, a gestão auditável da associação entre EPC existente e unidade rastreável, sem programação física da memória da tag.
+- "todo o manuseio RFID" foi resolvido como **Operação RFID**, cobrindo a rotina operacional completa no app e excluindo manutenção técnica do leitor.
+- "item perdido" foi separado em **Localizar**, a ação de busca, e **Pendente de resolução**, o estado operacional que precisa de decisão humana.
+- "check-out" foi resolvido como **Check-out físico**, cuja fonte de verdade são as unidades realmente conferidas e não toda a alocação presumida.
+- "erro de leitura" foi agrupado em **Revisar**, uma única camada de exceções que não interrompe o scanner.
+- "sucesso" de uma escrita foi resolvido como **Recibo operacional**, persistido apenas depois da confirmação do backend.
+- "cinco opções" foi resolvido como **Corte visual**, um gate iterativo e sequencial de validação para cada nova superfície.

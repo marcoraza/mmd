@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Event Pro 2.0 · Round 50 · Últimas movimentações</title>
+<title>Event Pro 2.0 · Round 54 · Evento na folha</title>
 <style>
   :root {
     --sans: "Inter Tight", -apple-system, "SF Pro Text", system-ui, sans-serif;
@@ -136,6 +136,176 @@
   .ev.on + .ev { border-top-color: transparent; }
   .ev.on .t { font-weight: 600; }
   .mk-pin { color: var(--ink2); flex: none; display: flex; align-items: center; }
+
+  /* ================= EVENTO · round 54 =================
+     Refeito do zero. A tela não é uma pilha de cartões flutuantes: é a mesma folha
+     de papel da Home, agrupada por categoria. Cada opção resolve o agrupamento por
+     estrutura diferente, não por skin diferente. */
+  .evtWrap {
+    --eo:  cubic-bezier(.23, 1, .32, 1);   /* entrar e sair */
+    --eio: cubic-bezier(.77, 0, .175, 1);  /* mover na tela */
+    --dur: .26s;                           /* colapso, abaixo dos 300ms de UI */
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .evtScroll { flex: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: 124px; }
+  .evtScroll::-webkit-scrollbar { display: none; }
+
+  /* ---- topo: métrica da Home, um degrau abaixo ---- */
+  .evtBack {
+    display: inline-flex; align-items: center; gap: 4px; height: 44px; padding: 0 10px;
+    margin-left: 12px; border-radius: 12px; cursor: pointer;
+    font: 500 14px var(--sans); letter-spacing: -.01em; color: var(--ink2);
+    transition: background .2s ease, transform .12s var(--eo);
+  }
+  .evtBack:active { transform: scale(.97); background: var(--paper2); }
+  .evtBack svg { width: 17px; height: 17px; fill: none; stroke: currentColor;
+                 stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .evtHead { padding: 2px 22px 0; }
+  .evtNome { font: 600 30px/1.06 var(--sans); letter-spacing: -.04em; }
+  .evtNome span { color: var(--ink3); }
+  /* texto operacional nesta tela fica em --sub (4.56:1), não em --ink3 (3.84:1), que reprova AA */
+  .evtSub { font: 400 13px var(--sans); letter-spacing: -.004em; color: var(--sub); margin-top: 9px; }
+  .evtSub b { font-weight: 600; color: var(--ink2); }
+  .evtTotal { margin: 15px 22px 0; height: 2px; border-radius: 1px; background: var(--linha); }
+  .evtTotal i { display: block; height: 100%; border-radius: 1px; background: var(--ink2);
+                transition: width .55s var(--eo); }
+
+  /* ---- casca comum dos grupos ---- */
+  .carga { margin-top: 26px; }
+  .grp { position: relative; }
+  .grpTop {
+    display: flex; align-items: center; gap: 12px; min-height: 48px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; position: relative;
+    transition: transform .13s var(--eo), background .2s ease;
+  }
+  .grpTop:active { transform: scale(.985); }
+  .gn { font: 600 16px var(--sans); letter-spacing: -.022em; }
+  .gq { margin-left: auto; font: 500 12px var(--mono); letter-spacing: .01em; color: var(--sub);
+        font-variant-numeric: tabular-nums; }
+  .gq b { font-weight: 600; color: var(--ink); }
+  .chev { width: 14px; height: 14px; flex: none; fill: none; stroke: var(--ink3); stroke-width: 1.9;
+          stroke-linecap: round; stroke-linejoin: round;
+          transition: transform var(--dur) var(--eio), stroke .2s ease; }
+  .grp.on .chev { transform: rotate(90deg); stroke: var(--ink2); }
+
+  .grpBody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur) var(--eio); }
+  .grp.on .grpBody { grid-template-rows: 1fr; }
+  .grpIn { overflow: hidden; min-height: 0; opacity: 0; transition: opacity .18s ease; }
+  .grp.on .grpIn { opacity: 1; transition-delay: .07s; }
+
+  /* ---- unidade: marca de leitura, nome, últimos quatro do código ---- */
+  .uni { display: flex; align-items: center; gap: 11px; min-height: 38px; padding: 4px 0; }
+  .uni .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font: 400 14px var(--sans); letter-spacing: -.008em; color: var(--sub); }
+  .uni.ok .n { font-weight: 500; color: var(--ink); }
+  /* a etiqueta só existe na linha lida: antes da leitura não há serial para mostrar */
+  .uni .tag { flex: none; font: 500 11px var(--mono); letter-spacing: .03em; color: var(--sub);
+              font-variant-numeric: tabular-nums; }
+  .mk { width: 16px; height: 16px; flex: none; position: relative; }
+  .mk svg { position: absolute; inset: 0; width: 16px; height: 16px; fill: none; stroke: var(--c);
+            stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+  .uni:not(.ok) .mk svg { display: none; }
+  .uni:not(.ok) .mk::after { content: ""; position: absolute; inset: 3px; border-radius: 50%;
+                             box-shadow: inset 0 0 0 1.2px #cbcac6; }
+  /* respiro do fim da lista vive na última linha, senão o padding aparece com o grupo fechado */
+  .grpIn .uni:last-child { padding-bottom: 20px; }
+
+  .acao { margin: 30px 22px 4px; height: 54px; border-radius: 16px; cursor: pointer;
+          background: var(--ink); color: var(--paper);
+          display: flex; align-items: center; justify-content: center;
+          font: 600 15px var(--sans); letter-spacing: -.015em;
+          box-shadow: 0 14px 30px rgba(20,22,26,.24), inset 0 0 0 .5px rgba(255,255,255,.1);
+          transition: transform .14s var(--eo), box-shadow .22s ease; }
+  .acao:active { transform: scale(.96);
+                 box-shadow: 0 5px 12px rgba(20,22,26,.2), inset 0 0 0 .5px rgba(255,255,255,.1); }
+
+  /* ---- 1 · Livro: seção de papel, cabeçalho que gruda, régua de tinta na borda ---- */
+  .evt1 .carga { padding: 0 22px; }
+  .evt1 .grpTop { position: sticky; top: 0; z-index: 2; padding: 8px 0 10px;
+                  background: var(--paper); box-shadow: 0 1px 0 var(--linha); }
+  .evt1 .grpTop::after { content: ""; position: absolute; left: 0; bottom: -1px; height: 1px;
+                         width: var(--p); background: var(--c); transition: width .55s var(--eo); }
+  /* a cor da categoria vive na régua, onde o mínimo é 3:1. Como texto de 11px ela reprovaria. */
+  .evt1 .sig { flex: none; width: 32px; font: 600 11px var(--mono); letter-spacing: .08em; color: var(--sub); }
+  .evt1 .gn { font-size: 15px; }
+  .evt1 .uni { padding-left: 44px; box-shadow: 0 1px 0 color-mix(in oklab, var(--linha) 55%, transparent); }
+  .evt1 .grpIn .uni:last-child { box-shadow: none; }
+  .evt1 .grp + .grp { margin-top: 4px; }
+
+  /* ---- 2 · Placa: o grupo aberto vira a placa escura do sistema ---- */
+  .evt2 .carga { padding: 0 16px; }
+  .evt2 .grp { border-radius: 24px; padding: 0 8px;
+               transition: background .3s var(--eo), box-shadow .3s var(--eo); }
+  .evt2 .grpTop { padding: 4px 8px; }
+  .evt2 .grp + .grp { margin-top: 2px; }
+  .evt2 .grp.on { padding-bottom: 6px; background: var(--ink); color: var(--paper);
+                  box-shadow: 0 22px 46px rgba(20,22,26,.3), inset 0 0 0 .5px rgba(255,255,255,.12); }
+  .evt2 .grp.on .chev { stroke: rgba(255,255,255,.5); }
+  .evt2 .grp.on .gq { color: rgba(255,255,255,.5); }
+  .evt2 .grp.on .gq b { color: var(--paper); }
+  .evt2 .grpIn { padding: 0 8px; }
+  .evt2 .grp.on .uni .n { color: rgba(255,255,255,.5); }
+  .evt2 .grp.on .uni.ok .n { color: var(--paper); }
+  .evt2 .grp.on .uni .tag { color: rgba(255,255,255,.5); }
+  .evt2 .grp.on .uni.ok .mk svg { stroke: color-mix(in oklab, var(--c) 45%, #fff); }
+  .evt2 .grp.on .uni:not(.ok) .mk::after { box-shadow: inset 0 0 0 1.2px rgba(255,255,255,.26); }
+  /* raio concêntrico: 24 externo, 16 de recuo, 8 na etiqueta interna */
+  .evt2 .sig { flex: none; font: 600 10px var(--mono); letter-spacing: .09em; padding: 5px 7px;
+               border-radius: 8px; background: color-mix(in oklab, var(--c) 13%, #fff);
+               color: color-mix(in oklab, var(--c) 80%, #17171a); transition: background .3s var(--eo); }
+  .evt2 .grp.on .sig { background: color-mix(in oklab, var(--c) 42%, #1e1e20);
+                       color: color-mix(in oklab, var(--c) 30%, #fff); }
+
+  /* ---- 3 · Trilho: o medidor é a coluna, e a tinta cobre as linhas já lidas ---- */
+  .evt3 .carga { padding: 0 22px; }
+  .evt3 .grp { padding-left: 24px; }
+  .evt3 .grp::before, .evt3 .grp::after { content: ""; position: absolute; left: 0; width: 3px;
+                                          border-radius: 2px; }
+  .evt3 .grp::before { top: 4px; bottom: 4px; background: var(--linha); }
+  .evt3 .grp::after { top: 4px; height: var(--p); background: var(--c);
+                      transition: height .55s var(--eo); }
+  .evt3 .gn { font-size: 15px; }
+  .evt3 .grp + .grp { margin-top: 6px; }
+  .evt3 .uni { padding-right: 2px; }
+
+  /* ---- 4 · Anel: o motivo de prontidão do sistema, cor concentrada em 32px ---- */
+  .evt4 .carga { padding: 0 22px; }
+  .evt4 .grpTop { gap: 13px; padding: 5px 0; }
+  .evt4 .grp + .grp .grpTop { box-shadow: 0 -1px 0 var(--linha); }
+  .evt4 .ring { width: 32px; height: 32px; flex: none; position: relative; }
+  .evt4 .ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .evt4 .ring .trk { stroke: var(--linha); }
+  .evt4 .ring .arc { stroke: var(--c); stroke-linecap: round;
+                     transition: stroke-dashoffset .7s var(--eo); }
+  /* miolo vazio: o nome da categoria já vive ao lado, e sigla de 9px encosta no arco */
+  .evt4 .ring .cheio { fill: var(--c); opacity: 0; transition: opacity .3s var(--eo); }
+  .evt4 .grp.full .ring .cheio { opacity: 1; }
+  .evt4 .gs { display: block; margin-top: 2px; font: 400 12px var(--sans); color: var(--sub); }
+  .evt4 .uni { padding-left: 45px; }
+
+  /* ---- 5 · Aba: papel sobre papel, com a sigla saindo na lombada ---- */
+  .evt5 .carga { padding: 0 22px; }
+  .evt5 .grp { background: #fbfaf8; border-radius: 18px; margin-top: 7px;
+               box-shadow: 0 1px 1px rgba(23,23,24,.04), 0 3px 8px -4px rgba(23,23,24,.14),
+                           0 0 0 .5px rgba(23,23,24,.06), inset 0 1px 0 #fff; }
+  .evt5 .grpTop { padding: 4px 14px; }
+  .evt5 .grpIn { padding: 0 14px; }
+  .evt5 .aba { flex: none; font: 600 10px var(--mono); letter-spacing: .09em; padding: 5px 7px;
+               border-radius: 8px; background: color-mix(in oklab, var(--c) 12%, #fff);
+               color: color-mix(in oklab, var(--c) 80%, #17171a); }
+  .evt5 .gn { font-size: 15px; }
+  .evt5 .med { height: 2px; border-radius: 1px; margin: 0 14px 10px;
+               background: color-mix(in oklab, var(--c) 14%, var(--linha)); }
+  .evt5 .med i { display: block; height: 100%; border-radius: 1px; background: var(--c);
+                 transition: width .55s var(--eo); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .evt1 .grpTop:hover .gn, .evt3 .grpTop:hover .gn, .evt4 .grpTop:hover .gn { color: var(--ink2); }
+    .evt2 .grp:not(.on):hover, .evt5 .grp:hover .grpTop { background: rgba(23,23,24,.02); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .evtWrap *, .evtWrap *::before, .evtWrap *::after { transition-duration: 1ms !important; }
+  }
 
   /* ================= BARRA ================= */
   .dock { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 20px 26px; display: flex; justify-content: center; z-index: 30; }
@@ -4194,10 +4364,48 @@ const ROUND25_OPCOES = [
     proporcao:"4,8 : 1", nav:"270 × 56", acao:"56 × 56", gap:"8 pt", abre:"Hub do leitor" },
 ];
 
+/* round 50 · travado. O corte do perfil e da lista identificada não depende mais
+   da rodada em avaliação: vive aqui e é lido direto por barraEl e updateReaderUI. */
+const CORTE = { key:"mono1", countPlace:"header", dragCue:true, list:true };
+
+/* round 54 · travado (Marco, 2026-08-04). A tela do evento é a opção 2 · Placa:
+   folha da Home, categoria fechada é linha, e só o grupo aberto vira a placa escura. */
+const CORTE_EVENTO = "evt2";
+
+/* round 54 · a tela deixa de ser pilha de cartão e volta a ser a folha da Home.
+   O que varia entre as cinco é a estrutura do agrupamento, não a skin. */
 const OPCOES = [
-  { key:"mono1", nome:"1 · Edge Rail", countPlace:"header", dragCue:true,
-    desc:"O scrollbar nativo sai da coluna da TAG e encosta na borda externa do sheet.",
-    list:true, abertura:"trilho externo", tipografia:"TAG intacta", ritmo:"14 px de respiro", superficie:"nativa" },
+  { key:"evt1", evento:true, nome:"1 · Livro",
+    desc:"Seções de um livro sobre a mesma folha. O cabeçalho da categoria gruda no topo enquanto a lista corre, e a régua de tinta na borda de baixo mede a fração conferida.",
+    tese:"o cabeçalho gruda, a régua mede", topo:"folha da Home", lista:"seção contínua", acao:"rodapé" },
+
+  { key:"evt2", evento:true, nome:"2 · Placa",
+    desc:"Fechada, a categoria é só uma linha na folha. Aberta, ela vira a placa escura do sistema, com raios concêntricos de 24, 16 e 8 e a sigla em etiqueta.",
+    tese:"só o grupo aberto ganha volume", topo:"folha da Home", lista:"linha que vira placa", acao:"rodapé" },
+
+  { key:"evt3", evento:true, nome:"3 · Trilho",
+    desc:"Uma coluna de 3px à esquerda de cada categoria. A tinta sobe pela coluna até a altura já conferida, então o progresso se lê na vertical, junto das linhas.",
+    tese:"o medidor é a margem", topo:"folha da Home", lista:"lista com trilho", acao:"rodapé" },
+
+  { key:"evt4", evento:true, nome:"4 · Anel",
+    desc:"O anel de prontidão do sistema em 32px, com o arco na cor da categoria e o miolo vazio até fechar, quando ganha um ponto cheio. Abaixo do nome, o estado em texto.",
+    tese:"cor concentrada no anel", topo:"folha da Home", lista:"lista com anel", acao:"rodapé" },
+
+  { key:"evt5", evento:true, nome:"5 · Aba",
+    desc:"Papel sobre papel: cada categoria é uma folha levemente elevada, com a sigla na lombada e um fio de 2px no pé do cabeçalho medindo o avanço.",
+    tese:"elevação mínima, uma camada só", topo:"folha da Home", lista:"folha sobre folha", acao:"rodapé" },
+];
+
+/* carga real do evento: 36 unidades do catálogo demo, 24 conferidas.
+   paleta rebaixada de propósito, para conviver com o papel sem virar arco-íris */
+const CARGA = [
+  { cat:"Iluminação", sig:"ILU", ok:6, c:"#b8702e" },
+  { cat:"Áudio",      sig:"AUD", ok:9, c:"#4a5f8f" },
+  { cat:"Cabo",       sig:"CAB", ok:2, c:"#4d7a6a" },
+  { cat:"Energia",    sig:"ENE", ok:4, c:"#9a7c26" },
+  { cat:"Vídeo",      sig:"VID", ok:3, c:"#7d5578" },
+  { cat:"Estrutura",  sig:"EST", ok:0, c:"#5c6470" },
+  { cat:"Efeito",     sig:"EFE", ok:0, c:"#a34f45" },
 ];
 
 const ledgerIcon = () => `<svg class="peekListIcon" viewBox="0 0 20 20" aria-hidden="true">
@@ -4396,7 +4604,7 @@ function equipmentProfileMarkup(option, item) {
 }
 
 const barraEl = (ativa) => {
-  const option = OPCOES[cur];
+  const option = CORTE;
   const profileItem = selectedEquipment || DEMO_EQUIPMENT[0];
   return `
   <div class="fade"></div>
@@ -4518,9 +4726,109 @@ const balaoEl = (i) => {
 };
 const slot = (i) => `<div class="slot">${mapSVG(i)}${balaoEl(i)}</div>`;
 
+const setaEsq = () => `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 4.5 6.5 10l5.5 5.5"></path></svg>`;
+
+/* unidades da carga: a categoria filtra o catálogo demo e as primeiras contam como conferidas */
+const unidadesDe = (c) => {
+  const lista = DEMO_EQUIPMENT.filter(u => u.codigo.includes(`-${c.sig}-`));
+  return lista.map((u, i) => ({ ...u, ok: i < c.ok, c: c.c }));
+};
+const grupos = () => CARGA.map(c => {
+  const u = unidadesDe(c);
+  return { ...c, u, tot: u.length, feitas: u.filter(x => x.ok).length };
+}).filter(g => g.tot);
+const somaCarga = (gs) => gs.reduce((a, g) => ({ ok: a.ok + g.feitas, tot: a.tot + g.tot }), { ok: 0, tot: 0 });
+
+/* lida: marca de tinta e os quatro últimos do código. Não lida: só a marca vazia e o nome
+   apagado, porque o serial não existe na tela antes da leitura e placeholder ali é ruído. */
+const linhaUnidade = (u) => `
+  <div class="uni${u.ok ? " ok" : ""}">
+    <span class="mk"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.4 8.4 3 3 6.2-6.9"></path></svg></span>
+    <span class="n">${u.nome}</span>
+    ${u.ok ? `<span class="tag">${u.codigo.slice(-4)}</span>` : ""}
+  </div>`;
+
+const chevron = () => `<svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="m8 5 5 5-5 5"></path></svg>`;
+
+/* casca comum: o cabeçalho muda por opção, o corpo colapsável nunca muda.
+   --p é a fração conferida, lida pela régua da 1 e pela coluna da 3. */
+const grupoEl = (g, head) => `
+  <div class="grp${abertos.has(g.sig) ? " on" : ""}${g.feitas === g.tot ? " full" : ""}"
+       data-grp="${g.sig}" style="--c:${g.c};--p:${pct(g)}%">
+    ${head}
+    <div class="grpBody"><div class="grpIn">${g.u.map(linhaUnidade).join("")}</div></div>
+  </div>`;
+
+const quantidade = (g) => `<span class="gq"><b>${g.feitas}</b>/${g.tot}</span>`;
+const acaoEl = (r) => `<div class="acao">${r.ok ? "Retomar conferência" : "Iniciar conferência"}</div>`;
+
+/* cabeçalho e medidor da carta: o que muda entre as opções é só isto */
+const pct = (g) => Math.round(100 * g.feitas / g.tot);
+const medidor = (g) => `<div class="med"><i style="width:${pct(g)}%"></i></div>`;
+
+/* anel de prontidão em 32px: r=13.5, circunferência 84.82, arco cortado pelo offset */
+const RAIO = 13.5, VOLTA = 2 * Math.PI * RAIO;
+const anel = (g) => `
+  <span class="ring">
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle class="trk" cx="16" cy="16" r="${RAIO}" fill="none" stroke-width="2.4"></circle>
+      <circle class="arc" cx="16" cy="16" r="${RAIO}" fill="none" stroke-width="2.4"
+              stroke-dasharray="${VOLTA.toFixed(2)}"
+              stroke-dashoffset="${(VOLTA * (1 - g.feitas / g.tot)).toFixed(2)}"></circle>
+      <circle class="cheio" cx="16" cy="16" r="4"></circle>
+    </svg>
+  </span>`;
+
+const estadoTexto = (g) => g.feitas === g.tot ? "conferida"
+  : g.feitas ? `faltam ${g.tot - g.feitas}` : "não iniciada";
+
+/* o cabeçalho é a única coisa que muda entre as cinco opções.
+   1 e 2 dividem o mesmo markup: a sigla vira coluna de texto ou etiqueta só no CSS. */
+function cartaHead(o, g) {
+  if (o.key === "evt3") return `
+    <div class="grpTop"><span class="gn">${g.cat}</span>${quantidade(g)}${chevron()}</div>`;
+
+  if (o.key === "evt4") return `
+    <div class="grpTop">
+      ${anel(g)}
+      <span><span class="gn">${g.cat}</span><span class="gs">${estadoTexto(g)}</span></span>
+      ${quantidade(g)}${chevron()}
+    </div>`;
+
+  if (o.key === "evt5") return `
+    <div class="grpTop">
+      <span class="aba">${g.sig}</span><span class="gn">${g.cat}</span>${quantidade(g)}${chevron()}
+    </div>${medidor(g)}`;
+
+  return `
+    <div class="grpTop">
+      <span class="sig">${g.sig}</span><span class="gn">${g.cat}</span>${quantidade(g)}${chevron()}
+    </div>`;
+}
+
+function eventoScreen(o, e) {
+  const gs = grupos();
+  const r = somaCarga(gs);
+
+  return `<div class="evtWrap"><div class="evtScroll">
+    <div class="evtBack" data-evt-back>${setaEsq()}Eventos</div>
+    <div class="evtHead">
+      <div class="evtNome">${e.nome}<br><span>${e.local}</span></div>
+      <div class="evtSub">${e.data} · <b>${r.ok} de ${r.tot}</b> unidades conferidas</div>
+    </div>
+    <div class="evtTotal"><i style="width:${Math.round(100 * r.ok / r.tot)}%"></i></div>
+    <div class="carga">${gs.map(g => grupoEl(g, cartaHead(o, g))).join("")}</div>
+    ${acaoEl(r)}
+  </div></div>`;
+}
+
 function tela(sel, o, aba) {
   const e = EVENTOS[sel];
-  return statusbar() + `<div class="app v9a readerSplit list4 ${o.key}"><div class="scroll" id="scroll">
+  if (eventoOpen) {
+    return statusbar() + `<div class="app v9a readerSplit list4 mono1 ${o.key}">
+      ${eventoScreen(o, e)}${barraEl(aba)}</div>`;
+  }
+  return statusbar() + `<div class="app v9a readerSplit list4 mono1 ${o.key}"><div class="scroll" id="scroll">
     <div class="pad" style="padding-top:4px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
         <div style="flex:1;min-width:0">
@@ -4566,12 +4874,14 @@ const contraste = (a, b) => {
   return (Math.max(l1, l2) + .05) / (Math.min(l1, l2) + .05);
 };
 
-let cur = 0, sel = 0, aba = "eventos", busy = false, readerOpen = false;
+let cur = OPCOES.findIndex(o => o.key === CORTE_EVENTO), sel = 0, aba = "eventos", busy = false, readerOpen = false;
 let readerScreenOpen = false, readerScanning = false;
 let readerCount = 0, readerTimer = null, readerListOpen = false, readerCloseTimer = null;
 let itemProfileOpen = true, selectedEquipment = null;
 let profileResumeScanning = false, profileReturnListOpen = true;
 let profileDataState = "data";
+let eventoOpen = true;
+const abertos = new Set(["ILU"]);
 const DEMO_EQUIPMENT = [
   { nome:"Moving Head Wash", codigo:"MMD-ILU-0042" },
   { nome:"Mesa de Som Digital", codigo:"MMD-AUD-0007" },
@@ -4685,7 +4995,7 @@ function renderLockedHalo(scanned) {
   }
   const latest = scanned.at(-1);
   const previous = scanned.slice(0, -1).reverse().slice(0, 5);
-  const countPlace = OPCOES[cur].countPlace;
+  const countPlace = CORTE.countPlace;
   const ringCount = countPlace === "ring"
     ? `<div class="scanCount ringCount"><b>${scanned.length}</b></div>` : "";
   const coreCount = countPlace === "core"
@@ -4719,7 +5029,7 @@ function renderLockedHalo(scanned) {
 }
 
 function renderConcept(scanned) {
-  if (OPCOES[cur].list) return renderLockedHalo(scanned);
+  if (CORTE.list) return renderLockedHalo(scanned);
   if (!scanned.length) {
     const copy = [
       ["RFD40 pronto", "A varredura começa quando o gatilho físico é pressionado."],
@@ -4733,7 +5043,7 @@ function renderConcept(scanned) {
   }
   const latestIndex = scanned.length - 1;
   const latest = scanned[latestIndex];
-  if (OPCOES[cur].key === "scan1") {
+  if (CORTE.key === "scan1") {
     return `<div class="scannerLayout">
       <div class="scanCircle sweepCircle" data-reader-list>
         <i class="scanRing" style="--inset:17%;--alpha:.08"></i>
@@ -4747,7 +5057,7 @@ function renderConcept(scanned) {
         <strong>${latest.nome}</strong><code>${latest.codigo}</code></div>
     </div>`;
   }
-  if (OPCOES[cur].key === "scan2") {
+  if (CORTE.key === "scan2") {
     return `<div class="scannerLayout">
       <div class="scanCircle latestCircle focusSweepCircle" data-reader-list>
         <i class="scanRing" style="--inset:18%;--alpha:.07"></i>
@@ -4758,7 +5068,7 @@ function renderConcept(scanned) {
       </div>
     </div>`;
   }
-  if (OPCOES[cur].key === "scan3") {
+  if (CORTE.key === "scan3") {
     const history = scanned.slice(0, -1).reverse().slice(0, 2);
     return `<div class="scannerLayout">
       <div class="scanCircle latestCircle" data-reader-list>
@@ -4770,7 +5080,7 @@ function renderConcept(scanned) {
       <div class="compactHistory">${history.map((item, index) => scannerRow(item, scanned.length - index - 1)).join("")}</div>
     </div>`;
   }
-  if (OPCOES[cur].key === "scan4") {
+  if (CORTE.key === "scan4") {
     const previous = scanned.slice(0, -1).reverse().slice(0, 5);
     return `<div class="scannerLayout">
       <div class="scanCircle latestCircle haloCircle lockedHalo" data-reader-list>
@@ -4789,7 +5099,7 @@ function renderConcept(scanned) {
       </div>
     </div>`;
   }
-  if (OPCOES[cur].key === "scan5") {
+  if (CORTE.key === "scan5") {
     const previous = scanned.at(-2);
     return `<div class="scannerLayout">
       <div class="scanCircle latestCircle" data-reader-list>
@@ -5119,10 +5429,11 @@ function show(i) {
   cur = (i + OPCOES.length) % OPCOES.length;
   sel = 0; aba = "eventos"; busy = false; readerOpen = false;
   stopReaderDemo();
-  readerScreenOpen = true;
-  readerListOpen = true;
-  readerCount = DEMO_EQUIPMENT.length;
-  itemProfileOpen = true;
+  readerScreenOpen = false;
+  readerListOpen = false;
+  readerCount = 0;
+  itemProfileOpen = false;
+  eventoOpen = true;
   selectedEquipment = null;
   profileResumeScanning = false;
   profileReturnListOpen = true;
@@ -5136,7 +5447,7 @@ function show(i) {
   pName.textContent = o.nome;
   pDesc.textContent = o.desc;
   pIdx.textContent = `${cur + 1} / ${OPCOES.length}`;
-  picker.classList.toggle("proportion", Boolean(o.proporcao || o.popup || o.scanner || o.list || o.profile));
+  picker.classList.toggle("proportion", Boolean(o.proporcao || o.popup || o.scanner || o.list || o.profile || o.evento));
   [...pDots.children].forEach((d, j) => d.classList.toggle("on", j === cur));
 
   pEscada.innerHTML = ESCADA.map((c, j) =>
@@ -5148,6 +5459,15 @@ function show(i) {
       <div class="linha"><span class="k">contexto</span><span class="v">${o.contexto}</span></div>
       <div class="linha"><span class="k">motion</span><span class="v">${o.motion}</span></div>
       <div class="linha"><span class="k">densidade</span><span class="v">${o.densidade}</span></div>`;
+    return;
+  }
+
+  if (o.evento) {
+    pMedida.innerHTML = `
+      <div class="linha"><span class="k">tese</span><span class="v">${o.tese}</span></div>
+      <div class="linha"><span class="k">topo</span><span class="v">${o.topo}</span></div>
+      <div class="linha"><span class="k">lista</span><span class="v">${o.lista}</span></div>
+      <div class="linha"><span class="k">ação</span><span class="v">${o.acao}</span></div>`;
     return;
   }
 
@@ -5211,6 +5531,17 @@ function show(i) {
 }
 
 screen.addEventListener("click", (ev) => {
+  const evtBack = ev.target.closest("[data-evt-back]");
+  if (evtBack) { eventoOpen = false; paint(); return; }
+
+  const grupo = ev.target.closest("[data-grp]");
+  if (grupo) {
+    const sig = grupo.dataset.grp;
+    abertos.has(sig) ? abertos.delete(sig) : abertos.add(sig);
+    grupo.classList.toggle("on", abertos.has(sig));
+    return;
+  }
+
   const profileState = ev.target.closest("[data-profile-state]");
   if (profileState) {
     profileDataState = profileState.dataset.profileState;
@@ -5291,7 +5622,8 @@ screen.addEventListener("click", (ev) => {
   const hit = ev.target.closest("[data-i]");
   if (!hit || busy) return;
   const i = Number(hit.dataset.i);
-  if (Number.isNaN(i) || i === sel) return;
+  if (Number.isNaN(i)) return;
+  if (i === sel) { eventoOpen = true; paint(); return; }
   busy = true;
   const central = screen.querySelectorAll(".slot")[1];
   const mk = central.querySelector(".marker");
@@ -5332,5 +5664,5 @@ function fit() {
 }
 addEventListener("resize", fit); fit();
 
-show(0);
+show(cur);
 </script>

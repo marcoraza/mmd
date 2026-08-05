@@ -79,13 +79,18 @@ final class APIClient: ObservableObject {
 
     /// Postgres devolve ISO 8601 com fração de segundo e fuso,
     /// ex.: "2026-03-20T14:30:00.000000+00:00". Nem toda coluna tem fração.
-    private static let dateFormatterWithFraction: ISO8601DateFormatter = {
+    ///
+    /// `nonisolated(unsafe)`: a classe é @MainActor, mas estes formatters são
+    /// imutáveis e ISO8601DateFormatter é thread-safe por documentação. Sem a
+    /// anotação, o closure Sendable do decoder e os testes (não isolados) não
+    /// podem referenciá-los.
+    private nonisolated(unsafe) static let dateFormatterWithFraction: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f
     }()
 
-    private static let dateFormatterPlain: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let dateFormatterPlain: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime]
         return f
@@ -93,7 +98,8 @@ final class APIClient: ObservableObject {
 
     /// Decoder compartilhado. **Sem** `.convertFromSnakeCase`: cada modelo
     /// declara seus `CodingKeys`, e o contrato manda no nome da chave.
-    static func makeDecoder() -> JSONDecoder {
+    /// `nonisolated` para os testes poderem construir decoder fora do MainActor.
+    nonisolated static func makeDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()

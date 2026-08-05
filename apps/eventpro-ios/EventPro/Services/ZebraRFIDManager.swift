@@ -112,17 +112,24 @@ final class ZebraRFIDManager: NSObject, RFIDReaderProtocol {
 
     /// Só o que o EventPro consome. Proximidade multi-tag, wifi e temperatura
     /// ficam de fora de propósito: evento que ninguém lê é ruído no canal BT.
-    private static let eventMask: Int32 =
-        SRFID_EVENT_READER_APPEARANCE
-        | SRFID_EVENT_READER_DISAPPEARANCE
-        | SRFID_EVENT_SESSION_ESTABLISHMENT
-        | SRFID_EVENT_SESSION_TERMINATION
-        | SRFID_EVENT_MASK_READ
-        | SRFID_EVENT_MASK_STATUS
-        | SRFID_EVENT_MASK_TRIGGER
-        | SRFID_EVENT_MASK_BATTERY
-        | SRFID_EVENT_MASK_STATUS_OPERENDSUMMARY
-        | SRFID_EVENT_MASK_RADIOERROR
+    ///
+    /// Montada com `|=` passo a passo: a cadeia de `|` com dez constantes
+    /// importadas do Obj-C estoura o type-checker do Swift (erro "unable to
+    /// type-check this expression in reasonable time").
+    private static let eventMask: Int32 = {
+        var mask: Int32 = 0
+        mask |= Int32(SRFID_EVENT_READER_APPEARANCE)
+        mask |= Int32(SRFID_EVENT_READER_DISAPPEARANCE)
+        mask |= Int32(SRFID_EVENT_SESSION_ESTABLISHMENT)
+        mask |= Int32(SRFID_EVENT_SESSION_TERMINATION)
+        mask |= Int32(SRFID_EVENT_MASK_READ)
+        mask |= Int32(SRFID_EVENT_MASK_STATUS)
+        mask |= Int32(SRFID_EVENT_MASK_TRIGGER)
+        mask |= Int32(SRFID_EVENT_MASK_BATTERY)
+        mask |= Int32(SRFID_EVENT_MASK_STATUS_OPERENDSUMMARY)
+        mask |= Int32(SRFID_EVENT_MASK_RADIOERROR)
+        return mask
+    }()
 
     // MARK: - Init / deinit
 

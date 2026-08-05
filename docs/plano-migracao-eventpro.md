@@ -123,20 +123,32 @@ Princípios que valem para o plano inteiro:
 
 **Objetivo:** app de campo EventPro com RFID real pela primeira vez.
 
-**Execução:**
+**Restrição de contexto (assumida no plano):** o RFD40 e o iPhone de campo estão com o Marcelo, em outra cidade. O hardware só encontra o app na entrega. Portanto a fase se divide em 6a (tudo que valida sem hardware, feito remotamente) e 6b (validação física, feita com o Marcelo). O desenvolvimento inteiro roda em mock + simulador, que é exatamente o que a arquitetura de `RFIDReaderProtocol` + `MockRFIDManager` permite.
 
-1. **Pré-requisito bloqueante, iniciar já:** obter o Zebra iOS RFID SDK oficial com versão fixada, iPhone físico, RFD40, conta de dev com signing. Sem isso a fase inteira trava (o legado nunca teve o SDK no projeto).
+**Execução 6a (remota, sem hardware):**
+
+1. **Pré-requisito que não depende do hardware, iniciar já:** baixar o Zebra iOS RFID SDK oficial (versão fixada e vendorizada no repo) e configurar conta de dev com signing. O SDK compila sem leitor físico; só a leitura real depende do RFD40.
 2. Portar em bloco, sem reescrita: `RFIDReaderProtocol`, `MockRFIDManager`, `RFIDManager` (fachada), models (`SerialNumber`, `Equipment`, `Project`, `PackingListItem`), contratos de `Movement.swift`, `QRScanView` (adicionando checagem de permissão de câmera), núcleo HTTP do `APIClient` e a suíte de testes.
-3. Reescrever `ZebraRFIDManager` do zero contra os headers reais do SDK (prefixo `SRFID_`, não as constantes `CYCLOPSEVENT_*` inventadas do legado), com: potência de antena configurável (essencial para conferência por proximidade), RSSI e bateria expostos, batch mode, `deinit` limpo com desregistro de delegate, callbacks serializados em fila dedicada.
+3. Reescrever `ZebraRFIDManager` contra os headers reais do SDK (prefixo `SRFID_`, não as constantes `CYCLOPSEVENT_*` inventadas do legado), com: potência de antena configurável (essencial para conferência por proximidade), RSSI e bateria expostos, batch mode, `deinit` limpo com desregistro de delegate, callbacks serializados em fila dedicada. Sem hardware, o critério de aceite desta etapa é: **compila contra o SDK real** (o `#if canImport` passa a ser verdadeiro), cobre a superfície documentada da API e degrada com mensagem clara quando o leitor não está presente.
 4. Corrigir o bug de ordenação: preservar ordem de leitura das tags ou expor `lastReadTag` (a tela de vincular tag depende disso).
 5. Auth real: login Supabase no app, token em Keychain com refresh, fim do JWT colado em Ajustes.
 6. Aposentar os caminhos de escrita direta no PostgREST (`registerCheckout`, `registerReturn`, `linkTag` via PATCH); toda mutação via BFF. Home passa a consumir `GET /api/eventos/[id]/resumo`.
 7. Limpezas de projeto: `Info.plist` (`arm64` no lugar de `armv7`, validar strings MFi do RFD40 com a doc do SDK, remover chaves deprecadas), remover código de demo dos ViewModels, remover as duas gerações de UI antigas.
-8. Validação física em galpão: parear RFD40, ler tags reais, executar um checkout e um retorno completos de evento de teste.
+8. **TestFlight cedo e contínuo:** como o equipamento está com o cliente, o TestFlight vira o canal de validação antecipada. Assim que houver build instalável, o Marcelo pode parear o RFD40 no iPhone dele e testar leitura real guiado por chamada, antes da entrega presencial. Cada build de TestFlight sai com um roteiro curto de teste (parear, ler 5 tags, reportar o que apareceu na tela).
 
-**Gate de saída:** checkout e retorno reais via RFID em device físico, gravados no Supabase EventPro com operador correto; TestFlight instalável.
+**Gate de saída 6a:** build TestFlight instalável compilada contra o SDK real; todos os fluxos (checkout, retorno, vincular tag, conferência) completos em mock/simulador; suíte de testes verde.
 
-**Depende de:** contratos congelados (fase 4) + hardware/SDK (item 1).
+**Execução 6b (com o Marcelo, na entrega ou via TestFlight guiado):**
+
+1. Parear RFD40 real, confirmar descoberta MFi, bateria e RSSI aparecendo.
+2. Calibrar potência de antena no galpão real (leitura de bancada vs. leitura de galpão inteiro).
+3. Vincular tags reais a unidades reais, validar dedupe e ordem de leitura.
+4. Executar um checkout e um retorno completos de evento de teste via RFID, verificando `movimentacoes` e operador corretos no Supabase EventPro.
+5. Buffer de correção: reservar tempo na agenda da entrega para 1-2 iterações de fix com o hardware em mãos (bugs de MFi/potência só aparecem aí).
+
+**Gate de saída 6b (aceite da fase):** checkout e retorno reais via RFID em device físico, gravados no Supabase EventPro com operador correto.
+
+**Depende de:** contratos congelados (fase 4) para 6a; hardware com o Marcelo (entrega ou sessão remota guiada) para 6b.
 
 ---
 
@@ -171,7 +183,8 @@ Princípios que valem para o plano inteiro:
 
 | Risco | Mitigação no plano |
 |---|---|
-| SDK Zebra/hardware atrasar | Fase 6 item 1 começa junto com a fase 1; mock mantém desenvolvimento destravado |
+| Hardware só disponível na entrega (RFD40 e iPhone com o cliente, em outra cidade) | Fase 6 dividida em 6a/6b; SDK compilado sem hardware; TestFlight guiado com o Marcelo antecipa a validação física; buffer de correção na agenda da entrega |
+| SDK Zebra atrasar | Download do SDK começa junto com a fase 1; mock mantém desenvolvimento destravado |
 | Drift de contrato entre web e iOS | Contratos congelados e versionados na fase 4; iOS legado usado como teste de compatibilidade |
 | Migração de dados divergente | Dry-run em staging com relatório de paridade antes de produção |
 | Config de ambiente abrir admin sem login | Fallback eliminado na fase 3; checklist de env no deploy |

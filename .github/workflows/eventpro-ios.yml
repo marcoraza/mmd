@@ -1,0 +1,197 @@
+name: iOS
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "apps/eventpro-ios/**"
+      - ".github/workflows/eventpro-ios.yml"
+  pull_request:
+    paths:
+      - "apps/eventpro-ios/**"
+      - ".github/workflows/eventpro-ios.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-and-test:
+    name: Build e testes (simulador)
+    runs-on: macos-14
+    timeout-minutes: 40
+
+    env:
+      PROJECT_DIR: apps/eventpro-ios
+      SCHEME: EventPro
+      XCFRAMEWORK: apps/eventpro-ios/Vendor/ZebraRfidSdkFramework/ZebraRfidSdkFramework.xcframework
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # O default do runner (/Applications/Xcode.app) pode ser um Xcode mais
+      # antigo que os runtimes de simulador listados pelo simctl. Seleciona o
+      # Xcode mais novo instalado para o destino escolhido ser sempre válido.
+      - name: Seleciona o Xcode
+        run: |
+          set -euo pipefail
+          xcode_mais_novo=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Xcodes instalados:"
+          ls -d /Applications/Xcode*.app
+          echo "Selecionando: $xcode_mais_novo"
+          sudo xcode-select -s "$xcode_mais_novo"
+          xcodebuild -version
+          swift --version
+
+      # O SDK da Zebra é binário e vendorizado. Se ele perder a slice de
+      # simulador, o build de simulador para de exercitar o ZebraRFIDManager e
+      # o CI volta a provar só o caminho mock — que foi exatamente o buraco do
+      # app legado. Falha cedo e explícito.
+      - name: Confere a slice de simulador do SDK Zebra
+        run: |
+          set -euo pipefail
+          test -d "$XCFRAMEWORK" || {
+            echo "::error::xcframework da Zebra não encontrado em $XCFRAMEWORK"
+            exit 1
+          }
+
+          plist="$XCFRAMEWORK/Info.plist"
+          identifiers=$(/usr/libexec/PlistBuddy -c "Print :AvailableLibraries" "$plist" \
+            | grep -E "LibraryIdentifier" | sed 's/.*= //')
+          echo "Slices disponíveis:"
+          echo "$identifiers"
+
+          if ! echo "$identifiers" | grep -q "simulator"; then
+            echo "::error::O xcframework não tem slice de simulador. Ou volte a um binário universal, ou exclua o framework em simulador no project.yml e documente em apps/eventpro-ios/README.md."
+            exit 1
+          fi
+
+          echo "Arquiteturas da slice de simulador:"
+          lipo -info "$XCFRAMEWORK"/ios-arm64_x86_64-simulator/ZebraRfidSdkFramework.framework/ZebraRfidSdkFramework
+
+      - name: Instala o XcodeGen
+        run: |
+          brew update --quiet || true
+          brew install xcodegen
+          xcodegen --version
+
+      - name: Gera o projeto
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -euo pipefail
+          # O .xcodeproj não é versionado: sempre gerado a partir do project.yml.
+          xcodegen generate --spec project.yml
+          test -d EventPro.xcodeproj
+
+      # Escolhe um simulador de iPhone realmente instalado no runner, em vez de
+      # fixar "iPhone 15": a imagem do macos-14 muda de Xcode e o nome do
+      # aparelho some sem aviso.
+      - name: Escolhe o simulador
+        id: simulator
+        run: |
+          set -euo pipefail
+          xcrun simctl list devices available | sed -n '/^-- iOS/,$p' > /tmp/simuladores.txt
+          echo "Simuladores de iOS disponíveis:"
+          cat /tmp/simuladores.txt
+
+          linha=$(grep -E "^[[:space:]]+iPhone" /tmp/simuladores.txt | tail -1)
+          test -n "$linha" || {
+            echo "::error::Nenhum simulador de iPhone disponível neste runner"
+            exit 1
+          }
+
+          udid=$(echo "$linha" \
+            | grep -oE "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}" \
+            | head -1)
+          echo "Escolhido: $linha"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$udid" || true
+
+      - name: Build para teste
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -uo pipefail
+          mkdir -p build
+          # Log completo em arquivo (sem `-quiet`, porque a etapa seguinte
+          # procura o nome do arquivo Swift no log) e só o essencial no console.
+          # O `|| status=$?` é obrigatório: o runner injeta `bash -e`, e sem ele
+          # uma falha do xcodebuild mata o script antes de imprimir o log.
+          status=0
+          xcodebuild build-for-testing \
+            -project EventPro.xcodeproj \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=${{ steps.simulator.outputs.udid }}" \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            ONLY_ACTIVE_ARCH=YES \
+            > build/build.log 2>&1 || status=$?
+
+          echo "--- avisos e erros ---"
+          grep -E "(warning|error|note): " build/build.log | sort -u | head -60 || true
+
+          if [ $status -ne 0 ]; then
+            echo "::error::Falha no build. Últimas 120 linhas do log:"
+            tail -120 build/build.log
+            exit $status
+          fi
+          echo "Build OK."
+
+      # Se o ZebraRFIDManager tivesse ficado fora do build (o buraco do legado),
+      # ele não apareceria no log de compilação. Checagem barata e direta.
+      - name: Confirma que o ZebraRFIDManager foi compilado
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -euo pipefail
+          if ! grep -q "ZebraRFIDManager.swift" build/build.log; then
+            echo "::error::ZebraRFIDManager.swift não apareceu no log de compilação."
+            exit 1
+          fi
+          echo "ZebraRFIDManager.swift compilado."
+
+      - name: Testes
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -uo pipefail
+          status=0
+          xcodebuild test-without-building \
+            -project EventPro.xcodeproj \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=${{ steps.simulator.outputs.udid }}" \
+            -derivedDataPath build/DerivedData \
+            -resultBundlePath build/tests.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            > build/test.log 2>&1 || status=$?
+
+          echo "--- resumo ---"
+          grep -E "Test Case .*(passed|failed)|Executed [0-9]+ test" build/test.log | tail -80 || true
+
+          if [ $status -ne 0 ]; then
+            echo "::error::Falha nos testes."
+            grep -E "error:|XCTAssert|failed" build/test.log | head -60 || true
+            tail -120 build/test.log
+            exit $status
+          fi
+          echo "Testes OK."
+
+      - name: Artefatos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eventpro-ios-build
+          path: |
+            apps/eventpro-ios/build/*.log
+            apps/eventpro-ios/build/tests.xcresult
+          retention-days: 7
+          if-no-files-found: ignore

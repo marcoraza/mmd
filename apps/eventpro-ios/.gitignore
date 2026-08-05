@@ -1,0 +1,13 @@
+# Projeto gerado pelo XcodeGen: nunca versionado, sempre `xcodegen generate`.
+EventPro.xcodeproj/
+*.xcworkspace/
+
+# Assinatura local
+Config/Signing.xcconfig
+
+# Artefatos de build e estado por usuario
+build/
+DerivedData/
+*.xcuserstate
+**/xcuserdata/
+.DS_Store

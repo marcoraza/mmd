@@ -869,6 +869,44 @@ Nota: `limit` acima de 100 **não** é erro, é silenciosamente reduzido a 100. 
 
 ---
 
+## 8b. POST /api/rfid/vinculo
+
+Status: **NOVO** (implementado junto com o BFF EventPro). Fecha o gap 4.2 da auditoria: o legado
+não tinha endpoint de vínculo e o iOS fazia PATCH direto no PostgREST, caminho aposentado.
+
+- Auth: Bearer ou cookie, role mínima `editor` (mesma regra de `/api/rfid/scans`).
+- Ordem de validação: auth antes do corpo (padrão da família `/api/rfid/*`).
+
+Request:
+
+```json
+{ "serial_id": "9a1f0c2e-...", "tag": "E28011702000020A5C41B6E0" }
+```
+
+- `serial_id`: uuid da unidade (aceito em qualquer caixa, normalizado para minúsculas).
+- `tag`: normalizada no servidor (maiúsculas, remove espaço, `:` e `-`), 8 a 96 caracteres `A-Z0-9`.
+
+Sucesso `200`:
+
+```json
+{ "codigo_interno": "MMD-CAB-0031", "tag_rfid": "E28011702000020A5C41B6E0" }
+```
+
+Erros:
+
+| HTTP | Body | Quando |
+|---|---|---|
+| 401 | `{ "error": "<mensagem de auth>" }` | sem sessão ou role insuficiente |
+| 400 | `{ "error": "invalid_json" }` | corpo não é JSON |
+| 400 | `{ "error": "serial_id_invalido" }` | `serial_id` ausente ou fora do formato uuid |
+| 400 | `{ "error": "<mensagem legível>" }` | tag inválida, tag já vinculada a outra unidade, unidade não encontrada, modo somente leitura |
+
+Diferenças em relação ao vínculo do web legado (intencionais): sem restrição a cabos
+(qualquer unidade é taggeável) e sem checagem de `lotes` (no design EventPro a unicidade
+inteira vive no UNIQUE de `serial_numbers.tag_rfid`).
+
+---
+
 ## 9. Divergências entre o que o iOS envia e o que o web valida
 
 Achados da leitura cruzada do código. Cada um precisa de decisão antes do gate de saída da fase 4.

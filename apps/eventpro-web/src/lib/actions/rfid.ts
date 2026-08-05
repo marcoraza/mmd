@@ -284,11 +284,27 @@ export async function bindRfidTagToSerial(
   serialId: string,
   rawTag: string,
 ): Promise<ActionResult<{ codigo_interno: string; tag_rfid: string }>> {
-  const blocked = blockWrite<{ codigo_interno: string; tag_rfid: string }>()
-  if (blocked) return blocked
-
   const auth = await requireActionUser('editor')
   if (!auth.ok) return auth
+
+  return executeBindRfidTag(serialId, rawTag)
+}
+
+// Variante para rota HTTP (Bearer, caminho iOS): a auth já foi feita pela rota
+// via requireRequestUser, então só executa. Contrato §8b (NOVO).
+export async function bindRfidTagAuthenticated(
+  serialId: string,
+  rawTag: string,
+): Promise<ActionResult<{ codigo_interno: string; tag_rfid: string }>> {
+  return executeBindRfidTag(serialId, rawTag)
+}
+
+async function executeBindRfidTag(
+  serialId: string,
+  rawTag: string,
+): Promise<ActionResult<{ codigo_interno: string; tag_rfid: string }>> {
+  const blocked = blockWrite<{ codigo_interno: string; tag_rfid: string }>()
+  if (blocked) return blocked
 
   const parsed = validateRfidTag(rawTag)
   if (!parsed.ok) return { ok: false, error: parsed.error }

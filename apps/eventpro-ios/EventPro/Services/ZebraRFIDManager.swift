@@ -140,8 +140,8 @@ final class ZebraRFIDManager: NSObject, RFIDReaderProtocol {
         api.srfidSetDelegate(self)
         // MFi cobre o RFD40 por cabo/Bluetooth clássico; BTLE cobre o pareamento
         // por Bluetooth Low Energy. ALL deixa o SDK escolher.
-        _ = api.srfidSetOperationalMode(SRFID_OPMODE_ALL)
-        _ = api.srfidSubsribeForEvents(Self.eventMask)
+        _ = api.srfidSetOperationalMode(Int32(SRFID_OPMODE_ALL))
+        _ = api.srfidSubsribe(forEvents: Self.eventMask)
         _ = api.srfidEnableAvailableReadersDetection(true)
         _ = api.srfidEnableAutomaticSessionReestablishment(true)
     }
@@ -156,7 +156,7 @@ final class ZebraRFIDManager: NSObject, RFIDReaderProtocol {
             _ = api.srfidTerminateCommunicationSession(readerID)
         }
         _ = api.srfidEnableAvailableReadersDetection(false)
-        _ = api.srfidUnsubsribeForEvents(Self.eventMask)
+        _ = api.srfidUnsubsribe(forEvents: Self.eventMask)
         api.srfidSetDelegate(nil)
     }
 

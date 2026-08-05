@@ -5,11 +5,11 @@ on:
     branches: ["**"]
     paths:
       - "apps/eventpro-ios/**"
-      - ".github/workflows/ios.yml"
+      - ".github/workflows/eventpro-ios.yml"
   pull_request:
     paths:
       - "apps/eventpro-ios/**"
-      - ".github/workflows/ios.yml"
+      - ".github/workflows/eventpro-ios.yml"
   workflow_dispatch:
 
 concurrency:
@@ -35,9 +35,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # O default do runner (/Applications/Xcode.app) pode ser um Xcode mais
+      # antigo que os runtimes de simulador listados pelo simctl. Seleciona o
+      # Xcode mais novo instalado para o destino escolhido ser sempre válido.
       - name: Seleciona o Xcode
         run: |
-          sudo xcode-select -s /Applications/Xcode.app
+          set -euo pipefail
+          xcode_mais_novo=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Xcodes instalados:"
+          ls -d /Applications/Xcode*.app
+          echo "Selecionando: $xcode_mais_novo"
+          sudo xcode-select -s "$xcode_mais_novo"
           xcodebuild -version
           swift --version
 
@@ -112,6 +120,9 @@ jobs:
           mkdir -p build
           # Log completo em arquivo (sem `-quiet`, porque a etapa seguinte
           # procura o nome do arquivo Swift no log) e só o essencial no console.
+          # O `|| status=$?` é obrigatório: o runner injeta `bash -e`, e sem ele
+          # uma falha do xcodebuild mata o script antes de imprimir o log.
+          status=0
           xcodebuild build-for-testing \
             -project EventPro.xcodeproj \
             -scheme "$SCHEME" \
@@ -123,8 +134,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
             ONLY_ACTIVE_ARCH=YES \
-            > build/build.log 2>&1
-          status=$?
+            > build/build.log 2>&1 || status=$?
 
           echo "--- avisos e erros ---"
           grep -E "(warning|error|note): " build/build.log | sort -u | head -60 || true
@@ -152,6 +162,7 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           set -uo pipefail
+          status=0
           xcodebuild test-without-building \
             -project EventPro.xcodeproj \
             -scheme "$SCHEME" \
@@ -161,8 +172,7 @@ jobs:
             -resultBundlePath build/tests.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            > build/test.log 2>&1
-          status=$?
+            > build/test.log 2>&1 || status=$?
 
           echo "--- resumo ---"
           grep -E "Test Case .*(passed|failed)|Executed [0-9]+ test" build/test.log | tail -80 || true

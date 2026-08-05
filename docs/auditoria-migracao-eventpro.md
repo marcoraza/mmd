@@ -159,7 +159,7 @@ Base: `apps/ios/MMDEstoque` (15.908 linhas Swift, XcodeGen, iOS 16+, iPhone only
 
 ## 5. Riscos ativos levados em conta na migração
 
-1. **Bug: `MONTAGEM` × trigger de transição.** `20260712191500_projeto_status_transition_guard.sql` não cobre `MONTAGEM` no `CASE` (sem `ELSE` → `CASE_NOT_FOUND`). Evento importado em `MONTAGEM` não muda de status — inclusive o `UPDATE` interno do `checkout_projeto` falha, abortando o check-out. Corrigir no legado ou garantir a matriz completa no schema do EventPro.
+1. **Bug: `MONTAGEM` × trigger de transição.** `20260712191500_projeto_status_transition_guard.sql` não cobria `MONTAGEM` no `CASE` (sem `ELSE` → `CASE_NOT_FOUND`). Evento importado em `MONTAGEM` não mudava de status — inclusive o `UPDATE` interno do `checkout_projeto` falhava, abortando o check-out. **Corrigido em `20260805194500_projeto_status_montagem_transition.sql`** (matriz completa + `ELSE` fail-closed); levar a matriz corrigida para o schema do EventPro.
 2. **Admin sem login.** `requireActionUser` devolve admin local quando `isAuthRequiredForEnv()` é falso. Config de env divergente no EventPro = acesso irrestrito.
 3. **Service role em todo o caminho web.** RLS não protege o caminho principal; a barreira é a checagem de role na aplicação. Decisão consciente a reavaliar no EventPro.
 4. **`MMD_READONLY` default `true`** — deploy novo esquece a env e o app fica read-only silenciosamente.

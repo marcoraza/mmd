@@ -1,44 +1,69 @@
 import SwiftUI
 
-/// Raiz autenticada da Home 2.0: quatro abas (Início, Eventos, Catálogo,
-/// Ler tag) na barra de tinta cheia (opção 1). Ajustes saiu da barra e vive
-/// no avatar do topo do Início.
-struct HomeView: View {
-    // Abre em Eventos: e a tela do grill; a Home propria ainda nao foi
-    // desenhada (proxima fatia).
-    @State private var tab: Tab = .eventos
+enum HomeDestination: String, CaseIterable, Equatable, Identifiable {
+    case inicio
+    case eventos
+    case catalogo
 
-    enum Tab: Int {
-        case inicio, eventos, catalogo, lerTag
+    var id: Self { self }
+}
+
+enum HomeOperation: String, Equatable, Identifiable {
+    case identify
+
+    var id: Self { self }
+}
+
+struct HomeShellState: Equatable {
+    var destination: HomeDestination
+    var operation: HomeOperation?
+    var showsSettings: Bool
+
+    init(
+        destination: HomeDestination = .eventos,
+        operation: HomeOperation? = nil,
+        showsSettings: Bool = false
+    ) {
+        self.destination = destination
+        self.operation = operation
+        self.showsSettings = showsSettings
     }
+
+    mutating func openIdentify() {
+        operation = .identify
+    }
+
+    mutating func closeOperation() {
+        operation = nil
+    }
+
+    mutating func openSettings() {
+        showsSettings = true
+    }
+
+    mutating func closeSettings() {
+        showsSettings = false
+    }
+}
+
+enum HomeDockLayout {
+    static let navigationWidth: CGFloat = 236.8
+    static let actionWidth: CGFloat = 58
+    static let height: CGFloat = 58
+    static let gap: CGFloat = 8
+}
+
+/// Raiz autenticada com três destinos persistentes e Identificar como
+/// operação global. Eventos permanece montado ao trocar de destino para
+/// preservar seleção, agenda, mapa e pin.
+struct HomeView: View {
+    @EnvironmentObject private var auth: AuthState
+    @State private var shell = HomeShellState()
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Group {
-                switch tab {
-                case .inicio:
-                    AbaEmConstrucao(
-                        icone: "house",
-                        titulo: "Início",
-                        texto: "A Home do Event Pro chega numa próxima fatia. Por enquanto a operação vive em Eventos."
-                    )
-                case .eventos:
-                    EventosView()
-                case .catalogo:
-                    AbaEmConstrucao(
-                        icone: "shippingbox",
-                        titulo: "Catálogo",
-                        texto: "O catálogo de equipamentos chega numa próxima fatia desta frente."
-                    )
-                case .lerTag:
-                    AbaEmConstrucao(
-                        icone: "viewfinder",
-                        titulo: "Ler tag",
-                        texto: "A leitura de tag chega junto com a frente RFID e o leitor RFD40."
-                    )
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            destinationContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Fade de 104pt do transparente ao papel, atras da barra.
             LinearGradient(
@@ -51,11 +76,63 @@ struct HomeView: View {
             .frame(height: 104)
             .allowsHitTesting(false)
 
-            TabBar(active: $tab)
-                .padding(.bottom, 26)
+            HStack(alignment: .bottom, spacing: HomeDockLayout.gap) {
+                TabBar(active: $shell.destination)
+                IdentifyButton { shell.openIdentify() }
+            }
+            .padding(.horizontal, EP.s4)
+            .padding(.bottom, 26)
         }
         .ignoresSafeArea(edges: .bottom)
         .background(EP.paper)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            HStack {
+                Spacer()
+                SettingsButton(
+                    letter: auth.email?.first.map { String($0).uppercased() } ?? "•",
+                    action: { shell.openSettings() }
+                )
+            }
+            .frame(height: EP.touchMin)
+            .padding(.horizontal, EP.padTela - 5)
+            .background(EP.paper)
+        }
+        .sheet(isPresented: $shell.showsSettings) {
+            SettingsView()
+        }
+        .fullScreenCover(item: $shell.operation) { operation in
+            switch operation {
+            case .identify:
+                IdentifyOperationView { shell.closeOperation() }
+            }
+        }
+    }
+
+    private var destinationContent: some View {
+        ZStack {
+            AbaEmConstrucao(
+                icone: "house",
+                titulo: "Início",
+                texto: "A Home do Event Pro chega numa próxima fatia. Por enquanto a operação vive em Eventos."
+            )
+            .opacity(shell.destination == .inicio ? 1 : 0)
+            .allowsHitTesting(shell.destination == .inicio)
+            .accessibilityHidden(shell.destination != .inicio)
+
+            EventosView()
+                .opacity(shell.destination == .eventos ? 1 : 0)
+                .allowsHitTesting(shell.destination == .eventos)
+                .accessibilityHidden(shell.destination != .eventos)
+
+            AbaEmConstrucao(
+                icone: "shippingbox",
+                titulo: "Catálogo",
+                texto: "O catálogo de equipamentos chega numa próxima fatia desta frente."
+            )
+            .opacity(shell.destination == .catalogo ? 1 : 0)
+            .allowsHitTesting(shell.destination == .catalogo)
+            .accessibilityHidden(shell.destination != .catalogo)
+        }
     }
 }
 
@@ -65,27 +142,37 @@ struct HomeView: View {
 // Estado por peso: a pílula de tinta é o elemento mais pesado da tela.
 
 private struct TabBar: View {
-    @Binding var active: HomeView.Tab
+    @Binding var active: HomeDestination
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let items: [(tab: HomeView.Tab, icon: String, label: String)] = [
+    private let items: [(tab: HomeDestination, icon: String, label: String)] = [
         (.inicio, "house", "Início"),
         (.eventos, "calendar", "Eventos"),
         (.catalogo, "shippingbox", "Catálogo"),
-        (.lerTag, "viewfinder", "Ler tag"),
     ]
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: EP.s1) {
             ForEach(items, id: \.tab) { item in
                 aba(item)
             }
         }
+        .padding(EP.s1)
+        .frame(
+            width: HomeDockLayout.navigationWidth,
+            height: HomeDockLayout.height
+        )
+        .background(EP.paper2, in: RoundedRectangle(cornerRadius: EP.r14, style: .continuous))
     }
 
-    private func aba(_ item: (tab: HomeView.Tab, icon: String, label: String)) -> some View {
+    private func aba(_ item: (tab: HomeDestination, icon: String, label: String)) -> some View {
         let ativa = active == item.tab
         return Button {
-            withAnimation(EP.abaCapsula) { active = item.tab }
+            if reduceMotion {
+                active = item.tab
+            } else {
+                withAnimation(EP.abaCapsula) { active = item.tab }
+            }
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: item.icon)
@@ -112,15 +199,109 @@ private struct TabBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(item.label)
+        .accessibilityValue(ativa ? "Selecionado" : "")
         .accessibilityAddTraits(ativa ? .isSelected : [])
+    }
+}
+
+private struct IdentifyButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "viewfinder")
+                .font(.system(size: 18, weight: .medium))
+            .foregroundStyle(EP.paper)
+            .frame(
+                width: HomeDockLayout.actionWidth,
+                height: HomeDockLayout.height
+            )
+            .background(EP.ink, in: RoundedRectangle(cornerRadius: EP.r14, style: .continuous))
+            .shadow(color: EP.ink.opacity(0.22), radius: 10, y: 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(EPPressStyle())
+        .accessibilityLabel("Identificar equipamento")
+        .accessibilityHint("Abre a operação global de leitura")
+    }
+}
+
+private struct SettingsButton: View {
+    let letter: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(letter)
+                .font(.custom("InterTight", size: 13).weight(.semibold))
+                .foregroundStyle(EP.paper)
+                .frame(width: 34, height: 34)
+                .background(EP.ink, in: Circle())
+                .frame(width: EP.touchMin, height: EP.touchMin)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(EPPressStyle())
+        .accessibilityLabel("Ajustes")
+        .accessibilityHint("Abre os ajustes da conta")
+    }
+}
+
+private struct IdentifyOperationView: View {
+    let close: () -> Void
+    @AccessibilityFocusState private var titleFocused: Bool
+
+    var body: some View {
+        ZStack {
+            EP.ink.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: EP.s5) {
+                HStack {
+                    Text("Identificar")
+                        .font(EP.kicker())
+                        .foregroundStyle(EP.paper.opacity(0.68))
+                    Spacer()
+                    Button(action: close) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(EP.ink)
+                            .frame(width: EP.touchMin, height: EP.touchMin)
+                            .background(EP.paper, in: Circle())
+                    }
+                    .buttonStyle(EPPressStyle())
+                    .accessibilityLabel("Fechar Identificar")
+                }
+
+                Spacer()
+
+                Image(systemName: "viewfinder")
+                    .font(.system(size: 40, weight: .light))
+                    .foregroundStyle(EP.paper)
+
+                Text("Leitor ainda não disponível")
+                    .font(EP.display())
+                    .tracking(EP.displayTracking)
+                    .foregroundStyle(EP.paper)
+                    .accessibilityFocused($titleFocused)
+
+                Text("Feche para continuar exatamente de onde parou.")
+                    .font(EP.body())
+                    .foregroundStyle(EP.paper.opacity(0.68))
+
+                Spacer()
+                Spacer()
+            }
+            .padding(.horizontal, EP.padTela)
+            .padding(.vertical, EP.s5)
+        }
+        .onAppear { titleFocused = true }
     }
 }
 
 // MARK: - EventosView
 //
 // A tela do grill (o protótipo abre com a aba Eventos ativa): topo
-// tipográfico com avatar, frase única de dados, mapa real do destino e
-// agenda de ordem fixa. Distância em km fica de fora até existir rota.
+// tipográfico, frase única de dados, mapa real do destino e agenda de ordem
+// fixa. Distância em km fica de fora até existir rota.
 
 struct EventosView: View {
     @EnvironmentObject private var api: APIClient
@@ -134,8 +315,6 @@ private struct EventosContent: View {
 
     @StateObject private var vm: HomeViewModel
     @StateObject private var location: EventLocationViewModel
-    @EnvironmentObject private var auth: AuthState
-    @State private var mostraAjustes = false
     @State private var mostraDestino = false
 
     init(apiClient: APIClient) {
@@ -191,7 +370,6 @@ private struct EventosContent: View {
                     proxy.scrollTo("agenda-\(id)", anchor: .center)
                 }
             }
-            .sheet(isPresented: $mostraAjustes) { SettingsView() }
             .sheet(isPresented: $mostraDestino) {
                 EventoDestinoSheet(location: location) {
                     mostraDestino = false
@@ -252,25 +430,7 @@ private struct EventosContent: View {
                 .padding(.top, 7)
             }
             Spacer(minLength: 0)
-
-            Button {
-                mostraAjustes = true
-            } label: {
-                Text(avatarLetra)
-                    .font(.custom("InterTight", size: 13).weight(.semibold))
-                    .foregroundStyle(EP.paper)
-                    .frame(width: 34, height: 34)
-                    .background(EP.ink, in: Circle())
-                    .padding(.top, 3)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(EPPressStyle())
-            .accessibilityLabel("Ajustes")
         }
-    }
-
-    private var avatarLetra: String {
-        auth.email?.first.map { String($0).uppercased() } ?? "•"
     }
 
     private var kicker: String {

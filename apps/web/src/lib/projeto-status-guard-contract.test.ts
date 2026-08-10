@@ -7,15 +7,28 @@ function migration(path: string) {
   return readFileSync(join(process.cwd(), '..', '..', 'supabase', 'migrations', path), 'utf8')
 }
 
-test('trigger de transição de status cobre a matriz completa de estados', () => {
-  const sql = migration('20260712191500_projeto_status_transition_guard.sql')
+test('migration base instala o trigger de transição de status', () => {
+  const sql = migration('20260712220716_projeto_status_transition_guard.sql')
 
   assert.match(sql, /CREATE OR REPLACE FUNCTION public\.enforce_projeto_status_transition\(\)/)
   assert.match(sql, /BEFORE UPDATE OF status ON public\.projetos/)
   assert.match(sql, /DROP TRIGGER IF EXISTS trg_projeto_status_transition/)
+})
+
+test('função final de transição cobre a matriz completa de estados', () => {
+  const sql = migration('20260805194500_projeto_status_montagem_transition.sql')
+
+  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.enforce_projeto_status_transition\(\)/)
 
   // Toda origem da matriz precisa de um ramo explícito no CASE.
-  for (const estado of ['PLANEJAMENTO', 'CONFIRMADO', 'EM_CAMPO', 'FINALIZADO', 'CANCELADO']) {
+  for (const estado of [
+    'PLANEJAMENTO',
+    'CONFIRMADO',
+    'MONTAGEM',
+    'EM_CAMPO',
+    'FINALIZADO',
+    'CANCELADO',
+  ]) {
     assert.match(sql, new RegExp(`WHEN '${estado}' THEN`))
   }
 

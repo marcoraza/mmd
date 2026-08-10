@@ -50,13 +50,11 @@ final class APIClient: ObservableObject {
 
     @Published private(set) var isLoading = false
     @Published var lastError: APIError?
-    /// UI observa pra reabrir o gate de login sem resetar navegação.
-    @Published var needsReauthentication = false
 
     // MARK: - Dependencies
 
     private let session: URLSession
-    private let authStore: AuthSessionStore
+    private let authState: AuthState
     private let logger = Logger(subsystem: "com.mmd.estoque", category: "APIClient")
 
     private var baseURL: String { AppConfig.shared.supabaseUrl }
@@ -125,10 +123,10 @@ final class APIClient: ObservableObject {
 
     init(
         session: URLSession = .shared,
-        authStore: AuthSessionStore = .shared
+        authState: AuthState
     ) {
         self.session = session
-        self.authStore = authStore
+        self.authState = authState
     }
 
     // MARK: - RFID Tag Resolution (primary use case)
@@ -666,14 +664,12 @@ final class APIClient: ObservableObject {
         #endif
 
         do {
-            return try await authStore.validAccessToken()
+            return try await authState.validAccessToken()
         } catch AuthError.notAuthenticated, AuthError.sessionExpired {
-            needsReauthentication = true
             throw APIError.sessionExpired
         } catch AuthError.notConfigured {
             throw APIError.notConfigured
         } catch AuthError.invalidCredentials {
-            needsReauthentication = true
             throw APIError.sessionExpired
         } catch AuthError.network(let error) {
             throw APIError.networkError(error)
@@ -836,23 +832,24 @@ final class APIClient: ObservableObject {
         if httpResponse.statusCode == 401,
            allowRefreshRetry,
            !isUsingDebugAuthOverride {
+            let newToken: String
             do {
-                let newToken = try await authStore.refreshedAccessToken()
-                var retry = request
-                retry.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
-                return try await perform(retry, allowRefreshRetry: false)
-            } catch {
-                needsReauthentication = true
-                let apiError = APIError.sessionExpired
+                newToken = try await refreshedBearerTokenAfterUnauthorized()
+            } catch let apiError as APIError {
                 lastError = apiError
                 throw apiError
             }
+            var retry = request
+            retry.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
+            return try await perform(retry, allowRefreshRetry: false)
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
             let body = String(data: data, encoding: .utf8)
             if httpResponse.statusCode == 401 {
-                needsReauthentication = true
+                if !isUsingDebugAuthOverride {
+                    await authState.invalidateSession()
+                }
                 let apiError = APIError.sessionExpired
                 lastError = apiError
                 throw apiError
@@ -912,23 +909,24 @@ final class APIClient: ObservableObject {
         if httpResponse.statusCode == 401,
            allowRefreshRetry,
            !isUsingDebugAuthOverride {
+            let newToken: String
             do {
-                let newToken = try await authStore.refreshedAccessToken()
-                var retry = request
-                retry.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
-                try await performVoid(retry, allowRefreshRetry: false)
-                return
-            } catch {
-                needsReauthentication = true
-                let apiError = APIError.sessionExpired
+                newToken = try await refreshedBearerTokenAfterUnauthorized()
+            } catch let apiError as APIError {
                 lastError = apiError
                 throw apiError
             }
+            var retry = request
+            retry.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
+            try await performVoid(retry, allowRefreshRetry: false)
+            return
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
             if httpResponse.statusCode == 401 {
-                needsReauthentication = true
+                if !isUsingDebugAuthOverride {
+                    await authState.invalidateSession()
+                }
                 let apiError = APIError.sessionExpired
                 lastError = apiError
                 throw apiError
@@ -937,6 +935,20 @@ final class APIClient: ObservableObject {
             let apiError = APIError.httpError(statusCode: httpResponse.statusCode, body: body)
             lastError = apiError
             throw apiError
+        }
+    }
+
+    private func refreshedBearerTokenAfterUnauthorized() async throws -> String {
+        do {
+            return try await authState.refreshedAccessToken()
+        } catch AuthError.notAuthenticated, AuthError.sessionExpired, AuthError.invalidCredentials {
+            throw APIError.sessionExpired
+        } catch AuthError.notConfigured {
+            throw APIError.notConfigured
+        } catch AuthError.network(let error) {
+            throw APIError.networkError(error)
+        } catch {
+            throw APIError.networkError(error)
         }
     }
 }

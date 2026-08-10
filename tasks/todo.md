@@ -1,3 +1,18 @@
+# Plano ativo: Event Pro Wave 1, lane backend
+
+Fonte: issue #27, C01 e fatia #19a. O WIP de RFID, QR, Checkout, Return, projeto Xcode e protótipo permanece fora deste plano.
+
+1. Fixar três interfaces: salvar decisão unitária, confirmar saída idempotente e consultar retorno esperado.
+2. Provar rascunho retomável por outro operador autenticado.
+3. Provar confirmação parcial, inclusão posterior, mesma chave e payload, conflito de hash e rollback completo.
+4. Provar que apenas Unidades confirmadas mudam, movimentação não duplica e retorno nasce de saídas aplicadas.
+5. Provar RLS, ausência de acesso anon, grants restritos, reset, pgTAP, lint e advisors locais.
+6. Rodar code review independente e criar commit seletivo antes de qualquer push remoto.
+
+Gate humano preservado: as superfícies iOS #11-#14 não avançam sem o ciclo visual de cinco opções e a escolha do Marco.
+
+---
+
 # Plano: treinamento privado do Marcelo
 
 Goal ativo: consolidar `MAR-85`, `MAR-215`, `MAR-216`, `MAR-217`, `MAR-218`, `MAR-99`, `MAR-100`, `MAR-219` e `MAR-98` sem tratar mock como prova de hardware real.

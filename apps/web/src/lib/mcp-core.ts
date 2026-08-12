@@ -58,15 +58,43 @@ export type McpRequestDependencies = {
   readEvent: (eventoId: string, identity: McpIdentity) => Promise<McpEvent | null>
   readUnit: (unidadeId: string, identity: McpIdentity) => Promise<McpUnit | null>
   audit: (input: McpAuditInput) => Promise<void>
-  rateLimit?: (identity: McpIdentity, request: Request) => Promise<'allowed' | 'limited' | 'unavailable'>
+  rateLimit?: (
+    identity: McpIdentity,
+    request: Request,
+  ) => Promise<'allowed' | 'limited' | 'unavailable'>
   allowedOrigins?: string[]
   resourceMetadataUrl?: (request: Request) => string | null
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/
-const CONSULTAR_EVENTO_ARGUMENTS = z.object({ evento_id: z.string().uuid() })
+const CONSULTAR_EVENTO_ARGUMENTS = z.object({ evento_id: z.string().uuid() }).strict()
+const MCP_EVENT_OUTPUT = z
+  .object({
+    id: z.string().uuid(),
+    nome: z.string(),
+    status: z.string(),
+    data_inicio: z.string().nullable(),
+    data_fim: z.string().nullable(),
+    local: z.string().nullable(),
+    packing: z
+      .object({
+        linhas: z.number().int().nonnegative(),
+        itens_total: z.number().int().nonnegative(),
+        itens_alocados: z.number().int().nonnegative(),
+        readiness_pct: z.number().int().min(0).max(100),
+      })
+      .strict(),
+  })
+  .strict()
+const MCP_UNIT_OUTPUT = z
+  .object({
+    id: z.string().uuid(),
+    codigo_interno: z.string(),
+    status: z.string(),
+    item: z.object({ nome: z.string(), categoria: z.string() }).strict(),
+  })
+  .strict()
 
 function privateCache() {
   return { ttlMs: 0, cacheScope: 'private' as const }
@@ -81,11 +109,12 @@ async function withRequestId(request: Request) {
   if (requestId(request)) return request
 
   try {
-    const body = (await request.clone().json()) as { id?: string | number }
+    const bodyText = await request.clone().text()
+    const body = JSON.parse(bodyText) as { id?: string | number }
     const jsonRpcId = body.id
     if (typeof jsonRpcId !== 'string' && typeof jsonRpcId !== 'number') return null
 
-    const derived = `jsonrpc-${String(jsonRpcId)}`
+    const derived = `jsonrpc-${createHash('sha256').update(bodyText).digest('hex').slice(0, 24)}`
     if (!REQUEST_ID_PATTERN.test(derived)) return null
 
     const headers = new Headers(request.headers)
@@ -106,7 +135,7 @@ function oauthChallenge(resourceMetadataUrl: string | null) {
     status: 401,
     headers: {
       'content-type': 'application/json',
-        'www-authenticate': `Bearer realm="MMD MCP", error="invalid_token"${metadata}`,
+      'www-authenticate': `Bearer realm="MMD MCP", error="invalid_token"${metadata}`,
     },
   })
 }
@@ -243,12 +272,22 @@ function createServer(
     async (uri) => {
       const eventoId = parseResourceId(uri, 'eventos')
       if (!eventoId) {
-        await auditRead(dependencies, identity, request, MCP_AUDIT_TARGETS.eventoResource, { uri: uri.href }, 'FAILED')
+        await auditRead(
+          dependencies,
+          identity,
+          request,
+          MCP_AUDIT_TARGETS.eventoResource,
+          { uri: uri.href },
+          'FAILED',
+        )
         throw new Error('EVENTO_ID_INVALIDO')
       }
 
       const evento = await readWithAudit(
-        () => dependencies.readEvent(eventoId, identity),
+        async () => {
+          const value = await dependencies.readEvent(eventoId, identity)
+          return value ? MCP_EVENT_OUTPUT.parse(value) : null
+        },
         dependencies,
         identity,
         request,
@@ -256,11 +295,25 @@ function createServer(
         { uri: uri.href },
       )
       if (!evento) {
-        await auditRead(dependencies, identity, request, MCP_AUDIT_TARGETS.eventoResource, { uri: uri.href }, 'FAILED')
+        await auditRead(
+          dependencies,
+          identity,
+          request,
+          MCP_AUDIT_TARGETS.eventoResource,
+          { uri: uri.href },
+          'FAILED',
+        )
         throw new Error('EVENTO_NAO_ENCONTRADO')
       }
 
-      await auditRead(dependencies, identity, request, MCP_AUDIT_TARGETS.eventoResource, { uri: uri.href }, 'SUCCEEDED')
+      await auditRead(
+        dependencies,
+        identity,
+        request,
+        MCP_AUDIT_TARGETS.eventoResource,
+        { uri: uri.href },
+        'SUCCEEDED',
+      )
       return resourceResult(uri, evento)
     },
   )
@@ -277,12 +330,22 @@ function createServer(
     async (uri) => {
       const unidadeId = parseResourceId(uri, 'unidades')
       if (!unidadeId) {
-        await auditRead(dependencies, identity, request, MCP_AUDIT_TARGETS.unidadeResource, { uri: uri.href }, 'FAILED')
+        await auditRead(
+          dependencies,
+          identity,
+          request,
+          MCP_AUDIT_TARGETS.unidadeResource,
+          { uri: uri.href },
+          'FAILED',
+        )
         throw new Error('UNIDADE_ID_INVALIDO')
       }
 
       const unidade = await readWithAudit(
-        () => dependencies.readUnit(unidadeId, identity),
+        async () => {
+          const value = await dependencies.readUnit(unidadeId, identity)
+          return value ? MCP_UNIT_OUTPUT.parse(value) : null
+        },
         dependencies,
         identity,
         request,
@@ -290,11 +353,25 @@ function createServer(
         { uri: uri.href },
       )
       if (!unidade) {
-        await auditRead(dependencies, identity, request, MCP_AUDIT_TARGETS.unidadeResource, { uri: uri.href }, 'FAILED')
+        await auditRead(
+          dependencies,
+          identity,
+          request,
+          MCP_AUDIT_TARGETS.unidadeResource,
+          { uri: uri.href },
+          'FAILED',
+        )
         throw new Error('UNIDADE_NAO_ENCONTRADA')
       }
 
-      await auditRead(dependencies, identity, request, MCP_AUDIT_TARGETS.unidadeResource, { uri: uri.href }, 'SUCCEEDED')
+      await auditRead(
+        dependencies,
+        identity,
+        request,
+        MCP_AUDIT_TARGETS.unidadeResource,
+        { uri: uri.href },
+        'SUCCEEDED',
+      )
       return resourceResult(uri, unidade)
     },
   )
@@ -303,13 +380,17 @@ function createServer(
     'mmd_consultar_evento',
     {
       title: 'Consultar Evento MMD',
-      description: 'Consulta o resumo operacional autenticado de um Evento pelo identificador UUID.',
-      inputSchema: z.object({ evento_id: z.string().uuid() }),
+      description:
+        'Consulta o resumo operacional autenticado de um Evento pelo identificador UUID.',
+      inputSchema: CONSULTAR_EVENTO_ARGUMENTS,
       annotations: { readOnlyHint: true },
     },
     async ({ evento_id }) => {
       const evento = await readWithAudit(
-        () => dependencies.readEvent(evento_id, identity),
+        async () => {
+          const value = await dependencies.readEvent(evento_id, identity)
+          return value ? MCP_EVENT_OUTPUT.parse(value) : null
+        },
         dependencies,
         identity,
         request,
@@ -317,14 +398,28 @@ function createServer(
         { evento_id },
       )
       if (!evento) {
-        await auditRead(dependencies, identity, request, MCP_AUDIT_TARGETS.consultarEvento, { evento_id }, 'FAILED')
+        await auditRead(
+          dependencies,
+          identity,
+          request,
+          MCP_AUDIT_TARGETS.consultarEvento,
+          { evento_id },
+          'FAILED',
+        )
         return {
           content: [{ type: 'text', text: JSON.stringify({ error: 'EVENTO_NAO_ENCONTRADO' }) }],
           isError: true,
         }
       }
 
-      await auditRead(dependencies, identity, request, MCP_AUDIT_TARGETS.consultarEvento, { evento_id }, 'SUCCEEDED')
+      await auditRead(
+        dependencies,
+        identity,
+        request,
+        MCP_AUDIT_TARGETS.consultarEvento,
+        { evento_id },
+        'SUCCEEDED',
+      )
       return {
         content: [{ type: 'text', text: JSON.stringify(evento) }],
       }
@@ -358,40 +453,68 @@ export function createMcpRequestHandler(dependencies: McpRequestDependencies) {
     if (!requestWithId) return invalidRequest('mcp_request_id_required')
 
     const identity = await dependencies.authenticate(requestWithId)
-    if (!identity) return privateNoStore(oauthChallenge(dependencies.resourceMetadataUrl?.(requestWithId) ?? null))
+    if (!identity)
+      return privateNoStore(
+        oauthChallenge(dependencies.resourceMetadataUrl?.(requestWithId) ?? null),
+      )
 
     if (!identity.scopes.includes('mcp:read')) {
-      await auditRead(dependencies, identity, requestWithId, MCP_AUDIT_TARGETS.request, { reason: 'insufficient_scope' }, 'DENIED')
-      return privateNoStore(new Response(JSON.stringify({ error: 'insufficient_scope' }), {
-        status: 403,
-        headers: {
-          'content-type': 'application/json',
-          'www-authenticate': 'Bearer error="insufficient_scope", scope="mcp:read"',
-        },
-      }))
+      await auditRead(
+        dependencies,
+        identity,
+        requestWithId,
+        MCP_AUDIT_TARGETS.request,
+        { reason: 'insufficient_scope' },
+        'DENIED',
+      )
+      return privateNoStore(
+        new Response(JSON.stringify({ error: 'insufficient_scope' }), {
+          status: 403,
+          headers: {
+            'content-type': 'application/json',
+            'www-authenticate': 'Bearer error="insufficient_scope"',
+          },
+        }),
+      )
     }
 
     const limit = dependencies.rateLimit
       ? await dependencies.rateLimit(identity, requestWithId)
       : 'allowed'
     if (limit !== 'allowed') {
-      await auditRead(dependencies, identity, requestWithId, MCP_AUDIT_TARGETS.request, { reason: `rate_${limit}` }, 'DENIED')
-      return privateNoStore(new Response(JSON.stringify({ error: limit === 'limited' ? 'rate_limited' : 'rate_limit_unavailable' }), {
-        status: limit === 'limited' ? 429 : 503,
-        headers: { 'content-type': 'application/json', 'retry-after': '60' },
-      }))
+      await auditRead(
+        dependencies,
+        identity,
+        requestWithId,
+        MCP_AUDIT_TARGETS.request,
+        { reason: `rate_${limit}` },
+        'DENIED',
+      )
+      return privateNoStore(
+        new Response(
+          JSON.stringify({
+            error: limit === 'limited' ? 'rate_limited' : 'rate_limit_unavailable',
+          }),
+          {
+            status: limit === 'limited' ? 429 : 503,
+            headers: { 'content-type': 'application/json', 'retry-after': '60' },
+          },
+        ),
+      )
     }
 
     await auditInvalidToolArguments(dependencies, identity, requestWithId)
 
-    return privateNoStore(await handler.fetch(requestWithId, {
-      authInfo: {
-        token: 'redacted',
-        clientId: identity.clientId,
-        scopes: identity.scopes,
-        expiresAt: Math.floor(Date.now() / 1000) + 60,
-        extra: { identity },
-      },
-    }))
+    return privateNoStore(
+      await handler.fetch(requestWithId, {
+        authInfo: {
+          token: 'redacted',
+          clientId: identity.clientId,
+          scopes: identity.scopes,
+          expiresAt: Math.floor(Date.now() / 1000) + 60,
+          extra: { identity },
+        },
+      }),
+    )
   }
 }

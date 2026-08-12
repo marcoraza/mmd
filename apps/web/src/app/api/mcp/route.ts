@@ -16,8 +16,10 @@ function allowedOrigins() {
 }
 
 async function handleMcp(request: Request) {
-  const [{ authenticateMcpRequest, enforceMcpRateLimit, recordMcpAudit }, { readMcpEvent, readMcpUnit }] =
-    await Promise.all([import('@/lib/mcp-auth'), import('@/lib/mcp-data')])
+  const [
+    { authenticateMcpRequest, enforceMcpRateLimit, recordMcpAudit },
+    { readMcpEvent, readMcpUnit },
+  ] = await Promise.all([import('@/lib/mcp-auth'), import('@/lib/mcp-data')])
   const handler = createMcpRequestHandler({
     authenticate: authenticateMcpRequest,
     readEvent: readMcpEvent,
@@ -39,7 +41,11 @@ function hasConfiguredMcpHost(request: Request) {
   const resource = mcpOAuthConfiguration()?.resource
   if (!resource) return false
   const expectedHost = new URL(resource).host
-  const suppliedHost = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '')
+  const suppliedHost = (
+    request.headers.get('x-forwarded-host') ??
+    request.headers.get('host') ??
+    ''
+  )
     .split(',')[0]
     .trim()
   return suppliedHost === expectedHost
@@ -47,7 +53,7 @@ function hasConfiguredMcpHost(request: Request) {
 
 async function respond(request: Request) {
   if (!mcpRemoteAccessIsReady()) {
-    return new Response(JSON.stringify({ error: 'mcp_token_exchange_required' }), {
+    return new Response(JSON.stringify({ error: 'mcp_remote_not_configured' }), {
       status: 503,
       headers: { 'cache-control': 'private, no-store', 'content-type': 'application/json' },
     })

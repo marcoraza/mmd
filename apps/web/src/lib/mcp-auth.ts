@@ -1,10 +1,18 @@
 import 'server-only'
 
+import { createHash, randomBytes } from 'node:crypto'
+
 import { createClient } from '@supabase/supabase-js'
+import { createRemoteJWKSet } from 'jose'
 
+import { extractBearerToken } from '@/lib/action-auth-core'
+import { resolveMcpIdentity, verifyMcpAccessToken } from '@/lib/mcp-auth-core'
 import type { McpAuditInput, McpIdentity } from '@/lib/mcp-core'
+import { mcpOAuthConfiguration } from '@/lib/mcp-oauth'
 
-function requiredEnv(name: 'NEXT_PUBLIC_SUPABASE_URL' | 'NEXT_PUBLIC_SUPABASE_ANON_KEY') {
+const remoteKeySets = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
+
+function requiredEnv(name: 'NEXT_PUBLIC_SUPABASE_URL') {
   const value = process.env[name]?.trim()
   if (!value) throw new Error(`MCP_${name}_MISSING`)
   return value
@@ -23,7 +31,9 @@ function createRegistryClient() {
     if (
       target !== 'mcp_clients' &&
       target !== 'mcp_operation_log' &&
-      target !== 'rpc/claim_mcp_rate_limit'
+      target !== 'profiles' &&
+      target !== 'rpc/claim_mcp_rate_limit' &&
+      target !== 'rpc/issue_mcp_read_capability'
     ) {
       throw new Error('MCP_REGISTRY_TABLE_DENIED')
     }
@@ -36,11 +46,96 @@ function createRegistryClient() {
   })
 }
 
+export async function registeredMcpClient(clientId: string) {
+  const resource = mcpOAuthConfiguration()?.resource
+  if (!resource) return null
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$/.test(clientId)) return null
+  const { data, error } = await createRegistryClient()
+    .from('mcp_clients')
+    .select('active,revoked_at,scopes,resource_audience')
+    .eq('client_id', clientId)
+    .maybeSingle()
+  if (
+    error ||
+    !data?.active ||
+    data.revoked_at ||
+    data.resource_audience !== resource ||
+    !Array.isArray(data.scopes)
+  )
+    return null
+  const scopes = data.scopes.filter((scope): scope is string => typeof scope === 'string')
+  return scopes.length ? { scopes } : null
+}
+
 export async function authenticateMcpRequest(request: Request): Promise<McpIdentity | null> {
-  void request
-  // Do not treat a Supabase web access token as an MCP access token. This is
-  // enabled only by the dedicated issuer/audience-validating token-exchange adapter.
-  return null
+  const configuration = mcpOAuthConfiguration()
+  const bearer = extractBearerToken(request.headers.get('authorization'))
+  if (!configuration || !bearer) return null
+
+  let getKey = remoteKeySets.get(configuration.jwksUrl)
+  if (!getKey) {
+    getKey = createRemoteJWKSet(new URL(configuration.jwksUrl), {
+      timeoutDuration: 5_000,
+      cooldownDuration: 30_000,
+      cacheMaxAge: 10 * 60_000,
+    })
+    remoteKeySets.set(configuration.jwksUrl, getKey)
+  }
+
+  const token = await verifyMcpAccessToken(
+    bearer,
+    { issuer: configuration.issuer, audience: configuration.resource },
+    getKey,
+  )
+  if (!token) return null
+
+  const registry = createRegistryClient()
+  const [clientResult, profileResult] = await Promise.all([
+    registry
+      .from('mcp_clients')
+      .select('active,revoked_at,scopes,resource_audience')
+      .eq('client_id', token.clientId)
+      .maybeSingle(),
+    registry.from('profiles').select('role').eq('id', token.actorId).maybeSingle(),
+  ])
+  if (
+    clientResult.error ||
+    profileResult.error ||
+    !clientResult.data ||
+    clientResult.data.resource_audience !== configuration.resource ||
+    !profileResult.data
+  )
+    return null
+
+  return resolveMcpIdentity(
+    token,
+    clientResult.data,
+    profileResult.data.role,
+    configuration.resource,
+  )
+}
+
+export async function issueMcpReadCapability(
+  identity: McpIdentity,
+  target: 'mmd:eventos:read' | 'mmd:unidades:read',
+  resourceId: string,
+) {
+  const token = randomBytes(32).toString('base64url')
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  const payloadHash = createHash('sha256')
+    .update(JSON.stringify({ resource_id: resourceId }))
+    .digest('hex')
+  const { error } = await createRegistryClient().rpc('issue_mcp_read_capability', {
+    p_token_hash: tokenHash,
+    p_client_id: identity.clientId,
+    p_actor_id: identity.actorId,
+    p_target: target,
+    p_resource_id: resourceId,
+    p_payload_hash: payloadHash,
+    p_ttl_seconds: 30,
+  })
+  if (error) throw new Error('MCP_CAPABILITY_ISSUE_FAILED')
+  return { token, payloadHash }
 }
 
 export async function recordMcpAudit(input: McpAuditInput): Promise<void> {

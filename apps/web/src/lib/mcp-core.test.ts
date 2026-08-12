@@ -3,10 +3,7 @@ import test from 'node:test'
 
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client'
 
-import {
-  createMcpRequestHandler,
-  type McpRequestDependencies,
-} from './mcp-core.ts'
+import { createMcpRequestHandler, type McpEvent, type McpRequestDependencies } from './mcp-core.ts'
 
 const EVENTO_ID = '11111111-1111-4111-8111-111111111111'
 const UNIDADE_ID = '33333333-3333-4333-8333-333333333333'
@@ -67,7 +64,7 @@ test('MCP rejects absent bearer even when local web auth could fall back to admi
   assert.match(response.headers.get('www-authenticate') ?? '', /^Bearer /)
 })
 
-test('MCP rejects a registered actor without the client read scope', async () => {
+test('MCP audit target metadata never grants a client the missing read scope', async () => {
   const dependencies = createDependencies()
   dependencies.authenticate = async () => ({
     actorId: '22222222-2222-4222-8222-222222222222',
@@ -75,6 +72,9 @@ test('MCP rejects a registered actor without the client read scope', async () =>
     role: 'viewer',
     scopes: [],
   })
+  dependencies.readEvent = async () => {
+    throw new Error('audit target must not authorize the reader')
+  }
   const handler = createMcpRequestHandler(dependencies)
   const response = await handler(
     new Request('https://mmd.test/api/mcp', {
@@ -84,7 +84,12 @@ test('MCP rejects a registered actor without the client read scope', async () =>
         'content-type': 'application/json',
         'x-mmd-mcp-request-id': 'scope-check-request',
       },
-      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'server/discover', params: {} }),
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: 'mmd_consultar_evento', arguments: { evento_id: EVENTO_ID } },
+      }),
     }),
   )
 
@@ -117,8 +122,14 @@ test('MCP discovery and authenticated Event resource work through the official S
   await client.connect(transport)
   const resources = await client.listResources({ cacheMode: 'bypass' })
   const templates = await client.listResourceTemplates({ cacheMode: 'bypass' })
-  const result = await client.readResource({ uri: `mmd://eventos/${EVENTO_ID}`, cacheMode: 'bypass' })
-  const unit = await client.readResource({ uri: `mmd://unidades/${UNIDADE_ID}`, cacheMode: 'bypass' })
+  const result = await client.readResource({
+    uri: `mmd://eventos/${EVENTO_ID}`,
+    cacheMode: 'bypass',
+  })
+  const unit = await client.readResource({
+    uri: `mmd://unidades/${UNIDADE_ID}`,
+    cacheMode: 'bypass',
+  })
 
   assert.equal(client.getServerVersion()?.name, 'mmd-eventos')
   assert.equal(resources.resources.length, 0)
@@ -165,7 +176,10 @@ test('MCP keeps the legacy SDK handshake available for current host compatibilit
   await client.connect(transport)
   const tools = await client.listTools({ cacheMode: 'bypass' })
 
-  assert.deepEqual(tools.tools.map((tool) => tool.name), ['mmd_consultar_evento'])
+  assert.deepEqual(
+    tools.tools.map((tool) => tool.name),
+    ['mmd_consultar_evento'],
+  )
   await client.close()
 })
 
@@ -207,7 +221,7 @@ test('MCP fails closed when the distributed rate-limit reservation is unavailabl
   assert.equal(response.headers.get('retry-after'), '60')
 })
 
-test('MCP derives a stable request ID from the JSON-RPC id when a host has no custom header', async () => {
+test('MCP derives a stable request ID from the JSON-RPC request when a host has no custom header', async () => {
   const dependencies = createDependencies()
   const auditInputs: { clientRequestId: string; payloadHash: string }[] = []
   dependencies.audit = async (input) => {
@@ -234,10 +248,44 @@ test('MCP derives a stable request ID from the JSON-RPC id when a host has no cu
   assert.equal(response.status, 200)
   assert.deepEqual(auditInputs, [
     {
-      clientRequestId: 'jsonrpc-stable-host-id',
+      clientRequestId: 'jsonrpc-00f1a3631d54acb085dd5364',
       payloadHash: 'a8bf26882df6e975ad13abe5ffa4490748d1fdf1a20f5ce2cb4b3543f13736c4',
     },
   ])
+})
+
+test('MCP rejects fields above the tool input allowlist before reading data', async () => {
+  const dependencies = createDependencies()
+  let readCalled = false
+  dependencies.readEvent = async () => {
+    readCalled = true
+    return null
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  const response = await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+        'x-mmd-mcp-request-id': 'strict-input-request',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'mmd_consultar_evento',
+          arguments: { evento_id: EVENTO_ID, page: 1 },
+        },
+      }),
+    }),
+  )
+
+  assert.equal(response.status, 200)
+  assert.equal(readCalled, false)
+  assert.match(await response.text(), /Input validation error/)
 })
 
 test('MCP rejects a malformed UUID before it reaches the Event reader', async () => {
@@ -326,4 +374,41 @@ test('MCP records a failed data read without replacing its protocol error', asyn
   assert.deepEqual(dependencies.audits, [
     'claude-desktop:22222222-2222-4222-8222-222222222222:mmd:unidades:read:FAILED',
   ])
+})
+
+test('MCP fails closed when an adapter returns fields above the DTO allowlist', async () => {
+  const dependencies = createDependencies()
+  dependencies.readEvent = async () =>
+    ({
+      id: EVENTO_ID,
+      nome: 'Evento controlado',
+      status: 'CONFIRMADO',
+      data_inicio: '2026-08-20',
+      data_fim: '2026-08-20',
+      local: 'Galpão',
+      packing: { linhas: 0, itens_total: 0, itens_alocados: 0, readiness_pct: 0 },
+      cliente: 'NÃO PODE VAZAR',
+    }) as McpEvent
+  const handler = createMcpRequestHandler(dependencies)
+  const response = await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+        'x-mmd-mcp-request-id': 'dto-overflow-request',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 17,
+        method: 'tools/call',
+        params: { name: 'mmd_consultar_evento', arguments: { evento_id: EVENTO_ID } },
+      }),
+    }),
+  )
+
+  const body = await response.text()
+  assert.doesNotMatch(body, /NÃO PODE VAZAR/)
+  assert.ok(dependencies.audits.some((entry) => entry.endsWith(':mmd_consultar_evento:FAILED')))
 })

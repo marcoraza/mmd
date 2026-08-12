@@ -1,3 +1,5 @@
+import { mcpDatabaseConfiguration } from '@/lib/mcp-data-core'
+
 function httpsUrl(value: string | undefined) {
   if (!value?.trim()) return null
   try {
@@ -11,18 +13,37 @@ function httpsUrl(value: string | undefined) {
 export function mcpOAuthConfiguration() {
   const resource = httpsUrl(process.env.MMD_MCP_RESOURCE_URL)
   const authorizationServer = httpsUrl(process.env.MMD_MCP_AUTHORIZATION_SERVER)
-  if (!resource || !authorizationServer) return null
+  const supabase = httpsUrl(process.env.NEXT_PUBLIC_SUPABASE_URL)
+  if (!resource || !authorizationServer || !supabase) return null
   if (resource.pathname !== '/api/mcp') return null
+  if (
+    authorizationServer.origin !== supabase.origin ||
+    authorizationServer.pathname !== '/auth/v1'
+  ) {
+    return null
+  }
+
+  const issuer = authorizationServer.href.replace(/\/$/, '')
+  const configuredJwks = process.env.MMD_MCP_JWKS_URL
+    ? httpsUrl(process.env.MMD_MCP_JWKS_URL)
+    : new URL(`${issuer}/.well-known/jwks.json`)
+  if (!configuredJwks || configuredJwks.origin !== authorizationServer.origin) return null
 
   return {
     resource: resource.href,
-    authorizationServer: authorizationServer.href,
+    authorizationServer: issuer,
+    issuer,
+    jwksUrl: configuredJwks.href,
     metadataUrl: new URL('/.well-known/oauth-protected-resource/mcp', resource).href,
   }
 }
 
+export function mcpOAuthAuthenticationIsReady() {
+  return Boolean(mcpOAuthConfiguration() && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim())
+}
+
 export function mcpRemoteAccessIsReady() {
-  return false
+  return mcpOAuthAuthenticationIsReady() && Boolean(mcpDatabaseConfiguration())
 }
 
 export function mcpProtectedResourceMetadata() {
@@ -32,7 +53,6 @@ export function mcpProtectedResourceMetadata() {
   return {
     resource: configuration.resource,
     authorization_servers: [configuration.authorizationServer],
-    scopes_supported: ['mcp:read', 'mcp:operate'],
     bearer_methods_supported: ['header'],
   }
 }

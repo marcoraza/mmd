@@ -33,6 +33,7 @@ async function main() {
 
     const capabilityCalls = [
       sql`select public.mcp_read_unit('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, ${'0'.repeat(64)})`,
+      sql`select public.mcp_read_event('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, ${'0'.repeat(64)})`,
       sql`select public.mcp_read_events('invalid-capability', null, null, null, 1, 50)`,
       sql`select public.mcp_read_catalog('invalid-capability', null, 1, 50)`,
       sql`select public.mcp_read_packing('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
@@ -53,7 +54,7 @@ async function main() {
     }
 
     console.log(
-      'MCP database smoke passed: dedicated login, direct table access denied, 8 capability RPCs reachable and fail-closed.',
+      'MCP database smoke passed: dedicated login, direct table access denied, 9 capability RPCs reachable and fail-closed.',
     )
   } finally {
     await sql.end({ timeout: 1 })

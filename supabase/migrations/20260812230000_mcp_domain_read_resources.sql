@@ -67,12 +67,11 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM public.mcp_clients AS client
-    JOIN public.profiles AS profile ON profile.id = p_actor_id
     WHERE client.client_id = p_client_id
       AND client.active
       AND client.revoked_at IS NULL
       AND client.scopes @> ARRAY['mcp:read']::text[]
-      AND profile.role IN ('viewer', 'editor', 'admin')
+      AND app_private.can_read_internal_stock(p_actor_id)
   ) THEN
     RAISE EXCEPTION 'MCP_COLLECTION_IDENTITY_DENIED' USING ERRCODE = '42501';
   END IF;
@@ -111,7 +110,7 @@ SET search_path = ''
 AS $$
   UPDATE app_private.mcp_collection_capabilities AS capability
   SET used_at = clock_timestamp()
-  FROM public.mcp_clients AS client, public.profiles AS profile
+  FROM public.mcp_clients AS client
   WHERE capability.token_hash = p_token_hash
     AND capability.target = p_target
     AND capability.payload_hash = p_payload_hash
@@ -121,8 +120,7 @@ AS $$
     AND client.active
     AND client.revoked_at IS NULL
     AND client.scopes @> ARRAY['mcp:read']::text[]
-    AND profile.id = capability.actor_id
-    AND profile.role IN ('viewer', 'editor', 'admin')
+    AND app_private.can_read_internal_stock(capability.actor_id)
   RETURNING capability.actor_id, capability.client_id;
 $$;
 
@@ -169,6 +167,27 @@ BEGIN
     RAISE EXCEPTION 'MCP_PAGE_INVALID' USING ERRCODE = '22023';
   END IF;
 END;
+$$;
+
+CREATE OR REPLACE FUNCTION app_private.external_rental_covered_quantity(p_rentals jsonb)
+RETURNS integer
+LANGUAGE sql
+IMMUTABLE
+SET search_path = ''
+AS $$
+  SELECT coalesce(sum((rental->>'quantidade')::numeric::integer), 0)::integer
+  FROM jsonb_array_elements(coalesce(p_rentals, '[]'::jsonb)) AS rental
+  WHERE jsonb_typeof(rental) = 'object'
+    AND jsonb_typeof(rental->'id') = 'string'
+    AND nullif(btrim(rental->>'id'), '') IS NOT NULL
+    AND jsonb_typeof(rental->'fornecedor') = 'string'
+    AND nullif(btrim(rental->>'fornecedor'), '') IS NOT NULL
+    AND jsonb_typeof(rental->'observacao') = 'string'
+    AND nullif(btrim(rental->>'observacao'), '') IS NOT NULL
+    AND jsonb_typeof(rental->'quantidade') IN ('number', 'string')
+    AND btrim(rental->>'quantidade') ~ '^[+]?[0-9]+([.]0+)?$'
+    AND (rental->>'quantidade')::numeric > 0
+    AND (rental->>'quantidade')::numeric = trunc((rental->>'quantidade')::numeric);
 $$;
 
 CREATE OR REPLACE FUNCTION public.mcp_read_events(
@@ -236,15 +255,11 @@ BEGIN
       SELECT
         count(*)::integer AS linhas,
         coalesce(sum(packing.quantidade), 0)::integer AS itens_total,
-        coalesce(sum(
+        coalesce(sum(least(
+          packing.quantidade,
           cardinality(coalesce(packing.serial_numbers_designados, ARRAY[]::uuid[]))
-          + coalesce((
-            SELECT sum(greatest((rental->>'quantidade')::integer, 0))
-            FROM jsonb_array_elements(packing.alugueis_avulsos) AS rental
-            WHERE jsonb_typeof(rental) = 'object'
-              AND coalesce(rental->>'quantidade', '') ~ '^[0-9]+$'
-          ), 0)
-        ), 0)::integer AS itens_alocados
+            + app_private.external_rental_covered_quantity(packing.alugueis_avulsos)
+        )), 0)::integer AS itens_alocados
       FROM public.packing_list AS packing
       WHERE packing.projeto_id = evento.id
     ) AS coverage
@@ -349,25 +364,16 @@ BEGIN
         'item', jsonb_build_object('id', item.id, 'nome', item.nome, 'categoria', item.categoria),
         'quantidade', packing.quantidade,
         'qtd_propria', cardinality(coalesce(packing.serial_numbers_designados, ARRAY[]::uuid[])),
-        'alugueis_avulsos', coalesce((
-          SELECT sum(greatest((rental->>'quantidade')::integer, 0))
-          FROM jsonb_array_elements(packing.alugueis_avulsos) AS rental
-          WHERE jsonb_typeof(rental) = 'object'
-            AND coalesce(rental->>'quantidade', '') ~ '^[0-9]+$'
-        ), 0),
-        'qtd_coberta', cardinality(coalesce(packing.serial_numbers_designados, ARRAY[]::uuid[])) + coalesce((
-          SELECT sum(greatest((rental->>'quantidade')::integer, 0))
-          FROM jsonb_array_elements(packing.alugueis_avulsos) AS rental
-          WHERE jsonb_typeof(rental) = 'object'
-            AND coalesce(rental->>'quantidade', '') ~ '^[0-9]+$'
-        ), 0),
+        'alugueis_avulsos', app_private.external_rental_covered_quantity(packing.alugueis_avulsos),
+        'qtd_coberta', least(
+          packing.quantidade,
+          cardinality(coalesce(packing.serial_numbers_designados, ARRAY[]::uuid[]))
+            + app_private.external_rental_covered_quantity(packing.alugueis_avulsos)
+        ),
         'qtd_faltante', greatest(
-          packing.quantidade - cardinality(coalesce(packing.serial_numbers_designados, ARRAY[]::uuid[])) - coalesce((
-            SELECT sum(greatest((rental->>'quantidade')::integer, 0))
-            FROM jsonb_array_elements(packing.alugueis_avulsos) AS rental
-            WHERE jsonb_typeof(rental) = 'object'
-              AND coalesce(rental->>'quantidade', '') ~ '^[0-9]+$'
-          ), 0),
+          packing.quantidade
+            - cardinality(coalesce(packing.serial_numbers_designados, ARRAY[]::uuid[]))
+            - app_private.external_rental_covered_quantity(packing.alugueis_avulsos),
           0
         )
       ) AS result
@@ -514,6 +520,9 @@ BEGIN
       ON decision.applied_confirmation_id = receipt.id
     WHERE receipt.conferencia_id = v_conference.id
     GROUP BY receipt.id, receipt.confirmed_at, receipt.incomplete_reason
+    ORDER BY receipt.confirmed_at, receipt.id
+    LIMIT p_page_size
+    OFFSET (p_page - 1) * p_page_size
   ) AS receipt_row;
 
   RETURN jsonb_build_object(
@@ -635,6 +644,8 @@ REVOKE ALL ON FUNCTION app_private.consume_mcp_collection_capability(text, text,
 REVOKE ALL ON FUNCTION app_private.require_mcp_collection_capability(text, text, jsonb)
   FROM PUBLIC, anon, authenticated, service_role, mmd_mcp_executor;
 REVOKE ALL ON FUNCTION app_private.require_mcp_page(integer, integer)
+  FROM PUBLIC, anon, authenticated, service_role, mmd_mcp_executor;
+REVOKE ALL ON FUNCTION app_private.external_rental_covered_quantity(jsonb)
   FROM PUBLIC, anon, authenticated, service_role, mmd_mcp_executor;
 
 REVOKE ALL ON FUNCTION public.mcp_read_events(text, text, date, date, integer, integer)

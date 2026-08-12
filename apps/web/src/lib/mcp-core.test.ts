@@ -336,6 +336,74 @@ test('MCP discovers and reads every operational resource through the official SD
   await client.close()
 })
 
+test('MCP fails closed when an operational resource exceeds its DTO allowlist', async () => {
+  const dependencies = createDependencies()
+  dependencies.readDomain = async () => ({
+    ...domainReadFixture(MCP_DOMAIN_READ_TARGETS.catalogo, 1, 10),
+    secret: 'must-not-leave-the-server',
+  })
+  const handler = createMcpRequestHandler(dependencies)
+  const response = await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+        'x-mmd-mcp-request-id': 'domain-output-allowlist',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'resources/read',
+        params: { uri: 'mmd://catalogo/pagina/1/tamanho/10' },
+      }),
+    }),
+  )
+
+  const body = await response.text()
+  assert.doesNotMatch(body, /must-not-leave-the-server/)
+  assert.ok(dependencies.audits.some((audit) => audit.endsWith(':mmd:catalogo:list:FAILED')))
+})
+
+test('MCP returns an explicit null when the requested Conference does not exist', async () => {
+  const dependencies = createDependencies()
+  dependencies.readDomain = async (target) => {
+    assert.equal(target, MCP_DOMAIN_READ_TARGETS.conferencias)
+    return null
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  const response = await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+        'x-mmd-mcp-request-id': 'missing-conference',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'resources/read',
+        params: {
+          uri: `mmd://eventos/${EVENTO_ID}/conferencias/RETORNO/pagina/1/tamanho/10`,
+        },
+      }),
+    }),
+  )
+  const body = await response.text()
+  const payload = body
+    .split('\n')
+    .find((line) => line.startsWith('data: '))
+    ?.slice('data: '.length)
+  assert.ok(payload)
+  const envelope = JSON.parse(payload) as {
+    result?: { contents?: { text?: string }[] }
+  }
+  assert.equal(envelope.result?.contents?.[0]?.text, 'null')
+})
+
 test('MCP keeps the legacy SDK handshake available for current host compatibility', async () => {
   const dependencies = createDependencies()
   const handler = createMcpRequestHandler(dependencies)

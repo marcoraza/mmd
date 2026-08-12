@@ -168,6 +168,20 @@ Todos exigem `mcp:read`, perfil ativo e capability de uso único presa a `client
 | `mmd://eventos/{evento_id}/retorno-esperado/pagina/{page}/tamanho/{page_size}`                    | Unidades com saída confirmada que compõem o retorno esperado.                        |
 | `mmd://eventos/{evento_id}/pendencias/pagina/{page}/tamanho/{page_size}`                          | Pendência, Unidade, estado, localização confirmada e datas, sem identidade do autor. |
 
+Exemplos de leitura:
+
+```text
+mmd://eventos/pagina/1/tamanho/25
+mmd://catalogo/pagina/2/tamanho/50
+mmd://eventos/11111111-1111-4111-8111-111111111111/packing/pagina/1/tamanho/25
+mmd://eventos/11111111-1111-4111-8111-111111111111/conferencias/SAIDA/pagina/1/tamanho/25
+mmd://eventos/11111111-1111-4111-8111-111111111111/movimentacoes/pagina/1/tamanho/25
+mmd://eventos/11111111-1111-4111-8111-111111111111/retorno-esperado/pagina/1/tamanho/25
+mmd://eventos/11111111-1111-4111-8111-111111111111/pendencias/pagina/1/tamanho/25
+```
+
+Coleções retornam `{ "items": [...], "page": 1, "page_size": 25 }`. Conferência retorna o objeto com `id`, `direcao`, `version`, `updated_at`, `decisoes`, `recibos`, `page` e `page_size`; quando a direção pedida ainda não existe, retorna `null` explicitamente.
+
 `loadProjectById` não serve como adaptador MCP porque cria URLs assinadas de documentos comerciais. QR público, lotes legados e campos comerciais seguem fora da superfície.
 
 ## Provas de código disponíveis

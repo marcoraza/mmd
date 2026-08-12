@@ -134,7 +134,8 @@ const OUTPUT_SCHEMAS: Record<McpDomainReadTarget, z.ZodType> = {
       ),
       ...PAGE_ENVELOPE,
     })
-    .strict(),
+    .strict()
+    .nullable(),
   [MCP_DOMAIN_READ_TARGETS.retornoEsperado]: z
     .object({
       items: z.array(

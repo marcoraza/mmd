@@ -84,7 +84,7 @@ INSERT INTO public.packing_list (
   'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb7',
   2,
   ARRAY['cccccccc-cccc-4ccc-8ccc-ccccccccccc7']::uuid[],
-  '[{"quantidade":1}]'::jsonb,
+  '[{"id":"rental-valid","fornecedor":"Parceiro","quantidade":"5","observacao":"Cobertura extra"},{"id":1,"fornecedor":2,"quantidade":9,"observacao":3}]'::jsonb,
   'NAO_VAZAR_NOTA_DO_PACKING'
 ) ON CONFLICT (id) DO UPDATE
 SET quantidade = excluded.quantidade, serial_numbers_designados = excluded.serial_numbers_designados,
@@ -110,6 +110,17 @@ INSERT INTO public.conferencia_decisoes (
   'DESIGNADA'
 ) ON CONFLICT (id) DO UPDATE
 SET source_event_id = excluded.source_event_id, observation = excluded.observation;
+
+INSERT INTO public.conferencia_confirmacoes (
+  conferencia_id, idempotency_key, payload_hash, actor_id, confirmed_at
+)
+SELECT
+  'ffffffff-ffff-4fff-8fff-fffffffffff7',
+  'mcp-page-' || lpad(series::text, 3, '0'),
+  repeat('a', 64),
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7',
+  now() + make_interval(secs => series)
+FROM generate_series(1, 51) AS series;
 
 INSERT INTO public.movimentacoes (
   id, serial_number_id, projeto_id, tipo, status_anterior, status_novo, registrado_por, metodo_scan, notas
@@ -179,6 +190,9 @@ BEGIN
   IF v_result->'items'->0->>'nome' <> 'Evento MCP de Leitura' THEN
     RAISE EXCEPTION 'Eventos MCP não retornou o DTO esperado';
   END IF;
+  IF (v_result->'items'->0->'packing'->>'readiness_pct')::integer <> 100 THEN
+    RAISE EXCEPTION 'Eventos MCP divergiu da cobertura canônica com sobrecobertura';
+  END IF;
 END;
 $$;
 
@@ -199,6 +213,9 @@ BEGIN
   IF v_result::text ~ 'NAO_VAZAR_NOTA_DO_PACKING|SERIAL-FABRICA-VETADO|QR-VETADO' THEN
     RAISE EXCEPTION 'Packing MCP vazou campo vetado';
   END IF;
+  IF (v_result->'items'->0->>'qtd_coberta')::integer <> 2 THEN
+    RAISE EXCEPTION 'Packing MCP não limitou cobertura à quantidade necessária';
+  END IF;
 END;
 $$;
 
@@ -218,6 +235,9 @@ BEGIN
   v_result := public.mcp_read_conference('mcp-conference-token', 'dddddddd-dddd-4ddd-8ddd-ddddddddddd7', 'SAIDA', 1, 50);
   IF v_result::text ~ 'NAO_VAZAR_SOURCE_EVENT|NAO_VAZAR_OBSERVACAO_DA_DECISAO' THEN
     RAISE EXCEPTION 'Conferência MCP vazou evidência livre';
+  END IF;
+  IF jsonb_array_length(v_result->'recibos') <> 50 THEN
+    RAISE EXCEPTION 'Conferência MCP não limitou recibos ao page_size';
   END IF;
 END;
 $$;

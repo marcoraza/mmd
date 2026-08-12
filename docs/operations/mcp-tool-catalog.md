@@ -48,6 +48,102 @@ O ACK mínimo vem da operação persistida, nunca é fabricado: sucesso retorna 
 | `mmd_pendencia_resolver_retorno`    | `pendencia_id` UUID, `acao` `ENCONTRADA`/`MANUTENCAO`/`BAIXA`/`COBRANCA`, `observacao?`, `localizacao_confirmada?`, `client_request_id`.                                                                                                                                                                                       | `editor` ou `admin`, `mcp:operate`, `destructiveHint: true`. `BAIXA` e `COBRANCA` exigem `admin`. `ENCONTRADA` exige localização; `MANUTENCAO` e `COBRANCA` exigem observação. | Resolve a pendência canônica de retorno e altera o estado físico conforme a ação. O ACK devolve a resolução persistida quando a RPC a fornecer.  |
 | `mmd_unidade_vincular_rfid`         | `unidade_id` UUID, `epc` texto de até 128 caracteres ou `null`, `client_request_id`.                                                                                                                                                                                                                                           | `editor` ou `admin`, `mcp:operate`, `destructiveHint: true`. O host mostra Unidade e EPC antes da confirmação humana. `epc: null` precisa aparecer como desvínculo.            | Vincula ou remove o EPC RFID pela RPC canônica idempotente. O ACK devolve a operação e o recibo de vínculo quando disponível.                    |
 
+### Exemplos reais de payload
+
+Os UUIDs são ilustrativos. O cliente mantém o mesmo `client_request_id` apenas ao repetir a mesma intenção e o mesmo payload.
+
+```json
+{
+  "mmd_conferencia_salvar_decisao": {
+    "evento_id": "11111111-1111-4111-8111-111111111111",
+    "direcao": "SAIDA",
+    "unidade_id": "22222222-2222-4222-8222-222222222222",
+    "resultado": "PRESENTE",
+    "metodo": "RFID",
+    "source_event_id": "rfid-scan-20260812-001",
+    "captured_at": "2026-08-12T18:00:00-03:00",
+    "client_request_id": "saida-decisao-001"
+  },
+  "mmd_conferencia_resolver_excecao": {
+    "decision_id": "33333333-3333-4333-8333-333333333333",
+    "action": "ADICIONAR",
+    "expected_version": 3,
+    "client_request_id": "saida-excecao-001"
+  },
+  "mmd_conferencia_confirmar_saida": {
+    "conferencia_id": "44444444-4444-4444-8444-444444444444",
+    "decision_ids": ["33333333-3333-4333-8333-333333333333"],
+    "expected_version": 4,
+    "incomplete_reason": "Uma Unidade permanece no galpão",
+    "client_request_id": "saida-confirmacao-001"
+  }
+}
+```
+
+O ramo de retorno da mesma ferramenta de decisão exige condição e observação quando o resultado é `PROBLEMA`:
+
+```json
+{
+  "mmd_conferencia_salvar_decisao": {
+    "evento_id": "11111111-1111-4111-8111-111111111111",
+    "direcao": "RETORNO",
+    "unidade_id": "22222222-2222-4222-8222-222222222222",
+    "resultado": "PROBLEMA",
+    "metodo": "MANUAL",
+    "source_event_id": "retorno-manual-001",
+    "captured_at": "2026-08-12T22:10:00-03:00",
+    "desgaste": 2,
+    "manual_reason": "Leitor indisponível no desmonte",
+    "observation": "Conector danificado",
+    "client_request_id": "retorno-decisao-001"
+  },
+  "mmd_conferencia_confirmar_retorno": {
+    "conferencia_id": "55555555-5555-4555-8555-555555555555",
+    "decision_ids": ["66666666-6666-4666-8666-666666666666"],
+    "expected_version": 2,
+    "client_request_id": "retorno-confirmacao-001"
+  },
+  "mmd_conferencia_finalizar_retorno": {
+    "evento_id": "11111111-1111-4111-8111-111111111111",
+    "expected_version": 3,
+    "client_request_id": "retorno-finalizacao-001"
+  },
+  "mmd_pendencia_resolver_retorno": {
+    "pendencia_id": "77777777-7777-4777-8777-777777777777",
+    "acao": "ENCONTRADA",
+    "observacao": "Localizada após o fechamento",
+    "localizacao_confirmada": "Case B do retorno",
+    "client_request_id": "retorno-pendencia-001"
+  },
+  "mmd_unidade_vincular_rfid": {
+    "unidade_id": "22222222-2222-4222-8222-222222222222",
+    "epc": "E2000017221101441890ABCD",
+    "client_request_id": "rfid-vinculo-001"
+  }
+}
+```
+
+Sucesso e falha usam envelopes mínimos persistidos:
+
+```json
+{
+  "success": {
+    "operation_id": "88888888-8888-4888-8888-888888888888",
+    "status": "SUCCEEDED",
+    "tool": "mmd_conferencia_confirmar_saida",
+    "domain_receipt_id": "99999999-9999-4999-8999-999999999999",
+    "conference_id": "44444444-4444-4444-8444-444444444444",
+    "project_id": "11111111-1111-4111-8111-111111111111",
+    "version": 5
+  },
+  "failure": {
+    "operation_id": "88888888-8888-4888-8888-888888888888",
+    "status": "FAILED",
+    "error_code": "40001"
+  }
+}
+```
+
 ## Fontes canônicas
 
 | Domínio             | Fonte                                                                                                                     | Uso MCP                                                                                                  |
@@ -80,7 +176,7 @@ Estes recursos não aparecem no manifesto atual. Eles precisam de DTO allowliste
 - `apps/web/src/lib/mcp-registry-contract.test.ts` verifica as migrations de registry, capability de leitura e dispatcher de mutação.
 - `apps/web/scripts/smoke-mcp-database.ts` abre conexão real com o login dedicado, nega leitura direta e alcança a RPC allowlisted.
 - `supabase/tests/mcp_registry_test.sql` cobre capability de leitura, executor sem acesso direto às tabelas e uso único.
-- `supabase/tests/mcp_mutation_capability_test.sql` cobre operação persistida, retry idempotente, conflito de payload, capability inválida e falha sem ACK fabricado.
+- `supabase/tests/mcp_mutation_capability_test.sql` percorre as sete branches do dispatcher com sucesso, retry concluído, timeout antes do commit, conflito de payload, capability inválida e falha sem ACK fabricado.
 - `supabase/tests/conferencia_fisica_test.sql`, `supabase/tests/return_confirmation_test.sql` e `supabase/tests/rfid_epc_contract_test.sql` cobrem os contratos canônicos de Conferência, retorno e RFID.
 
 Essas provas são locais. Ainda faltam migrations no ambiente alvo, OAuth 2.1, consentimento configurado, credencial de `mmd_mcp_executor`, WAF pré-auth, deploy autorizado e smoke no Claude Code e ChatGPT Developer Mode.

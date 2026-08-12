@@ -1,0 +1,3 @@
+-- No-op intencional. Esta versão entrou no histórico local durante um reset
+-- concorrente antes de o contrato RFID ser gravado. A migration efetiva é a
+-- 20260812163030_rfid_epc_operations_contract.sql, imediatamente posterior.

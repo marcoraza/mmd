@@ -28,7 +28,7 @@ As respostas de Evento e Unidade passam por schemas `zod.strict()`. Campo acima 
 
 ### Contrato comum das mutações
 
-Todas as ferramentas abaixo exigem `mcp:operate` no token e no registry, mais perfil `editor` ou `admin`. `viewer` recebe `PERMISSAO_NEGADA` antes do adaptador. `mmd_pendencia_resolver_retorno` exige `admin` para `BAIXA` e `COBRANCA`.
+Todas as ferramentas abaixo exigem `mcp:operate` no token e no registry, mais perfil `editor` ou `admin`. O servidor não anuncia mutações para `viewer`; tentativa direta por nome continua registrada como `DENIED` sem alcançar o adaptador. `mmd_pendencia_resolver_retorno` exige `admin` para `BAIXA` e `COBRANCA`.
 
 Cada mutation recebe `client_request_id`, string de 8 a 128 caracteres no padrão `[A-Za-z0-9][A-Za-z0-9._:-]*`. O servidor persiste a intenção em `mcp_operation_log` por `client_id + actor_id + tool + client_request_id`; compara `payload_hash`; e recusa o mesmo identificador com payload diferente. O retry com payload idêntico reutiliza a operação e, depois de sucesso, devolve o resultado persistido.
 

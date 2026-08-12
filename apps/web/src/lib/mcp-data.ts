@@ -5,7 +5,13 @@ import postgres from 'postgres'
 import { computePackingCoverage, parseExternalRentalCoverages } from '@/lib/external-rental-core'
 import { issueMcpOperationCapability, issueMcpReadCapability } from '@/lib/mcp-auth'
 import { mcpDatabaseConfiguration } from '@/lib/mcp-data-core'
-import type { McpEvent, McpIdentity, McpUnit } from '@/lib/mcp-core'
+import type {
+  McpEvent,
+  McpIdentity,
+  McpMutationAck,
+  McpMutationTool,
+  McpUnit,
+} from '@/lib/mcp-core'
 
 const clients = new Map<string, ReturnType<typeof postgres>>()
 
@@ -16,7 +22,7 @@ type MutationEnvelope = {
   error_code?: unknown
 }
 
-function mutationAck(tool: string, envelope: MutationEnvelope) {
+function mutationAck(tool: McpMutationTool, envelope: MutationEnvelope): McpMutationAck {
   const operationId = typeof envelope.operation_id === 'string' ? envelope.operation_id : null
   if (!operationId) throw new Error('MCP_OPERATION_RESULT_INVALID')
   if (envelope.ok !== true) {
@@ -135,7 +141,7 @@ export async function readMcpUnit(
 }
 
 export async function executeMcpMutation(
-  tool: string,
+  tool: McpMutationTool,
   args: Record<string, unknown>,
   identity: McpIdentity,
   clientRequestId: string,

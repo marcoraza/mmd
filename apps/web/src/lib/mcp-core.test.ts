@@ -3,7 +3,12 @@ import test from 'node:test'
 
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client'
 
-import { createMcpRequestHandler, type McpEvent, type McpRequestDependencies } from './mcp-core.ts'
+import {
+  createMcpRequestHandler,
+  MCP_MUTATION_TOOL_NAMES,
+  type McpEvent,
+  type McpRequestDependencies,
+} from './mcp-core.ts'
 
 const EVENTO_ID = '11111111-1111-4111-8111-111111111111'
 const UNIDADE_ID = '33333333-3333-4333-8333-333333333333'
@@ -290,7 +295,17 @@ test('MCP rejects fields above the tool input allowlist before reading data', as
 
 test('MCP advertises canonical mutation tools only when the operation adapter exists', async () => {
   const dependencies = createDependencies()
-  dependencies.mutate = async () => ({})
+  dependencies.authenticate = async () => ({
+    actorId: '22222222-2222-4222-8222-222222222222',
+    clientId: 'claude-code',
+    role: 'editor',
+    scopes: ['mcp:read', 'mcp:operate'],
+  })
+  dependencies.mutate = async () => ({
+    operation_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+    status: 'FAILED',
+    error_code: 'NOT_CALLED',
+  })
   const handler = createMcpRequestHandler(dependencies)
   let requestNumber = 0
   const transport = new StreamableHTTPClientTransport(new URL('https://mmd.test/api/mcp'), {
@@ -307,19 +322,30 @@ test('MCP advertises canonical mutation tools only when the operation adapter ex
   const tools = await client.listTools()
   await client.close()
 
-  const confirmation = tools.tools.find((tool) => tool.name === 'mmd_conferencia_confirmar_saida')
-  assert.equal(confirmation?.annotations?.destructiveHint, true)
-  assert.equal(confirmation?.annotations?.idempotentHint, true)
-  assert.equal(
-    tools.tools.some((tool) => tool.name === 'mmd_unidade_vincular_rfid'),
-    true,
+  assert.deepEqual(
+    tools.tools.map((tool) => tool.name),
+    ['mmd_consultar_evento', ...MCP_MUTATION_TOOL_NAMES],
   )
+  for (const tool of tools.tools.filter((candidate) => candidate.name !== 'mmd_consultar_evento')) {
+    assert.equal(tool.annotations?.idempotentHint, true)
+    assert.equal(tool.annotations?.readOnlyHint, false)
+    assert.equal(
+      tool.annotations?.destructiveHint,
+      !['mmd_conferencia_salvar_decisao', 'mmd_conferencia_resolver_excecao'].includes(tool.name),
+    )
+    const schema = tool.inputSchema as {
+      required?: string[]
+      anyOf?: { required?: string[] }[]
+      oneOf?: { required?: string[] }[]
+    }
+    const variants = schema.anyOf ?? schema.oneOf ?? [schema]
+    assert.ok(variants.every((variant) => variant.required?.includes('client_request_id')))
+  }
 })
 
-test('MCP denies mutation for viewer before the operation adapter', async () => {
+test('MCP hides mutation tools from viewer before the operation adapter', async () => {
   const dependencies = createDependencies()
   let mutateCalled = false
-  const audits: { intent: string; outcome: string }[] = []
   dependencies.authenticate = async () => ({
     actorId: '22222222-2222-4222-8222-222222222222',
     clientId: 'claude-code',
@@ -328,7 +354,77 @@ test('MCP denies mutation for viewer before the operation adapter', async () => 
   })
   dependencies.mutate = async () => {
     mutateCalled = true
-    return {}
+    return {
+      operation_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+      status: 'FAILED',
+      error_code: 'NOT_CALLED',
+    }
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  let requestNumber = 0
+  const transport = new StreamableHTTPClientTransport(new URL('https://mmd.test/api/mcp'), {
+    requestInit: { headers: { authorization: 'Bearer valid-user-token' } },
+    fetch: async (input, init) => {
+      requestNumber += 1
+      const headers = new Headers(init?.headers)
+      headers.set('x-mmd-mcp-request-id', `viewer-list-${requestNumber}`)
+      return handler(new Request(input, { ...init, headers }))
+    },
+  })
+  const client = new Client({ name: 'viewer-list-test', version: '1.0.0' })
+  await client.connect(transport)
+  const tools = await client.listTools()
+  await client.close()
+
+  assert.equal(mutateCalled, false)
+  assert.deepEqual(
+    tools.tools.map((tool) => tool.name),
+    ['mmd_consultar_evento'],
+  )
+
+  await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+        'x-mmd-mcp-request-id': 'viewer-direct-call',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tools/call',
+        params: {
+          name: 'mmd_unidade_vincular_rfid',
+          arguments: {
+            unidade_id: UNIDADE_ID,
+            epc: null,
+            client_request_id: 'viewer-direct-operation',
+          },
+        },
+      }),
+    }),
+  )
+
+  assert.ok(
+    dependencies.audits.includes(
+      'claude-code:22222222-2222-4222-8222-222222222222:mmd_unidade_vincular_rfid:DENIED',
+    ),
+  )
+})
+
+test('MCP audits a client revocation that races with mutation capability issuance', async () => {
+  const dependencies = createDependencies()
+  const audits: { intent: string; outcome: string }[] = []
+  dependencies.authenticate = async () => ({
+    actorId: '22222222-2222-4222-8222-222222222222',
+    clientId: 'claude-code',
+    role: 'editor',
+    scopes: ['mcp:read', 'mcp:operate'],
+  })
+  dependencies.mutate = async () => {
+    throw new Error('MCP_OPERATION_DENIED')
   }
   dependencies.audit = async (input) => {
     audits.push({ intent: input.intent, outcome: input.outcome })
@@ -341,7 +437,7 @@ test('MCP denies mutation for viewer before the operation adapter', async () => 
         authorization: 'Bearer valid-user-token',
         accept: 'application/json, text/event-stream',
         'content-type': 'application/json',
-        'x-mmd-mcp-request-id': 'viewer-mutation-request',
+        'x-mmd-mcp-request-id': 'revoked-mutation-request',
       },
       body: JSON.stringify({
         jsonrpc: '2.0',
@@ -351,16 +447,15 @@ test('MCP denies mutation for viewer before the operation adapter', async () => 
           name: 'mmd_unidade_vincular_rfid',
           arguments: {
             unidade_id: UNIDADE_ID,
-            epc: 'E2000017221101441890ABCD',
-            client_request_id: 'viewer-operation-1',
+            epc: null,
+            client_request_id: 'revoked-operation-1',
           },
         },
       }),
     }),
   )
 
-  assert.equal(mutateCalled, false)
-  assert.match(await response.text(), /PERMISSAO_NEGADA/)
+  assert.match(await response.text(), /PERMISSAO_REVOGADA/)
   assert.deepEqual(audits, [{ intent: 'MUTATION', outcome: 'DENIED' }])
 })
 

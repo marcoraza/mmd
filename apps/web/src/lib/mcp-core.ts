@@ -49,6 +49,16 @@ export const MCP_AUDIT_TARGETS = {
 } as const
 
 export type McpAuditTarget = (typeof MCP_AUDIT_TARGETS)[keyof typeof MCP_AUDIT_TARGETS]
+export const MCP_MUTATION_TOOL_NAMES = [
+  MCP_AUDIT_TARGETS.salvarDecisao,
+  MCP_AUDIT_TARGETS.resolverExcecao,
+  MCP_AUDIT_TARGETS.confirmarSaida,
+  MCP_AUDIT_TARGETS.confirmarRetorno,
+  MCP_AUDIT_TARGETS.finalizarRetorno,
+  MCP_AUDIT_TARGETS.resolverPendencia,
+  MCP_AUDIT_TARGETS.vincularRfid,
+] as const
+export type McpMutationTool = (typeof MCP_MUTATION_TOOL_NAMES)[number]
 
 export type McpAuditInput = {
   clientId: string
@@ -65,11 +75,11 @@ export type McpRequestDependencies = {
   readEvent: (eventoId: string, identity: McpIdentity) => Promise<McpEvent | null>
   readUnit: (unidadeId: string, identity: McpIdentity) => Promise<McpUnit | null>
   mutate?: (
-    tool: string,
+    tool: McpMutationTool,
     args: Record<string, unknown>,
     identity: McpIdentity,
     clientRequestId: string,
-  ) => Promise<unknown>
+  ) => Promise<McpMutationAck>
   audit: (input: McpAuditInput) => Promise<void>
   rateLimit?: (
     identity: McpIdentity,
@@ -114,7 +124,7 @@ const MUTATION_ACK = z.discriminatedUnion('status', [
     .object({
       operation_id: z.string().uuid(),
       status: z.literal('SUCCEEDED'),
-      tool: z.string(),
+      tool: z.enum(MCP_MUTATION_TOOL_NAMES),
       domain_receipt_id: z.string().uuid().nullable(),
       conference_id: z.string().uuid().nullable(),
       project_id: z.string().uuid().nullable(),
@@ -129,6 +139,7 @@ const MUTATION_ACK = z.discriminatedUnion('status', [
     })
     .strict(),
 ])
+export type McpMutationAck = z.infer<typeof MUTATION_ACK>
 const SAVE_DECISION_INPUT = z.discriminatedUnion('direcao', [
   z
     .object({
@@ -202,6 +213,64 @@ const BIND_RFID_INPUT = z
     client_request_id: CLIENT_REQUEST_ID,
   })
   .strict()
+const MUTATION_DEFINITIONS = [
+  {
+    tool: MCP_AUDIT_TARGETS.salvarDecisao,
+    title: 'Salvar decisão de Conferência',
+    description:
+      'Registra um rascunho físico idempotente de saída ou retorno. Não move estoque. Confirme Evento, Unidade, resultado e método com o operador.',
+    schema: SAVE_DECISION_INPUT,
+    destructive: false,
+  },
+  {
+    tool: MCP_AUDIT_TARGETS.resolverExcecao,
+    title: 'Resolver exceção de saída',
+    description:
+      'Adiciona ou ignora uma Unidade em revisão. Altera o rascunho, não move estoque. Exige confirmação explícita da ação.',
+    schema: RESOLVE_EXCEPTION_INPUT,
+    destructive: false,
+  },
+  {
+    tool: MCP_AUDIT_TARGETS.confirmarSaida,
+    title: 'Confirmar saída física',
+    description:
+      'MOVE as Unidades escolhidas de DISPONIVEL para EM_CAMPO e grava movimentações. O hospedeiro deve mostrar o impacto e obter confirmação humana antes da chamada.',
+    schema: CONFIRM_EXIT_INPUT,
+    destructive: true,
+  },
+  {
+    tool: MCP_AUDIT_TARGETS.confirmarRetorno,
+    title: 'Confirmar retorno parcial',
+    description:
+      'APLICA o retorno físico das decisões OK ou PROBLEMA selecionadas. O hospedeiro deve obter confirmação humana antes da chamada.',
+    schema: CONFIRM_INPUT,
+    destructive: true,
+  },
+  {
+    tool: MCP_AUDIT_TARGETS.finalizarRetorno,
+    title: 'Finalizar Conferência de retorno',
+    description:
+      'APLICA retornos pendentes e cria ausências NAO_VOLTOU para o restante. O hospedeiro deve mostrar esse impacto e obter confirmação humana.',
+    schema: FINALIZE_RETURN_INPUT,
+    destructive: true,
+  },
+  {
+    tool: MCP_AUDIT_TARGETS.resolverPendencia,
+    title: 'Resolver pendência de retorno',
+    description:
+      'ALTERA o estado físico de uma Unidade pendente. BAIXA e COBRANCA exigem admin. O hospedeiro deve obter confirmação humana.',
+    schema: RESOLVE_PENDING_INPUT,
+    destructive: true,
+  },
+  {
+    tool: MCP_AUDIT_TARGETS.vincularRfid,
+    title: 'Vincular ou remover EPC RFID',
+    description:
+      'ALTERA o vínculo RFID da Unidade. EPC nulo desvincula. O hospedeiro deve mostrar Unidade e EPC e obter confirmação humana.',
+    schema: BIND_RFID_INPUT,
+    destructive: true,
+  },
+] as const
 
 function privateCache() {
   return { ttlMs: 0, cacheScope: 'private' as const }
@@ -236,7 +305,7 @@ function hashPayload(value: unknown) {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex')
 }
 
-function mutationArgumentError(tool: McpAuditTarget, args: Record<string, unknown>) {
+function mutationArgumentError(tool: McpMutationTool, args: Record<string, unknown>) {
   if (tool === MCP_AUDIT_TARGETS.salvarDecisao) {
     if (args.metodo === 'MANUAL' && String(args.manual_reason ?? '').trim().length < 3) {
       return 'MOTIVO_MANUAL_OBRIGATORIO'
@@ -383,32 +452,38 @@ async function auditInvalidToolArguments(
     return
   }
 
-  const mutationSchemas = new Map<string, z.ZodType>([
-    [MCP_AUDIT_TARGETS.salvarDecisao, SAVE_DECISION_INPUT],
-    [MCP_AUDIT_TARGETS.resolverExcecao, RESOLVE_EXCEPTION_INPUT],
-    [MCP_AUDIT_TARGETS.confirmarSaida, CONFIRM_EXIT_INPUT],
-    [MCP_AUDIT_TARGETS.confirmarRetorno, CONFIRM_INPUT],
-    [MCP_AUDIT_TARGETS.finalizarRetorno, FINALIZE_RETURN_INPUT],
-    [MCP_AUDIT_TARGETS.resolverPendencia, RESOLVE_PENDING_INPUT],
-    [MCP_AUDIT_TARGETS.vincularRfid, BIND_RFID_INPUT],
-  ])
   const mutationTool =
     body.method === 'tools/call' && typeof body.params?.name === 'string' ? body.params.name : null
-  const mutationSchema = mutationTool ? mutationSchemas.get(mutationTool) : null
+  const mutation = MUTATION_DEFINITIONS.find((definition) => definition.tool === mutationTool)
   const clientRequestId = requestId(request)
-  if (
-    mutationSchema &&
-    clientRequestId &&
-    !mutationSchema.safeParse(body.params?.arguments).success
-  ) {
+  if (mutation && clientRequestId && !mutation.schema.safeParse(body.params?.arguments).success) {
     await dependencies.audit({
       clientId: identity.clientId,
       actorId: identity.actorId,
-      tool: mutationTool as McpAuditTarget,
+      tool: mutation.tool,
       clientRequestId,
       payloadHash: hashPayload({ invalid_arguments: true }),
       intent: 'MUTATION',
       outcome: 'FAILED',
+    })
+    return
+  }
+
+  const parsedMutation = mutation?.schema.safeParse(body.params?.arguments)
+  if (
+    mutation &&
+    parsedMutation?.success &&
+    (!identity.scopes.includes('mcp:operate') || identity.role === 'viewer')
+  ) {
+    const { client_request_id: deniedRequestId, ...args } = parsedMutation.data
+    await dependencies.audit({
+      clientId: identity.clientId,
+      actorId: identity.actorId,
+      tool: mutation.tool,
+      clientRequestId: deniedRequestId,
+      payloadHash: hashPayload(args),
+      intent: 'MUTATION',
+      outcome: 'DENIED',
     })
   }
 }
@@ -427,7 +502,7 @@ function createServer(
   )
 
   async function executeMutation(
-    tool: McpAuditTarget,
+    tool: McpMutationTool,
     input: Record<string, unknown> & { client_request_id: string },
   ) {
     const { client_request_id: clientRequestId, ...args } = input
@@ -481,7 +556,24 @@ function createServer(
         content: [{ type: 'text' as const, text: JSON.stringify(ack) }],
         isError: ack.status === 'FAILED',
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === 'MCP_OPERATION_DENIED') {
+        await dependencies.audit({
+          clientId: identity.clientId,
+          actorId: identity.actorId,
+          tool,
+          clientRequestId,
+          payloadHash: hashPayload(args),
+          intent: 'MUTATION',
+          outcome: 'DENIED',
+        })
+        return {
+          content: [
+            { type: 'text' as const, text: JSON.stringify({ error: 'PERMISSAO_REVOGADA' }) },
+          ],
+          isError: true,
+        }
+      }
       return {
         content: [
           { type: 'text' as const, text: JSON.stringify({ error: 'MCP_OPERATION_UNAVAILABLE' }) },
@@ -657,90 +749,31 @@ function createServer(
     },
   )
 
-  if (dependencies.mutate) {
-    server.registerTool(
-      MCP_AUDIT_TARGETS.salvarDecisao,
-      {
-        title: 'Salvar decisão de Conferência',
-        description:
-          'Registra um rascunho físico idempotente de saída ou retorno. Não move estoque. Confirme Evento, Unidade, resultado e método com o operador.',
-        inputSchema: SAVE_DECISION_INPUT,
-        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-      },
-      async (input) => executeMutation(MCP_AUDIT_TARGETS.salvarDecisao, input),
-    )
-
-    server.registerTool(
-      MCP_AUDIT_TARGETS.resolverExcecao,
-      {
-        title: 'Resolver exceção de saída',
-        description:
-          'Adiciona ou ignora uma Unidade em revisão. Altera o rascunho, não move estoque. Exige confirmação explícita da ação.',
-        inputSchema: RESOLVE_EXCEPTION_INPUT,
-        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-      },
-      async (input) => executeMutation(MCP_AUDIT_TARGETS.resolverExcecao, input),
-    )
-
-    server.registerTool(
-      MCP_AUDIT_TARGETS.confirmarSaida,
-      {
-        title: 'Confirmar saída física',
-        description:
-          'MOVE as Unidades escolhidas de DISPONIVEL para EM_CAMPO e grava movimentações. O hospedeiro deve mostrar o impacto e obter confirmação humana antes da chamada.',
-        inputSchema: CONFIRM_EXIT_INPUT,
-        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
-      },
-      async (input) => executeMutation(MCP_AUDIT_TARGETS.confirmarSaida, input),
-    )
-
-    server.registerTool(
-      MCP_AUDIT_TARGETS.confirmarRetorno,
-      {
-        title: 'Confirmar retorno parcial',
-        description:
-          'APLICA o retorno físico das decisões OK ou PROBLEMA selecionadas. O hospedeiro deve obter confirmação humana antes da chamada.',
-        inputSchema: CONFIRM_INPUT,
-        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
-      },
-      async (input) => executeMutation(MCP_AUDIT_TARGETS.confirmarRetorno, input),
-    )
-
-    server.registerTool(
-      MCP_AUDIT_TARGETS.finalizarRetorno,
-      {
-        title: 'Finalizar Conferência de retorno',
-        description:
-          'APLICA retornos pendentes e cria ausências NAO_VOLTOU para o restante. O hospedeiro deve mostrar esse impacto e obter confirmação humana.',
-        inputSchema: FINALIZE_RETURN_INPUT,
-        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
-      },
-      async (input) => executeMutation(MCP_AUDIT_TARGETS.finalizarRetorno, input),
-    )
-
-    server.registerTool(
-      MCP_AUDIT_TARGETS.resolverPendencia,
-      {
-        title: 'Resolver pendência de retorno',
-        description:
-          'ALTERA o estado físico de uma Unidade pendente. BAIXA e COBRANCA exigem admin. O hospedeiro deve obter confirmação humana.',
-        inputSchema: RESOLVE_PENDING_INPUT,
-        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
-      },
-      async (input) => executeMutation(MCP_AUDIT_TARGETS.resolverPendencia, input),
-    )
-
-    server.registerTool(
-      MCP_AUDIT_TARGETS.vincularRfid,
-      {
-        title: 'Vincular ou remover EPC RFID',
-        description:
-          'ALTERA o vínculo RFID da Unidade. EPC nulo desvincula. O hospedeiro deve mostrar Unidade e EPC e obter confirmação humana.',
-        inputSchema: BIND_RFID_INPUT,
-        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
-      },
-      async (input) => executeMutation(MCP_AUDIT_TARGETS.vincularRfid, input),
-    )
+  if (
+    dependencies.mutate &&
+    identity.scopes.includes('mcp:operate') &&
+    identity.role !== 'viewer'
+  ) {
+    for (const definition of MUTATION_DEFINITIONS) {
+      server.registerTool(
+        definition.tool,
+        {
+          title: definition.title,
+          description: definition.description,
+          inputSchema: definition.schema,
+          annotations: {
+            readOnlyHint: false,
+            destructiveHint: definition.destructive,
+            idempotentHint: true,
+          },
+        },
+        async (input: Record<string, unknown>) =>
+          executeMutation(
+            definition.tool,
+            input as Record<string, unknown> & { client_request_id: string },
+          ),
+      )
+    }
   }
 
   return server

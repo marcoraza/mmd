@@ -7,7 +7,7 @@ import { createRemoteJWKSet } from 'jose'
 
 import { extractBearerToken } from '@/lib/action-auth-core'
 import { resolveMcpIdentity, verifyMcpAccessToken } from '@/lib/mcp-auth-core'
-import type { McpAuditInput, McpIdentity } from '@/lib/mcp-core'
+import type { McpAuditInput, McpIdentity, McpMutationTool } from '@/lib/mcp-core'
 import { mcpOAuthConfiguration } from '@/lib/mcp-oauth'
 
 const remoteKeySets = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
@@ -141,7 +141,7 @@ export async function issueMcpReadCapability(
 
 export async function issueMcpOperationCapability(
   identity: McpIdentity,
-  tool: string,
+  tool: McpMutationTool,
   clientRequestId: string,
   args: Record<string, unknown>,
 ) {
@@ -156,6 +156,9 @@ export async function issueMcpOperationCapability(
     p_arguments: args,
     p_ttl_seconds: 30,
   })
+  if (error?.code === '42501' || error?.message.includes('MCP_OPERATION_PERMISSION_DENIED')) {
+    throw new Error('MCP_OPERATION_DENIED')
+  }
   if (error || !data || typeof data !== 'object') {
     throw new Error('MCP_OPERATION_CLAIM_FAILED')
   }

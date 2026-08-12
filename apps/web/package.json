@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test": "node --import tsx --test src/lib/*.test.ts src/lib/data/*.test.ts",
+    "test:mcp": "node --import tsx --test src/lib/mcp-*.test.ts",
     "test:training": "node --import tsx --test src/lib/training-event-core.test.ts",
     "training:prepare": "tsx scripts/prepare-training-event.ts",
     "lint": "eslint .",
@@ -14,6 +15,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
     "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.104.0",
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/plugin-kit": "0.7.2",
+    "@modelcontextprotocol/client": "2.0.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",

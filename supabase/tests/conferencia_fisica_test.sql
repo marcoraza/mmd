@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(62);
+SELECT plan(63);
 
 INSERT INTO auth.users (
   instance_id,
@@ -333,6 +333,46 @@ SELECT is(
     WHERE idempotency_key = 'checkout:test:001'
   ),
   'retry devolve o mesmo identificador de Recibo'
+);
+
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1","role":"authenticated"}',
+  true
+);
+
+SELECT throws_ok(
+  $$
+    SELECT public.confirmar_conferencia_saida(
+      (
+        SELECT id
+        FROM public.conferencias
+        WHERE projeto_id = '33333333-3333-3333-3333-333333333333'
+          AND direcao = 'SAIDA'
+      ),
+      ARRAY[
+        (
+          SELECT cd.id
+          FROM public.conferencia_decisoes cd
+          JOIN public.conferencias c ON c.id = cd.conferencia_id
+          WHERE c.projeto_id = '33333333-3333-3333-3333-333333333333'
+            AND cd.serial_number_id = '22222222-2222-2222-2222-222222222222'
+        )
+      ],
+      2,
+      'checkout:test:001',
+      'A segunda Unidade ainda está no galpão'
+    )
+  $$,
+  'P0001',
+  'IDEMPOTENCY_KEY_CONFLICT',
+  'outro operador não recebe Recibo de saída alheio'
+);
+
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2","role":"authenticated"}',
+  true
 );
 
 SELECT is(

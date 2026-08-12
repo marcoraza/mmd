@@ -1,5 +1,9 @@
 # Lessons
 
+## 2026-08-12
+
+- Em toda escrita idempotente de estoque, o retry precisa comparar `actor_id` e `payload_hash` antes de devolver ACK. Chave igual de outro operador é conflito, nunca recibo alheio. Em EPC, RLS de linha não protege coluna sensível: bloquear alteração direta de `tag_rfid` no banco e liberar só a RPC transacional auditada.
+
 ## 2026-07-27
 
 - `AuthSessionStoreTests` chama `AppConfig.shared.save(supabaseUrl: "https://example.supabase.co", anonKey: "test-anon-key", ...)`, que grava em `UserDefaults.standard` do app host e nao restaura no tearDown. Rodar a suite no simulador deixa o app instalado apontando para um host inexistente, e o sintoma aparece depois como "Erro de rede: nao foi possivel encontrar um servidor" na tela de login. Teste que toca config global precisa de suite isolada ou restore no tearDown.

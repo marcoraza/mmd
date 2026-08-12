@@ -9,6 +9,11 @@ import {
   type McpEvent,
   type McpRequestDependencies,
 } from './mcp-core.ts'
+import {
+  MCP_DOMAIN_READ_TARGETS,
+  MCP_DOMAIN_RESOURCE_DEFINITIONS,
+  type McpDomainReadTarget,
+} from './mcp-read-resources.ts'
 
 const EVENTO_ID = '11111111-1111-4111-8111-111111111111'
 const UNIDADE_ID = '33333333-3333-4333-8333-333333333333'
@@ -52,6 +57,110 @@ function createDependencies(): McpRequestDependencies & { audits: string[] } {
     audit: async (input) => {
       audits.push(`${input.clientId}:${input.actorId}:${input.tool}:${input.outcome}`)
     },
+  }
+}
+
+function domainReadFixture(target: McpDomainReadTarget, page: number, pageSize: number) {
+  const envelope = (items: unknown[]) => ({ items, page, page_size: pageSize })
+  switch (target) {
+    case MCP_DOMAIN_READ_TARGETS.eventos:
+      return envelope([
+        {
+          id: EVENTO_ID,
+          nome: 'Evento Operacional',
+          status: 'CONFIRMADO',
+          data_inicio: '2026-08-20',
+          data_fim: '2026-08-20',
+          local: 'Galpão',
+          packing: { linhas: 1, itens_total: 2, itens_alocados: 2, readiness_pct: 100 },
+        },
+      ])
+    case MCP_DOMAIN_READ_TARGETS.catalogo:
+      return envelope([
+        {
+          id: '44444444-4444-4444-8444-444444444444',
+          nome: 'PAR LED',
+          categoria: 'ILUMINACAO',
+          quantidade_total: 3,
+          unidades: { disponiveis: 2, em_campo: 1, retornando: 0, manutencao: 0 },
+        },
+      ])
+    case MCP_DOMAIN_READ_TARGETS.packing:
+      return envelope([
+        {
+          id: '55555555-5555-4555-8555-555555555555',
+          item: {
+            id: '44444444-4444-4444-8444-444444444444',
+            nome: 'PAR LED',
+            categoria: 'ILUMINACAO',
+          },
+          quantidade: 2,
+          qtd_propria: 2,
+          alugueis_avulsos: 0,
+          qtd_coberta: 2,
+          qtd_faltante: 0,
+        },
+      ])
+    case MCP_DOMAIN_READ_TARGETS.movimentacoes:
+      return envelope([
+        {
+          id: '66666666-6666-4666-8666-666666666666',
+          unidade: { id: UNIDADE_ID, codigo_interno: 'MMD-ILU-0001' },
+          tipo: 'CHECKOUT',
+          status_anterior: 'DISPONIVEL',
+          status_novo: 'EM_CAMPO',
+          metodo: 'RFID',
+          timestamp: '2026-08-20T10:00:00Z',
+        },
+      ])
+    case MCP_DOMAIN_READ_TARGETS.conferencias:
+      return {
+        id: '77777777-7777-4777-8777-777777777777',
+        direcao: 'SAIDA',
+        version: 2,
+        updated_at: '2026-08-20T10:00:00Z',
+        decisoes: [
+          {
+            id: '88888888-8888-4888-8888-888888888888',
+            unidade: { id: UNIDADE_ID, codigo_interno: 'MMD-ILU-0001' },
+            resultado: 'PRESENTE',
+            metodo: 'RFID',
+            captured_at: '2026-08-20T09:55:00Z',
+            resolution: null,
+            applied: true,
+          },
+        ],
+        recibos: [
+          {
+            id: '99999999-9999-4999-8999-999999999999',
+            confirmed_at: '2026-08-20T10:00:00Z',
+            incomplete_reason: null,
+            applied_count: 1,
+          },
+        ],
+        page,
+        page_size: pageSize,
+      }
+    case MCP_DOMAIN_READ_TARGETS.retornoEsperado:
+      return envelope([
+        {
+          unidade: { id: UNIDADE_ID, codigo_interno: 'MMD-ILU-0001' },
+          saida_confirmation_id: '99999999-9999-4999-8999-999999999999',
+          saida_confirmed_at: '2026-08-20T10:00:00Z',
+        },
+      ])
+    case MCP_DOMAIN_READ_TARGETS.pendencias:
+      return envelope([
+        {
+          id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+          unidade: { id: UNIDADE_ID, codigo_interno: 'MMD-ILU-0001', status: 'RETORNANDO' },
+          status: 'ABERTA',
+          observacao: null,
+          localizacao_confirmada: null,
+          created_at: '2026-08-20T12:00:00Z',
+          resolved_at: null,
+        },
+      ])
   }
 }
 
@@ -159,6 +268,71 @@ test('MCP discovery and authenticated Event resource work through the official S
     'claude-desktop:22222222-2222-4222-8222-222222222222:mmd:unidades:read:SUCCEEDED',
   ])
 
+  await client.close()
+})
+
+test('MCP discovers and reads every operational resource through the official SDK', async () => {
+  const dependencies = createDependencies()
+  const reads: McpDomainReadTarget[] = []
+  dependencies.readDomain = async (target, args) => {
+    reads.push(target)
+    return domainReadFixture(target, Number(args.page), Number(args.page_size))
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  let requestNumber = 0
+  const transport = new StreamableHTTPClientTransport(new URL('https://mmd.test/api/mcp'), {
+    requestInit: { headers: { authorization: 'Bearer valid-user-token' } },
+    fetch: async (input, init) => {
+      requestNumber += 1
+      const headers = new Headers(init?.headers)
+      headers.set('x-mmd-mcp-request-id', `domain-resource-${requestNumber}`)
+      return handler(new Request(input, { ...init, headers }))
+    },
+  })
+  const client = new Client({ name: 'domain-resource-test', version: '1.0.0' })
+  await client.connect(transport)
+
+  const templates = await client.listResourceTemplates({ cacheMode: 'bypass' })
+  assert.deepEqual(
+    templates.resourceTemplates.map((template) => template.uriTemplate),
+    [
+      'mmd://eventos/{evento_id}',
+      'mmd://unidades/{unidade_id}',
+      ...MCP_DOMAIN_RESOURCE_DEFINITIONS.map((definition) => definition.uriTemplate),
+    ],
+  )
+
+  const uris = [
+    'mmd://eventos/pagina/2/tamanho/10',
+    'mmd://catalogo/pagina/1/tamanho/10',
+    `mmd://eventos/${EVENTO_ID}/packing/pagina/1/tamanho/10`,
+    `mmd://eventos/${EVENTO_ID}/conferencias/SAIDA/pagina/1/tamanho/10`,
+    `mmd://eventos/${EVENTO_ID}/movimentacoes/pagina/1/tamanho/10`,
+    `mmd://eventos/${EVENTO_ID}/retorno-esperado/pagina/1/tamanho/10`,
+    `mmd://eventos/${EVENTO_ID}/pendencias/pagina/1/tamanho/10`,
+  ]
+  for (const uri of uris) {
+    const result = await client.readResource({ uri, cacheMode: 'bypass' })
+    const output = JSON.parse(result.contents[0]?.text ?? '{}') as {
+      items?: unknown[]
+      page?: number
+      page_size?: number
+    }
+    assert.ok(output.items?.length === 1 || uri.includes('/conferencias/'))
+    assert.ok((output.page ?? 0) >= 1)
+    assert.equal(output.page_size, 10)
+  }
+
+  await assert.rejects(
+    client.readResource({
+      uri: `mmd://eventos/${EVENTO_ID}/pendencias/pagina/1/tamanho/51`,
+      cacheMode: 'bypass',
+    }),
+  )
+  assert.deepEqual(
+    reads,
+    MCP_DOMAIN_RESOURCE_DEFINITIONS.map((definition) => definition.target),
+  )
   await client.close()
 })
 

@@ -4,6 +4,13 @@ import { createMcpHandler, McpServer, ResourceTemplate } from '@modelcontextprot
 import { z } from 'zod'
 
 import type { UserRole } from '@/lib/action-auth-core'
+import {
+  MCP_DOMAIN_READ_TARGETS,
+  MCP_DOMAIN_RESOURCE_DEFINITIONS,
+  parseMcpDomainResourceArguments,
+  parseMcpDomainResourceOutput,
+  type McpDomainReadTarget,
+} from '@/lib/mcp-read-resources'
 
 export type McpIdentity = {
   actorId: string
@@ -46,6 +53,7 @@ export const MCP_AUDIT_TARGETS = {
   finalizarRetorno: 'mmd_conferencia_finalizar_retorno',
   resolverPendencia: 'mmd_pendencia_resolver_retorno',
   vincularRfid: 'mmd_unidade_vincular_rfid',
+  ...MCP_DOMAIN_READ_TARGETS,
 } as const
 
 export type McpAuditTarget = (typeof MCP_AUDIT_TARGETS)[keyof typeof MCP_AUDIT_TARGETS]
@@ -74,6 +82,11 @@ export type McpRequestDependencies = {
   authenticate: (request: Request) => Promise<McpIdentity | null>
   readEvent: (eventoId: string, identity: McpIdentity) => Promise<McpEvent | null>
   readUnit: (unidadeId: string, identity: McpIdentity) => Promise<McpUnit | null>
+  readDomain?: (
+    target: McpDomainReadTarget,
+    args: Record<string, unknown>,
+    identity: McpIdentity,
+  ) => Promise<unknown>
   mutate?: (
     tool: McpMutationTool,
     args: Record<string, unknown>,
@@ -369,7 +382,7 @@ function parseResourceId(uri: URL, expectedHost: string) {
   return UUID_PATTERN.test(value) ? value : null
 }
 
-function resourceResult(uri: URL, value: McpEvent | McpUnit) {
+function resourceResult(uri: URL, value: unknown) {
   return {
     contents: [
       {
@@ -698,6 +711,59 @@ function createServer(
       return resourceResult(uri, unidade)
     },
   )
+
+  if (dependencies.readDomain) {
+    for (const definition of MCP_DOMAIN_RESOURCE_DEFINITIONS) {
+      server.registerResource(
+        definition.name,
+        new ResourceTemplate(definition.uriTemplate, { list: undefined }),
+        {
+          title: definition.title,
+          description: definition.description,
+          mimeType: 'application/json',
+          cacheHint: privateCache(),
+        },
+        async (uri) => {
+          let args: Record<string, unknown>
+          try {
+            args = parseMcpDomainResourceArguments(definition.target, uri)
+          } catch {
+            await auditRead(
+              dependencies,
+              identity,
+              request,
+              definition.target,
+              { uri: uri.href },
+              'FAILED',
+            )
+            throw new Error('MCP_RESOURCE_ARGUMENTS_INVALID')
+          }
+
+          const value = await readWithAudit(
+            async () =>
+              parseMcpDomainResourceOutput(
+                definition.target,
+                await dependencies.readDomain!(definition.target, args, identity),
+              ),
+            dependencies,
+            identity,
+            request,
+            definition.target,
+            args,
+          )
+          await auditRead(
+            dependencies,
+            identity,
+            request,
+            definition.target,
+            args,
+            'SUCCEEDED',
+          )
+          return resourceResult(uri, value)
+        },
+      )
+    }
+  }
 
   server.registerTool(
     'mmd_consultar_evento',

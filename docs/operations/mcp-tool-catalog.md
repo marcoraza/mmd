@@ -154,19 +154,19 @@ Sucesso e falha usam envelopes mínimos persistidos:
 | Retorno e pendência | `supabase/migrations/20260812162010_return_conference_idempotency.sql`, `20260812167000_return_finalization_location.sql` | Retorno, finalização e pendência passam pelo dispatcher MCP com ator e idempotência canônicos.           |
 | RFID                | `supabase/migrations/20260812163652_rfid_epc_operations_implementation.sql`                                               | Vínculo EPC passa por `aplicar_vinculo_rfid`; o caminho legado com `supabaseAdmin` não é usado pelo MCP. |
 
-## Recursos de leitura candidatos
+## Recursos operacionais de leitura
 
-Estes recursos não aparecem no manifesto atual. Eles precisam de DTO allowlisted, paginação strict, capability própria e testes antes de publicação. Não aceitam filtro PostgREST, ordenação livre, URI arbitrária, SQL ou seleção de colunas.
+Todos exigem `mcp:read`, perfil ativo e capability de uso único presa a `client_id`, `actor_id`, target e argumentos. Coleções usam `page` a partir de 1 e `page_size` entre 1 e 50 no próprio URI. Não aceitam PostgREST, ordenação livre, URI arbitrária, SQL ou seleção de colunas.
 
-| Recurso candidato                                  | Parâmetros previstos                                                     | Conteúdo previsto                                                         |
-| -------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `mmd://eventos`                                    | `status?` em enum, datas ISO, `page` de 1 a 1.000, `page_size` de 1 a 50 | Lista allowlisted de Eventos e resumo de packing.                         |
-| `mmd://eventos/{evento_id}/packing`                | `evento_id` UUID                                                         | Linhas, cobertura, faltas e conflitos permitidos pelo DTO.                |
-| `mmd://catalogo`                                   | `categoria?` em enum, paginação strict                                   | Tipos de equipamento e estado consolidado, sem valor patrimonial inicial. |
-| `mmd://eventos/{evento_id}/movimentacoes`          | `evento_id` UUID, paginação strict                                       | Trilha operacional de saída, retorno, manutenção, transferência e dano.   |
-| `mmd://eventos/{evento_id}/conferencias/{direcao}` | `evento_id` UUID, `direcao` `SAIDA` ou `RETORNO`                         | Conferência, decisões e recibos allowlisted.                              |
-| `mmd://eventos/{evento_id}/retorno-esperado`       | `evento_id` UUID                                                         | Unidades que saíram e ainda não retornaram.                               |
-| `mmd://eventos/{evento_id}/pendencias-retorno`     | `evento_id` UUID                                                         | Pendências de retorno e estado de resolução, sem baixa automática.        |
+| Template descoberto                                                                              | Conteúdo allowlisted                                                                 |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `mmd://eventos/pagina/{page}/tamanho/{page_size}`                                                 | Eventos, período, local e resumo de prontidão do packing.                            |
+| `mmd://catalogo/pagina/{page}/tamanho/{page_size}`                                                | Item, categoria e contagem de Unidades por estado, sem valor ou notas.               |
+| `mmd://eventos/{evento_id}/packing/pagina/{page}/tamanho/{page_size}`                             | Linhas do packing, quantidade própria, aluguel avulso, cobertura e falta.            |
+| `mmd://eventos/{evento_id}/movimentacoes/pagina/{page}/tamanho/{page_size}`                       | Unidade, tipo, transição, método e timestamp, sem ator ou observação livre.           |
+| `mmd://eventos/{evento_id}/conferencias/{direcao}/pagina/{page}/tamanho/{page_size}`              | Conferência de `SAIDA` ou `RETORNO`, decisões e recibos, sem source event ou ator.    |
+| `mmd://eventos/{evento_id}/retorno-esperado/pagina/{page}/tamanho/{page_size}`                    | Unidades com saída confirmada que compõem o retorno esperado.                        |
+| `mmd://eventos/{evento_id}/pendencias/pagina/{page}/tamanho/{page_size}`                          | Pendência, Unidade, estado, localização confirmada e datas, sem identidade do autor. |
 
 `loadProjectById` não serve como adaptador MCP porque cria URLs assinadas de documentos comerciais. QR público, lotes legados e campos comerciais seguem fora da superfície.
 
@@ -176,6 +176,7 @@ Estes recursos não aparecem no manifesto atual. Eles precisam de DTO allowliste
 - `apps/web/src/lib/mcp-registry-contract.test.ts` verifica as migrations de registry, capability de leitura e dispatcher de mutação.
 - `apps/web/scripts/smoke-mcp-database.ts` abre conexão real com o login dedicado, nega leitura direta e alcança a RPC allowlisted.
 - `supabase/tests/mcp_registry_test.sql` cobre capability de leitura, executor sem acesso direto às tabelas e uso único.
+- `supabase/tests/mcp_domain_read_resources_test.sql` atravessa as sete RPCs operacionais, capability, paginação e DTOs allowlisted.
 - `supabase/tests/mcp_mutation_capability_test.sql` percorre as sete branches do dispatcher com sucesso, retry concluído, timeout antes do commit, conflito de payload, capability inválida e falha sem ACK fabricado.
 - `supabase/tests/conferencia_fisica_test.sql`, `supabase/tests/return_confirmation_test.sql` e `supabase/tests/rfid_epc_contract_test.sql` cobrem os contratos canônicos de Conferência, retorno e RFID.
 

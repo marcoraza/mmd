@@ -3,7 +3,11 @@ import 'server-only'
 import postgres from 'postgres'
 
 import { computePackingCoverage, parseExternalRentalCoverages } from '@/lib/external-rental-core'
-import { issueMcpOperationCapability, issueMcpReadCapability } from '@/lib/mcp-auth'
+import {
+  issueMcpDomainReadCapability,
+  issueMcpOperationCapability,
+  issueMcpReadCapability,
+} from '@/lib/mcp-auth'
 import { mcpDatabaseConfiguration } from '@/lib/mcp-data-core'
 import type {
   McpEvent,
@@ -12,6 +16,7 @@ import type {
   McpMutationTool,
   McpUnit,
 } from '@/lib/mcp-core'
+import { MCP_DOMAIN_READ_TARGETS, type McpDomainReadTarget } from '@/lib/mcp-read-resources'
 
 const clients = new Map<string, ReturnType<typeof postgres>>()
 
@@ -138,6 +143,84 @@ export async function readMcpUnit(
     ) as result
   `
   return row?.result ?? null
+}
+
+export async function readMcpDomain(
+  target: McpDomainReadTarget,
+  rawArgs: Record<string, unknown>,
+  identity: McpIdentity,
+) {
+  const page = Number(rawArgs.page)
+  const pageSize = Number(rawArgs.page_size)
+  const eventoId = typeof rawArgs.evento_id === 'string' ? rawArgs.evento_id : null
+  const direcao = typeof rawArgs.direcao === 'string' ? rawArgs.direcao : null
+  const args =
+    target === MCP_DOMAIN_READ_TARGETS.eventos
+      ? { status: null, date_from: null, date_to: null, page, page_size: pageSize }
+      : target === MCP_DOMAIN_READ_TARGETS.catalogo
+        ? { categoria: null, page, page_size: pageSize }
+        : target === MCP_DOMAIN_READ_TARGETS.conferencias
+          ? { evento_id: eventoId, direcao, page, page_size: pageSize }
+          : { evento_id: eventoId, page, page_size: pageSize }
+  const capability = await issueMcpDomainReadCapability(identity, target, args)
+  const sql = database()
+
+  switch (target) {
+    case MCP_DOMAIN_READ_TARGETS.eventos: {
+      const [row] = await sql<[{ result: unknown }]>`
+        select public.mcp_read_events(
+          ${capability}, null, null, null, ${page}, ${pageSize}
+        ) as result
+      `
+      return row?.result
+    }
+    case MCP_DOMAIN_READ_TARGETS.catalogo: {
+      const [row] = await sql<[{ result: unknown }]>`
+        select public.mcp_read_catalog(${capability}, null, ${page}, ${pageSize}) as result
+      `
+      return row?.result
+    }
+    case MCP_DOMAIN_READ_TARGETS.packing: {
+      const [row] = await sql<[{ result: unknown }]>`
+        select public.mcp_read_packing(
+          ${capability}, ${eventoId}::uuid, ${page}, ${pageSize}
+        ) as result
+      `
+      return row?.result
+    }
+    case MCP_DOMAIN_READ_TARGETS.movimentacoes: {
+      const [row] = await sql<[{ result: unknown }]>`
+        select public.mcp_read_movements(
+          ${capability}, ${eventoId}::uuid, ${page}, ${pageSize}
+        ) as result
+      `
+      return row?.result
+    }
+    case MCP_DOMAIN_READ_TARGETS.conferencias: {
+      const [row] = await sql<[{ result: unknown }]>`
+        select public.mcp_read_conference(
+          ${capability}, ${eventoId}::uuid, ${direcao}, ${page}, ${pageSize}
+        ) as result
+      `
+      return row?.result
+    }
+    case MCP_DOMAIN_READ_TARGETS.retornoEsperado: {
+      const [row] = await sql<[{ result: unknown }]>`
+        select public.mcp_read_expected_return(
+          ${capability}, ${eventoId}::uuid, ${page}, ${pageSize}
+        ) as result
+      `
+      return row?.result
+    }
+    case MCP_DOMAIN_READ_TARGETS.pendencias: {
+      const [row] = await sql<[{ result: unknown }]>`
+        select public.mcp_read_return_pendings(
+          ${capability}, ${eventoId}::uuid, ${page}, ${pageSize}
+        ) as result
+      `
+      return row?.result
+    }
+  }
 }
 
 export async function executeMcpMutation(

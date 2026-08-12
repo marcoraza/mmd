@@ -31,29 +31,29 @@ async function main() {
     }
     assert.equal(directTableDenied, true, 'dedicated MCP role must not read stock tables directly')
 
-    let capabilityRejected = false
-    let capabilityFailure = 'no database error returned'
-    try {
-      await sql`
-      select public.mcp_read_unit(
-        'invalid-capability',
-        '00000000-0000-4000-8000-000000000000'::uuid,
-        ${'0'.repeat(64)}
+    const capabilityCalls = [
+      sql`select public.mcp_read_unit('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, ${'0'.repeat(64)})`,
+      sql`select public.mcp_read_events('invalid-capability', null, null, null, 1, 50)`,
+      sql`select public.mcp_read_catalog('invalid-capability', null, 1, 50)`,
+      sql`select public.mcp_read_packing('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
+      sql`select public.mcp_read_movements('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
+      sql`select public.mcp_read_conference('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 'SAIDA', 1, 50)`,
+      sql`select public.mcp_read_expected_return('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
+      sql`select public.mcp_read_return_pendings('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
+    ]
+    const capabilityFailures = await Promise.allSettled(capabilityCalls)
+    for (const failure of capabilityFailures) {
+      assert.equal(failure.status, 'rejected', 'capability RPC must reject an invalid token')
+      const databaseError = failure.reason as { message?: string }
+      assert.match(
+        databaseError.message ?? '',
+        /MCP_(COLLECTION_)?CAPABILITY_INVALID/,
+        'capability RPC must be reachable and fail closed',
       )
-    `
-    } catch (error) {
-      const databaseError = error as { code?: string; message?: string }
-      capabilityFailure = `${databaseError.code ?? 'no-code'}:${databaseError.message ?? 'no-message'}`
-      capabilityRejected = databaseError.message?.includes('MCP_CAPABILITY_INVALID') === true
     }
-    assert.equal(
-      capabilityRejected,
-      true,
-      `capability RPC must be reachable and fail closed (${capabilityFailure})`,
-    )
 
     console.log(
-      'MCP database smoke passed: dedicated login, direct table access denied, capability RPC reachable and fail-closed.',
+      'MCP database smoke passed: dedicated login, direct table access denied, 8 capability RPCs reachable and fail-closed.',
     )
   } finally {
     await sql.end({ timeout: 1 })

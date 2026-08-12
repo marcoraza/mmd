@@ -9,6 +9,7 @@ import { extractBearerToken } from '@/lib/action-auth-core'
 import { resolveMcpIdentity, verifyMcpAccessToken } from '@/lib/mcp-auth-core'
 import type { McpAuditInput, McpIdentity, McpMutationTool } from '@/lib/mcp-core'
 import { mcpOAuthConfiguration } from '@/lib/mcp-oauth'
+import type { McpDomainReadTarget } from '@/lib/mcp-read-resources'
 
 const remoteKeySets = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
 
@@ -34,6 +35,7 @@ function createRegistryClient() {
       target !== 'profiles' &&
       target !== 'rpc/claim_mcp_rate_limit' &&
       target !== 'rpc/issue_mcp_read_capability' &&
+      target !== 'rpc/issue_mcp_collection_capability' &&
       target !== 'rpc/issue_mcp_operation_capability'
     ) {
       throw new Error('MCP_REGISTRY_TABLE_DENIED')
@@ -137,6 +139,25 @@ export async function issueMcpReadCapability(
   })
   if (error) throw new Error('MCP_CAPABILITY_ISSUE_FAILED')
   return { token, payloadHash }
+}
+
+export async function issueMcpDomainReadCapability(
+  identity: McpIdentity,
+  target: McpDomainReadTarget,
+  args: Record<string, unknown>,
+) {
+  const token = randomBytes(32).toString('base64url')
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  const { error } = await createRegistryClient().rpc('issue_mcp_collection_capability', {
+    p_token_hash: tokenHash,
+    p_client_id: identity.clientId,
+    p_actor_id: identity.actorId,
+    p_target: target,
+    p_arguments: args,
+    p_ttl_seconds: 30,
+  })
+  if (error) throw new Error('MCP_CAPABILITY_ISSUE_FAILED')
+  return token
 }
 
 export async function issueMcpOperationCapability(

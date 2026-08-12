@@ -18,12 +18,13 @@ function allowedOrigins() {
 async function handleMcp(request: Request) {
   const [
     { authenticateMcpRequest, enforceMcpRateLimit, recordMcpAudit },
-    { executeMcpMutation, readMcpEvent, readMcpUnit },
+    { executeMcpMutation, readMcpDomain, readMcpEvent, readMcpUnit },
   ] = await Promise.all([import('@/lib/mcp-auth'), import('@/lib/mcp-data')])
   const handler = createMcpRequestHandler({
     authenticate: authenticateMcpRequest,
     readEvent: readMcpEvent,
     readUnit: readMcpUnit,
+    readDomain: readMcpDomain,
     mutate: executeMcpMutation,
     audit: recordMcpAudit,
     rateLimit: enforceMcpRateLimit,

@@ -25,6 +25,7 @@ export function RfidTagBinder({ stats }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [bindRequestId, setBindRequestId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -60,12 +61,15 @@ export function RfidTagBinder({ stats }: Props) {
     setMessage(null)
     setError(null)
     startTransition(async () => {
-      const result = await bindRfidTagToSerial(selectedId, tag)
+      const requestId = bindRequestId ?? crypto.randomUUID()
+      setBindRequestId(requestId)
+      const result = await bindRfidTagToSerial(selectedId, tag, requestId)
       if (result.ok) {
         setMessage(`${result.data.codigo_interno} vinculado ao RFID ${result.data.tag_rfid}.`)
         setTag('')
         setQuery('')
         setSelectedId(null)
+        setBindRequestId(null)
         const refreshed = await searchCableUnitsForRfidBind('')
         if (refreshed.ok) setUnits(refreshed.data)
       } else {

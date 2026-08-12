@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireActionUser } from '@/lib/action-auth'
 import { isWriteBlocked } from '@/lib/data/demo-mode'
+import { createSupabaseCookieClient } from '@/lib/supabase-ssr'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import type { StatusSerial } from '@/lib/types'
 
@@ -95,6 +96,7 @@ export async function searchCableUnitsForRfidBind(
 export async function bindRfidTagToSerial(
   serialId: string,
   rawTag: string,
+  idempotencyKey?: string,
 ): Promise<ActionResult<{ codigo_interno: string; tag_rfid: string }>> {
   const blocked = blockWrite<{ codigo_interno: string; tag_rfid: string }>()
   if (blocked) return blocked
@@ -106,60 +108,23 @@ export async function bindRfidTagToSerial(
   if (!parsed.ok) return parsed
   const tag = parsed.data
 
-  const { data: serial, error: serialError } = await supabaseAdmin
-    .from('serial_numbers')
-    .select('id, codigo_interno, item_id, items!inner (categoria)')
-    .eq('id', serialId)
-    .maybeSingle()
-
-  if (serialError) return { ok: false, error: serialError.message }
-  if (!serial) return { ok: false, error: 'Unidade não encontrada.' }
-
-  const serialShape = serial as unknown as {
-    id: string
-    codigo_interno: string
-    items: { categoria: string } | null
-  }
-  if (serialShape.items?.categoria !== 'CABO') {
-    return { ok: false, error: 'Vínculo rápido de RFID está limitado a cabos.' }
+  if (!auth.data.authRequired) {
+    return { ok: false, error: 'Sessão autenticada obrigatória para Etiquetar.' }
   }
 
-  const { data: existingSerial, error: existingSerialError } = await supabaseAdmin
-    .from('serial_numbers')
-    .select('id, codigo_interno')
-    .eq('tag_rfid', tag)
-    .maybeSingle()
+  const key = idempotencyKey?.trim() || crypto.randomUUID()
+  const supabase = await createSupabaseCookieClient()
+  const { data, error } = await supabase.rpc('aplicar_vinculo_rfid', {
+    p_serial_id: serialId,
+    p_epc: tag,
+    p_idempotency_key: key,
+  })
 
-  if (existingSerialError) return { ok: false, error: existingSerialError.message }
-  if (existingSerial && existingSerial.id !== serialId) {
-    return {
-      ok: false,
-      error: `RFID já vinculado à unidade ${existingSerial.codigo_interno}.`,
-    }
+  if (error) return { ok: false, error: error.message }
+  const result = data as { next_unit_code?: string; epc?: string } | null
+  if (!result?.next_unit_code || !result.epc) {
+    return { ok: false, error: 'A associação RFID não foi confirmada.' }
   }
-
-  const { data: legacyLote, error: loteError } = await supabaseAdmin
-    .from('lotes')
-    .select('codigo_lote')
-    .eq('tag_rfid', tag)
-    .maybeSingle()
-
-  if (loteError) return { ok: false, error: loteError.message }
-  if (legacyLote) {
-    return {
-      ok: false,
-      error: `RFID ainda está vinculado ao lote legado ${legacyLote.codigo_lote}.`,
-    }
-  }
-
-  const { data: updated, error: updateError } = await supabaseAdmin
-    .from('serial_numbers')
-    .update({ tag_rfid: tag })
-    .eq('id', serialId)
-    .select('codigo_interno, tag_rfid')
-    .single()
-
-  if (updateError) return { ok: false, error: updateError.message }
 
   revalidatePath('/rfid')
   revalidatePath('/qrcodes')
@@ -168,8 +133,8 @@ export async function bindRfidTagToSerial(
   return {
     ok: true,
     data: {
-      codigo_interno: updated.codigo_interno,
-      tag_rfid: updated.tag_rfid,
+      codigo_interno: result.next_unit_code,
+      tag_rfid: result.epc,
     },
   }
 }

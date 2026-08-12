@@ -862,6 +862,7 @@ WHERE c.id = cd.conferencia_id
   AND c.projeto_id = '33333333-3333-3333-3333-333333333333'
   AND cd.serial_number_id = '22222222-2222-2222-2222-222222222224';
 
+SAVEPOINT conference_movement_fault;
 CREATE OR REPLACE FUNCTION pg_temp.fail_conferencia_movement()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -914,7 +915,7 @@ SELECT throws_ok(
 );
 
 RESET ROLE;
-DROP TRIGGER trg_test_fail_conferencia_movement ON public.movimentacoes;
+ROLLBACK TO SAVEPOINT conference_movement_fault;
 
 SET LOCAL ROLE authenticated;
 SELECT set_config(
@@ -1190,6 +1191,7 @@ SELECT is(
 );
 
 RESET ROLE;
+SAVEPOINT substitution_movement_fault;
 CREATE OR REPLACE FUNCTION pg_temp.fail_substitution_movement()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -1228,7 +1230,7 @@ SELECT throws_ok(
 );
 
 RESET ROLE;
-DROP TRIGGER trg_test_fail_substitution_movement ON public.movimentacoes;
+ROLLBACK TO SAVEPOINT substitution_movement_fault;
 
 SELECT is(
   (SELECT serial_numbers_designados[1] FROM public.packing_list WHERE projeto_id = '88888888-8888-8888-8888-888888888888'),

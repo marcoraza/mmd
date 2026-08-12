@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(24);
+SELECT plan(26);
 
 INSERT INTO auth.users (
   instance_id,
@@ -222,6 +222,13 @@ SELECT lives_ok(
   'editor altera Unidade'
 );
 
+SELECT throws_ok(
+  $$UPDATE public.serial_numbers SET status = 'EM_CAMPO' WHERE id = '44444444-4444-4444-4444-444444444444'$$,
+  '42501',
+  'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC',
+  'editor não altera o estado físico da Unidade fora da Conferência'
+);
+
 SELECT lives_ok(
   $$UPDATE public.projetos SET notas = 'editor' WHERE id = '55555555-5555-5555-5555-555555555555'$$,
   'editor altera Evento'
@@ -237,7 +244,7 @@ SELECT lives_ok(
   'editor altera lote legado'
 );
 
-SELECT lives_ok(
+SELECT throws_ok(
   $$
     INSERT INTO public.movimentacoes (
       serial_number_id,
@@ -257,7 +264,26 @@ SELECT lives_ok(
       'MANUAL'
     )
   $$,
-  'editor registra movimentação auditável'
+  '42501',
+  'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC',
+  'editor não registra movimentação física fora da RPC canônica'
+);
+
+SELECT throws_ok(
+  $$
+    INSERT INTO public.retorno_pendencias (
+      projeto_id,
+      serial_number_id,
+      registrado_por
+    ) VALUES (
+      '55555555-5555-5555-5555-555555555555',
+      '44444444-4444-4444-4444-444444444444',
+      'editor-rls@test.local'
+    )
+  $$,
+  '42501',
+  'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC',
+  'editor não abre pendência fora da confirmação de retorno'
 );
 
 RESET ROLE;

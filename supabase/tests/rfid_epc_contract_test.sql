@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(34);
+SELECT plan(41);
 
 SELECT has_function(
   'public',
@@ -20,6 +20,13 @@ SELECT has_function(
   'resolver_excecao_conferencia_saida',
   ARRAY['uuid', 'public.conferencia_resolution_enum', 'bigint', 'text'],
   'Revisar exige resolução persistida antes da confirmação'
+);
+
+SELECT ok(
+  pg_get_functiondef(
+    'public.resolver_excecao_conferencia_saida(uuid,public.conferencia_resolution_enum,bigint,text)'::regprocedure
+  ) ~ 'FROM public\.projetos p[[:space:]]+WHERE p\.id = v_projeto_id[[:space:]]+FOR UPDATE;[[:space:]]+SELECT c\.\*[[:space:]]+INTO v_conferencia[[:space:]]+FROM public\.conferencias c[[:space:]]+WHERE c\.id = v_conferencia_id[[:space:]]+FOR UPDATE;[[:space:]]+SELECT cd\.\*[[:space:]]+INTO v_decision[[:space:]]+FROM public\.conferencia_decisoes cd[[:space:]]+WHERE cd\.id = p_decision_id[[:space:]]+AND cd\.conferencia_id = v_conferencia\.id[[:space:]]+FOR UPDATE;',
+  'Revisar trava Evento, Conferência e decisão nessa ordem'
 );
 
 INSERT INTO auth.users (
@@ -267,6 +274,71 @@ SELECT is(
   'desvincular remove a associação atual'
 );
 
+SELECT ok(
+  pg_get_functiondef('public.aplicar_vinculo_rfid(uuid,text,text)'::regprocedure)
+    ~ 'WHERE sn\.id = ANY \(v_lock_serial_ids\)[[:space:]]+ORDER BY sn\.id[[:space:]]+FOR UPDATE',
+  'Etiquetar trava origem e destino em ordem estável antes de mover EPC'
+);
+
+SELECT is(
+  public.aplicar_vinculo_rfid(
+    'd4444444-4444-4444-4444-444444444441',
+    'E28011702000020A5C41A005',
+    'rfid:cross-bind:a'
+  ) ->> 'action',
+  'VINCULAR',
+  'primeira Unidade recebe EPC para regressão de move cruzado'
+);
+
+SELECT is(
+  public.aplicar_vinculo_rfid(
+    'd4444444-4444-4444-4444-444444444442',
+    'E28011702000020A5C41A006',
+    'rfid:cross-bind:b'
+  ) ->> 'action',
+  'VINCULAR',
+  'segunda Unidade recebe EPC para regressão de move cruzado'
+);
+
+SELECT is(
+  public.aplicar_vinculo_rfid(
+    'd4444444-4444-4444-4444-444444444442',
+    'E28011702000020A5C41A005',
+    'rfid:cross-move:b'
+  ) ->> 'action',
+  'MOVER',
+  'primeiro move cruzado preserva uma única associação do EPC'
+);
+
+SELECT lives_ok(
+  $$
+    SELECT public.aplicar_vinculo_rfid(
+      'd4444444-4444-4444-4444-444444444441',
+      'E28011702000020A5C41A006',
+      'rfid:cross-move:a'
+    )
+  $$,
+  'segundo move cruzado completa sem depender da ordem de seleção'
+);
+
+SELECT results_eq(
+  $$
+    SELECT codigo_interno, tag_rfid
+    FROM public.serial_numbers
+    WHERE id IN (
+      'd4444444-4444-4444-4444-444444444441'::uuid,
+      'd4444444-4444-4444-4444-444444444442'::uuid
+    )
+    ORDER BY codigo_interno
+  $$,
+  $$
+    VALUES
+      ('MMD-ILU-R001'::text, 'E28011702000020A5C41A006'::text),
+      ('MMD-ILU-R002'::text, 'E28011702000020A5C41A005'::text)
+  $$,
+  'move cruzado termina com uma associação única por Unidade'
+);
+
 INSERT INTO public.projetos (id, nome, status)
 VALUES ('d5555555-5555-5555-5555-555555555555', 'Evento RFID Revisar', 'CONFIRMADO');
 
@@ -363,6 +435,7 @@ SELECT is(
 );
 
 RESET ROLE;
+SAVEPOINT rfid_fault_injection;
 CREATE OR REPLACE FUNCTION pg_temp.fail_rfid_audit()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -397,11 +470,12 @@ SELECT throws_ok(
 );
 
 RESET ROLE;
-DROP TRIGGER trg_test_fail_rfid_audit ON public.rfid_tag_operations;
+ROLLBACK TO SAVEPOINT rfid_fault_injection;
+RELEASE SAVEPOINT rfid_fault_injection;
 
 SELECT is(
   (SELECT tag_rfid FROM public.serial_numbers WHERE id = 'd4444444-4444-4444-4444-444444444442'),
-  NULL,
+  'E28011702000020A5C41A005',
   'rollback preserva a tag anterior da Unidade'
 );
 

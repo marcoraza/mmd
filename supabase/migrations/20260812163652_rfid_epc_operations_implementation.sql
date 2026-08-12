@@ -172,6 +172,8 @@ DECLARE
   v_existing public.rfid_tag_operations%ROWTYPE;
   v_target public.serial_numbers%ROWTYPE;
   v_source public.serial_numbers%ROWTYPE;
+  v_source_id uuid;
+  v_lock_serial_ids uuid[];
   v_previous_epc text;
   v_action text;
   v_operation public.rfid_tag_operations%ROWTYPE;
@@ -218,22 +220,16 @@ BEGIN
     RETURN app_private.rfid_tag_operation_ack(v_existing.id);
   END IF;
 
-  SELECT sn.*
-  INTO v_target
+  PERFORM 1
   FROM public.serial_numbers sn
-  WHERE sn.id = p_serial_id
-  FOR UPDATE;
+  WHERE sn.id = p_serial_id;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Unidade % não encontrada', p_serial_id
       USING ERRCODE = 'P0002';
   END IF;
 
-  v_previous_epc := nullif(btrim(coalesce(v_target.tag_rfid, '')), '');
-
-  IF v_epc IS NULL THEN
-    v_action := 'DESVINCULAR';
-  ELSE
+  IF v_epc IS NOT NULL THEN
     PERFORM pg_advisory_xact_lock(hashtextextended('rfid-epc:' || v_epc, 0));
 
     IF EXISTS (
@@ -245,11 +241,52 @@ BEGIN
         USING ERRCODE = '55000';
     END IF;
 
+    SELECT sn.id
+    INTO v_source_id
+    FROM public.serial_numbers sn
+    WHERE regexp_replace(upper(sn.tag_rfid), '[^A-Z0-9]', '', 'g') = v_epc;
+  END IF;
+
+  SELECT array_agg(lock_target.serial_id ORDER BY lock_target.serial_id)
+  INTO v_lock_serial_ids
+  FROM (
+    SELECT p_serial_id AS serial_id
+    UNION
+    SELECT v_source_id
+    WHERE v_source_id IS NOT NULL
+  ) AS lock_target;
+
+  PERFORM 1
+  FROM public.serial_numbers sn
+  WHERE sn.id = ANY (v_lock_serial_ids)
+  ORDER BY sn.id
+  FOR UPDATE;
+
+  SELECT sn.*
+  INTO v_target
+  FROM public.serial_numbers sn
+  WHERE sn.id = p_serial_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Unidade % não encontrada', p_serial_id
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  v_previous_epc := nullif(btrim(coalesce(v_target.tag_rfid, '')), '');
+
+  IF v_epc IS NULL THEN
+    v_action := 'DESVINCULAR';
+  ELSE
+    v_source := NULL;
     SELECT sn.*
     INTO v_source
     FROM public.serial_numbers sn
-    WHERE regexp_replace(upper(sn.tag_rfid), '[^A-Z0-9]', '', 'g') = v_epc
-    FOR UPDATE;
+    WHERE regexp_replace(upper(sn.tag_rfid), '[^A-Z0-9]', '', 'g') = v_epc;
+
+    IF FOUND AND NOT (v_source.id = ANY (v_lock_serial_ids)) THEN
+      RAISE EXCEPTION 'RFID_SOURCE_CHANGED'
+        USING ERRCODE = '40001';
+    END IF;
 
     IF FOUND AND v_source.id <> v_target.id THEN
       v_action := 'MOVER';
@@ -347,6 +384,8 @@ DECLARE
   v_existing public.conferencia_excecao_resolucoes%ROWTYPE;
   v_decision public.conferencia_decisoes%ROWTYPE;
   v_conferencia public.conferencias%ROWTYPE;
+  v_conferencia_id uuid;
+  v_projeto_id uuid;
   v_resolution public.conferencia_excecao_resolucoes%ROWTYPE;
 BEGIN
   IF v_actor_id IS NULL THEN
@@ -395,22 +434,39 @@ BEGIN
     RETURN app_private.conferencia_excecao_ack(v_existing.id);
   END IF;
 
-  SELECT cd.*
-  INTO v_decision
+  SELECT c.id, c.projeto_id
+  INTO v_conferencia_id, v_projeto_id
   FROM public.conferencia_decisoes cd
-  WHERE cd.id = p_decision_id
-  FOR UPDATE;
+  JOIN public.conferencias c ON c.id = cd.conferencia_id
+  WHERE cd.id = p_decision_id;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Decisão % não encontrada', p_decision_id
       USING ERRCODE = 'P0002';
   END IF;
 
+  PERFORM 1
+  FROM public.projetos p
+  WHERE p.id = v_projeto_id
+  FOR UPDATE;
+
   SELECT c.*
   INTO v_conferencia
   FROM public.conferencias c
-  WHERE c.id = v_decision.conferencia_id
+  WHERE c.id = v_conferencia_id
   FOR UPDATE;
+
+  SELECT cd.*
+  INTO v_decision
+  FROM public.conferencia_decisoes cd
+  WHERE cd.id = p_decision_id
+    AND cd.conferencia_id = v_conferencia.id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Decisão % não encontrada', p_decision_id
+      USING ERRCODE = 'P0002';
+  END IF;
 
   IF v_conferencia.direcao <> 'SAIDA' OR v_decision.applied_confirmation_id IS NOT NULL THEN
     RAISE EXCEPTION 'Decisão não aceita resolução de saída'
@@ -622,6 +678,8 @@ BEGIN
   IF v_is_incomplete AND length(coalesce(v_incomplete_reason, '')) < 3 THEN
     RAISE EXCEPTION 'Saída incompleta exige motivo' USING ERRCODE = '22023';
   END IF;
+
+  PERFORM set_config('app_private.physical_operation', 'true', true);
 
   INSERT INTO public.conferencia_confirmacoes (
     conferencia_id, idempotency_key, payload_hash, actor_id, incomplete_reason

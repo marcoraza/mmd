@@ -610,8 +610,8 @@ FROM PUBLIC, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.resolver_pendencia_retorno(uuid, text, text, text)
 TO authenticated;
 
--- O Web legada não pode mais fabricar um retorno por service_role. Mantemos as
--- funções para callers iOS ainda não migrados, mas sem uma concessão executável.
+-- Os caminhos legados seguem no schema apenas para preservar histórico de
+-- migration. Não têm grant executável e nenhum cliente deve integrá-los.
 REVOKE ALL ON FUNCTION public.checkin_projeto(uuid, public.metodo_scan_enum, text, jsonb)
 FROM PUBLIC, anon, authenticated, service_role;
 

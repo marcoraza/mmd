@@ -62,17 +62,22 @@ cliente move estoque por PostgREST direto, alocação ou leitura RFID bruta.
 1. `conferencia_retorno_esperado(p_projeto_id)` lista somente Unidades com
    saída física aplicada e sem retorno aplicado. Alocação não cria retorno.
 
-2. `salvar_decisao_conferencia(... p_direcao='RETORNO',
-   p_resultado='OK'|'PROBLEMA'|'NAO_VOLTOU', ...)`
+2. `salvar_decisao_conferencia_retorno(p_projeto_id, p_serial_id,
+   p_resultado='OK'|'PROBLEMA'|'NAO_VOLTOU', p_metodo,
+   p_source_event_id, p_captured_at, p_desgaste?, p_manual_reason?,
+   p_observation?)`
 
-   `PROBLEMA` exige observação de pelo menos três caracteres. Ainda é rascunho.
+   Registra o rascunho de retorno. `PROBLEMA` exige desgaste entre 1 e 5 e
+   observação de pelo menos três caracteres. `NAO_VOLTOU` não recebe desgaste,
+   pois não houve condição física observável.
 
 3. `confirmar_conferencia_retorno(p_conferencia_id, p_decision_ids,
    p_expected_version, p_idempotency_key)`
 
    `OK` muda a Unidade para `DISPONIVEL`; `PROBLEMA`, para `MANUTENCAO`; e
    `NAO_VOLTOU`, para `RETORNANDO` e abre uma única pendência. A resposta é o
-   mesmo formato de Recibo da saída, com direção `RETORNO`.
+   mesmo formato de Recibo da saída, com direção `RETORNO` e desgaste quando
+   ele foi observado.
 
 4. `resolver_pendencia_retorno(p_pendencia_id, p_acao,
    p_observacao, p_idempotency_key)`

@@ -14,9 +14,6 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trg_serial_numbers_guard_rfid_tag_write
-ON public.serial_numbers;
-
 CREATE TRIGGER trg_serial_numbers_guard_rfid_tag_write
 BEFORE UPDATE OF tag_rfid ON public.serial_numbers
 FOR EACH ROW

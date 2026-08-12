@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(33);
+SELECT plan(48);
 
 SELECT has_function(
   'public',
@@ -13,6 +13,13 @@ SELECT has_function(
   'resolver_pendencia_retorno',
   ARRAY['uuid', 'text', 'text', 'text'],
   'pendência possui resolução idempotente por RPC própria'
+);
+
+SELECT has_function(
+  'public',
+  'salvar_decisao_conferencia_retorno',
+  ARRAY['uuid', 'uuid', 'public.conferencia_resultado_enum', 'public.metodo_scan_enum', 'text', 'timestamp with time zone', 'integer', 'text', 'text'],
+  'retorno persiste a condição física pela RPC canônica'
 );
 
 INSERT INTO auth.users (
@@ -84,17 +91,75 @@ SELECT results_eq(
   'retorno esperado vem apenas das saídas aplicadas'
 );
 
-SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'RETORNO', 'e5555555-5555-5555-5555-555555555551', 'OK', 'QRCODE', 'ret:ok:001', '2026-08-12T20:00:00Z')
-$$, 'retorno OK é registrado');
+SELECT throws_ok($$
+  SELECT public.salvar_decisao_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    'e5555555-5555-5555-5555-555555555551',
+    'PROBLEMA',
+    'QRCODE',
+    'ret:problem:no-condition',
+    '2026-08-12T20:00:00Z',
+    NULL,
+    NULL,
+    'Conector danificado'
+  )
+$$, '22023', 'Retorno PROBLEMA exige condição e observação', 'problema sem condição não vira decisão');
+
+SELECT throws_ok($$
+  SELECT public.salvar_decisao_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    'e5555555-5555-5555-5555-555555555551',
+    'OK',
+    'QRCODE',
+    'ret:ok:invalid-condition',
+    '2026-08-12T20:00:00Z',
+    0,
+    NULL,
+    NULL
+  )
+$$, '22023', 'Desgaste de retorno deve estar entre 1 e 5', 'condição fora da faixa não vira decisão');
 
 SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'RETORNO', 'e5555555-5555-5555-5555-555555555552', 'NAO_VOLTOU', 'QRCODE', 'ret:missing:001', '2026-08-12T20:00:01Z', NULL, 'Não localizado no desmonte')
-$$, 'ausência é registrada');
+  SELECT public.salvar_decisao_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    'e5555555-5555-5555-5555-555555555551',
+    'OK',
+    'QRCODE',
+    'ret:ok:001',
+    '2026-08-12T20:00:00Z',
+    4,
+    NULL,
+    NULL
+  )
+$$, 'retorno OK registra a condição física');
 
 SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'RETORNO', 'e5555555-5555-5555-5555-555555555553', 'PROBLEMA', 'QRCODE', 'ret:problem:001', '2026-08-12T20:00:02Z', NULL, 'Conector danificado')
-$$, 'problema com observação é registrado');
+  SELECT public.salvar_decisao_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    'e5555555-5555-5555-5555-555555555552',
+    'NAO_VOLTOU',
+    'QRCODE',
+    'ret:missing:001',
+    '2026-08-12T20:00:01Z',
+    NULL,
+    NULL,
+    'Não localizado no desmonte'
+  )
+$$, 'ausência não exige condição que não pode ser observada');
+
+SELECT lives_ok($$
+  SELECT public.salvar_decisao_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    'e5555555-5555-5555-5555-555555555553',
+    'PROBLEMA',
+    'QRCODE',
+    'ret:problem:001',
+    '2026-08-12T20:00:02Z',
+    2,
+    NULL,
+    'Conector danificado'
+  )
+$$, 'problema com condição e observação é registrado');
 
 SELECT is(
   public.confirmar_conferencia_retorno(
@@ -106,10 +171,39 @@ SELECT is(
   'Recibo de retorno é persistido'
 );
 
+SELECT is(
+  (
+    SELECT retorno_desgaste
+    FROM public.conferencia_decisoes cd
+    JOIN public.conferencias c ON c.id = cd.conferencia_id
+    WHERE c.projeto_id = 'e6666666-6666-6666-6666-666666666666'
+      AND c.direcao = 'RETORNO'
+      AND cd.serial_number_id = 'e5555555-5555-5555-5555-555555555553'
+  ),
+  2,
+  'decisão de problema persiste o desgaste informado'
+);
+
+SELECT is(
+  public.confirmar_conferencia_retorno(
+    (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO'),
+    ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO') ORDER BY id),
+    3, 'ret:confirm:001'
+  ) #>> '{units,2,desgaste}',
+  '2',
+  'Recibo de retorno inclui o desgaste da Unidade'
+);
+
 SELECT results_eq(
   $$SELECT codigo_interno, status::text FROM public.serial_numbers WHERE id IN ('e5555555-5555-5555-5555-555555555551'::uuid, 'e5555555-5555-5555-5555-555555555552'::uuid, 'e5555555-5555-5555-5555-555555555553'::uuid) ORDER BY codigo_interno$$,
   $$VALUES ('MMD-ILU-RET001'::text, 'DISPONIVEL'::text), ('MMD-ILU-RET002'::text, 'RETORNANDO'::text), ('MMD-ILU-RET003'::text, 'MANUTENCAO'::text)$$,
   'OK, ausência e problema aplicam estados distintos'
+);
+
+SELECT is(
+  (SELECT desgaste FROM public.serial_numbers WHERE id = 'e5555555-5555-5555-5555-555555555553'),
+  2,
+  'problema aplica a condição física no estado atual da Unidade'
 );
 
 SELECT results_eq(
@@ -216,6 +310,7 @@ SELECT lives_ok($$
 $$, 'fixture de rollback registra ausência');
 
 RESET ROLE;
+SAVEPOINT return_pending_failure;
 CREATE OR REPLACE FUNCTION pg_temp.fail_return_pending()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -229,16 +324,24 @@ FOR EACH ROW EXECUTE FUNCTION pg_temp.fail_return_pending();
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
 
-SELECT throws_ok($$
-  SELECT public.confirmar_conferencia_retorno(
+DO $$
+BEGIN
+  PERFORM public.confirmar_conferencia_retorno(
     (SELECT id FROM public.conferencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND direcao = 'RETORNO'),
     ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND direcao = 'RETORNO')),
     1, 'ret:fail:confirm'
-  )
-$$, 'P0001', 'INJECTED_RETURN_PENDING_FAILURE', 'falha tardia aborta toda a confirmação de retorno');
+  );
+  RAISE EXCEPTION 'A confirmação deveria falhar';
+EXCEPTION
+  WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM <> 'INJECTED_RETURN_PENDING_FAILURE' THEN
+      RAISE;
+    END IF;
+END;
+$$;
 
-RESET ROLE;
-DROP TRIGGER trg_test_fail_return_pending ON public.retorno_pendencias;
+ROLLBACK TO SAVEPOINT return_pending_failure;
+SELECT pass('falha tardia aborta toda a confirmação de retorno');
 
 SELECT is((SELECT status::text FROM public.serial_numbers WHERE id = 'e5555555-5555-5555-5555-555555555554'), 'EM_CAMPO', 'rollback preserva estado anterior da Unidade');
 
@@ -247,6 +350,106 @@ SELECT is((SELECT count(*)::integer FROM public.conferencia_confirmacoes WHERE i
 SELECT is((SELECT count(*)::integer FROM public.movimentacoes WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND tipo IN ('RETORNO', 'MANUTENCAO')), 0, 'rollback não deixa movimentação parcial');
 
 SELECT is((SELECT count(*)::integer FROM public.retorno_pendencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777'), 0, 'rollback não deixa pendência parcial');
+
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+
+SELECT is(
+  public.confirmar_conferencia_retorno(
+    (SELECT id FROM public.conferencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND direcao = 'RETORNO'),
+    ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND direcao = 'RETORNO')),
+    1, 'ret:fail:confirm'
+  ) ->> 'direction',
+  'RETORNO',
+  'retry após rollback aplica a mesma intenção sem duplicar pendência'
+);
+
+SELECT is(
+  (SELECT count(*)::integer FROM public.retorno_pendencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND status = 'ABERTA'),
+  1,
+  'retry após rollback cria uma única pendência'
+);
+
+SAVEPOINT return_pending_resolution_fault;
+RESET ROLE;
+CREATE OR REPLACE FUNCTION pg_temp.fail_pending_resolution()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'INJECTED_PENDING_RESOLUTION_FAILURE';
+END;
+$$;
+CREATE TRIGGER trg_test_fail_pending_resolution
+BEFORE UPDATE OF status ON public.retorno_pendencias
+FOR EACH ROW EXECUTE FUNCTION pg_temp.fail_pending_resolution();
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+
+DO $$
+BEGIN
+  PERFORM public.resolver_pendencia_retorno(
+    (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND status = 'ABERTA'),
+    'ENCONTRADA',
+    'Encontrada após a conferência.',
+    'ret:fail:resolve'
+  );
+  RAISE EXCEPTION 'A resolução deveria falhar';
+EXCEPTION
+  WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM <> 'INJECTED_PENDING_RESOLUTION_FAILURE' THEN
+      RAISE;
+    END IF;
+END;
+$$;
+
+ROLLBACK TO SAVEPOINT return_pending_resolution_fault;
+SELECT pass('falha tardia aborta a resolução de pendência inteira');
+
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+
+SELECT is(
+  (SELECT status::text FROM public.serial_numbers WHERE id = 'e5555555-5555-5555-5555-555555555554'),
+  'RETORNANDO',
+  'rollback da resolução preserva o estado pendente da Unidade'
+);
+
+SELECT is(
+  (SELECT count(*)::integer FROM public.movimentacoes WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND tipo = 'RETORNO'),
+  1,
+  'rollback da resolução não adiciona movimentação parcial'
+);
+
+SELECT is(
+  (SELECT count(*)::integer FROM public.retorno_pendencia_resolucoes WHERE idempotency_key = 'ret:fail:resolve'),
+  0,
+  'rollback da resolução não deixa ACK persistido'
+);
+
+SELECT is(
+  (SELECT status FROM public.retorno_pendencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777'),
+  'ABERTA',
+  'rollback da resolução mantém a pendência aberta'
+);
+
+SELECT is(
+  public.resolver_pendencia_retorno(
+    (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND status = 'ABERTA'),
+    'ENCONTRADA',
+    'Encontrada após a conferência.',
+    'ret:fail:resolve'
+  ) ->> 'action',
+  'ENCONTRADA',
+  'retry depois do rollback resolve a pendência sem segunda intenção'
+);
+
+SELECT is(
+  (SELECT status::text FROM public.serial_numbers WHERE id = 'e5555555-5555-5555-5555-555555555554'),
+  'DISPONIVEL',
+  'retry da resolução aplica o estado final esperado'
+);
 
 SELECT * FROM finish();
 ROLLBACK;

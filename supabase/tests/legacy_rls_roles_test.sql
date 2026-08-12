@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(26);
+SELECT plan(32);
 
 INSERT INTO auth.users (
   instance_id,
@@ -222,11 +222,21 @@ SELECT lives_ok(
   'editor altera Unidade'
 );
 
+SELECT set_config('app_private.physical_operation', 'true', true);
+SELECT set_config('app_private.rfid_tag_operation', 'true', true);
+
 SELECT throws_ok(
   $$UPDATE public.serial_numbers SET status = 'EM_CAMPO' WHERE id = '44444444-4444-4444-4444-444444444444'$$,
   '42501',
   'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC',
   'editor não altera o estado físico da Unidade fora da Conferência'
+);
+
+SELECT throws_ok(
+  $$UPDATE public.serial_numbers SET tag_rfid = 'E2000017221101441890BEEF' WHERE id = '44444444-4444-4444-4444-444444444444'$$,
+  '42501',
+  'RFID_TAG_WRITE_REQUIRES_OPERATION',
+  'editor não forja autorização RFID com GUC de sessão'
 );
 
 SELECT lives_ok(
@@ -284,6 +294,72 @@ SELECT throws_ok(
   '42501',
   'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC',
   'editor não abre pendência fora da confirmação de retorno'
+);
+
+RESET ROLE;
+SET LOCAL ROLE service_role;
+SELECT set_config('app_private.physical_operation', 'true', true);
+SELECT set_config('app_private.rfid_tag_operation', 'true', true);
+
+SELECT lives_ok(
+  $$UPDATE public.serial_numbers SET desgaste = 4 WHERE id = '44444444-4444-4444-4444-444444444444'$$,
+  'service_role preserva edição não física da Unidade'
+);
+
+SELECT throws_ok(
+  $$UPDATE public.serial_numbers SET status = 'EM_CAMPO' WHERE id = '44444444-4444-4444-4444-444444444444'$$,
+  '42501',
+  'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC',
+  'service_role não forja alteração de estado físico com GUC de sessão'
+);
+
+SELECT throws_ok(
+  $$UPDATE public.serial_numbers SET tag_rfid = 'E2000017221101441890CAFE' WHERE id = '44444444-4444-4444-4444-444444444444'$$,
+  '42501',
+  'RFID_TAG_WRITE_REQUIRES_OPERATION',
+  'service_role não forja alteração RFID com GUC de sessão'
+);
+
+SELECT throws_ok(
+  $$
+    INSERT INTO public.movimentacoes (
+      serial_number_id,
+      projeto_id,
+      tipo,
+      status_anterior,
+      status_novo,
+      registrado_por,
+      metodo_scan
+    ) VALUES (
+      '44444444-4444-4444-4444-444444444444',
+      '55555555-5555-5555-5555-555555555555',
+      'TRANSFERENCIA',
+      'DISPONIVEL',
+      'DISPONIVEL',
+      'service-role@test.local',
+      'MANUAL'
+    )
+  $$,
+  '42501',
+  'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC',
+  'service_role não forja movimentação física com GUC de sessão'
+);
+
+SELECT throws_ok(
+  $$
+    INSERT INTO public.retorno_pendencias (
+      projeto_id,
+      serial_number_id,
+      registrado_por
+    ) VALUES (
+      '55555555-5555-5555-5555-555555555555',
+      '44444444-4444-4444-4444-444444444444',
+      'service-role@test.local'
+    )
+  $$,
+  '42501',
+  'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC',
+  'service_role não forja pendência com GUC de sessão'
 );
 
 RESET ROLE;

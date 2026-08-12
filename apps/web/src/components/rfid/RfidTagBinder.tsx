@@ -127,7 +127,10 @@ export function RfidTagBinder({ stats }: Props) {
             </span>
             <input
               value={tag}
-              onChange={(e) => setTag(e.target.value)}
+              onChange={(e) => {
+                setTag(e.target.value)
+                setBindRequestId(null)
+              }}
               placeholder="Ex: E2801191A503006625D9..."
               className="mono"
               style={inputStyle}
@@ -163,7 +166,12 @@ export function RfidTagBinder({ stats }: Props) {
                 <button
                   key={unit.id}
                   type="button"
-                  onClick={() => setSelectedId(unit.id)}
+                  onClick={() => {
+                    if (selectedId !== unit.id) {
+                      setSelectedId(unit.id)
+                      setBindRequestId(null)
+                    }
+                  }}
                   aria-pressed={selectedId === unit.id}
                   style={{
                     width: '100%',

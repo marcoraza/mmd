@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(48);
+SELECT plan(54);
 
 SELECT has_function(
   'public',
@@ -11,14 +11,21 @@ SELECT has_function(
 SELECT has_function(
   'public',
   'resolver_pendencia_retorno',
-  ARRAY['uuid', 'text', 'text', 'text'],
-  'pendência possui resolução idempotente por RPC própria'
+  ARRAY['uuid', 'text', 'text', 'text', 'text'],
+  'pendência possui resolução idempotente e localização confirmada por RPC própria'
+);
+
+SELECT has_function(
+  'public',
+  'finalizar_conferencia_retorno',
+  ARRAY['uuid', 'bigint', 'text'],
+  'finalização deriva ausências do retorno por RPC própria'
 );
 
 SELECT has_function(
   'public',
   'salvar_decisao_conferencia_retorno',
-  ARRAY['uuid', 'uuid', 'public.conferencia_resultado_enum', 'public.metodo_scan_enum', 'text', 'timestamp with time zone', 'integer', 'text', 'text'],
+  ARRAY['uuid', 'uuid', 'public.conferencia_resultado_enum', 'public.metodo_scan_enum', 'text', 'timestamp with time zone', 'integer', 'text', 'text', 'text'],
   'retorno persiste a condição física pela RPC canônica'
 );
 
@@ -66,15 +73,15 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
 
 SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'SAIDA', 'e5555555-5555-5555-5555-555555555551', 'PRESENTE', 'QRCODE', 'ret:saida:001', '2026-08-12T18:00:00Z')
+  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'SAIDA', 'e5555555-5555-5555-5555-555555555551', 'PRESENTE', 'QRCODE', 'ret:saida:001', '2026-08-12T18:00:00Z', NULL, NULL, 'ret:saida:001:key')
 $$, 'primeira saída física é registrada');
 
 SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'SAIDA', 'e5555555-5555-5555-5555-555555555552', 'PRESENTE', 'QRCODE', 'ret:saida:002', '2026-08-12T18:00:01Z')
+  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'SAIDA', 'e5555555-5555-5555-5555-555555555552', 'PRESENTE', 'QRCODE', 'ret:saida:002', '2026-08-12T18:00:01Z', NULL, NULL, 'ret:saida:002:key')
 $$, 'segunda saída física é registrada');
 
 SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'SAIDA', 'e5555555-5555-5555-5555-555555555553', 'PRESENTE', 'QRCODE', 'ret:saida:003', '2026-08-12T18:00:02Z')
+  SELECT public.salvar_decisao_conferencia('e6666666-6666-6666-6666-666666666666', 'SAIDA', 'e5555555-5555-5555-5555-555555555553', 'PRESENTE', 'QRCODE', 'ret:saida:003', '2026-08-12T18:00:02Z', NULL, NULL, 'ret:saida:003:key')
 $$, 'terceira saída física é registrada');
 
 SELECT lives_ok($$
@@ -101,7 +108,8 @@ SELECT throws_ok($$
     '2026-08-12T20:00:00Z',
     NULL,
     NULL,
-    'Conector danificado'
+    'Conector danificado',
+    'ret:problem:no-condition:key'
   )
 $$, '22023', 'Retorno PROBLEMA exige condição e observação', 'problema sem condição não vira decisão');
 
@@ -115,9 +123,25 @@ SELECT throws_ok($$
     '2026-08-12T20:00:00Z',
     0,
     NULL,
-    NULL
+    NULL,
+    'ret:ok:invalid-condition:key'
   )
 $$, '22023', 'Desgaste de retorno deve estar entre 1 e 5', 'condição fora da faixa não vira decisão');
+
+SELECT throws_ok($$
+  SELECT public.salvar_decisao_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    'e5555555-5555-5555-5555-555555555552',
+    'NAO_VOLTOU',
+    'QRCODE',
+    'ret:missing:client',
+    '2026-08-12T20:00:01Z',
+    NULL,
+    NULL,
+    'Não localizado no desmonte',
+    'ret:missing:client:key'
+  )
+$$, '22023', 'Ausência é derivada ao finalizar o retorno', 'cliente não fabrica a ausência da Unidade');
 
 SELECT lives_ok($$
   SELECT public.salvar_decisao_conferencia_retorno(
@@ -129,23 +153,10 @@ SELECT lives_ok($$
     '2026-08-12T20:00:00Z',
     4,
     NULL,
-    NULL
+    NULL,
+    'ret:ok:001:key'
   )
 $$, 'retorno OK registra a condição física');
-
-SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia_retorno(
-    'e6666666-6666-6666-6666-666666666666',
-    'e5555555-5555-5555-5555-555555555552',
-    'NAO_VOLTOU',
-    'QRCODE',
-    'ret:missing:001',
-    '2026-08-12T20:00:01Z',
-    NULL,
-    NULL,
-    'Não localizado no desmonte'
-  )
-$$, 'ausência não exige condição que não pode ser observada');
 
 SELECT lives_ok($$
   SELECT public.salvar_decisao_conferencia_retorno(
@@ -157,18 +168,33 @@ SELECT lives_ok($$
     '2026-08-12T20:00:02Z',
     2,
     NULL,
-    'Conector danificado'
+    'Conector danificado',
+    'ret:problem:001:key'
   )
 $$, 'problema com condição e observação é registrado');
 
 SELECT is(
-  public.confirmar_conferencia_retorno(
-    (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO'),
-    ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO') ORDER BY id),
-    3, 'ret:confirm:001'
-  ) ->> 'direction',
+  public.finalizar_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    2,
+    'ret:finalize:001'
+  ) #>> '{receipt,direction}',
   'RETORNO',
-  'Recibo de retorno é persistido'
+  'finalização de retorno devolve o Recibo persistido'
+);
+
+SELECT is(
+  (
+    SELECT count(*)::integer
+    FROM public.conferencia_decisoes cd
+    JOIN public.conferencias c ON c.id = cd.conferencia_id
+    WHERE c.projeto_id = 'e6666666-6666-6666-6666-666666666666'
+      AND c.direcao = 'RETORNO'
+      AND cd.resultado = 'NAO_VOLTOU'
+      AND cd.source_event_id LIKE 'return-finalization:%'
+  ),
+  1,
+  'finalização deriva a ausência sem decisão fabricada pelo cliente'
 );
 
 SELECT is(
@@ -185,11 +211,11 @@ SELECT is(
 );
 
 SELECT is(
-  public.confirmar_conferencia_retorno(
-    (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO'),
-    ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO') ORDER BY id),
-    3, 'ret:confirm:001'
-  ) #>> '{units,2,desgaste}',
+  public.finalizar_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    2,
+    'ret:finalize:001'
+  ) #>> '{receipt,units,2,desgaste}',
   '2',
   'Recibo de retorno inclui o desgaste da Unidade'
 );
@@ -219,33 +245,40 @@ SELECT is(
 );
 
 SELECT is(
-  public.confirmar_conferencia_retorno(
-    (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO'),
-    ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO') ORDER BY id),
-    3, 'ret:confirm:001'
-  ) ->> 'confirmation_id',
-  (SELECT id::text FROM public.conferencia_confirmacoes WHERE idempotency_key = 'ret:confirm:001'),
-  'retry pós-commit devolve o mesmo Recibo'
+  public.finalizar_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    2,
+    'ret:finalize:001'
+  ) ->> 'finalization_id',
+  (SELECT id::text FROM public.retorno_conferencia_finalizacoes WHERE idempotency_key = 'ret:finalize:001'),
+  'retry pós-commit devolve o mesmo Recibo de finalização'
 );
 
 SELECT set_config('request.jwt.claims', '{"sub":"e2222222-2222-2222-2222-222222222222","role":"authenticated"}', true);
 
 SELECT throws_ok($$
-  SELECT public.confirmar_conferencia_retorno(
-    (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO'),
-    ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND direcao = 'RETORNO') ORDER BY id),
-    3, 'ret:confirm:001'
+  SELECT public.finalizar_conferencia_retorno(
+    'e6666666-6666-6666-6666-666666666666',
+    2,
+    'ret:finalize:001'
   )
-$$, 'P0001', 'IDEMPOTENCY_KEY_CONFLICT', 'outro operador não recebe Recibo de retorno alheio');
+$$, 'P0001', 'IDEMPOTENCY_KEY_CONFLICT', 'outro operador não recebe Recibo de finalização alheio');
 
 SELECT is((SELECT status::text FROM public.projetos WHERE id = 'e6666666-6666-6666-6666-666666666666'), 'EM_CAMPO', 'pendência aberta mantém Evento em campo');
 
 SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
 
+SELECT throws_ok($$
+  SELECT public.resolver_pendencia_retorno(
+    (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND status = 'ABERTA'),
+    'ENCONTRADA', 'Encontrada no case', NULL, 'ret:resolve:no-location'
+  )
+$$, '22023', 'ENCONTRADA exige localização confirmada', 'unidade encontrada não fecha sem localização confirmada');
+
 SELECT is(
   public.resolver_pendencia_retorno(
     (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666' AND status = 'ABERTA'),
-    'ENCONTRADA', 'Encontrada no case', 'ret:resolve:001'
+    'ENCONTRADA', 'Encontrada no case', 'Case retorno A', 'ret:resolve:001'
   ) ->> 'action',
   'ENCONTRADA',
   'pendência encontrada é resolvida por transação própria'
@@ -255,12 +288,27 @@ SELECT is((SELECT status::text FROM public.serial_numbers WHERE id = 'e5555555-5
 
 SELECT is((SELECT status FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666'), 'ENCONTRADA', 'pendência recebe o desfecho persistido');
 
+SELECT is(
+  (SELECT localizacao_confirmada FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666'),
+  'Case retorno A',
+  'pendência persiste a localização confirmada da Unidade encontrada'
+);
+
+SELECT is(
+  public.resolver_pendencia_retorno(
+    (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666'),
+    'ENCONTRADA', 'Encontrada no case', 'Case retorno A', 'ret:resolve:001'
+  ) ->> 'confirmed_location',
+  'Case retorno A',
+  'Recibo de resolução registra a localização confirmada'
+);
+
 SELECT is((SELECT status::text FROM public.projetos WHERE id = 'e6666666-6666-6666-6666-666666666666'), 'FINALIZADO', 'última pendência resolvida finaliza Evento');
 
 SELECT is(
   public.resolver_pendencia_retorno(
     (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666'),
-    'ENCONTRADA', 'Encontrada no case', 'ret:resolve:001'
+    'ENCONTRADA', 'Encontrada no case', 'Case retorno A', 'ret:resolve:001'
   ) ->> 'resolution_id',
   (SELECT id::text FROM public.retorno_pendencia_resolucoes WHERE idempotency_key = 'ret:resolve:001'),
   'retry de pendência devolve o mesmo ACK'
@@ -271,14 +319,14 @@ SELECT set_config('request.jwt.claims', '{"sub":"e2222222-2222-2222-2222-2222222
 SELECT throws_ok($$
   SELECT public.resolver_pendencia_retorno(
     (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666'),
-    'ENCONTRADA', 'Encontrada no case', 'ret:resolve:001'
+    'ENCONTRADA', 'Encontrada no case', 'Case retorno A', 'ret:resolve:001'
   )
 $$, 'P0001', 'IDEMPOTENCY_KEY_CONFLICT', 'outro operador não recebe ACK de pendência alheio');
 
 SELECT throws_ok($$
   SELECT public.resolver_pendencia_retorno(
     (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666'),
-    'BAIXA', 'Sem recuperação', 'ret:resolve:admin-only'
+    'BAIXA', 'Sem recuperação', NULL, 'ret:resolve:admin-only'
   )
 $$, '42501', 'Baixa e cobrança exigem usuário admin', 'editor não contorna a permissão administrativa');
 
@@ -287,14 +335,14 @@ SELECT set_config('request.jwt.claims', '{"sub":"e3333333-3333-3333-3333-3333333
 SELECT throws_ok($$
   SELECT public.resolver_pendencia_retorno(
     (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e6666666-6666-6666-6666-666666666666'),
-    'ENCONTRADA', 'Encontrada no case', 'ret:resolve:viewer'
+    'ENCONTRADA', 'Encontrada no case', 'Case retorno A', 'ret:resolve:viewer'
   )
 $$, '42501', 'Perfil sem permissão para resolver pendência', 'viewer não resolve pendência');
 
 SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
 
 SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia('e7777777-7777-7777-7777-777777777777', 'SAIDA', 'e5555555-5555-5555-5555-555555555554', 'PRESENTE', 'QRCODE', 'ret:fail:saida', '2026-08-12T21:00:00Z')
+  SELECT public.salvar_decisao_conferencia('e7777777-7777-7777-7777-777777777777', 'SAIDA', 'e5555555-5555-5555-5555-555555555554', 'PRESENTE', 'QRCODE', 'ret:fail:saida', '2026-08-12T21:00:00Z', NULL, NULL, 'ret:fail:saida:key')
 $$, 'fixture de rollback registra saída');
 
 SELECT lives_ok($$
@@ -305,10 +353,6 @@ SELECT lives_ok($$
   )
 $$, 'fixture de rollback aplica saída');
 
-SELECT lives_ok($$
-  SELECT public.salvar_decisao_conferencia('e7777777-7777-7777-7777-777777777777', 'RETORNO', 'e5555555-5555-5555-5555-555555555554', 'NAO_VOLTOU', 'QRCODE', 'ret:fail:return', '2026-08-12T22:00:00Z', NULL, 'Não retornou')
-$$, 'fixture de rollback registra ausência');
-
 RESET ROLE;
 SAVEPOINT return_pending_failure;
 CREATE OR REPLACE FUNCTION pg_temp.fail_return_pending()
@@ -318,7 +362,7 @@ BEGIN
 END;
 $$;
 CREATE TRIGGER trg_test_fail_return_pending
-BEFORE INSERT ON public.retorno_pendencias
+AFTER UPDATE ON public.conferencias
 FOR EACH ROW EXECUTE FUNCTION pg_temp.fail_return_pending();
 
 SET LOCAL ROLE authenticated;
@@ -326,10 +370,10 @@ SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-1111111
 
 DO $$
 BEGIN
-  PERFORM public.confirmar_conferencia_retorno(
-    (SELECT id FROM public.conferencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND direcao = 'RETORNO'),
-    ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND direcao = 'RETORNO')),
-    1, 'ret:fail:confirm'
+  PERFORM public.finalizar_conferencia_retorno(
+    'e7777777-7777-7777-7777-777777777777',
+    0,
+    'ret:fail:confirm'
   );
   RAISE EXCEPTION 'A confirmação deveria falhar';
 EXCEPTION
@@ -341,7 +385,7 @@ END;
 $$;
 
 ROLLBACK TO SAVEPOINT return_pending_failure;
-SELECT pass('falha tardia aborta toda a confirmação de retorno');
+SELECT pass('falha após a última escrita aborta toda a confirmação de retorno');
 
 SELECT is((SELECT status::text FROM public.serial_numbers WHERE id = 'e5555555-5555-5555-5555-555555555554'), 'EM_CAMPO', 'rollback preserva estado anterior da Unidade');
 
@@ -351,18 +395,42 @@ SELECT is((SELECT count(*)::integer FROM public.movimentacoes WHERE projeto_id =
 
 SELECT is((SELECT count(*)::integer FROM public.retorno_pendencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777'), 0, 'rollback não deixa pendência parcial');
 
+SELECT is(
+  (
+    SELECT count(*)::integer
+    FROM public.conferencias
+    WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777'
+      AND direcao = 'RETORNO'
+  ),
+  0,
+  'rollback não deixa Conferência de retorno parcial'
+);
+
+SELECT is(
+  (
+    SELECT count(*)::integer
+    FROM public.conferencia_decisoes cd
+    JOIN public.conferencias c ON c.id = cd.conferencia_id
+    WHERE c.projeto_id = 'e7777777-7777-7777-7777-777777777777'
+      AND c.direcao = 'RETORNO'
+      AND cd.applied_confirmation_id IS NOT NULL
+  ),
+  0,
+  'rollback não marca decisão de retorno como aplicada'
+);
+
 RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"sub":"e1111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
 
 SELECT is(
-  public.confirmar_conferencia_retorno(
-    (SELECT id FROM public.conferencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND direcao = 'RETORNO'),
-    ARRAY(SELECT id FROM public.conferencia_decisoes WHERE conferencia_id = (SELECT id FROM public.conferencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND direcao = 'RETORNO')),
-    1, 'ret:fail:confirm'
-  ) ->> 'direction',
+  public.finalizar_conferencia_retorno(
+    'e7777777-7777-7777-7777-777777777777',
+    0,
+    'ret:fail:confirm'
+  ) #>> '{receipt,direction}',
   'RETORNO',
-  'retry após rollback aplica a mesma intenção sem duplicar pendência'
+  'retry após rollback aplica a mesma finalização sem duplicar pendência'
 );
 
 SELECT is(
@@ -392,6 +460,7 @@ BEGIN
     (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND status = 'ABERTA'),
     'ENCONTRADA',
     'Encontrada após a conferência.',
+    'Case retorno B',
     'ret:fail:resolve'
   );
   RAISE EXCEPTION 'A resolução deveria falhar';
@@ -439,6 +508,7 @@ SELECT is(
     (SELECT id FROM public.retorno_pendencias WHERE projeto_id = 'e7777777-7777-7777-7777-777777777777' AND status = 'ABERTA'),
     'ENCONTRADA',
     'Encontrada após a conferência.',
+    'Case retorno B',
     'ret:fail:resolve'
   ) ->> 'action',
   'ENCONTRADA',

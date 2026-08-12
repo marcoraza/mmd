@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(41);
+SELECT plan(45);
 
 SELECT has_function(
   'public',
@@ -360,7 +360,10 @@ SELECT lives_ok(
       'PRESENTE',
       'RFID',
       'rfid:review:0001',
-      '2026-08-12T18:00:00Z'
+      '2026-08-12T18:00:00Z',
+      NULL,
+      NULL,
+      'decision:rfid:review:0001'
     )
   $$,
   'item fora do packing entra em Revisar'
@@ -376,6 +379,88 @@ SELECT is(
   ),
   'REVISAR',
   'exceção fica em Revisar antes da decisão do operador'
+);
+
+RESET ROLE;
+SAVEPOINT exception_resolution_fault;
+CREATE OR REPLACE FUNCTION pg_temp.fail_exception_resolution()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RAISE EXCEPTION 'INJECTED_EXCEPTION_RESOLUTION_FAILURE';
+END;
+$$;
+
+CREATE TRIGGER trg_test_fail_exception_resolution
+AFTER UPDATE ON public.conferencias
+FOR EACH ROW EXECUTE FUNCTION pg_temp.fail_exception_resolution();
+
+SET LOCAL ROLE authenticated;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"d1111111-1111-1111-1111-111111111111","role":"authenticated"}',
+  true
+);
+
+SELECT throws_ok(
+  $$
+    SELECT public.resolver_excecao_conferencia_saida(
+      (
+        SELECT cd.id
+        FROM public.conferencia_decisoes cd
+        JOIN public.conferencias c ON c.id = cd.conferencia_id
+        WHERE c.projeto_id = 'd5555555-5555-5555-5555-555555555555'
+          AND cd.serial_number_id = 'd4444444-4444-4444-4444-444444444443'
+      ),
+      'ADICIONAR',
+      1,
+      'review:add:rollback'
+    )
+  $$,
+  'P0001',
+  'INJECTED_EXCEPTION_RESOLUTION_FAILURE',
+  'falha após a última escrita aborta a resolução de Revisar inteira'
+);
+
+RESET ROLE;
+ROLLBACK TO SAVEPOINT exception_resolution_fault;
+RELEASE SAVEPOINT exception_resolution_fault;
+
+SELECT is(
+  (
+    SELECT resolution::text
+    FROM public.conferencia_decisoes cd
+    JOIN public.conferencias c ON c.id = cd.conferencia_id
+    WHERE c.projeto_id = 'd5555555-5555-5555-5555-555555555555'
+      AND cd.serial_number_id = 'd4444444-4444-4444-4444-444444444443'
+  ),
+  'REVISAR',
+  'rollback preserva a exceção antes da resolução'
+);
+
+SELECT is(
+  (
+    SELECT version
+    FROM public.conferencias
+    WHERE projeto_id = 'd5555555-5555-5555-5555-555555555555'
+      AND direcao = 'SAIDA'
+  ),
+  1::bigint,
+  'rollback preserva a versão anterior à resolução'
+);
+
+SELECT is(
+  (SELECT count(*)::integer FROM public.conferencia_excecao_resolucoes WHERE idempotency_key = 'review:add:rollback'),
+  0,
+  'rollback não deixa ACK de resolução parcial'
+);
+
+SET LOCAL ROLE authenticated;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"d1111111-1111-1111-1111-111111111111","role":"authenticated"}',
+  true
 );
 
 SELECT is(

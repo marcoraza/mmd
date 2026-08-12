@@ -312,8 +312,6 @@ BEGIN
     RETURN app_private.retorno_pendencia_recibo(v_existing.id);
   END IF;
 
-  PERFORM set_config('app_private.physical_operation', 'true', true);
-
   RETURN public.resolver_pendencia_retorno_legacy_actor_scope(
     p_pendencia_id,
     p_acao,

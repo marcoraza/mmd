@@ -298,8 +298,6 @@ BEGIN
     END IF;
   END IF;
 
-  PERFORM set_config('app_private.rfid_tag_operation', 'true', true);
-
   IF v_action = 'MOVER' THEN
     UPDATE public.serial_numbers
     SET tag_rfid = NULL
@@ -311,8 +309,6 @@ BEGIN
     SET tag_rfid = v_epc
     WHERE id = v_target.id;
   END IF;
-
-  PERFORM set_config('app_private.rfid_tag_operation', 'false', true);
 
   INSERT INTO public.rfid_tag_operations (
     idempotency_key,
@@ -678,8 +674,6 @@ BEGIN
   IF v_is_incomplete AND length(coalesce(v_incomplete_reason, '')) < 3 THEN
     RAISE EXCEPTION 'Saída incompleta exige motivo' USING ERRCODE = '22023';
   END IF;
-
-  PERFORM set_config('app_private.physical_operation', 'true', true);
 
   INSERT INTO public.conferencia_confirmacoes (
     conferencia_id, idempotency_key, payload_hash, actor_id, incomplete_reason

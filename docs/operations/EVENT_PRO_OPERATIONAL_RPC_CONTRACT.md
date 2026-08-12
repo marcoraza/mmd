@@ -20,13 +20,13 @@ cliente move estoque por PostgREST direto, alocação ou leitura RFID bruta.
 
 ## Conferência de saída
 
-1. `salvar_decisao_conferencia(p_projeto_id, p_direcao='SAIDA', p_serial_id,
-   p_resultado='PRESENTE', p_metodo, p_source_event_id, p_captured_at,
-   p_manual_reason?, p_observation?)`
+1. `salvar_decisao_conferencia(p_projeto_id, p_direcao, p_serial_id,
+   p_resultado, p_metodo, p_source_event_id, p_captured_at,
+   p_manual_reason?, p_observation?, p_idempotency_key)`
 
-   Registra ou atualiza uma decisão de rascunho. Leitura RFID não confirma
-   nada. Manual exige motivo. Uma Unidade fora do packing ou indisponível fica
-   `REVISAR`.
+   Registra ou atualiza uma decisão de rascunho de `SAIDA`. Leitura RFID não
+   confirma nada. Manual exige motivo. Uma Unidade fora do packing ou
+   indisponível fica `REVISAR`.
 
 2. `resolver_excecao_conferencia_saida(p_decision_id, p_action='ADICIONAR'|
    'IGNORAR', p_expected_version, p_idempotency_key)`
@@ -63,30 +63,43 @@ cliente move estoque por PostgREST direto, alocação ou leitura RFID bruta.
    saída física aplicada e sem retorno aplicado. Alocação não cria retorno.
 
 2. `salvar_decisao_conferencia_retorno(p_projeto_id, p_serial_id,
-   p_resultado='OK'|'PROBLEMA'|'NAO_VOLTOU', p_metodo,
-   p_source_event_id, p_captured_at, p_desgaste?, p_manual_reason?,
-   p_observation?)`
+   p_resultado, p_metodo, p_source_event_id,
+   p_captured_at, p_desgaste?, p_manual_reason?, p_observation?,
+   p_idempotency_key)`
 
    Registra o rascunho de retorno. `PROBLEMA` exige desgaste entre 1 e 5 e
-   observação de pelo menos três caracteres. `NAO_VOLTOU` não recebe desgaste,
-   pois não houve condição física observável.
+   observação de pelo menos três caracteres. A ausência não é enviada pelo
+   cliente.
 
 3. `confirmar_conferencia_retorno(p_conferencia_id, p_decision_ids,
    p_expected_version, p_idempotency_key)`
 
-   `OK` muda a Unidade para `DISPONIVEL`; `PROBLEMA`, para `MANUTENCAO`; e
-   `NAO_VOLTOU`, para `RETORNANDO` e abre uma única pendência. A resposta é o
-   mesmo formato de Recibo da saída, com direção `RETORNO` e desgaste quando
-   ele foi observado.
+   Aplica um retorno parcial: somente decisões existentes de `OK` ou
+   `PROBLEMA`. Não cria ausência, não aceita uma decisão já aplicada e devolve
+   o Recibo físico. Use quando o Evento recebe devoluções em levas.
 
-4. `resolver_pendencia_retorno(p_pendencia_id, p_acao,
-   p_observacao, p_idempotency_key)`
+4. `finalizar_conferencia_retorno(p_projeto_id, p_expected_version,
+   p_idempotency_key)`
+
+   É a confirmação final canônica. A versão é a da Conferência de retorno
+   recém-lida pelo operador. O servidor deriva, para cada Unidade que teve
+   saída física e segue sem retorno, uma decisão `NAO_VOLTOU`, muda-a para
+   `RETORNANDO` e cria uma só pendência. Decisões `OK` e `PROBLEMA` já
+   registradas são aplicadas na mesma transação. O Recibo traz
+   `finalization_id`, ator, horário, quantidade de ausências derivadas e o
+   Recibo físico com direção `RETORNO` e desgaste quando observado.
+
+5. `resolver_pendencia_retorno(p_pendencia_id, p_acao,
+   p_observacao?, p_localizacao_confirmada?, p_idempotency_key)`
 
    Ações: `ENCONTRADA` leva para `DISPONIVEL`; `MANUTENCAO`, para
    `MANUTENCAO`; `BAIXA`, para `BAIXA`; `COBRANCA` mantém a Unidade e registra
-   a cobrança. Manutenção e cobrança exigem observação. A resposta contém
-   `resolution_id`, pendência, Evento, Unidade, ação, observação, ator, horário
-   e estado novo.
+   a cobrança. `ENCONTRADA` exige `p_localizacao_confirmada` com ao menos três
+   caracteres. Ela fica persistida na pendência e no Recibo. Manutenção e
+   cobrança exigem observação. A resposta contém `resolution_id`, pendência,
+   Evento, Unidade, ação, observação, localização confirmada, ator, horário e
+   estado novo. A assinatura antiga de quatro parâmetros não tem grant e não
+   deve ser integrada.
 
 ## Erros que o agente deve tratar
 

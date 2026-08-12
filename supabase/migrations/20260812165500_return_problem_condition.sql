@@ -254,8 +254,6 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
-  PERFORM set_config('app_private.physical_operation', 'true', true);
-
   v_receipt := public.confirmar_conferencia_retorno_legacy_actor_scope(
     p_conferencia_id,
     p_decision_ids,

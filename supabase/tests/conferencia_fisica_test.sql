@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(63);
+SELECT plan(66);
 
 INSERT INTO auth.users (
   instance_id,
@@ -126,7 +126,8 @@ SELECT lives_ok(
       'qr:read-001',
       '2026-08-10T21:00:00Z',
       NULL,
-      'Primeira leitura'
+      'Primeira leitura',
+      'decision:qr:read-001'
     )
   $$,
   'operador A salva uma decisão unitária'
@@ -154,10 +155,65 @@ SELECT is(
   'primeira decisão avança a versão do rascunho'
 );
 
+SELECT is(
+  public.salvar_decisao_conferencia(
+    '33333333-3333-3333-3333-333333333333',
+    'SAIDA',
+    '22222222-2222-2222-2222-222222222222',
+    'PRESENTE',
+    'QRCODE',
+    'qr:read-001',
+    '2026-08-10T21:00:00Z',
+    NULL,
+    'Primeira leitura',
+    'decision:qr:read-001'
+  ) ->> 'decision_id',
+  (
+    SELECT cd.id::text
+    FROM public.conferencia_decisoes cd
+    JOIN public.conferencias c ON c.id = cd.conferencia_id
+    WHERE c.projeto_id = '33333333-3333-3333-3333-333333333333'
+      AND c.direcao = 'SAIDA'
+      AND cd.serial_number_id = '22222222-2222-2222-2222-222222222222'
+  ),
+  'retry da mesma decisão devolve o ACK original'
+);
+
+SELECT is(
+  (
+    SELECT version
+    FROM public.conferencias
+    WHERE projeto_id = '33333333-3333-3333-3333-333333333333'
+      AND direcao = 'SAIDA'
+  ),
+  1::bigint,
+  'retry da mesma decisão não avança a versão'
+);
+
 SELECT set_config(
   'request.jwt.claims',
   '{"sub":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2","role":"authenticated"}',
   true
+);
+
+SELECT throws_ok(
+  $$
+    SELECT public.salvar_decisao_conferencia(
+      '33333333-3333-3333-3333-333333333333',
+      'SAIDA',
+      '22222222-2222-2222-2222-222222222222',
+      'PRESENTE',
+      'QRCODE',
+      'qr:read-001',
+      '2026-08-10T21:00:00Z',
+      NULL,
+      'Primeira leitura',
+      'decision:qr:read-001'
+    )
+  $$,
+  'P0001',
+  'IDEMPOTENCY_KEY_CONFLICT',
+  'retry por outro ator não recebe o ACK original'
 );
 
 SELECT is(
@@ -184,7 +240,8 @@ SELECT lives_ok(
       'qr:read-002',
       '2026-08-10T21:05:00Z',
       NULL,
-      'Revisada pelo segundo operador'
+      'Revisada pelo segundo operador',
+      'decision:qr:read-002'
     )
   $$,
   'operador B continua o mesmo rascunho'
@@ -449,7 +506,8 @@ SELECT lives_ok(
       'qr:read-003',
       '2026-08-10T21:10:00Z',
       NULL,
-      'Inclusão posterior'
+      'Inclusão posterior',
+      'decision:qr:read-003'
     )
   $$,
   'a mesma Conferência aceita inclusão posterior'
@@ -528,7 +586,8 @@ SELECT throws_ok(
       'qr:read-applied',
       '2026-08-10T21:20:00Z',
       NULL,
-      'Tentativa de reabrir decisão aplicada'
+      'Tentativa de reabrir decisão aplicada',
+      'decision:qr:read-applied'
     )
   $$,
   '55000',
@@ -571,7 +630,8 @@ SELECT throws_ok(
       'qr:viewer-001',
       '2026-08-10T22:04:00Z',
       NULL,
-      NULL
+      NULL,
+      'decision:qr:viewer-001'
     )
   $$,
   '42501',
@@ -788,7 +848,8 @@ SELECT throws_ok(
       'manual:test-001',
       '2026-08-10T22:05:00Z',
       NULL,
-      NULL
+      NULL,
+      'decision:manual:test-001'
     )
   $$,
   '22023',
@@ -807,7 +868,8 @@ SELECT lives_ok(
       'manual:test-002',
       '2026-08-10T22:06:00Z',
       'QR danificado',
-      NULL
+      NULL,
+      'decision:manual:test-002'
     )
   $$,
   'decisão manual com motivo entra no rascunho'
@@ -995,7 +1057,8 @@ SELECT lives_ok(
       'manual:no-packing-001',
       '2026-08-10T22:10:00Z',
       'Saída emergencial',
-      NULL
+      NULL,
+      'decision:manual:no-packing-001'
     )
   $$,
   'Evento sem packing ainda pode registrar presença física'
@@ -1106,7 +1169,8 @@ SELECT lives_ok(
       'rfid:unavailable-001',
       '2026-08-10T22:59:00Z',
       NULL,
-      NULL
+      NULL,
+      'decision:rfid:unavailable-001'
     )
   $$,
   'Unidade indisponível fica persistida para Revisar'
@@ -1145,7 +1209,8 @@ SELECT lives_ok(
       'rfid:substitute-001',
       '2026-08-10T23:00:00Z',
       NULL,
-      NULL
+      NULL,
+      'decision:rfid:substitute-001'
     )
   $$,
   'Unidade disponível do mesmo Item entra como substituição'
@@ -1173,7 +1238,8 @@ SELECT lives_ok(
       'rfid:substitute-replay-001',
       '2026-08-10T23:00:01Z',
       NULL,
-      NULL
+      NULL,
+      'decision:rfid:substitute-replay-001'
     )
   $$,
   'replay da mesma Unidade substituta preserva a decisão'
@@ -1302,7 +1368,8 @@ SELECT lives_ok(
       'qr:review-001',
       '2026-08-10T23:05:00Z',
       NULL,
-      NULL
+      NULL,
+      'decision:qr:review-001'
     )
   $$,
   'Item fora do packing fica persistido para Revisar'

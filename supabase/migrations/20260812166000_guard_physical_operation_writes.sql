@@ -1,5 +1,8 @@
--- O estado físico só muda dentro das RPCs canônicas. O contexto é local à
--- transação, portanto não atravessa retry nem pode vazar para outra operação.
+-- O estado físico só muda dentro das RPCs canônicas. Um GUC de sessão não é
+-- autorização, porque o próprio cliente pode definir seu valor. As RPCs
+-- canônicas executam como SECURITY DEFINER sob o dono confiável das migrations;
+-- DML direto por authenticated e service_role preserva o seu próprio current_user
+-- e é rejeitado.
 
 CREATE OR REPLACE FUNCTION app_private.require_physical_operation_write()
 RETURNS trigger
@@ -7,7 +10,7 @@ LANGUAGE plpgsql
 SET search_path = ''
 AS $$
 BEGIN
-  IF coalesce(current_setting('app_private.physical_operation', true), '') <> 'true' THEN
+  IF current_user <> 'postgres' THEN
     RAISE EXCEPTION 'PHYSICAL_OPERATION_WRITE_REQUIRES_RPC'
       USING ERRCODE = '42501';
   END IF;

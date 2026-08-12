@@ -21,3 +21,13 @@ test('Web não altera EPC por PostgREST direto', () => {
 
   assert.doesNotMatch(source, /\.update\(\{\s*tag_rfid\s*:/)
 })
+
+test('vínculo RFID só reutiliza a chave idempotente enquanto a intenção não muda', () => {
+  const binder = readFileSync(join(process.cwd(), 'src/components/rfid/RfidTagBinder.tsx'), 'utf8')
+
+  assert.match(binder, /setTag\(e\.target\.value\)\s+setBindRequestId\(null\)/)
+  assert.match(
+    binder,
+    /if \(selectedId !== unit\.id\) \{\s+setSelectedId\(unit\.id\)\s+setBindRequestId\(null\)/,
+  )
+})

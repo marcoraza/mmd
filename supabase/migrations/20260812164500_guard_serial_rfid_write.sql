@@ -4,8 +4,11 @@ LANGUAGE plpgsql
 SET search_path = ''
 AS $$
 BEGIN
+  -- A configuração de sessão não é uma autorização: qualquer cliente que
+  -- tenha conexão SQL pode forjá-la. As RPCs canônicas são SECURITY DEFINER
+  -- e, por isso, executam DML como o dono confiável das migrations.
   IF NEW.tag_rfid IS DISTINCT FROM OLD.tag_rfid
-     AND coalesce(current_setting('app_private.rfid_tag_operation', true), '') <> 'true' THEN
+     AND current_user <> 'postgres' THEN
     RAISE EXCEPTION 'RFID_TAG_WRITE_REQUIRES_OPERATION'
       USING ERRCODE = '42501';
   END IF;

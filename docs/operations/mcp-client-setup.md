@@ -1,6 +1,6 @@
 # Operação do cliente MCP MMD
 
-Estado: protocolo, validação OAuth e leitura por capability estão implementados e testados localmente. A tela e a ação de consentimento estão implementadas, mas aguardam prova end-to-end com o Authorization Server habilitado. Sem a configuração completa, a rota responde `503 mcp_remote_not_configured`. Não publicar nem cadastrar cliente de produção antes de migrations aplicadas, OAuth habilitado, credencial técnica dedicada criada, WAF configurado e deploy autorizado.
+Estado: protocolo, validação OAuth, leituras e sete mutações canônicas por capability estão implementados e testados localmente. A tela e a ação de consentimento aguardam prova end-to-end com o Authorization Server habilitado. Sem a configuração completa, a rota responde `503 mcp_remote_not_configured`. Não publicar nem cadastrar cliente de produção antes de migrations aplicadas, OAuth habilitado, credencial técnica dedicada criada, WAF configurado e deploy autorizado.
 
 ## Endereço e autenticação
 
@@ -19,7 +19,11 @@ Antes de liberar o endpoint, configure `MMD_MCP_RESOURCE_URL` como a URL HTTPS e
 
 ## Cadastro e revogação
 
-`mcp_clients` é o registro de revogação do cliente. Segredos de cliente pertencem ao Supabase OAuth Server e nunca são copiados para a aplicação. Cadastre o mesmo `client_id`, a URL HTTPS exata do resource, escopos mínimos (`mcp:read` agora) e marque `active=false` com `revoked_at` ao revogar. A segunda migration cria `mmd_mcp_executor` sem login e remove qualquer membership em `authenticated`. A ativação remota deve gerar senha forte fora do Git, habilitar `LOGIN` nesse papel e guardar somente a connection string no secret `MMD_MCP_DATABASE_URL`.
+`mcp_clients` é o registro de revogação do cliente. Segredos de cliente pertencem ao Supabase OAuth Server e nunca são copiados para a aplicação. Cadastre o mesmo `client_id`, a URL HTTPS exata do resource e `mcp:read`. Clientes autorizados a operar recebem também `mcp:operate`; a constraint exige que `mcp:operate` nunca exista sem `mcp:read`. Marque `active=false` com `revoked_at` ao revogar.
+
+As migrations criam `mmd_mcp_executor` como `NOLOGIN`, sem membership em `authenticated`. Isso impede uso acidental antes da ativação. No preflight autorizado, gere uma senha aleatória de 256 bits fora do Git, execute `ALTER ROLE mmd_mcp_executor LOGIN PASSWORD '<senha>';` no banco alvo e grave somente a connection string no secret `MMD_MCP_DATABASE_URL`. O usuário da URL precisa ser exatamente `mmd_mcp_executor` ou, no pooler, `mmd_mcp_executor.<project-ref>`.
+
+Antes do deploy, execute `npm --prefix apps/web run smoke:mcp-db` com esse secret. O smoke abre uma conexão real pelo mesmo driver da rota, confirma `current_user` e `session_user`, prova que `SELECT public.items` recebe `42501` e que a RPC de capability é alcançável e falha fechada com token inválido. Rotacione a senha com outro `ALTER ROLE`, atualize o secret e repita o smoke. Em incidente, remova o secret, rode `ALTER ROLE mmd_mcp_executor NOLOGIN PASSWORD NULL;` e revogue o cliente no registry.
 
 O servidor registra em `mcp_operation_log`: cliente, ator, ferramenta, ID da tentativa, hash, intenção, resultado, correlação e recibo opcional. Token, segredo e payload livre não entram no log. Reutilizar a mesma tentativa com outro payload falha como conflito. O limite distribuído implementado usa `mcp_rate_limit_buckets` por cliente e ator, com 60 chamadas por minuto por padrão. Antes de expor a rota, o edge/WAF também precisa limitar por IP antes de autenticar. Se a reserva de limite não responder, o endpoint falha fechado.
 
@@ -31,7 +35,7 @@ Após configurar e publicar o ambiente, o cliente poderá descobrir e ler:
 - `mmd://unidades/{unidade_id}`
 - `mmd_consultar_evento({ evento_id })`
 
-Todas são somente leitura. Não há ferramenta de saída, retorno, RFID, packing ou pendência disponível. A confirmação do hospedeiro e o ACK persistido entram apenas quando o backend concluir o envelope transacional de mutação.
+Com `mcp:operate` e perfil autorizado, ele também descobre as sete ferramentas descritas em `docs/operations/mcp-tool-catalog.md`: decisão, exceção, confirmação de saída e retorno, finalização de retorno, pendência e vínculo RFID. Toda mutação carrega `client_request_id`, usa operation log e capability presos a cliente, ator, ferramenta e hash, e devolve ACK mínimo persistido. Ferramentas físicas anunciam impacto destrutivo e exigem confirmação do hospedeiro.
 
 ## Claude Code
 
@@ -53,7 +57,9 @@ Cadastre a URL HTTPS remota e conclua OAuth somente depois de o emissor em `MMD_
 
 - `npm run test:mcp`: descoberta e leitura pelos SDKs oficial moderno e legado, bearer ausente, Origin malicioso, DTO allowlist e metadata OAuth.
 - `supabase/tests/mcp_registry_test.sql`: persiste os alvos de Evento e Unidade contra a CHECK real do log, rejeita o template com chaves, nega `SELECT` direto ao executor e prova consumo único das RPCs de Evento e Unidade, tudo em transação com rollback.
+- `supabase/tests/mcp_mutation_capability_test.sql`: prova claim persistido, retry, conflito de payload, capability inválida e falha sem ACK fabricado.
+- `npm run smoke:mcp-db`: prova conexão real sob o login dedicado e as restrições usadas pela rota.
 - `npm run lint` e `npm run build`: endpoint `/api/mcp` e metadata compilam na app Next.
 - As migrations de registry e capability são executadas dentro de transação e rollback contra o Postgres local, sem gravar dados.
 
-Ainda falta: habilitar o Supabase OAuth 2.1 e apontar a Authorization Path para `/oauth/consent`; selecionar `public.mmd_custom_access_token_hook`; aplicar as migrations no ambiente alvo; criar a senha do papel `mmd_mcp_executor`; configurar secrets e limite pré-auth no WAF/edge; publicar URL HTTPS e fazer smoke no Claude Code e ChatGPT Developer Mode. Deploy requer autorização nova.
+Ainda falta: habilitar o Supabase OAuth 2.1 e apontar a Authorization Path para `/oauth/consent`; selecionar `public.mmd_custom_access_token_hook`; aplicar as migrations no ambiente alvo; ativar o login dedicado; configurar secrets e limite pré-auth no WAF/edge; publicar URL HTTPS e fazer smoke no Claude Code e ChatGPT Developer Mode. Deploy requer autorização nova.

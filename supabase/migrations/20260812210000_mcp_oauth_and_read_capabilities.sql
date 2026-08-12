@@ -24,6 +24,7 @@ ALTER TABLE public.mcp_clients
   ADD CONSTRAINT mcp_clients_scopes_check CHECK (
     cardinality(scopes) > 0
     AND scopes <@ ARRAY['mcp:read', 'mcp:operate']::text[]
+    AND ('mcp:operate' <> ALL(scopes) OR 'mcp:read' = ANY(scopes))
   ),
   DROP COLUMN secret_hash;
 

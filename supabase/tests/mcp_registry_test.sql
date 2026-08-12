@@ -1,63 +1,5 @@
 BEGIN;
-DO $$ BEGIN
-  CREATE TYPE public.categoria_enum AS ENUM ('AUDIO');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-DO $$ BEGIN
-  CREATE TYPE public.user_role_enum AS ENUM ('viewer', 'editor', 'admin');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text NOT NULL,
-  role public.user_role_enum NOT NULL DEFAULT 'viewer'
-);
-CREATE TABLE IF NOT EXISTS public.items (
-  id uuid PRIMARY KEY,
-  nome text NOT NULL,
-  categoria public.categoria_enum NOT NULL
-);
-CREATE TABLE IF NOT EXISTS public.serial_numbers (
-  id uuid PRIMARY KEY,
-  item_id uuid NOT NULL REFERENCES public.items(id),
-  codigo_interno text UNIQUE NOT NULL,
-  status text NOT NULL
-);
-CREATE TABLE IF NOT EXISTS public.projetos (
-  id uuid PRIMARY KEY,
-  nome text NOT NULL,
-  status text NOT NULL,
-  data_inicio date,
-  data_fim date,
-  local text
-);
-CREATE TABLE IF NOT EXISTS public.packing_list (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  projeto_id uuid NOT NULL REFERENCES public.projetos(id),
-  item_id uuid NOT NULL REFERENCES public.items(id),
-  quantidade integer NOT NULL DEFAULT 1,
-  serial_numbers_designados uuid[],
-  alugueis_avulsos jsonb NOT NULL DEFAULT '[]'::jsonb
-);
-CREATE TABLE IF NOT EXISTS public.conferencia_confirmacoes (
-  id uuid PRIMARY KEY
-);
-CREATE SCHEMA IF NOT EXISTS app_private;
-DO $outer$
-BEGIN
-  IF to_regprocedure('app_private.current_user_role()') IS NULL THEN
-    EXECUTE $function$
-      CREATE FUNCTION app_private.current_user_role()
-      RETURNS text
-      LANGUAGE sql
-      STABLE
-      AS 'SELECT ''viewer''::text'
-    $function$;
-  END IF;
-END;
-$outer$;
-\ir ../migrations/20260812163430_mcp_client_registry_and_operations.sql
-\ir ../migrations/20260812210000_mcp_oauth_and_read_capabilities.sql
+SELECT plan(2);
 GRANT mmd_mcp_executor TO postgres;
 
 INSERT INTO auth.users (
@@ -181,6 +123,7 @@ BEGIN
   END;
 END;
 $$;
+SELECT pass('Registry, OAuth hook e constraints MCP persistem alvos canônicos');
 
 SET LOCAL ROLE service_role;
 SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
@@ -203,7 +146,7 @@ SELECT public.issue_mcp_read_capability(
   30
 );
 SELECT public.issue_mcp_read_capability(
-  encode(extensions.digest('revoked-scope-capability', 'sha256'), 'hex'),
+  encode(extensions.digest('revoked-client-capability', 'sha256'), 'hex'),
   'mcp-registry-test',
   'dddddddd-dddd-dddd-dddd-ddddddddddd4',
   'mmd:eventos:read',
@@ -212,7 +155,7 @@ SELECT public.issue_mcp_read_capability(
   30
 );
 UPDATE public.mcp_clients
-SET scopes = ARRAY['mcp:operate']::text[]
+SET active = false, revoked_at = now()
 WHERE client_id = 'mcp-registry-test';
 SET LOCAL ROLE postgres;
 
@@ -231,11 +174,11 @@ BEGIN
 
   BEGIN
     PERFORM public.mcp_read_event(
-      'revoked-scope-capability',
+      'revoked-client-capability',
       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
       repeat('a', 64)
     );
-    RAISE EXCEPTION 'Capability sobreviveu à remoção do escopo de leitura';
+    RAISE EXCEPTION 'Capability sobreviveu à revogação do cliente';
   EXCEPTION WHEN raise_exception THEN
     IF SQLERRM <> 'MCP_CAPABILITY_INVALID' THEN
       RAISE;
@@ -244,7 +187,7 @@ BEGIN
 
   PERFORM set_config('role', 'postgres', true);
   UPDATE public.mcp_clients
-  SET scopes = ARRAY['mcp:read']::text[]
+  SET active = true, revoked_at = NULL
   WHERE client_id = 'mcp-registry-test';
   PERFORM set_config('role', 'mmd_mcp_executor', true);
 
@@ -288,5 +231,8 @@ BEGIN
 END;
 $$;
 SET LOCAL ROLE postgres;
+
+SELECT pass('Login executor consome capabilities uma vez sem ler tabelas diretamente');
+SELECT * FROM finish();
 
 ROLLBACK;

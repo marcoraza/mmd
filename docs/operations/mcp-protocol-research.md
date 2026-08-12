@@ -27,7 +27,7 @@ O endpoint MCP falha fechado em toda request. Ele não usa `requireRequestUser`,
 
 O Supabase Auth OAuth 2.1 é o Authorization Server. Um Custom Access Token Hook vincula `aud` à URL `/api/mcp` e copia somente os escopos aprovados no registry. O servidor valida assinatura por JWKS, emissor, audiência, expiração, ator, cliente e escopos. Esse bearer não é repassado à Data API. Para cada leitura, a fronteira autenticada emite uma capability aleatória de 256 bits, guarda apenas seu hash com ator, cliente, alvo, `resource_id`, hash dos argumentos e validade de 30 segundos. O papel Postgres `mmd_mcp_executor` não pertence a `authenticated`, não injeta claims e não recebe `SELECT` no estoque. Ele só executa RPCs allowlisted que consomem a capability uma vez e revalidam cliente, escopo e o mesmo predicado de perfil usado pelas policies de leitura do produto. `SUPABASE_SERVICE_ROLE_KEY` e `supabaseAdmin` continuam proibidos de ler estoque MCP.
 
-O log/auditoria de uma operação MCP deve guardar somente metadados permitidos: `mcp_operation_id`, `client_id`, `actor_id`, ferramenta ou recurso, intenção, `payload_hash`, chave de idempotência, consentimento, resultado ou erro e correlação. Token e payload sensível não entram em log. Mutações só entram depois de existir esse recibo persistido, idempotência no contrato canônico e confirmação humana quando aplicável.
+O log/auditoria de uma operação MCP guarda somente metadados permitidos: `mcp_operation_id`, `client_id`, `actor_id`, ferramenta ou recurso, intenção, `payload_hash`, chave de idempotência, resultado ou erro e correlação. Token e payload sensível não entram em log. As mutações integradas usam uma capability separada, curta e de uso único; o dispatcher chama apenas as RPCs Event Pro allowlisted e persiste sucesso ou falha na mesma transação da regra canônica.
 
 ## Clientes considerados
 
@@ -42,7 +42,7 @@ O log/auditoria de uma operação MCP deve guardar somente metadados permitidos:
 - A prova de descoberta e leitura em cliente real local pode usar o client oficial, mas a prova em Claude Code e ChatGPT depende de URL HTTPS pública ou túnel seguro, usuário Supabase real e consentimento de administrador do workspace.
 - O ChatGPT não conecta diretamente a um servidor local. A documentação oficial indica Secure MCP Tunnel para servidor privado. Isso não autoriza deploy nem exposição pública.
 - Sem deploy autorizado, não se declara smoke test remoto, conexão real com ChatGPT ou compatibilidade universal.
-- Mutações não entram na primeira superfície até a dependência de backend consolidar contrato canônico, recibo, auditoria, idempotência e escopo.
+- As mutações canônicas já entram na superfície local. A prova remota continua bloqueada até OAuth, credencial dedicada e deploy autorizado.
 
 ## Modo degradado da pesquisa
 

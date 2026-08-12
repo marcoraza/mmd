@@ -12,6 +12,7 @@ function migration(path: string) {
 test('registro MCP vincula cliente, ator, ferramenta, request e payload sem expor segredo', () => {
   const sql = migration('20260812163430_mcp_client_registry_and_operations.sql')
   const oauthSql = migration('20260812210000_mcp_oauth_and_read_capabilities.sql')
+  const mutationSql = migration('20260812220000_mcp_mutation_capabilities.sql')
 
   assert.match(sql, /CREATE TABLE public\.mcp_clients/)
   assert.match(oauthSql, /CREATE ROLE mmd_mcp_executor NOLOGIN NOINHERIT NOBYPASSRLS/)
@@ -45,6 +46,13 @@ test('registro MCP vincula cliente, ator, ferramenta, request e payload sem expo
   )
   assert.doesNotMatch(sql, /bearer_token|authorization(?:_token)?|service_role_key/i)
   assert.doesNotMatch(oauthSql, /bearer_token|authorization(?:_token)?|service_role_key/i)
+  assert.match(mutationSql, /CREATE TABLE app_private\.mcp_operation_capabilities/)
+  assert.match(mutationSql, /CREATE OR REPLACE FUNCTION public\.execute_mcp_operation/)
+  assert.match(mutationSql, /MCP_REQUEST_PAYLOAD_CONFLICT/)
+  assert.match(mutationSql, /outcome = 'SUCCEEDED'/)
+  assert.match(mutationSql, /outcome = CASE WHEN SQLSTATE/)
+  assert.match(mutationSql, /GRANT EXECUTE ON FUNCTION public\.execute_mcp_operation/)
+  assert.doesNotMatch(mutationSql, /bearer_token|authorization(?:_token)?|service_role_key/i)
   for (const target of Object.values(MCP_AUDIT_TARGETS)) {
     assert.match(target, /^[A-Za-z0-9][A-Za-z0-9._:/-]{2,127}$/)
   }

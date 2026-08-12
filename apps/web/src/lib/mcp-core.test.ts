@@ -288,6 +288,289 @@ test('MCP rejects fields above the tool input allowlist before reading data', as
   assert.match(await response.text(), /Input validation error/)
 })
 
+test('MCP advertises canonical mutation tools only when the operation adapter exists', async () => {
+  const dependencies = createDependencies()
+  dependencies.mutate = async () => ({})
+  const handler = createMcpRequestHandler(dependencies)
+  let requestNumber = 0
+  const transport = new StreamableHTTPClientTransport(new URL('https://mmd.test/api/mcp'), {
+    requestInit: { headers: { authorization: 'Bearer valid-user-token' } },
+    fetch: async (input, init) => {
+      requestNumber += 1
+      const headers = new Headers(init?.headers)
+      headers.set('x-mmd-mcp-request-id', `mutation-list-${requestNumber}`)
+      return handler(new Request(input, { ...init, headers }))
+    },
+  })
+  const client = new Client({ name: 'mutation-list-test', version: '1.0.0' })
+  await client.connect(transport)
+  const tools = await client.listTools()
+  await client.close()
+
+  const confirmation = tools.tools.find((tool) => tool.name === 'mmd_conferencia_confirmar_saida')
+  assert.equal(confirmation?.annotations?.destructiveHint, true)
+  assert.equal(confirmation?.annotations?.idempotentHint, true)
+  assert.equal(
+    tools.tools.some((tool) => tool.name === 'mmd_unidade_vincular_rfid'),
+    true,
+  )
+})
+
+test('MCP denies mutation for viewer before the operation adapter', async () => {
+  const dependencies = createDependencies()
+  let mutateCalled = false
+  const audits: { intent: string; outcome: string }[] = []
+  dependencies.authenticate = async () => ({
+    actorId: '22222222-2222-4222-8222-222222222222',
+    clientId: 'claude-code',
+    role: 'viewer',
+    scopes: ['mcp:read', 'mcp:operate'],
+  })
+  dependencies.mutate = async () => {
+    mutateCalled = true
+    return {}
+  }
+  dependencies.audit = async (input) => {
+    audits.push({ intent: input.intent, outcome: input.outcome })
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  const response = await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+        'x-mmd-mcp-request-id': 'viewer-mutation-request',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'mmd_unidade_vincular_rfid',
+          arguments: {
+            unidade_id: UNIDADE_ID,
+            epc: 'E2000017221101441890ABCD',
+            client_request_id: 'viewer-operation-1',
+          },
+        },
+      }),
+    }),
+  )
+
+  assert.equal(mutateCalled, false)
+  assert.match(await response.text(), /PERMISSAO_NEGADA/)
+  assert.deepEqual(audits, [{ intent: 'MUTATION', outcome: 'DENIED' }])
+})
+
+test('MCP returns only the strict persisted ACK from a canonical mutation', async () => {
+  const dependencies = createDependencies()
+  dependencies.authenticate = async () => ({
+    actorId: '22222222-2222-4222-8222-222222222222',
+    clientId: 'claude-code',
+    role: 'editor',
+    scopes: ['mcp:read', 'mcp:operate'],
+  })
+  dependencies.mutate = async (tool, args, _identity, clientRequestId) => {
+    assert.equal(tool, 'mmd_unidade_vincular_rfid')
+    assert.deepEqual(args, { unidade_id: UNIDADE_ID, epc: null })
+    assert.equal(clientRequestId, 'editor-operation-1')
+    return {
+      operation_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+      status: 'SUCCEEDED',
+      tool,
+      domain_receipt_id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2',
+      conference_id: null,
+      project_id: null,
+      version: null,
+    }
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  const response = await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+        'x-mmd-mcp-request-id': 'editor-mutation-request',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'mmd_unidade_vincular_rfid',
+          arguments: {
+            unidade_id: UNIDADE_ID,
+            epc: null,
+            client_request_id: 'editor-operation-1',
+          },
+        },
+      }),
+    }),
+  )
+
+  const body = await response.text()
+  assert.match(body, /SUCCEEDED/)
+  assert.match(body, /bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2/)
+  assert.doesNotMatch(body, /tag_rfid|serial_fabrica|service_role/)
+})
+
+test('MCP rejects every conditional mutation argument before the operation adapter', async () => {
+  const dependencies = createDependencies()
+  let mutateCalled = false
+  const audits: { intent: string; outcome: string }[] = []
+  dependencies.authenticate = async () => ({
+    actorId: '22222222-2222-4222-8222-222222222222',
+    clientId: 'claude-code',
+    role: 'editor',
+    scopes: ['mcp:read', 'mcp:operate'],
+  })
+  dependencies.mutate = async () => {
+    mutateCalled = true
+    return {}
+  }
+  dependencies.audit = async (input) => {
+    audits.push({ intent: input.intent, outcome: input.outcome })
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  const cases = [
+    {
+      tool: 'mmd_conferencia_salvar_decisao',
+      code: 'MOTIVO_MANUAL_OBRIGATORIO',
+      arguments: {
+        evento_id: EVENTO_ID,
+        direcao: 'RETORNO',
+        unidade_id: UNIDADE_ID,
+        resultado: 'OK',
+        metodo: 'MANUAL',
+        source_event_id: 'rfid-scan-1',
+        captured_at: '2026-08-12T12:00:00-03:00',
+        client_request_id: 'invalid-operation-1',
+      },
+    },
+    {
+      tool: 'mmd_conferencia_salvar_decisao',
+      code: 'PROBLEMA_EXIGE_DESGASTE_E_OBSERVACAO',
+      arguments: {
+        evento_id: EVENTO_ID,
+        direcao: 'RETORNO',
+        unidade_id: UNIDADE_ID,
+        resultado: 'PROBLEMA',
+        metodo: 'RFID',
+        source_event_id: 'rfid-scan-2',
+        captured_at: '2026-08-12T12:00:00-03:00',
+        client_request_id: 'invalid-operation-2',
+      },
+    },
+    {
+      tool: 'mmd_pendencia_resolver_retorno',
+      code: 'LOCALIZACAO_CONFIRMADA_OBRIGATORIA',
+      arguments: {
+        pendencia_id: '44444444-4444-4444-8444-444444444444',
+        acao: 'ENCONTRADA',
+        client_request_id: 'invalid-operation-3',
+      },
+    },
+    {
+      tool: 'mmd_pendencia_resolver_retorno',
+      code: 'OBSERVACAO_OBRIGATORIA',
+      arguments: {
+        pendencia_id: '44444444-4444-4444-8444-444444444444',
+        acao: 'MANUTENCAO',
+        client_request_id: 'invalid-operation-4',
+      },
+    },
+  ]
+
+  for (const [index, scenario] of cases.entries()) {
+    const response = await handler(
+      new Request('https://mmd.test/api/mcp', {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer valid-user-token',
+          accept: 'application/json, text/event-stream',
+          'content-type': 'application/json',
+          'x-mmd-mcp-request-id': `invalid-mutation-${index + 1}`,
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: index + 1,
+          method: 'tools/call',
+          params: { name: scenario.tool, arguments: scenario.arguments },
+        }),
+      }),
+    )
+
+    assert.match(await response.text(), new RegExp(scenario.code))
+  }
+
+  assert.equal(mutateCalled, false)
+  assert.deepEqual(
+    audits,
+    cases.map(() => ({ intent: 'MUTATION', outcome: 'FAILED' })),
+  )
+})
+
+test('MCP audits malformed mutation schemas without persisting their payload', async () => {
+  const dependencies = createDependencies()
+  const audits: { tool: string; intent: string; outcome: string; payloadHash: string }[] = []
+  dependencies.authenticate = async () => ({
+    actorId: '22222222-2222-4222-8222-222222222222',
+    clientId: 'claude-code',
+    role: 'editor',
+    scopes: ['mcp:read', 'mcp:operate'],
+  })
+  dependencies.mutate = async () => {
+    throw new Error('adapter must not receive malformed arguments')
+  }
+  dependencies.audit = async (input) => {
+    audits.push({
+      tool: input.tool,
+      intent: input.intent,
+      outcome: input.outcome,
+      payloadHash: input.payloadHash,
+    })
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  const response = await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+        'x-mmd-mcp-request-id': 'malformed-mutation-request',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'mmd_unidade_vincular_rfid',
+          arguments: {
+            unidade_id: 'not-a-uuid',
+            epc: 'EPC-MUST-NOT-ENTER-THE-LOG',
+            client_request_id: 'malformed-operation-1',
+          },
+        },
+      }),
+    }),
+  )
+
+  assert.match(await response.text(), /Input validation error/)
+  assert.deepEqual(audits, [
+    {
+      tool: 'mmd_unidade_vincular_rfid',
+      intent: 'MUTATION',
+      outcome: 'FAILED',
+      payloadHash: '8c0660fdf7c4a9c8dfe2e1036813be70fd20fc9d95b44f484f7d6ff5b5741038',
+    },
+  ])
+})
+
 test('MCP rejects a malformed UUID before it reaches the Event reader', async () => {
   const dependencies = createDependencies()
   dependencies.readEvent = async () => {

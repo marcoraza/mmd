@@ -33,7 +33,8 @@ function createRegistryClient() {
       target !== 'mcp_operation_log' &&
       target !== 'profiles' &&
       target !== 'rpc/claim_mcp_rate_limit' &&
-      target !== 'rpc/issue_mcp_read_capability'
+      target !== 'rpc/issue_mcp_read_capability' &&
+      target !== 'rpc/issue_mcp_operation_capability'
     ) {
       throw new Error('MCP_REGISTRY_TABLE_DENIED')
     }
@@ -136,6 +137,33 @@ export async function issueMcpReadCapability(
   })
   if (error) throw new Error('MCP_CAPABILITY_ISSUE_FAILED')
   return { token, payloadHash }
+}
+
+export async function issueMcpOperationCapability(
+  identity: McpIdentity,
+  tool: string,
+  clientRequestId: string,
+  args: Record<string, unknown>,
+) {
+  const token = randomBytes(32).toString('base64url')
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  const { data, error } = await createRegistryClient().rpc('issue_mcp_operation_capability', {
+    p_token_hash: tokenHash,
+    p_client_id: identity.clientId,
+    p_actor_id: identity.actorId,
+    p_tool: tool,
+    p_client_request_id: clientRequestId,
+    p_arguments: args,
+    p_ttl_seconds: 30,
+  })
+  if (error || !data || typeof data !== 'object') {
+    throw new Error('MCP_OPERATION_CLAIM_FAILED')
+  }
+  const claim = data as { completed?: unknown; operation_id?: unknown; result?: unknown }
+  if (typeof claim.operation_id !== 'string') throw new Error('MCP_OPERATION_CLAIM_INVALID')
+  return claim.completed === true
+    ? { completed: true as const, operationId: claim.operation_id, result: claim.result }
+    : { completed: false as const, operationId: claim.operation_id, token }
 }
 
 export async function recordMcpAudit(input: McpAuditInput): Promise<void> {

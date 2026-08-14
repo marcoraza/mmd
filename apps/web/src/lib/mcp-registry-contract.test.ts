@@ -12,6 +12,7 @@ function migration(path: string) {
 test('registro MCP vincula cliente, ator, ferramenta, request e payload sem expor segredo', () => {
   const sql = migration('20260812163430_mcp_client_registry_and_operations.sql')
   const oauthSql = migration('20260812210000_mcp_oauth_and_read_capabilities.sql')
+  const oauthUserIdSql = migration('20260814231500_mcp_oauth_user_id_claim.sql')
   const mutationSql = migration('20260812220000_mcp_mutation_capabilities.sql')
 
   assert.match(sql, /CREATE TABLE public\.mcp_clients/)
@@ -22,6 +23,9 @@ test('registro MCP vincula cliente, ator, ferramenta, request e payload sem expo
   assert.match(oauthSql, /CREATE OR REPLACE FUNCTION public\.mmd_custom_access_token_hook/)
   assert.match(oauthSql, /jsonb_set\(v_claims, '\{aud\}'/)
   assert.match(oauthSql, /jsonb_set\(v_claims, '\{mcp_scopes\}'/)
+  assert.match(oauthUserIdSql, /v_actor_id text := event->'claims'->>'sub'/)
+  assert.match(oauthUserIdSql, /jsonb_set\(v_claims, '\{user_id\}', to_jsonb\(v_actor_id\), true\)/)
+  assert.match(oauthUserIdSql, /v_actor_id !~\*/)
   assert.match(oauthSql, /CREATE TABLE app_private\.mcp_read_capabilities/)
   assert.match(oauthSql, /CREATE OR REPLACE FUNCTION public\.mcp_read_event/)
   assert.match(oauthSql, /CREATE OR REPLACE FUNCTION public\.mcp_read_unit/)
@@ -46,6 +50,7 @@ test('registro MCP vincula cliente, ator, ferramenta, request e payload sem expo
   )
   assert.doesNotMatch(sql, /bearer_token|authorization(?:_token)?|service_role_key/i)
   assert.doesNotMatch(oauthSql, /bearer_token|authorization(?:_token)?|service_role_key/i)
+  assert.doesNotMatch(oauthUserIdSql, /bearer_token|authorization(?:_token)?|service_role_key/i)
   assert.match(mutationSql, /CREATE TABLE app_private\.mcp_operation_capabilities/)
   assert.match(mutationSql, /CREATE OR REPLACE FUNCTION public\.execute_mcp_operation/)
   assert.match(mutationSql, /MCP_REQUEST_PAYLOAD_CONFLICT/)

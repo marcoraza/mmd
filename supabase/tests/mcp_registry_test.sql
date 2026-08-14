@@ -96,6 +96,9 @@ BEGIN
   IF v_hook_result->'claims'->'mcp_scopes' <> '["mcp:read"]'::jsonb THEN
     RAISE EXCEPTION 'Hook não emitiu os escopos do registry';
   END IF;
+  IF v_hook_result->'claims'->>'user_id' <> 'dddddddd-dddd-dddd-dddd-ddddddddddd4' THEN
+    RAISE EXCEPTION 'Hook não vinculou user_id ao sub do token OAuth';
+  END IF;
 
   BEGIN
     INSERT INTO public.mcp_clients (client_id, resource_audience, scopes)

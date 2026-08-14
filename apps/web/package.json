@@ -9,6 +9,7 @@
     "test": "node --import tsx --test src/lib/*.test.ts src/lib/data/*.test.ts",
     "test:mcp": "node --import tsx --test src/lib/mcp-*.test.ts",
     "smoke:mcp-db": "tsx scripts/smoke-mcp-database.ts",
+    "smoke:mcp-remote": "tsx scripts/smoke-mcp-remote.ts",
     "test:training": "node --import tsx --test src/lib/training-event-core.test.ts",
     "training:prepare": "tsx scripts/prepare-training-event.ts",
     "lint": "eslint .",

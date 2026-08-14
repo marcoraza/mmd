@@ -17,6 +17,8 @@ O metadata protegido não anuncia `mcp:read` ou `mcp:operate` como scopes OAuth.
 
 Antes de liberar o endpoint, configure `MMD_MCP_RESOURCE_URL` como a URL HTTPS exata de `/api/mcp`, `MMD_MCP_AUTHORIZATION_SERVER` como o Authorization Server HTTPS que emite tokens próprios para esse resource e `MMD_MCP_ALLOWED_ORIGINS` somente quando houver cliente browser com Origin conhecido. Sem os dois primeiros, o metadata OAuth não é publicado. Sem Origin enviado, o desktop client continua aceito; Origin não listado falha fechado.
 
+`MMD_MCP_REMOTE_ENABLED` é o último gate. Mantenha ausente durante migrations, OAuth, secrets, WAF e preflight. Nesse estado, o metadata protegido fica disponível para discovery, mas `/api/mcp` continua respondendo `503 mcp_remote_not_configured`. Defina exatamente `true` somente depois de `npm --prefix apps/web run smoke:mcp-db` e `npm --prefix apps/web run smoke:mcp-remote` passarem e o WAF estar ativo.
+
 ## Cadastro e revogação
 
 `mcp_clients` é o registro de revogação do cliente. Segredos de cliente pertencem ao Supabase OAuth Server e nunca são copiados para a aplicação. Cadastre o mesmo `client_id`, a URL HTTPS exata do resource e `mcp:read`. Clientes autorizados a operar recebem também `mcp:operate`; a constraint exige que `mcp:operate` nunca exista sem `mcp:read`. Marque `active=false` com `revoked_at` ao revogar.
@@ -64,7 +66,9 @@ Cadastre a URL HTTPS remota e conclua OAuth somente depois de o emissor em `MMD_
 - `supabase/tests/mcp_domain_read_resources_test.sql`: prova as sete RPCs operacionais, DTOs sem campos vetados, paginação e capability de uso único.
 - `supabase/tests/mcp_mutation_capability_test.sql`: prova claim persistido, retry, conflito de payload, capability inválida e falha sem ACK fabricado.
 - `npm run smoke:mcp-db`: prova conexão real sob o login dedicado e as restrições usadas pela rota.
+- `MMD_MCP_RESOURCE_URL=https://SEU_DOMINIO/api/mcp npm --prefix apps/web run smoke:mcp-remote`: antes da ativação final, prova os dois metadatas e confirma que `/api/mcp` ainda responde `503`.
+- `MMD_MCP_RESOURCE_URL=https://SEU_DOMINIO/api/mcp MMD_MCP_EXPECT_REMOTE_ENABLED=true npm --prefix apps/web run smoke:mcp-remote`: depois de definir `MMD_MCP_REMOTE_ENABLED=true` e publicar a configuração, prova os dois metadatas e o desafio `401`.
 - `npm run lint` e `npm run build`: endpoint `/api/mcp` e metadata compilam na app Next.
 - As migrations de registry e capability são executadas dentro de transação e rollback contra o Postgres local, sem gravar dados.
 
-Ainda falta: habilitar o Supabase OAuth 2.1 e apontar a Authorization Path para `/oauth/consent`; selecionar `public.mmd_custom_access_token_hook`; aplicar as migrations no ambiente alvo; ativar o login dedicado; configurar secrets e limite pré-auth no WAF/edge; publicar URL HTTPS e fazer smoke no Claude Code e ChatGPT Developer Mode. Deploy requer autorização nova.
+Ainda falta: habilitar o Supabase OAuth 2.1 e apontar a Authorization Path para `/oauth/consent`; selecionar `public.mmd_custom_access_token_hook`; aplicar as migrations no ambiente alvo; ativar o login dedicado; configurar secrets e limite pré-auth no WAF/edge; publicar URL HTTPS; rodar o smoke remoto; definir `MMD_MCP_REMOTE_ENABLED=true`; fazer smoke no Claude Code e ChatGPT Developer Mode. Deploy requer autorização nova.

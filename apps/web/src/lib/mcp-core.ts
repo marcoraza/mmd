@@ -1,6 +1,12 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
-import { createMcpHandler, McpServer, ResourceTemplate } from '@modelcontextprotocol/server'
+import {
+  createMcpHandler,
+  isJSONRPCNotification,
+  isJSONRPCRequest,
+  McpServer,
+  ResourceTemplate,
+} from '@modelcontextprotocol/server'
 import { z } from 'zod'
 
 import type { UserRole } from '@/lib/action-auth-core'
@@ -299,11 +305,13 @@ async function withRequestId(request: Request) {
 
   try {
     const bodyText = await request.clone().text()
-    const body = JSON.parse(bodyText) as { id?: string | number }
-    const jsonRpcId = body.id
-    if (typeof jsonRpcId !== 'string' && typeof jsonRpcId !== 'number') return null
-
-    const derived = `jsonrpc-${createHash('sha256').update(bodyText).digest('hex').slice(0, 24)}`
+    const body: unknown = JSON.parse(bodyText)
+    const derived = isJSONRPCRequest(body)
+      ? `jsonrpc-${createHash('sha256').update(bodyText).digest('hex').slice(0, 24)}`
+      : isJSONRPCNotification(body)
+        ? `notification-${randomUUID()}`
+        : null
+    if (!derived) return null
     if (!REQUEST_ID_PATTERN.test(derived)) return null
 
     const headers = new Headers(request.headers)

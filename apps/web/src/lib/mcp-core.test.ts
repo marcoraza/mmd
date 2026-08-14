@@ -214,19 +214,13 @@ test('MCP audit target metadata never grants a client the missing read scope', a
   ])
 })
 
-test('MCP discovery and authenticated Event resource work through the official SDK', async () => {
+test('MCP discovery and authenticated Event resource work through the official SDK without proprietary headers', async () => {
   const dependencies = createDependencies()
   const handler = createMcpRequestHandler(dependencies)
-  let requestNumber = 0
   const transport = new StreamableHTTPClientTransport(new URL('https://mmd.test/api/mcp'), {
     authProvider: { token: async () => 'valid-user-token' },
     requestInit: { headers: {} },
-    fetch: async (input, init) => {
-      requestNumber += 1
-      const headers = new Headers(init?.headers)
-      headers.set('x-mmd-mcp-request-id', `sdk-request-${requestNumber}`)
-      return handler(new Request(input, { ...init, headers }))
-    },
+    fetch: async (input, init) => handler(new Request(input, init)),
   })
   const client = new Client(
     { name: 'mmd-contract-test', version: '1.0.0' },
@@ -499,6 +493,53 @@ test('MCP derives a stable request ID from the JSON-RPC request when a host has 
       payloadHash: 'a8bf26882df6e975ad13abe5ffa4490748d1fdf1a20f5ce2cb4b3543f13736c4',
     },
   ])
+})
+
+test('MCP accepts protocol notifications from hosts without proprietary headers', async () => {
+  const dependencies = createDependencies()
+  const requestIds: string[] = []
+  dependencies.rateLimit = async (_identity, request) => {
+    requestIds.push(request.headers.get('x-mmd-mcp-request-id') ?? '')
+    return 'allowed'
+  }
+  const handler = createMcpRequestHandler(dependencies)
+  const notification = () =>
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        accept: 'application/json, text/event-stream',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
+    })
+  const first = await handler(notification())
+  const second = await handler(notification())
+
+  assert.equal(first.status, 202)
+  assert.equal(second.status, 202)
+  assert.match(requestIds[0] ?? '', /^notification-[0-9a-f-]{36}$/)
+  assert.notEqual(requestIds[0], requestIds[1])
+})
+
+test('MCP rejects malformed protocol notifications before authentication', async () => {
+  const handler = createMcpRequestHandler(createDependencies())
+  const response = await handler(
+    new Request('https://mmd.test/api/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer valid-user-token',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'notifications/initialized',
+        params: 'invalid',
+      }),
+    }),
+  )
+
+  assert.equal(response.status, 400)
 })
 
 test('MCP rejects fields above the tool input allowlist before reading data', async () => {

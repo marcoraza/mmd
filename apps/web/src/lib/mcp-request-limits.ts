@@ -2,6 +2,17 @@ export const MAX_MCP_BODY_BYTES = 128 * 1024
 
 export class McpRequestTooLargeError extends Error {}
 
+export function asPlainMcpRequest(request: Request) {
+  const hasBody = request.method !== 'GET' && request.method !== 'HEAD' && request.body
+  return new Request(request.url, {
+    method: request.method,
+    headers: new Headers(request.headers),
+    body: hasBody ? request.body : undefined,
+    signal: request.signal,
+    ...(hasBody ? { duplex: 'half' } : {}),
+  } as RequestInit)
+}
+
 export async function enforceMcpRequestBodyLimit(request: Request) {
   if (request.method === 'GET' || request.method === 'HEAD' || !request.body) return request
 

@@ -1,6 +1,7 @@
 import { createMcpRequestHandler } from '@/lib/mcp-core'
 import { mcpOAuthConfiguration, mcpRemoteAccessIsReady } from '@/lib/mcp-oauth'
 import {
+  asPlainMcpRequest,
   enforceMcpRequestBodyLimit,
   MAX_MCP_BODY_BYTES,
   McpRequestTooLargeError,
@@ -54,6 +55,7 @@ function hasConfiguredMcpHost(request: Request) {
 }
 
 async function respond(request: Request) {
+  request = asPlainMcpRequest(request)
   if (!mcpRemoteAccessIsReady()) {
     return new Response(JSON.stringify({ error: 'mcp_remote_not_configured' }), {
       status: 503,

@@ -32,20 +32,31 @@ async function main() {
     assert.equal(directTableDenied, true, 'dedicated MCP role must not read stock tables directly')
 
     const capabilityCalls = [
-      sql`select public.mcp_read_unit('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, ${'0'.repeat(64)})`,
-      sql`select public.mcp_read_event('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, ${'0'.repeat(64)})`,
-      sql`select public.mcp_read_events('invalid-capability', null, null, null, 1, 50)`,
-      sql`select public.mcp_read_catalog('invalid-capability', null, 1, 50)`,
-      sql`select public.mcp_read_packing('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
-      sql`select public.mcp_read_movements('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
-      sql`select public.mcp_read_conference('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 'SAIDA', 1, 50)`,
-      sql`select public.mcp_read_expected_return('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
-      sql`select public.mcp_read_return_pendings('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
+      () =>
+        sql`select public.mcp_read_unit('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, ${'0'.repeat(64)})`,
+      () =>
+        sql`select public.mcp_read_event('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, ${'0'.repeat(64)})`,
+      () => sql`select public.mcp_read_events('invalid-capability', null, null, null, 1, 50)`,
+      () => sql`select public.mcp_read_catalog('invalid-capability', null, 1, 50)`,
+      () =>
+        sql`select public.mcp_read_packing('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
+      () =>
+        sql`select public.mcp_read_movements('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
+      () =>
+        sql`select public.mcp_read_conference('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 'SAIDA', 1, 50)`,
+      () =>
+        sql`select public.mcp_read_expected_return('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
+      () =>
+        sql`select public.mcp_read_return_pendings('invalid-capability', '00000000-0000-4000-8000-000000000000'::uuid, 1, 50)`,
     ]
-    const capabilityFailures = await Promise.allSettled(capabilityCalls)
-    for (const failure of capabilityFailures) {
-      assert.equal(failure.status, 'rejected', 'capability RPC must reject an invalid token')
-      const databaseError = failure.reason as { message?: string }
+    for (const call of capabilityCalls) {
+      let databaseError: { message?: string } | null = null
+      try {
+        await call()
+      } catch (error) {
+        databaseError = error as { message?: string }
+      }
+      assert.ok(databaseError, 'capability RPC must reject an invalid token')
       assert.match(
         databaseError.message ?? '',
         /MCP_(COLLECTION_)?CAPABILITY_INVALID/,

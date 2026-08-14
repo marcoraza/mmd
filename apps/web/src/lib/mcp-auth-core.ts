@@ -1,7 +1,7 @@
 import { jwtVerify, type JWTVerifyGetKey } from 'jose'
 
 import type { UserRole } from '@/lib/action-auth-core'
-import type { McpIdentity } from '@/lib/mcp-core'
+import type { McpAuditInput, McpIdentity } from '@/lib/mcp-core'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const CLIENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$/
@@ -17,6 +17,18 @@ export type McpTokenIdentity = {
   clientId: string
   expiresAt: number
   scopes: string[]
+}
+
+export function mcpAuditInsert(input: McpAuditInput) {
+  return {
+    client_id: input.clientId,
+    actor_id: input.actorId,
+    tool: input.tool,
+    client_request_id: input.clientRequestId,
+    payload_hash: input.payloadHash,
+    intent: input.intent,
+    outcome: input.outcome,
+  }
 }
 
 export async function verifyMcpAccessToken(

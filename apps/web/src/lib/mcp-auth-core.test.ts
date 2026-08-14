@@ -3,7 +3,7 @@ import test from 'node:test'
 
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose'
 
-import { resolveMcpIdentity, verifyMcpAccessToken } from './mcp-auth-core.ts'
+import { mcpAuditInsert, resolveMcpIdentity, verifyMcpAccessToken } from './mcp-auth-core.ts'
 
 const ACTOR_ID = '22222222-2222-4222-8222-222222222222'
 const ISSUER = 'https://project-ref.supabase.co/auth/v1'
@@ -150,4 +150,27 @@ test('MCP resolves only active registered clients and canonical profile roles', 
     ),
     null,
   )
+})
+
+test('MCP lets Postgres assign both audit timestamps from the same clock', () => {
+  const row = mcpAuditInsert({
+    clientId: 'claude-code-test',
+    actorId: ACTOR_ID,
+    tool: 'mmd:eventos:list',
+    clientRequestId: 'read-request-1',
+    payloadHash: '0'.repeat(64),
+    intent: 'READ',
+    outcome: 'SUCCEEDED',
+  })
+
+  assert.deepEqual(row, {
+    client_id: 'claude-code-test',
+    actor_id: ACTOR_ID,
+    tool: 'mmd:eventos:list',
+    client_request_id: 'read-request-1',
+    payload_hash: '0'.repeat(64),
+    intent: 'READ',
+    outcome: 'SUCCEEDED',
+  })
+  assert.equal('completed_at' in row, false)
 })

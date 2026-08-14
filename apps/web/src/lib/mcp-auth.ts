@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createRemoteJWKSet } from 'jose'
 
 import { extractBearerToken } from '@/lib/action-auth-core'
-import { resolveMcpIdentity, verifyMcpAccessToken } from '@/lib/mcp-auth-core'
+import { mcpAuditInsert, resolveMcpIdentity, verifyMcpAccessToken } from '@/lib/mcp-auth-core'
 import type { McpAuditInput, McpIdentity, McpMutationTool } from '@/lib/mcp-core'
 import { mcpOAuthConfiguration } from '@/lib/mcp-oauth'
 import type { McpDomainReadTarget } from '@/lib/mcp-read-resources'
@@ -192,16 +192,7 @@ export async function issueMcpOperationCapability(
 
 export async function recordMcpAudit(input: McpAuditInput): Promise<void> {
   const registry = createRegistryClient()
-  const base = {
-    client_id: input.clientId,
-    actor_id: input.actorId,
-    tool: input.tool,
-    client_request_id: input.clientRequestId,
-    payload_hash: input.payloadHash,
-    intent: input.intent,
-    outcome: input.outcome,
-    completed_at: new Date().toISOString(),
-  }
+  const base = mcpAuditInsert(input)
 
   const { data: previous, error: previousError } = await registry
     .from('mcp_operation_log')

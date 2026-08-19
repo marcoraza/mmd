@@ -26,6 +26,7 @@ Sessões: fundação da barra concluída; **detalhe do evento em execução**; d
 | 01 | sim, candidato B | 12/14 | lista ainda alta: ~57px por passo e gap de 20.1px | sim, `9790d5f` | `claude-opus-5` |
 | 02 | sim, candidato B | 14/14 | contagem técnica `24/36` ainda sem textura mono | sim, `3f5852c` | `claude-opus-5` |
 | 03 | sim, candidato B | 14/14 | `24/36` ainda tem pouca hierarquia de leitura | sim, `047f211` | `claude-opus-5` |
+| 04 | sim, candidato B | 14/14 | escada tipográfica no teto, sem falha de barra | sim, `fa3313e` | `claude-opus-5` |
 
 Estado após a Rodada 2:
 
@@ -52,3 +53,12 @@ Estado após a Rodada 3:
 - evidência de 390x844 e 1440x1000 passou no gate;
 - nenhum PASS anterior virou FAIL;
 - a Rodada 4 deve fechar a hierarquia da contagem sem alterar composição, densidade ou navegação.
+
+Estado após a Rodada 4:
+
+- candidato venceu o melhor anterior no pick cego, com 14 PASS contra 14;
+- `24` agora usa JetBrains Mono 12px/600 em tinta e `/36` permanece 12px/500 em cinza secundário;
+- composição, densidade, gaps, navegação e motion permaneceram intactos;
+- evidência de 390x844 e 1440x1000 passou no gate;
+- caçador independente encontrou zero regressões;
+- sessão `detalhe do evento` concluiu as quatro rodadas e está pronta para aprovação de Marco.

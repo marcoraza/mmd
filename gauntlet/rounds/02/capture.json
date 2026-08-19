@@ -1,0 +1,18 @@
+{
+  "url": "http://127.0.0.1:8933/prototipo-eventpro-c-finalizacao.html?tab=eventos&scene=event-detail&v=3f5852c",
+  "when": "2026-08-19T21:02:17.474Z",
+  "files": [
+    {
+      "file": "gauntlet/rounds/02/detalhe-evento-390-light.png",
+      "width": 390,
+      "height": 844,
+      "scheme": "light"
+    },
+    {
+      "file": "gauntlet/rounds/02/detalhe-evento-1440-light.png",
+      "width": 1440,
+      "height": 1000,
+      "scheme": "light"
+    }
+  ]
+}

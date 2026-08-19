@@ -25,6 +25,7 @@ Sessões: fundação da barra concluída; **detalhe do evento em execução**; d
 | 00 | baseline | a medir na R1 | tipografia das linhas ainda usa Inter Tight e pesa mais que a Home | baseline gravado | orquestrador atual |
 | 01 | sim, candidato B | 12/14 | lista ainda alta: ~57px por passo e gap de 20.1px | sim, `9790d5f` | `claude-opus-5` |
 | 02 | sim, candidato B | 14/14 | contagem técnica `24/36` ainda sem textura mono | sim, `3f5852c` | `claude-opus-5` |
+| 03 | sim, candidato B | 14/14 | `24/36` ainda tem pouca hierarquia de leitura | sim, `047f211` | `claude-opus-5` |
 
 Estado após a Rodada 2:
 
@@ -41,3 +42,13 @@ Caçador da Rodada 2:
 - encontrou aumento de cerca de 49.5px no vazio antes da dock;
 - encontrou alvos de ação visualmente no limite de 44px;
 - a Rodada 3 deve manter os ganhos de motion e ritmo, mas recuperar a densidade visual e tratar `24/36` como dado técnico.
+
+Estado após a Rodada 3:
+
+- candidato venceu o melhor anterior por 14 PASS contra 13;
+- linhas de ação e zona agora rendem 49.24px no PNG e mantêm 58px de caixa computada;
+- a faixa morta antes da dock caiu para 9.11px renderizados;
+- `24/36` virou uma unidade técnica em JetBrains Mono sem quebrar o `#hdOk` vivo;
+- evidência de 390x844 e 1440x1000 passou no gate;
+- nenhum PASS anterior virou FAIL;
+- a Rodada 4 deve fechar a hierarquia da contagem sem alterar composição, densidade ou navegação.

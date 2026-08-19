@@ -163,6 +163,24 @@
           letter-spacing: -.006em !important;
         }
         body .dk .dkSub b { font-weight: 600 !important; }
+        /* Rodada 3 · 24/36 é contagem técnica, então lê como uma unidade em mono.
+           12px/500/.01em é o mesmo passo de contagem que a Home já usa em .gq,
+           então nenhum token novo entra. O b#hdOk continua vivo dentro do span
+           e herda a família, para o r55 seguir escrevendo só o número. */
+        body .dk .dkSub .cntTec {
+          font-family: var(--mono) !important;
+          font-size: 12px !important;
+          font-weight: 500 !important;
+          letter-spacing: .01em !important;
+          font-variant-numeric: tabular-nums !important;
+          white-space: nowrap !important;
+        }
+        body .dk .dkSub .cntTec b,
+        body .dk .dkSub .cntTec b#hdOk {
+          font-family: inherit !important;
+          font-weight: 500 !important;
+          color: inherit !important;
+        }
         body .dk .r60Row .r67v,
         body .dk .r60Row.r67 .r67v,
         body .dk .r60Row.chip .r67v.chip {
@@ -175,13 +193,18 @@
         /* Uma coluna só: cabeçalho, menu de ação e lista na mesma borda. */
         body .dk .dkHd { margin: 0 16px !important; padding: 2px 0 0 !important; }
 
-        /* Rodada 2 · passo único de 52px em ação e zona, e ritmo vertical de 16px.
-           52px mantém a caixa de toque acima de 48px no espaço computado e acima
-           de 44px no frame reduzido do preview. O texto continua em 16px. */
+        /* Rodada 3 · passo único de 58px computados em ação e zona, e ritmo de 16px.
+           O preview desenha o telefone com zoom 0.849, então 58px computados
+           rendem 49.2px no PNG, que é o meio da faixa visual de 48-52px de onde
+           a GRAMATICA tirou "3 linhas de 49px" e "7 linhas de 49px".
+           52px computados rendiam 44.15px e derrubavam a faixa visual.
+           O seletor .tileMenu .hubRow entra porque a folha anterior fixa 52px
+           com três classes e venceria um seletor mais curto. */
+        body .dk .tileMenu .hubRow,
         body .dk .hubRow,
         body .dk .r60Row,
         body .dk .r60Row.r67 {
-          min-height: 52px !important;
+          min-height: 58px !important;
         }
         /* Rodada 2 · motion do detalhe fica só em transform e opacity.
            Fundo e traço continuam mudando, agora sem transição. */
@@ -197,6 +220,27 @@
           .dk .dkLens, .dk .dkTab { transition: none !important; }
         }
       `;
+
+      /* Rodada 3 · o metadado nasce como "local · data · <b id="hdOk">24</b>/36 conferidas",
+         então o total fica num nó de texto solto e não dá para pintar só com CSS.
+         Aqui o par vira um único `.cntTec`, sem tocar no `#hdOk`: o r55 continua
+         escrevendo `hdOk.textContent` e o total acompanha. É idempotente. */
+      function unifyTechnicalCount() {
+        for (const sub of oldDocument.querySelectorAll(".dkSub")) {
+          if (sub.querySelector(".cntTec")) continue;
+          const okNode = sub.querySelector("#hdOk");
+          const tail = okNode?.nextSibling;
+          if (!okNode || !tail || tail.nodeType !== 3) continue;
+          const split = /^(\s*\/\s*\d+)([\s\S]*)$/.exec(tail.nodeValue);
+          if (!split) continue;
+          const unit = oldDocument.createElement("span");
+          unit.className = "cntTec";
+          okNode.parentNode.insertBefore(unit, okNode);
+          unit.appendChild(okNode);
+          unit.appendChild(oldDocument.createTextNode(split[1].trim()));
+          tail.nodeValue = split[2];
+        }
+      }
 
       function normalizeIdentifyTab() {
         const liveDockBar = oldDocument.querySelector(".dkDockBar");
@@ -223,6 +267,7 @@
       }
 
       normalizeIdentifyTab();
+      unifyTechnicalCount();
       if (oldDocument.body.dataset.homeDockIdentifyBound !== "true") {
         oldDocument.body.dataset.homeDockIdentifyBound = "true";
         oldDocument.defaultView.addEventListener("click", event => {
@@ -235,7 +280,7 @@
           event.stopImmediatePropagation();
           shellDocument.defaultView.openHistoricalRfid?.();
         }, true);
-        const observer = new MutationObserver(() => normalizeIdentifyTab());
+        const observer = new MutationObserver(() => { normalizeIdentifyTab(); unifyTechnicalCount(); });
         observer.observe(oldDocument.body, { childList: true, subtree: true });
       }
 
@@ -249,6 +294,7 @@
           if (oldDocument.querySelector(".evtWrap")) document.body.dataset.sceneApplied = scene;
         }
       }
+      unifyTechnicalCount();
       shellDocument.body.dataset.canonicalDock = "home";
       document.body.dataset.snapshot = "eventpro-c-finalizacao";
       document.body.dataset.validation = JSON.stringify({

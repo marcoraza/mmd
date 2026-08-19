@@ -1,0 +1,16 @@
+[
+  {
+    "name": "detalhe-evento-final",
+    "title": "Detalhe do evento pronto para aprovação",
+    "note": "A tela agora fala a mesma língua da Home sem perder densidade operacional, fluxo ou área de toque.",
+    "file": "/Users/marko/Projects/mmd/gauntlet/rounds/04/detalhe-evento-390-light.png",
+    "rects": [
+      {"label":"Cabeçalho, ações e lista compartilham uma coluna","x":38,"y":76,"w":313,"h":82},
+      {"label":"Ações usam SF Pro com área de toque computada de 58px","x":38,"y":164,"w":313,"h":152},
+      {"label":"Sete zonas fecham em passo visual de 49px","x":38,"y":329,"w":313,"h":349},
+      {"label":"Realizado e total têm hierarquia técnica própria","x":163,"y":134,"w":48,"h":17}
+    ],
+    "vw": 390,
+    "vh": 844
+  }
+]

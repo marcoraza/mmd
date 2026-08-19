@@ -1,0 +1,31 @@
+{
+  "model": "claude-opus-5",
+  "blind_mapping": {
+    "A": "final-round-04",
+    "B": "baseline-round-00"
+  },
+  "evidence": "valid",
+  "pick": "A",
+  "pick_is_final": true,
+  "pick_reason": "O final fecha uma coluna só e um degrau único de UI em fonte de sistema; o baseline mantém Inter Tight pesada na lista e mono num nome de categoria.",
+  "pass_count": {
+    "final": 14,
+    "baseline": 10
+  },
+  "regressions": {
+    "final": [],
+    "baseline": [
+      "cabeçalho fora da coluna dos cards",
+      "lista e navegação com peso excessivo",
+      "mono aplicada ao nome de categoria",
+      "transição de color fora da barra de motion"
+    ]
+  },
+  "gains": [
+    "desvio horizontal caiu para zero",
+    "SF Pro virou o degrau operacional único",
+    "mono ficou restrita à contagem 24/36",
+    "linhas rendem 49.24px e mantêm 58px computados",
+    "motion usa apenas transform e opacity até 260ms"
+  ]
+}

@@ -62,3 +62,11 @@ Estado após a Rodada 4:
 - evidência de 390x844 e 1440x1000 passou no gate;
 - caçador independente encontrou zero regressões;
 - sessão `detalhe do evento` concluiu as quatro rodadas e está pronta para aprovação de Marco.
+
+## Pick final contra a Rodada 0
+
+- mapeamento cego: A = final da Rodada 4; B = baseline da Rodada 0;
+- crítico Opus escolheu A por 14 PASS contra 10;
+- final terminou com zero regressões listadas;
+- ganhos objetivos: coluna única, SF Pro no degrau operacional, mono só em dado técnico, passo visual de 49.24px e motion restrito a transform/opacity;
+- comparação A/B/C e showcase local foram capturados com o código servido, ambos passaram no gate de evidência.

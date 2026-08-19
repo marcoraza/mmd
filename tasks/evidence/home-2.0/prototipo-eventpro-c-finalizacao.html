@@ -1,0 +1,189 @@
+<!--
+  VERSÃO C · LINHA DE FINALIZAÇÃO DO MOCKUP
+  Parte do B aprovado, mas usa a barra inferior da Home em todas as áreas.
+  Somente este arquivo e seus próximos cortes podem evoluir no gauntlet.
+-->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Event Pro · C Finalização</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #08090a; }
+    #appFrame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #08090a; }
+  </style>
+</head>
+<body>
+  <iframe id="appFrame" title="Versão C em finalização"></iframe>
+  <script>
+    const appFrame = document.getElementById("appFrame");
+    const params = new URLSearchParams(location.search);
+    const scene = params.get("scene") || "default";
+    const initialTab = ["inicio", "eventos", "catalogo"].includes(params.get("tab"))
+      ? params.get("tab")
+      : "eventos";
+
+    function baseDocument() {
+      return appFrame.contentDocument;
+    }
+
+    function eventDocument() {
+      return baseDocument()
+        ?.getElementById("eventAppFrame")?.contentDocument
+        ?.getElementById("sourceFrame")?.contentDocument
+        ?.getElementById("previousFrame")?.contentDocument;
+    }
+
+    function installHomeDock(attempt = 0) {
+      const shellDocument = baseDocument();
+      const oldDocument = eventDocument();
+      const dock = oldDocument?.querySelector(".dkDock");
+      const dockBar = dock?.querySelector(".dkDockBar");
+      const reader = dock?.querySelector(".dkRead");
+      const tabs = dockBar ? Array.from(dockBar.querySelectorAll(".dkTab")) : [];
+
+      if (!shellDocument?.body || !oldDocument?.head || !dock || !dockBar || tabs.length !== 4) {
+        if (attempt < 200) setTimeout(() => installHomeDock(attempt + 1), 60);
+        return;
+      }
+
+      let style = oldDocument.getElementById("eventProCanonicalHomeDock");
+      if (!style) {
+        style = oldDocument.createElement("style");
+        style.id = "eventProCanonicalHomeDock";
+        oldDocument.head.appendChild(style);
+      }
+      style.textContent = `
+        /* C: a barra da Home passa a ser a única navegação inferior. */
+        .dk .dkDock {
+          left: 20px !important;
+          right: 20px !important;
+          bottom: 22px !important;
+          height: 62px !important;
+          display: block !important;
+          pointer-events: none !important;
+        }
+        .dk .dkDockBar {
+          width: 100% !important;
+          height: 62px !important;
+          max-width: none !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 0 !important;
+          padding: 5px !important;
+          border: 1px solid rgba(32, 33, 36, .12) !important;
+          border-radius: 22px !important;
+          background: rgba(255, 255, 255, .88) !important;
+          box-shadow: 0 18px 34px rgba(12, 15, 20, .15), inset 0 1px rgba(255,255,255,.72) !important;
+          backdrop-filter: blur(18px) saturate(1.25) !important;
+          -webkit-backdrop-filter: blur(18px) saturate(1.25) !important;
+          pointer-events: auto !important;
+        }
+        .dk .dkTab {
+          min-height: 51px !important;
+          height: 51px !important;
+          border-radius: 17px !important;
+          gap: 3px !important;
+          color: #767a82 !important;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif !important;
+          font-size: 9px !important;
+          font-weight: 560 !important;
+          line-height: 1 !important;
+          letter-spacing: 0 !important;
+          transition: color 160ms ease, transform 120ms ease !important;
+        }
+        .dk .dkTab:active { transform: scale(.97) !important; }
+        .dk .dkTab.on { color: #fff !important; }
+        .dk .dkTab .ic { width: 19px !important; height: 19px !important; }
+        .dk .dkTab.home-identify-tab .ic { width: 23px !important; height: 23px !important; }
+        .dk .dkTab .lb { max-height: 12px !important; }
+        .dk .dkTab .bdg { display: none !important; }
+        .dk .dkLens {
+          top: 5px !important;
+          bottom: 5px !important;
+          height: 51px !important;
+          border-radius: 17px !important;
+          background: #4b6cff !important;
+          box-shadow: inset 0 1px rgba(255,255,255,.24), 0 7px 18px rgba(75,108,255,.28) !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+        }
+        .dk .dkRead { display: none !important; }
+        .dk .scroll, .dk .evtScroll, .dk .gScroll, .dk .hubScroll { padding-bottom: 106px !important; }
+        @media (prefers-reduced-motion: reduce) {
+          .dk .dkLens, .dk .dkTab { transition: none !important; }
+        }
+      `;
+
+      function normalizeIdentifyTab() {
+        const liveDockBar = oldDocument.querySelector(".dkDockBar");
+        const liveTabs = liveDockBar ? Array.from(liveDockBar.querySelectorAll(".dkTab")) : [];
+        const identifyTab = liveTabs[3];
+        if (!identifyTab) return;
+        identifyTab.classList.add("home-identify-tab");
+        identifyTab.dataset.homeDestination = "identificar";
+        identifyTab.removeAttribute("data-tb");
+        identifyTab.removeAttribute("data-aba");
+        const identifyLabel = identifyTab.querySelector(".lb");
+        const identifyGlyph = identifyTab.querySelector(".g");
+        if (identifyLabel?.textContent?.trim() !== "Identificar") {
+          identifyLabel.textContent = "Identificar";
+        }
+        if (identifyGlyph && !identifyGlyph.querySelector(".homeScanIcon")) {
+          identifyGlyph.innerHTML = `
+            <span class="ic homeScanIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M8 4H5a1 1 0 0 0-1 1v3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7.5 12h9"/>
+              </svg>
+            </span>`;
+        }
+      }
+
+      normalizeIdentifyTab();
+      if (oldDocument.body.dataset.homeDockIdentifyBound !== "true") {
+        oldDocument.body.dataset.homeDockIdentifyBound = "true";
+        oldDocument.defaultView.addEventListener("click", event => {
+          const liveTab = event.target.closest?.(".dkTab");
+          if (!liveTab) return;
+          const liveDockBar = oldDocument.querySelector(".dkDockBar");
+          const liveTabs = liveDockBar ? Array.from(liveDockBar.querySelectorAll(".dkTab")) : [];
+          if (liveTabs.indexOf(liveTab) !== 3) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          shellDocument.defaultView.openHistoricalRfid?.();
+        }, true);
+        const observer = new MutationObserver(() => normalizeIdentifyTab());
+        observer.observe(oldDocument.body, { childList: true, subtree: true });
+      }
+
+      if (reader) reader.setAttribute("aria-hidden", "true");
+      if (scene === "event-detail" && document.body.dataset.sceneApplied !== scene) {
+        const openDetail = oldDocument.querySelector(".ev.on, .ev[data-i=\"0\"]");
+        if (oldDocument.querySelector(".evtWrap")) {
+          document.body.dataset.sceneApplied = scene;
+        } else if (openDetail) {
+          openDetail.click();
+          if (oldDocument.querySelector(".evtWrap")) document.body.dataset.sceneApplied = scene;
+        }
+      }
+      shellDocument.body.dataset.canonicalDock = "home";
+      document.body.dataset.snapshot = "eventpro-c-finalizacao";
+      document.body.dataset.validation = JSON.stringify({
+        version: "C",
+        scene,
+        canonicalDock: "home",
+        dockTabs: tabs.map(tab => tab.querySelector(".lb")?.textContent?.trim()),
+        separateReaderHidden: Boolean(reader && oldDocument.defaultView.getComputedStyle(reader).display === "none"),
+        homePreserved: Boolean(shellDocument.getElementById("homeReference")),
+        historicalRfidPreserved: Boolean(shellDocument.getElementById("rfidReference"))
+      });
+    }
+
+    appFrame.addEventListener("load", () => installHomeDock());
+    appFrame.src = `prototipo-eventpro-b-isolado.html?copy=C&typography=converged&eventConnection=B&eventRefinement=B&tab=${initialTab}&build=finalizacao-c-v1`;
+    installHomeDock();
+  </script>
+</body>
+</html>

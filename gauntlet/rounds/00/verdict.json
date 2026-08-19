@@ -1,0 +1,12 @@
+{
+  "round": "00",
+  "state": "baseline",
+  "artifact": "prototipo-eventpro-c-finalizacao.html?tab=eventos&scene=event-detail",
+  "evidence": {
+    "mobile": "detalhe-evento-baseline-390-light.png",
+    "context": "detalhe-evento-baseline-1440-light.png",
+    "gate": "PASS --max-blank 0.80"
+  },
+  "biggest_gap": "As linhas operacionais ainda usam Inter Tight e têm peso acima do corpo aprovado da Home.",
+  "ratchet": "baseline aguardando bora"
+}

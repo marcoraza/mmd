@@ -1,0 +1,90 @@
+<!--
+  COMPARAÇÃO DE FINALIZAÇÃO
+  A e B permanecem congeladas. C é a única linha mutável do gauntlet.
+-->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Event Pro · Finalização A B C</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #08090a; }
+    .comparison {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .pane {
+      position: relative;
+      min-width: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #08090a;
+    }
+    .pane + .pane { border-left: 1px solid #24272c; }
+    .pane iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #08090a;
+    }
+    .label {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 20;
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 13px;
+      border-radius: 12px;
+      background: rgba(20, 22, 25, .92);
+      color: #f5f5f7;
+      box-shadow: inset 0 0 0 1px #30343a, 0 8px 22px rgba(0, 0, 0, .28);
+      font: 700 11px/1 "SFMono-Regular", ui-monospace, Menlo, monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+    .pane-c .label {
+      background: rgba(48, 67, 145, .94);
+      box-shadow: inset 0 0 0 1px rgba(125, 148, 255, .54), 0 8px 22px rgba(0, 0, 0, .28);
+    }
+    @media (max-width: 1259px) {
+      html, body { overflow-x: auto; }
+      .comparison { min-width: 1260px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="comparison" aria-label="Comparação A B C para finalização do mockup">
+    <section class="pane pane-a" aria-label="A congelada">
+      <span class="label">A · A2.2 congelada</span>
+      <iframe
+        title="Versão A congelada"
+        src="prototipo-eventpro-b-isolado.html?copy=A&amp;typography=converged&amp;eventConnection=B&amp;eventRefinement=B&amp;tab=eventos&amp;build=fixed-home-v2"
+      ></iframe>
+    </section>
+    <section class="pane pane-b" aria-label="B congelada">
+      <span class="label">B · Molde intacto</span>
+      <iframe
+        title="Versão B congelada"
+        src="prototipo-eventpro-b-isolado.html?copy=B&amp;tab=eventos&amp;build=fixed-home-v2"
+      ></iframe>
+    </section>
+    <section class="pane pane-c" aria-label="C em finalização">
+      <span class="label">C · Gauntlet ativo</span>
+      <iframe
+        id="versionCFrame"
+        title="Versão C em finalização"
+        src="prototipo-eventpro-c-finalizacao.html?tab=eventos"
+      ></iframe>
+    </section>
+  </main>
+</body>
+</html>

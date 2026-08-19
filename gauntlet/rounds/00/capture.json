@@ -1,0 +1,18 @@
+{
+  "url": "http://127.0.0.1:8933/prototipo-eventpro-c-finalizacao.html?tab=eventos&scene=event-detail&v=round0",
+  "when": "2026-08-19T03:33:57.178Z",
+  "files": [
+    {
+      "file": "/Users/marko/Projects/mmd/gauntlet/rounds/00/detalhe-evento-baseline-390-light.png",
+      "width": 390,
+      "height": 844,
+      "scheme": "light"
+    },
+    {
+      "file": "/Users/marko/Projects/mmd/gauntlet/rounds/00/detalhe-evento-baseline-1440-light.png",
+      "width": 1440,
+      "height": 1000,
+      "scheme": "light"
+    }
+  ]
+}

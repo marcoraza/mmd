@@ -34,3 +34,10 @@ Estado após a Rodada 2:
 - evidência de 390x844 e 1440x1000 passou no gate;
 - nenhum PASS anterior virou FAIL;
 - caçador da Rodada 2 ainda fará a leitura lateral antes do próximo brief.
+
+Caçador da Rodada 2:
+
+- encontrou perda de cerca de 5px na altura renderizada das linhas;
+- encontrou aumento de cerca de 49.5px no vazio antes da dock;
+- encontrou alvos de ação visualmente no limite de 44px;
+- a Rodada 3 deve manter os ganhos de motion e ritmo, mas recuperar a densidade visual e tratar `24/36` como dado técnico.

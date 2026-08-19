@@ -1,0 +1,20 @@
+{
+  "model": "claude-opus-5",
+  "regressions": [
+    {
+      "what": "Altura renderizada das linhas caiu abaixo da faixa visual de 48-52px.",
+      "where": "Card das sete zonas em 390x844.",
+      "number": "Rodada 1: cerca de 49-51.5px; Rodada 2: cerca de 44-46.5px, aproximadamente 5px a menos."
+    },
+    {
+      "what": "O vazio entre a última zona e a dock cresceu e soltou o rodapé.",
+      "where": "Fim do card de zonas até o topo da dock.",
+      "number": "Rodada 1: cerca de 10px; Rodada 2: cerca de 59.5px, aumento de 49.5px."
+    },
+    {
+      "what": "A margem visual dos alvos das três ações ficou no limite mínimo.",
+      "where": "Card escuro de ações.",
+      "number": "Rodada 1: cerca de 49.5-51.5px; Rodada 2: cerca de 44-46.5px."
+    }
+  ]
+}

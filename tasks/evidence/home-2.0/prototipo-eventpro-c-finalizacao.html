@@ -166,7 +166,14 @@
         /* Rodada 3 · 24/36 é contagem técnica, então lê como uma unidade em mono.
            12px/500/.01em é o mesmo passo de contagem que a Home já usa em .gq,
            então nenhum token novo entra. O b#hdOk continua vivo dentro do span
-           e herda a família, para o r55 seguir escrevendo só o número. */
+           e herda a família, para o r55 seguir escrevendo só o número.
+           Rodada 4 · a unidade fecha a hierarquia interna copiando a regra
+           aprovada da Home: .gq usa 500 em var(--sub) e .gq b usa 600 em
+           var(--ink). O realizado vira tinta em 600 e o total fica no cinza
+           secundário em 500. Mesmo tamanho, mesma linha, nenhum chip ou fundo.
+           Os hex são os mesmos que a folha base já aplica em .dkSub e
+           .dkSub b, então nenhum matiz novo entra.
+           Sem crase neste bloco: o CSS mora dentro de um template literal. */
         body .dk .dkSub .cntTec {
           font-family: var(--mono) !important;
           font-size: 12px !important;
@@ -174,12 +181,14 @@
           letter-spacing: .01em !important;
           font-variant-numeric: tabular-nums !important;
           white-space: nowrap !important;
+          color: #747880 !important;
         }
         body .dk .dkSub .cntTec b,
         body .dk .dkSub .cntTec b#hdOk {
           font-family: inherit !important;
-          font-weight: 500 !important;
-          color: inherit !important;
+          font-size: inherit !important;
+          font-weight: 600 !important;
+          color: #202124 !important;
         }
         body .dk .r60Row .r67v,
         body .dk .r60Row.r67 .r67v,

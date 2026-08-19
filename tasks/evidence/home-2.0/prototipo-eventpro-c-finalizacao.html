@@ -112,6 +112,61 @@
         }
         .dk .dkRead { display: none !important; }
         .dk .scroll, .dk .evtScroll, .dk .gScroll, .dk .hubScroll { padding-bottom: 106px !important; }
+
+        /* Rodada 1 · o detalhe passa a falar a mesma língua da Home.
+           Inter Tight fica só no nome do evento; ação, zona, metadado e volta
+           usam SF Pro Text/system. O prefixo body vence a camada anterior. */
+        body .dk .evtBack,
+        body .dk .dkSub,
+        body .dk .dkSub b,
+        body .dk .hubRow .n,
+        body .dk .hubRow .bdg,
+        body .dk .r60Row strong,
+        body .dk .r60Row.r67 strong,
+        body .dk .r60Row .r67v,
+        body .dk .r60Row.r67 .r67v {
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif !important;
+        }
+        body .dk .dkNome {
+          font-family: "Inter Tight", -apple-system, "SF Pro Text", system-ui, sans-serif !important;
+          font-size: 32px !important;
+          font-weight: 650 !important;
+          line-height: 1.04 !important;
+          letter-spacing: -.038em !important;
+        }
+
+        /* Um degrau único de UI: volta, ação e zona leem na mesma linha. */
+        body .dk .evtBack,
+        body .dk .hubRow .n,
+        body .dk .r60Row strong,
+        body .dk .r60Row.r67 strong {
+          font-size: 16px !important;
+          font-weight: 400 !important;
+          letter-spacing: -.011em !important;
+        }
+        body .dk .evtBack { margin-left: 6px !important; }
+
+        /* Um degrau único de metadado, sem mono fora de serial e contagem. */
+        body .dk .dkSub,
+        body .dk .hubRow .bdg {
+          font-size: 13px !important;
+          font-weight: 400 !important;
+          letter-spacing: -.006em !important;
+        }
+        body .dk .dkSub b { font-weight: 600 !important; }
+        body .dk .r60Row .r67v,
+        body .dk .r60Row.r67 .r67v,
+        body .dk .r60Row.chip .r67v.chip {
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          letter-spacing: 0 !important;
+          font-variant-numeric: tabular-nums !important;
+        }
+
+        /* Uma coluna só: cabeçalho, menu de ação e lista na mesma borda. */
+        body .dk .dkHd { margin: 0 16px !important; padding: 2px 0 0 !important; }
+        /* a margem colapsa com .carga, por isso o valor precisa vencer o dela */
+        body .dk .r60List { margin-top: 19px !important; }
         @media (prefers-reduced-motion: reduce) {
           .dk .dkLens, .dk .dkTab { transition: none !important; }
         }

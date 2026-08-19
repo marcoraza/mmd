@@ -1,0 +1,38 @@
+{
+  "round": 2,
+  "piece": "detalhe-do-evento",
+  "model": "claude-opus-5",
+  "blind_mapping": {"A":"best-round-01","B":"candidate-round-02"},
+  "evidence": "valid",
+  "pick": "B",
+  "pick_is_candidate": true,
+  "pick_reason": "B tem passo de linha e gaps constantes como as referências; A perde a densidade operacional.",
+  "criteria": [
+    {"id":"K1","A":"PASS","B":"PASS","measured":"dock canônica, leitor oculto e zero Mais"},
+    {"id":"K2","A":"PASS","B":"PASS","measured":"paleta, radius e famílias dentro da identidade"},
+    {"id":"T1","A":"PASS","B":"PASS","measured":"LatBus Inter Tight 32px/650"},
+    {"id":"T2","A":"PASS","B":"PASS","measured":"UI 16px/400, metadado 13px e quatro tamanhos"},
+    {"id":"S1","A":"PASS","B":"PASS","measured":"uma coluna, desvio 0"},
+    {"id":"S2","A":"FAIL","B":"PASS","measured":"A cerca de 57px e gap 19; B 52px e gaps 16/16"},
+    {"id":"L1","A":"PASS","B":"PASS","measured":"título, três ações, sete zonas e dock visíveis"},
+    {"id":"L2","A":"PASS","B":"PASS","measured":"sete zonas; check ou número"},
+    {"id":"I1","A":"PASS","B":"PASS","measured":"três ações com alvo computado >=44px"},
+    {"id":"I2","A":"PASS","B":"PASS","measured":"cena e navegação preservadas; Playwright do construtor"},
+    {"id":"R1","A":"PASS","B":"PASS","measured":"sem truncamento ou overflow; dock não cobre conteúdo"},
+    {"id":"M1","A":"FAIL","B":"PASS","measured":"B só usa transform/opacity e máximo 260ms"},
+    {"id":"D1","A":"PASS","B":"PASS","measured":"composição própria"},
+    {"id":"A1","A":"PASS","B":"PASS","measured":"zero slop listado na barra"}
+  ],
+  "pass_count": {"A":12,"B":14},
+  "previous_pass_regressed": false,
+  "accepted": true,
+  "biggest_gap": {
+    "text": "A contagem técnica 24/36 ainda não recebe o tratamento mono usado pela Home.",
+    "number": "1 de 1 contagem técnica sem mono",
+    "where": "tasks/evidence/home-2.0/prototipo-eventpro-c-finalizacao.html:159-165"
+  },
+  "regressions": {
+    "A":["densidade", "gap", "motion"],
+    "B":["folga final cresce de cerca de 22px para 75px computados"]
+  }
+}

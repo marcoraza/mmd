@@ -24,12 +24,13 @@ Sessões: fundação da barra concluída; **detalhe do evento em execução**; d
 |---|---:|---:|---|---|---|
 | 00 | baseline | a medir na R1 | tipografia das linhas ainda usa Inter Tight e pesa mais que a Home | baseline gravado | orquestrador atual |
 | 01 | sim, candidato B | 12/14 | lista ainda alta: ~57px por passo e gap de 20.1px | sim, `9790d5f` | `claude-opus-5` |
+| 02 | sim, candidato B | 14/14 | contagem técnica `24/36` ainda sem textura mono | sim, `3f5852c` | `claude-opus-5` |
 
-Estado após a Rodada 1:
+Estado após a Rodada 2:
 
-- candidato venceu o baseline por 12 PASS contra 9;
-- SF Pro Text/system virou a família operacional; LatBus segue Inter Tight;
-- cabeçalho, menu e lista agora compartilham a mesma coluna;
+- candidato venceu o melhor anterior por 14 PASS contra 12;
+- ações e zonas agora têm 52px computados e ritmo vertical 16/16;
+- motion do detalhe ficou restrito a transform/opacity e abaixo de 300ms;
 - evidência de 390x844 e 1440x1000 passou no gate;
 - nenhum PASS anterior virou FAIL;
-- próxima rodada ataca densidade da lista e a regra de motion, sem tocar A ou B.
+- caçador da Rodada 2 ainda fará a leitura lateral antes do próximo brief.

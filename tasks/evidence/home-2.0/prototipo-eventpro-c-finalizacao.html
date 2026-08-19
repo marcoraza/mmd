@@ -80,6 +80,8 @@
           backdrop-filter: blur(18px) saturate(1.25) !important;
           -webkit-backdrop-filter: blur(18px) saturate(1.25) !important;
           pointer-events: auto !important;
+          /* Rodada 2 · a caixa da barra é fixa em C; max-width e padding não animam. */
+          transition: transform 160ms ease !important;
         }
         .dk .dkTab {
           min-height: 51px !important;
@@ -92,15 +94,22 @@
           font-weight: 560 !important;
           line-height: 1 !important;
           letter-spacing: 0 !important;
-          transition: color 160ms ease, transform 120ms ease !important;
+          /* Rodada 2 · a barra só aceita transform e opacity; a cor troca sem transição. */
+          transition: transform 120ms ease !important;
         }
         .dk .dkTab:active { transform: scale(.97) !important; }
         .dk .dkTab.on { color: #fff !important; }
         .dk .dkTab .ic { width: 19px !important; height: 19px !important; }
         .dk .dkTab.home-identify-tab .ic { width: 23px !important; height: 23px !important; }
-        .dk .dkTab .lb { max-height: 12px !important; }
+        .dk .dkTab .lb {
+          max-height: 12px !important;
+          /* Rodada 2 · o rótulo é estático em C; max-height e margin saem da lista. */
+          transition: opacity 160ms ease !important;
+        }
         .dk .dkTab .bdg { display: none !important; }
         .dk .dkLens {
+          /* Rodada 2 · a lente continua sendo a mesma mola, agora abaixo de 300ms. */
+          transition: transform 260ms cubic-bezier(.32, 1.5, .4, 1) !important;
           top: 5px !important;
           bottom: 5px !important;
           height: 51px !important;
@@ -165,8 +174,25 @@
 
         /* Uma coluna só: cabeçalho, menu de ação e lista na mesma borda. */
         body .dk .dkHd { margin: 0 16px !important; padding: 2px 0 0 !important; }
-        /* a margem colapsa com .carga, por isso o valor precisa vencer o dela */
-        body .dk .r60List { margin-top: 19px !important; }
+
+        /* Rodada 2 · passo único de 52px em ação e zona, e ritmo vertical de 16px.
+           52px mantém a caixa de toque acima de 48px no espaço computado e acima
+           de 44px no frame reduzido do preview. O texto continua em 16px. */
+        body .dk .hubRow,
+        body .dk .r60Row,
+        body .dk .r60Row.r67 {
+          min-height: 52px !important;
+        }
+        /* Rodada 2 · motion do detalhe fica só em transform e opacity.
+           Fundo e traço continuam mudando, agora sem transição. */
+        body .dk .evtBack { transition: transform 120ms ease !important; }
+        body .dk .hubRow .chev,
+        body .dk .r60Row .chev { transition: transform 260ms ease !important; }
+
+        body .dk .tileMenu { margin-top: 16px !important; }
+        /* .carga é o pai da lista e as margens colapsam: o pai fixa o gap, o filho zera. */
+        body .dk .carga { margin-top: 16px !important; }
+        body .dk .r60List { margin-top: 0 !important; }
         @media (prefers-reduced-motion: reduce) {
           .dk .dkLens, .dk .dkTab { transition: none !important; }
         }

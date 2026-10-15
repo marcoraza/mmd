@@ -128,3 +128,7 @@ Abas relevantes:
 11. LOTES: aba histórica, não regra operacional futura
 12. FORA DE OPERACAO: vendidos, emprestados, baixa
 13. REF CATEGORIAS: guia visual completo
+
+## Compilar a partir do VPS
+
+Sessão rodando no VPS (`hostname` = `raza-vps`) não compila Swift. Use `mac-build mmd` (skill `raza-mac-build`): faz push da branch, espelha em `~/build/mmd` no Mac e roda o build lá pela tailnet. Commite antes; o Mac só compila o que está na origin.

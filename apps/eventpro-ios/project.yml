@@ -1,0 +1,89 @@
+name: EventPro
+
+options:
+  bundleIdPrefix: com.emdash
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+targets:
+  EventPro:
+    type: application
+    platform: iOS
+    deploymentTarget:
+      iOS: "16.0"
+    sources:
+      - path: EventPro
+        excludes:
+          - "Resources/Info.plist"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.emdash.eventpro
+        PRODUCT_NAME: EventPro
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.9"
+        INFOPLIST_FILE: EventPro/Resources/Info.plist
+        # iPhone only, portrait. 1 = iPhone.
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        SUPPORTS_MACCATALYST: false
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+        ENABLE_USER_SCRIPT_SANDBOXING: false
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+        Release:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: ""
+    dependencies:
+      - sdk: ExternalAccessory.framework
+      - sdk: CoreBluetooth.framework
+      - sdk: AVFoundation.framework
+      # Zebra RFID SDK vendorizado. O xcframework tem slice de simulador
+      # (ios-arm64_x86_64-simulator), entao o CI compila o codigo real do
+      # ZebraRFIDManager, nao so o fallback mock. Ver Vendor/.../PROVENANCE.md.
+      - framework: Vendor/ZebraRfidSdkFramework/ZebraRfidSdkFramework.xcframework
+        embed: true
+        codeSign: true
+
+  EventProTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget:
+      iOS: "16.0"
+    sources:
+      - EventProTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.emdash.eventpro.tests
+        PRODUCT_NAME: EventProTests
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: true
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/EventPro.app/EventPro"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: EventPro
+
+schemes:
+  EventPro:
+    build:
+      targets:
+        EventPro: all
+        EventProTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - EventProTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

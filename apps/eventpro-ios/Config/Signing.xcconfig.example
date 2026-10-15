@@ -1,0 +1,7 @@
+// Copie para Config/Signing.xcconfig (ignorado pelo git) e troque pelo Team ID
+// real da conta Apple Developer usada para assinar o EventPro.
+//
+// O Team ID tem 10 caracteres alfanumericos e aparece em
+// https://developer.apple.com/account -> Membership Details -> Team ID.
+
+EVENTPRO_DEVELOPMENT_TEAM = ABCDE12345

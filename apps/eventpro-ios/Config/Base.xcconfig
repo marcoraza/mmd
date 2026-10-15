@@ -1,0 +1,25 @@
+// EventPro: build settings compartilhadas entre Debug e Release.
+//
+// Assinatura NAO fica aqui e NAO e versionada. O time de desenvolvimento entra
+// por Config/Signing.xcconfig, que e ignorado pelo git. Copie o exemplo:
+//
+//     cp apps/ios/Config/Signing.xcconfig.example apps/ios/Config/Signing.xcconfig
+//
+// e preencha EVENTPRO_DEVELOPMENT_TEAM com o Team ID de 10 caracteres da conta
+// Apple Developer da MMD. Sem esse arquivo o projeto continua gerando e
+// compilando (e o que o CI faz, com CODE_SIGNING_ALLOWED=NO); so nao instala em
+// device.
+//
+// Alternativa sem arquivo, util em script:
+//
+//     xcodebuild ... DEVELOPMENT_TEAM=ABCDE12345
+//
+// (setting passada na linha de comando ganha do xcconfig).
+
+#include? "Signing.xcconfig"
+
+DEVELOPMENT_TEAM = $(EVENTPRO_DEVELOPMENT_TEAM)
+CODE_SIGN_STYLE = Automatic
+
+// Sem bitcode (removido pela Apple) e sem armv7: o app e arm64 puro.
+ENABLE_BITCODE = NO

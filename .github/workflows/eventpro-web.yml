@@ -1,0 +1,51 @@
+name: eventpro-web
+
+on:
+  push:
+    paths:
+      - 'apps/eventpro-web/**'
+      - '.github/workflows/web.yml'
+  pull_request:
+    paths:
+      - 'apps/eventpro-web/**'
+      - '.github/workflows/web.yml'
+
+defaults:
+  run:
+    working-directory: apps/eventpro-web
+
+jobs:
+  gates:
+    name: tsc + eslint + node --test + next build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/eventpro-web/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint . --max-warnings=0
+
+      - name: Testes das libs puras
+        run: node --test --experimental-strip-types "src/lib/**/*.test.ts"
+
+      # O build precisa das variáveis públicas do Supabase para o cliente SSR ser
+      # construído. Valores de placeholder bastam: nenhuma rota é pré-renderizada
+      # com dados reais (tudo é `force-dynamic`).
+      - name: Build
+        run: npx next build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
